@@ -222,6 +222,28 @@ const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 
+(async()=>{
+  const params=new URLSearchParams(window.location.search);
+  const mode=params.get('mode');
+  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  const{data:{session}}=await sb.auth.getSession();
+  
+  if(mode==='pricing'){
+    openPricingModal();
+    return;
+  }
+  
+  if(mode==='check'&&session){
+    const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
+    const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+    if(isActive){window.location.href='app.html';}else{openPricingModal();}
+    return;
+  }
+  
+  if(session){window.location.href='app.html';}
+})();
+</script>
+
 const PLANS={
   free:{name:'Essai',monthly:0,yearly:0,features:['Accès complet','Événements illimités','Cocktails illimités','Staff illimité','Devis watermark','Clients illimités','Export Excel/CSV','Analytics & marges','Non exploitable']},
   early:{name:'Accès Anticipé',monthly:89,yearly:801,features:['Événements illimités','Cocktails illimités','Staff illimité','Devis PDF custom','Clients illimités','Accès multi-device','Pas de limite de login','Support prioritaire']},
