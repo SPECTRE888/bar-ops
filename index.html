@@ -316,3 +316,25 @@ function contactSales(){
 </script>
 </body>
 </html>
+<script>
+(()=>{
+  const params=new URLSearchParams(window.location.search);
+  const mode=params.get('mode');
+  
+  if(mode==='pricing') openPricingModal();
+  
+  if(mode==='check'&&window.supabase){
+    (async()=>{
+      const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+      const{data:{session}}=await sb.auth.getSession();
+      if(!session){openPricingModal();return;}
+      try{
+        const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
+        if(subs?.status==='active'&&new Date(subs.expires_at)>new Date()){
+          window.location.href='app.html';
+        }else{openPricingModal();}
+      }catch(e){openPricingModal();}
+    })();
+  }
+})();
+</script>
