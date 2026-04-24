@@ -256,6 +256,26 @@ const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mT
 })();
 </script>
 
+let currentPeriod='monthly';
+
+function openPricingModal(){
+  document.getElementById('pricingModal').classList.add('active');
+}
+
+function closePricingModal(){
+  document.getElementById('pricingModal').classList.remove('active');
+}
+
+function setPeriod(period){
+  currentPeriod=period;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  const isYearly=period==='yearly';
+  document.getElementById('earlyPrice').innerHTML=`${isYearly?801:89}€<small>${isYearly?'/an':'/mois'}</small>`;
+  document.getElementById('proPrice').innerHTML=`${isYearly?1341:149}€<small>${isYearly?'/an':'/mois'}</small>`;
+}
+
 const PLANS={
   free:{name:'Essai',monthly:0,yearly:0,features:['Accès complet','Événements illimités','Cocktails illimités','Staff illimité','Devis watermark','Clients illimités','Export Excel/CSV','Analytics & marges','Non exploitable']},
   early:{name:'Accès Anticipé',monthly:89,yearly:801,features:['Événements illimités','Cocktails illimités','Staff illimité','Devis PDF custom','Clients illimités','Accès multi-device','Pas de limite de login','Support prioritaire']},
