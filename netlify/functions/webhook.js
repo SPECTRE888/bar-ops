@@ -1,13 +1,39 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2869
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;}
-{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
-{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\deftab720
-\pard\pardeftab720\partightenfactor0
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { createClient } = require('@supabase/supabase-js');
 
-\f0\fs24 \cf0 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 STRIPE_SECRET_KEY=sk_test_51TPeHTH4J8tDqadYJN2TZ5Fs54ZscxB3EaNdJ83DfEvkcSWSVPomzGcasr5npHuVGAnKA1iArZSZIbOyfcKRHsDd003H4F4mfR\
-STRIPE_WEBHOOK_SECRET=whsec_test_... (r\'e9cup\'e8re depuis Stripe Dashboard)\
-SUPABASE_URL=https://hrpcdtkhnewigewomcvv.supabase.co\
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
+
+  const sig = event.headers['stripe-signature'];
+  let stripeEvent;
+
+  try {
+    stripeEvent = stripe.webhooks.constructEvent(event.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return { statusCode: 400, body: `Webhook Error: ${err.message}` };
+  }
+
+  if (stripeEvent.type === 'checkout.session.completed') {
+    const session = stripeEvent.data.object;
+    const { user_id, plan, period } = session.metadata;
+
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + (period === 'yearly' ? 12 : 1));
+
+    const { error } = await supabase.from('subscriptions').insert([{
+      user_id, plan, period, status: 'active',
+      stripe_session_id: session.id,
+      stripe_subscription_id: session.subscription,
+      expires_at: expiresAt.toISOString(),
+    }]);
+
+    if (error) {
+      console.error('DB error:', error);
+      return { statusCode: 500, body: 'DB error' };
+    }
+  }
+
+  return { statusCode: 200, body: 'OK' };
+};

@@ -1,23 +1,30 @@
--- Run in Supabase SQL Editor
-CREATE TABLE subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  plan TEXT NOT NULL,
-  period TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  stripe_session_id TEXT UNIQUE,
-  stripe_subscription_id TEXT,
-  expires_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') return { statusCode: 405 };
 
-CREATE POLICY "users_own_subscriptions" ON subscriptions
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  const { plan, period, userId, priceInCents } = JSON.parse(event.body);
 
-CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
-CREATE INDEX idx_subscriptions_status ON subscriptions(status);
-CREATE INDEX idx_subscriptions_expires ON subscriptions(expires_at);
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: { name: `BAR OPS - ${plan}` },
+          unit_amount: priceInCents,
+          recurring: period === 'yearly' ? { interval: 'year' } : { interval: 'month' },
+        },
+        quantity: 1,
+      }],
+      mode: period === 'yearly' || plan === 'full' ? 'subscription' : 'payment',
+      success_url: `${process.env.URL}/index.html?mode=check`,
+      cancel_url: `${process.env.URL}/index.html?mode=pricing`,
+      metadata: { user_id: userId, plan, period },
+    });
+
+    return { statusCode: 200, body: JSON.stringify({ sessionId: session.id }) };
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+  }
+};
