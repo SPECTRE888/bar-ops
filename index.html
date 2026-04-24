@@ -223,24 +223,30 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 
 (async()=>{
-  const params=new URLSearchParams(window.location.search);
-  const mode=params.get('mode');
-  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-  const{data:{session}}=await sb.auth.getSession();
-  
-  if(mode==='pricing'){
-    openPricingModal();
-    return;
-  }
-  
-  if(mode==='check'&&session){
-    const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
-    const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
-    if(isActive){window.location.href='app.html';}else{openPricingModal();}
-    return;
-  }
-  
-  if(session){window.location.href='app.html';}
+  try{
+    if(!window.supabase)return;
+    const params=new URLSearchParams(window.location.search);
+    const mode=params.get('mode');
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    const{data:{session}}=await sb.auth.getSession();
+    
+    if(mode==='pricing'){
+      openPricingModal();
+      return;
+    }
+    
+    if(mode==='check'&&session){
+      try{
+        const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
+        const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+        if(isActive){window.location.href='app.html';return;}
+      }catch(e){console.log('No active sub');}
+      openPricingModal();
+      return;
+    }
+    
+    if(session){window.location.href='app.html';}
+  }catch(e){console.error('Auth check error:',e);}
 })();
 </script>
 
