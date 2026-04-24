@@ -6,6 +6,12 @@
 <title>BAR OPS — Gestion Événementielle Haut de Gamme</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
+</script>
 <style>
 :root{
   --bg:#080808;
@@ -330,6 +336,34 @@ function loginEmail(){
 function contactSales(){
   window.location.href='mailto:sales@bar-ops.fr?subject=Enterprise%20Plan';
 }
+
+// ═══ INIT ROUTING ═══
+(async()=>{
+  try{
+    if(!window.supabase)return;
+    const params=new URLSearchParams(window.location.search);
+    const mode=params.get('mode');
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    const{data:{session}}=await sb.auth.getSession();
+    
+    if(mode==='pricing'){
+      openPricingModal();
+      return;
+    }
+    
+    if(mode==='check'&&session){
+      try{
+        const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
+        const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+        if(isActive){window.location.href='app.html';return;}
+      }catch(e){console.log('No active sub');}
+      openPricingModal();
+      return;
+    }
+    
+    if(session){window.location.href='app.html';}
+  }catch(e){console.error('Auth check error:',e);}
+})();
 </script>
 
 </body>
