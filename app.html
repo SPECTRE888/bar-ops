@@ -518,10 +518,11 @@ select option{background:#151515}
 // ════════════════════════════════════════════════════════
 const CLOUD_SK='bcp_cloud';
 // ── Supabase config (system-level, not exposed to users) ──
-const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
 let cloudUser=null;
 let syncDebounceTimer=null;
+
+function showCloudModal(){} // Stub - real impl below
+function deleteAccountModal(){}
 
 function getSupabase(){
   return{url:SUPA_URL,key:SUPA_KEY};
