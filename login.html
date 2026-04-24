@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Connexion — BAR OPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080808;
+  --surface:#0f0f0f;
+  --text:#ede8e0;
+  --text2:#a09890;
+  --gold:#c4a46b;
+  --gold2:#d4b47a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#000;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+
+.login-container{background:var(--surface);border:1px solid #2a2a2a;border-radius:12px;padding:60px 48px;max-width:450px;width:90%;text-align:center}
+
+.login-container h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-bottom:12px;letter-spacing:.03em}
+
+.login-container p{color:var(--text2);font-size:13px;margin-bottom:40px;letter-spacing:.08em;text-transform:uppercase}
+
+.auth-buttons{display:flex;flex-direction:column;gap:16px;margin-bottom:32px}
+
+.btn-auth{padding:16px 24px;border:1px solid #2a2a2a;background:none;color:var(--text);border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;transition:.2s}
+
+.btn-auth:hover{border-color:var(--gold);color:var(--gold)}
+
+.btn-auth.google{border-color:var(--gold);color:var(--gold)}
+
+.divider{display:flex;align-items:center;gap:16px;margin:32px 0;color:var(--text2);font-size:12px}
+
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
+
+.form-group{text-align:left;margin-bottom:20px}
+
+.form-group label{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;color:var(--text2)}
+
+.form-group input{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid #2a2a2a;border-radius:5px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px}
+
+.form-group input::placeholder{color:var(--text2)}
+
+.form-group input:focus{outline:none;border-color:var(--gold)}
+
+.btn-submit{width:100%;padding:14px 24px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;transition:.2s;margin-top:24px}
+
+.btn-submit:hover{background:var(--gold2);transform:translateY(-2px)}
+
+.back-link{text-align:center;margin-top:32px}
+
+.back-link a{color:var(--text2);text-decoration:none;font-size:12px;letter-spacing:.08em;transition:.2s}
+
+.back-link a:hover{color:var(--gold)}
+
+footer{position:fixed;bottom:20px;left:20px;right:20px;text-align:center;color:var(--text2);font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="login-container">
+  <h1>BAR OPS</h1>
+  <p>Connectez-vous pour accéder aux plans</p>
+  
+  <div class="auth-buttons">
+    <button class="btn-auth google" onclick="loginGoogle()">Continuer avec Google</button>
+    <button class="btn-auth" onclick="toggleEmailForm()">Continuer avec Email</button>
+  </div>
+
+  <div id="emailForm" style="display:none">
+    <div class="divider">Ou</div>
+    
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="vous@example.com"/>
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••"/>
+    </div>
+    
+    <button class="btn-submit" onclick="loginEmail()">Se connecter</button>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← Retour</a>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 BAR OPS. Tous droits réservés.</p>
+</footer>
+
+<script>
+const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+
+function toggleEmailForm(){
+  const form=document.getElementById('emailForm');
+  form.style.display=form.style.display==='none'?'block':'none';
+}
+
+async function loginGoogle(){
+  window.location.href=`${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${window.location.origin}/index.html`;
+}
+
+async function loginEmail(){
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  
+  if(!email||!password){
+    alert('Remplis tous les champs');
+    return;
+  }
+  
+  try{
+    const{data,error}=await fetch(`${SUPA_URL}/auth/v1/signup`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY},
+      body:JSON.stringify({email,password})
+    }).then(r=>r.json());
+    
+    if(error){
+      alert('Erreur: '+error.message);
+      return;
+    }
+    
+    localStorage.setItem('bcp_session',data.session.access_token);
+    window.location.href='index.html?authenticated=true';
+  }catch(e){
+    alert('Erreur de connexion');
+    console.error(e);
+  }
+}
+</script>
+
+</body>
+</html>
