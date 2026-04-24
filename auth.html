@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Connexion — BAR OPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#080808;--surface:#0f0f0f;--text:#ede8e0;--text2:#a09890;--gold:#c4a46b;--gold2:#d4b47a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#000;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-container{background:var(--surface);border:1px solid #2a2a2a;border-radius:12px;padding:60px 48px;max-width:450px;width:100%;text-align:center}
+.auth-container h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-bottom:12px}
+.auth-container p{color:var(--text2);font-size:13px;margin-bottom:40px;letter-spacing:.08em;text-transform:uppercase}
+.auth-buttons{display:flex;flex-direction:column;gap:16px;margin-bottom:32px}
+.btn-auth{padding:16px 24px;border:1px solid #2a2a2a;background:none;color:var(--text);border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;transition:.2s}
+.btn-auth:hover{border-color:var(--gold);color:var(--gold)}
+.btn-auth.google{border-color:var(--gold);color:var(--gold)}
+.divider{display:flex;align-items:center;gap:16px;margin:32px 0;color:var(--text2);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
+.form-group{text-align:left;margin-bottom:20px}
+.form-group label{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;color:var(--text2)}
+.form-group input{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid #2a2a2a;border-radius:5px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px}
+.form-group input:focus{outline:none;border-color:var(--gold)}
+.btn-submit{width:100%;padding:14px 24px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;transition:.2s;margin-top:24px}
+.btn-submit:hover{background:var(--gold2)}
+.btn-submit:disabled{opacity:.5}
+.back-link{text-align:center;margin-top:32px}
+.back-link a{color:var(--text2);text-decoration:none;font-size:12px;transition:.2s}
+.back-link a:hover{color:var(--gold)}
+.message{padding:12px;border-radius:5px;margin-bottom:20px;font-size:12px;display:none}
+.message.success{background:rgba(106,170,136,.2);color:#6aaa88;display:block}
+.message.error{background:rgba(220,100,100,.2);color:#dc6464;display:block}
+.toggle-link{text-align:center;margin-top:16px;font-size:12px;color:var(--text2)}
+.toggle-link button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;font-family:'Jost',sans-serif}
+</style>
+</head>
+<body>
+
+<div class="auth-container">
+  <h1>BAR OPS</h1>
+  <p id="subtitle">Inscrivez-vous pour accéder aux plans</p>
+  
+  <div id="message" class="message"></div>
+  
+  <!-- SIGNUP FORM -->
+  <div id="signupForm">
+    <div class="auth-buttons">
+      <button class="btn-auth google" onclick="signupGoogle()">S'inscrire avec Google</button>
+      <button class="btn-auth" onclick="toggleEmailForm('signup')">S'inscrire avec Email</button>
+    </div>
+
+    <div id="signupEmailForm" style="display:none">
+      <div class="divider">Ou</div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="vous@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="signupPassword" placeholder="Minimum 6 caractères"/>
+      </div>
+      <button class="btn-submit" id="signupBtn" onclick="signupEmail()">S'inscrire</button>
+    </div>
+
+    <div class="toggle-link">
+      Vous avez déjà un compte? <button onclick="switchToLogin()">Se connecter</button>
+    </div>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div id="loginForm" style="display:none">
+    <div class="auth-buttons">
+      <button class="btn-auth google" onclick="loginGoogle()">Se connecter avec Google</button>
+      <button class="btn-auth" onclick="toggleEmailForm('login')">Se connecter avec Email</button>
+    </div>
+
+    <div id="loginEmailForm" style="display:none">
+      <div class="divider">Ou</div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="vous@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="loginPassword" placeholder="••••••••"/>
+      </div>
+      <button class="btn-submit" id="loginBtn" onclick="loginEmail()">Se connecter</button>
+    </div>
+
+    <div class="toggle-link">
+      Pas encore inscrit? <button onclick="switchToSignup()">S'inscrire</button>
+    </div>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← Retour</a>
+  </div>
+</div>
+
+<script>
+const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+
+function showMessage(msg,type){
+  const el=document.getElementById('message');
+  el.textContent=msg;
+  el.className='message '+type;
+  setTimeout(()=>{el.className='message'},5000);
+}
+
+function switchToLogin(){
+  document.getElementById('signupForm').style.display='none';
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('subtitle').textContent='Connectez-vous à votre compte';
+  document.getElementById('message').className='message';
+}
+
+function switchToSignup(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('signupForm').style.display='block';
+  document.getElementById('subtitle').textContent='Inscrivez-vous pour accéder aux plans';
+  document.getElementById('message').className='message';
+}
+
+function toggleEmailForm(type){
+  const formId=type==='signup'?'signupEmailForm':'loginEmailForm';
+  const form=document.getElementById(formId);
+  form.style.display=form.style.display==='none'?'block':'none';
+}
+
+async function signupGoogle(){
+  try{
+    const{error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:window.location.origin+'/index.html?mode=pricing'}
+    });
+    if(error)throw error;
+  }catch(e){
+    showMessage('Erreur: '+e.message,'error');
+  }
+}
+
+async function loginGoogle(){
+  try{
+    const{error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:window.location.origin+'/index.html?mode=check'}
+    });
+    if(error)throw error;
+  }catch(e){
+    showMessage('Erreur: '+e.message,'error');
+  }
+}
+
+async function signupEmail(){
+  const email=document.getElementById('signupEmail').value.trim();
+  const password=document.getElementById('signupPassword').value;
+  const btn=document.getElementById('signupBtn');
+  
+  if(!email||!password){
+    showMessage('Remplis tous les champs','error');
+    return;
+  }
+  
+  if(password.length<6){
+    showMessage('Mot de passe: 6+ caractères','error');
+    return;
+  }
+  
+  btn.disabled=true;
+  btn.textContent='...';
+  
+  try{
+    const{error}=await sb.auth.signUp({email,password});
+    if(error)throw error;
+    
+    localStorage.setItem('bcp_user',email);
+    showMessage('Inscription réussie! Redirection...','success');
+    setTimeout(()=>{window.location.href='index.html?mode=pricing'},2000);
+  }catch(e){
+    showMessage('Erreur: '+e.message,'error');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='S\'inscrire';
+  }
+}
+
+async function loginEmail(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const btn=document.getElementById('loginBtn');
+  
+  if(!email||!password){
+    showMessage('Remplis tous les champs','error');
+    return;
+  }
+  
+  btn.disabled=true;
+  btn.textContent='...';
+  
+  try{
+    const{error}=await sb.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    
+    localStorage.setItem('bcp_user',email);
+    showMessage('Connexion réussie!','success');
+    setTimeout(()=>{window.location.href='index.html?mode=check'},2000);
+  }catch(e){
+    showMessage('Email/mot de passe incorrect','error');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Se connecter';
+  }
+}
+
+(async()=>{
+  const{data}=await sb.auth.getSession();
+  if(data.session){
+    window.location.href='index.html?mode=check';
+  }
+})();
+</script>
+
+</body>
+</html>
