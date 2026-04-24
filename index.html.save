@@ -1,0 +1,308 @@
+G<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BAR OPS — Gestion Événementielle Haut de Gamme</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{
+  --bg:#080808;
+  --surface:#0f0f0f;
+  --text:#ede8e0;
+  --text2:#a09890;
+  --gold:#c4a46b;
+  --gold2:#d4b47a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:#000;color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3{font-family:'Cormorant Garamond',serif}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#080808 0%,#0f0f0f 100%);padding:40px 20px;text-align:center;border-bottom:1px solid #222}
+.hero h1{font-size:56px;font-weight:300;margin-bottom:16px;letter-spacing:.04em}
+.hero p{font-size:20px;color:var(--text2);margin-bottom:40px;max-width:600px;letter-spacing:.02em}
+.btn-primary{padding:14px 48px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-size:14px;font-weight:500;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;transition:.3s}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-2px);box-shadow:0 12px 32px rgba(196,164,107,.3)}
+
+/* ── FEATURES ── */
+.features{max-width:1200px;margin:80px auto;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px}
+.feature{text-align:center}
+.feature h3{font-size:18px;margin-bottom:12px;letter-spacing:.02em;font-weight:400}
+.feature p{color:var(--text2);font-size:13px;line-height:1.6;letter-spacing:.02em}
+
+/* ── PRICING MODAL ── */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.95);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal.active{display:flex}
+.modal-content{background:var(--surface);border:1px solid #222;border-radius:8px;padding:48px;max-width:1200px;width:95%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--text2);font-size:28px;cursor:pointer;transition:.2s}
+.modal-close:hover{color:var(--text)}
+
+.pricing-header{text-align:center;margin-bottom:40px}
+.pricing-header h2{font-size:40px;margin-bottom:16px;font-weight:300;letter-spacing:.03em}
+.toggle-period{display:flex;gap:12px;justify-content:center;align-items:center;margin-top:32px}
+.toggle-btn{padding:14px 40px;background:none;border:1px solid #2a2a2a;color:var(--text2);border-radius:5px;cursor:pointer;transition:.2s;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;width:150px;text-align:center}
+.toggle-btn:hover{border-color:var(--text)}
+.toggle-btn.active{background:var(--gold);color:#080808;border-color:var(--gold);box-shadow:0 4px 12px rgba(196,164,107,.25)}
+
+.pricing-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:40px;align-items:stretch}
+.price-card{border:1px solid #2a2a2a;border-radius:8px;padding:40px 24px;text-align:center;display:grid;grid-template-rows:auto auto auto 1fr auto;gap:0;height:100%;position:relative}
+.price-card.popular{border:2px solid var(--gold);box-shadow:inset 0 0 20px rgba(196,164,107,.1)}
+.price-card.popular::before{content:"POPULAIRE";position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:6px 16px;border-radius:4px;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+
+.price-card h3{font-size:28px;letter-spacing:.02em;font-weight:300;align-self:start}
+.price-tag{font-size:48px;font-family:'Cormorant Garamond',serif;font-weight:300;letter-spacing:.02em;margin:6px 0 0}
+.price-tag small{font-size:11px;color:var(--text2);letter-spacing:.1em;text-transform:uppercase;margin-left:6px}
+.price-desc{color:var(--text2);font-size:10px;letter-spacing:.12em;text-transform:uppercase;line-height:1.4;margin-top:10px;align-self:start}
+
+.price-features{text-align:left;font-size:11px;line-height:2;margin:24px 0;align-self:stretch}
+.price-features li{list-style:none;color:var(--text2);padding:0}
+.price-features li:before{content:"—  ";color:var(--gold);margin-right:8px}
+
+.price-card button{width:100%;padding:12px 20px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-weight:600;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:.2s;font-family:'Jost',sans-serif;font-size:11px;align-self:end}
+.price-card button:hover{background:var(--gold2);transform:translateY(-2px)}
+
+/* ── DISCOUNT BADGE ── */
+.discount-badge{display:inline;background:none;color:var(--gold);padding:0;font-size:9px;font-weight:600;letter-spacing:.08em;margin-left:4px;white-space:nowrap}
+/* ── AUTH GATE ── */
+.auth-section{background:var(--surface);border:1px solid #2a2a2a;border-radius:8px;padding:32px;margin-top:40px;text-align:center}
+.auth-section h3{margin-bottom:20px;font-size:16px;letter-spacing:.08em;text-transform:uppercase;font-weight:400}
+.auth-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.auth-btn{padding:12px 32px;border:1px solid #2a2a2a;background:none;color:var(--text2);border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
+.auth-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── FOOTER ── */
+footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:center;color:var(--text2);font-size:13px}
+
+@media(max-width:768px){
+  .hero h1{font-size:36px}
+  .hero p{font-size:16px}
+  .price-card.popular{transform:scale(1)}
+  .modal-content{padding:32px 20px}
+  .pricing-header h2{font-size:28px}
+  .pricing-cards{grid-template-columns:1fr 1fr 1fr;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <h1>BAR OPS</h1>
+  <p>Gestion d'événements haut de gamme. Devis, staff, logistique — tout centralisé.</p>
+  <button class="btn-primary" onclick="openPricingModal()">Commencer Maintenant</button>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features">
+  <div class="feature">
+    <h3>Cocktails</h3>
+    <p>Gérez votre catalogue, coûts et marges. Devis auto-générés.</p>
+  </div>
+  <div class="feature">
+    <h3>Staff & Équipe</h3>
+    <p>Assignez bartenders, serveurs, managers. Tracking temps réel.</p>
+  </div>
+  <div class="feature">
+    <h3>Logistique</h3>
+    <p>Listes de courses, matériel, livraisons. Rien n'est oublié.</p>
+  </div>
+  <div class="feature">
+    <h3>Analytics</h3>
+    <p>Historique, marges, événements. Data complète.</p>
+  </div>
+</section>
+
+<!-- ═══ PRICING MODAL ═══ -->
+<div id="pricingModal" class="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closePricingModal()">×</button>
+    
+    <div class="pricing-header">
+      <h2>Choisissez votre plan</h2>
+      <div class="toggle-period">
+        <button class="toggle-btn active" onclick="setPeriod('monthly')">Mensuel</button>
+        <button class="toggle-btn" onclick="setPeriod('yearly')">Annuel<span class="discount-badge"> −10%</span></button>
+      </div>
+    </div>
+
+    <div class="pricing-cards">
+      <!-- Free Try Mode -->
+      <div class="price-card" id="freeCard">
+        <h3>Essai</h3>
+        <div class="price-tag" id="freePrice">Gratuit<small></small></div>
+        <p class="price-desc">Accès complet • Non exploitable</p>
+        <ul class="price-features">
+          <li>Événements illimités</li>
+          <li>Cocktails illimités</li>
+          <li>Staff illimité</li>
+          <li>Devis PDF (watermark)</li>
+          <li>Clients illimités</li>
+          <li>Export (Excel, CSV)</li>
+          <li>Analytics & marges</li>
+          <li>Planning mensuel</li>
+          <li>Support email</li>
+        </ul>
+        <button onclick="startCheckout('free')">Essayer</button>
+      </div>
+
+      <!-- Early Access -->
+      <div class="price-card" id="earlyCard">
+        <h3>Accès Anticipé</h3>
+        <div class="price-tag" id="earlyPrice">89€<small>/mois</small></div>
+        <p class="price-desc">20 premiers utilisateurs • Valable 1 an</p>
+        <ul class="price-features">
+          <li>Événements illimités</li>
+          <li>Cocktails illimités</li>
+          <li>Staff illimité</li>
+          <li>Devis PDF custom</li>
+          <li>Clients illimités</li>
+          <li>Accès multi-device</li>
+          <li>Pas de limite de login</li>
+          <li>Support prioritaire</li>
+        </ul>
+        <button onclick="startCheckout('early')">Souscrire</button>
+      </div>
+
+      <!-- Pro -->
+      <div class="price-card popular" id="proCard">
+        <h3>Professionnel</h3>
+        <div class="price-tag" id="proPrice">149€<small>/mois</small></div>
+        <p class="price-desc">1 compte principal</p>
+        <ul class="price-features">
+          <li>Événements illimités</li>
+          <li>Cocktails illimités</li>
+          <li>Staff illimité</li>
+          <li>Devis PDF custom</li>
+          <li>Clients illimités</li>
+          <li>Accès multi-device</li>
+          <li>Pas de limite de login</li>
+          <li>Support prioritaire</li>
+        </ul>
+        <button onclick="startCheckout('pro')">Souscrire</button>
+      </div>
+
+      <!-- Full -->
+      <div class="price-card" id="fullCard">
+        <h3>Complet</h3>
+        <div class="price-tag" id="fullPrice">299€<small>/an</small></div>
+        <p class="price-desc">À venir</p>
+        <ul class="price-features">
+          <li>Tout Professionnel +</li>
+          <li>Multi-utilisateurs</li>
+          <li>Permissions RLS</li>
+          <li>Accès API</li>
+          <li>Webhooks</li>
+          <li>IA avancée</li>
+          <li>Support 24/7</li>
+          <li>Intégrations avancées</li>
+        </ul>
+        <button onclick="startCheckout('full')" style="opacity:.5;cursor:not-allowed">À venir</button>
+      </div>
+    </div>
+
+    <!-- Auth Gate -->
+    <div class="auth-section">
+      <h3>Connectez-vous pour continuer</h3>
+      <div class="auth-buttons">
+        <button class="auth-btn" onclick="loginGoogle()">Google</button>
+        <button class="auth-btn" onclick="loginEmail()">Email</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 BAR OPS. Tous droits réservés.</p>
+</footer>
+
+<script>
+const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
+
+const PLANS={
+  free:{name:'Essai',monthly:0,yearly:0,features:['Accès complet','Événements illimités','Cocktails illimités','Staff illimité','Devis watermark','Clients illimités','Export Excel/CSV','Analytics & marges','Non exploitable']},
+  early:{name:'Accès Anticipé',monthly:89,yearly:801,features:['Événements illimités','Cocktails illimités','Staff illimité','Devis PDF custom','Clients illimités','Accès multi-device','Pas de limite de login','Support prioritaire']},
+  pro:{name:'Professionnel',monthly:149,yearly:1341,features:['Événements illimités','Cocktails illimités','Staff illimité','Devis PDF custom','Clients illimités','Accès multi-device','Pas de limite de login','Support prioritaire']},
+  full:{name:'Complet',monthly:0,yearly:299,features:['Tout Professionnel +','Multi-utilisateurs','Permissions RLS','Accès API','Webhooks','IA avancée','Support 24/7','Intégrations avancées']}
+};
+
+let currentPeriod='monthly';
+
+function openPricingModal(){
+  document.getElementById('pricingModal').classList.add('active');
+}
+
+function closePricingModal(){
+  document.getElementById('pricingModal').classList.remove('active');
+}
+
+function setPeriod(period){
+  currentPeriod=period;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  const isYearly=period==='yearly';
+  
+  // Update Early Access
+  const earlyPrice=isYearly?801:89;
+  document.getElementById('earlyPrice').innerHTML=`${earlyPrice}€<small>${isYearly?'/an':'/mois'}</small>`;
+  
+  // Update Pro
+  const proPrice=isYearly?1341:149;
+  document.getElementById('proPrice').innerHTML=`${proPrice}€<small>${isYearly?'/an':'/mois'}</small>`;
+  
+  // Full stays yearly only
+  document.getElementById('fullPrice').innerHTML='299€<small>/an</small>';
+}
+
+async function startCheckout(plan){
+  const authSection=document.getElementById('pricingModal').querySelector('.auth-section');
+  if(authSection && authSection.style.display!=='none'){
+    alert('Connectez-vous d\'abord');
+    return;
+  }
+  
+  try{
+    const price=currentPeriod==='yearly'?PLANS[plan].yearly:PLANS[plan].monthly;
+    const res=await fetch('/.netlify/functions/subscription',{
+      method:'POST',
+      body:JSON.stringify({
+        plan:plan,
+        period:currentPeriod,
+        userId:localStorage.getItem('user_id'),
+        priceInCents:Math.round(price*100)
+      })
+    }).then(r=>r.json());
+    
+    if(res.sessionId){
+      const stripe=Stripe(STRIPE_KEY);
+      stripe.redirectToCheckout({sessionId:res.sessionId});
+    }
+  }catch(e){
+    console.error(e);
+    alert('Erreur checkout');
+  }
+}
+
+async function loginGoogle(){
+  // Redirect to Supabase auth
+  window.location.href=`${SUPA_URL}/auth/v1/authorize?provider=google&redirect_to=${window.location.origin}/index.html`;
+}
+
+function loginEmail(){
+  const email=prompt('Votre email:');
+  if(!email)return;
+  // Simple magic link or password
+  alert('Email reçu. Vérifiez votre boîte.');
+}
+
+function contactSales(){
+  window.location.href='mailto:sales@bar-ops.fr?subject=Enterprise%20Plan';
+}
+</script>
+
+</body>
+</html>
