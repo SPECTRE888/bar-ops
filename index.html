@@ -125,6 +125,25 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 let currentPeriod='monthly';
 
+// CHECK SESSION ON LOAD
+(async()=>{
+  if(!window.supabase)return;
+  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  const{data:{session}}=await sb.auth.getSession();
+  
+  if(session){
+    try{
+      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+        window.location.href='app.html';
+        return;
+      }
+    }catch(e){}
+    document.getElementById('pricingModal').classList.add('active');
+  }
+})();
+</script>
+
 function setPeriod(p){
   currentPeriod=p;
   document.getElementById('btn-monthly').classList.toggle('active',p==='monthly');
@@ -146,25 +165,6 @@ async function goPay(plan, price){
   }catch(e){alert('Erreur: '+e.message);}
 }
 
-// Handle redirects from auth
-(async()=>{
-  if(!window.supabase)return;
-  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session)return;
-
-  // After Google auth — check subscription
-  try{
-    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
-    if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
-      window.location.href='app.html';
-      return;
-    }
-  }catch(e){}
-  
-  // No active subscription → show pricing
-  document.getElementById('pricingModal').classList.add('active');
-})();
 </script>
 </body>
 </html>
