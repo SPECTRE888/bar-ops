@@ -2496,10 +2496,10 @@ function renderDashboard(){
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">CA</div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1">${totalFacture.toFixed(0)}€</div>
       <div style="height:1px;background:var(--gold-border);margin:16px 0"></div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.6">
-        <div>Acompte: <span style="color:var(--green);font-weight:500">${totalAcompte.toFixed(0)}€</span></div>
-        <div>Versé: <span style="color:var(--gold);font-weight:500">${totalEncaisse.toFixed(0)}€</span></div>
-        <div>Prestation payée: <span style="color:var(--text);font-weight:500">${totalPaid.toFixed(0)}€</span></div>
+      <div style="font-size:11px;color:var(--text2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+        <div><span style="color:var(--green);font-weight:500">${totalAcompte.toFixed(0)}€</span><div style="margin-top:3px;color:var(--text3);font-size:9px">Acompte</div></div>
+        <div><span style="color:var(--gold);font-weight:500">${totalEncaisse.toFixed(0)}€</span><div style="margin-top:3px;color:var(--text3);font-size:9px">Versé</div></div>
+        <div><span style="color:var(--text);font-weight:500">${totalPaid.toFixed(0)}€</span><div style="margin-top:3px;color:var(--text3);font-size:9px">Payée</div></div>
       </div>
     </div>
     <div class="card" style="padding:16px;cursor:pointer;text-align:center" onclick="goPage('catalogue')">
