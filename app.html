@@ -6751,7 +6751,9 @@ function applyLang(){
 
 load();
 lang=localStorage.getItem('bcp_lang')||'fr';
-cloudRestoreSession();
+// Sync cloudUser from window (set by paywall script) or localStorage
+if(window.cloudUser&&window.cloudUser.access_token) cloudUser=window.cloudUser;
+else cloudRestoreSession();
 applyTheme();
 handleExternalParams();
 injectMoninSyrups();
