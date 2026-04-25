@@ -1784,26 +1784,22 @@ function selectClientFromSearch(clientId){
   
   window._selectedClientId=clientId;
   
-  console.log('Filling event form fields...');
-  console.log('ef-addr exists:', !!document.getElementById('ef-addr'));
-  console.log('ef-email exists:', !!document.getElementById('ef-email'));
-  console.log('ef-phone exists:', !!document.getElementById('ef-phone'));
-  console.log('ef-contact exists:', !!document.getElementById('ef-contact'));
+  // First link client to event (this renders the form)
+  linkClientToEvent(clientId);
   
-  // Auto-fill ALL client fields into event form
-  document.getElementById('ef-client-search').value=client.name||'';
-  if(document.getElementById('ef-addr')) document.getElementById('ef-addr').value=client.address||'';
-  if(document.getElementById('ef-contact')) document.getElementById('ef-contact').value=client.name+(client.phone?` · ${client.phone}`:'')||'';
-  if(document.getElementById('ef-email')) document.getElementById('ef-email').value=client.email||'';
-  if(document.getElementById('ef-phone')) document.getElementById('ef-phone').value=client.phone||'';
-  if(document.getElementById('ef-notes')) document.getElementById('ef-notes').value=client.notes||'';
-  
-  console.log('Fields filled');
+  // THEN fill fields (after form is rendered)
+  setTimeout(()=>{
+    console.log('Filling event form fields...');
+    if(document.getElementById('ef-addr')) document.getElementById('ef-addr').value=client.address||'';
+    if(document.getElementById('ef-contact')) document.getElementById('ef-contact').value=client.name||'';
+    if(document.getElementById('ef-email')) document.getElementById('ef-email').value=client.email||'';
+    if(document.getElementById('ef-phone')) document.getElementById('ef-phone').value=client.phone||'';
+    if(document.getElementById('ef-notes')) document.getElementById('ef-notes').value=client.notes||'';
+    console.log('Fields filled');
+  }, 0);
   
   document.getElementById('ef-client-list').style.display='none';
   document.getElementById('ef-client-form').style.display='none';
-  
-  linkClientToEvent(clientId);
 }
 
 function cancelClientForm(){
