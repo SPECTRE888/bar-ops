@@ -729,8 +729,11 @@ async function cloudRefreshSession(){
     });
     if(!r.ok){
       if(r.status===400||r.status===401){
-        cloudUser=null;
-        localStorage.removeItem('bcp_session');
+        // Only clear if no existing valid token
+        if(!extractToken(cloudUser)){
+          cloudUser=null;
+          localStorage.removeItem('bcp_session');
+        }
       }
       return false;
     }
@@ -6761,8 +6764,7 @@ updateCloudStatus();
   if(cloudUser){
     const refreshed=await cloudRefreshSession();
     console.log('Session refresh result:',refreshed,'cloudUser after:',!!cloudUser);
-    if(!refreshed){
-      cloudUser=null;
+    if(!refreshed&&!cloudUser){
       localStorage.removeItem('bcp_session');
       updateCloudStatus();
       injectDemoData();
