@@ -32,6 +32,14 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       }
     }
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+    // Fallback: if no subscription after retries, allow trial access
+    if(!isActive&&!subs){
+      console.log('No subscription found - allowing trial access');
+      window.cloudUser=session.user;
+      window._userEmail=session.user.email;
+      window._userPlan='trial';
+      return;
+    }
     if(!isActive){window.location.href='index.html?mode=pricing';return;}
     
     window.cloudUser=session.user;
