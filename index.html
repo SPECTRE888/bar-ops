@@ -129,18 +129,19 @@ let currentPeriod='monthly';
 (async()=>{
   if(!window.supabase)return;
   const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-  const{data:{session}}=await sb.auth.getSession();
   
-  if(session){
-    try{
-      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
-      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
-        window.location.href='app.html';
-        return;
-      }
-    }catch(e){}
-    document.getElementById('pricingModal').classList.add('active');
-  }
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(session){
+      try{
+        const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+        if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+          window.location.href='app.html';
+          return;
+        }
+      }catch(e){}
+      document.getElementById('pricingModal').classList.add('active');
+    }
+  });
 })();
 </script>
 
