@@ -67,7 +67,9 @@ input:focus{outline:none;border-color:var(--gold)}
 <script>
 const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
-const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{
+  auth:{detectSessionInUrl:true,persistSession:true}
+});
 
 function show(v){
   document.getElementById('view-signup').style.display=v==='signup'?'block':'none';
@@ -96,7 +98,7 @@ async function redirect(userId){
 async function googleAuth(){
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://animated-bombolone-8fba95.netlify.app/auth.html?mode=callback'}
+    options:{redirectTo:'https://animated-bombolone-8fba95.netlify.app/auth.html'}
   });
   if(error)msg(error.message,'err');
 }
@@ -139,3 +141,13 @@ async function emailLogin(){
 </script>
 </body>
 </html>
+<script>
+// Always check session on load (handles Google redirect)
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){await redirect(session.user.id);return;}
+  sb.auth.onAuthStateChange(async(e,s)=>{
+    if(e==='SIGNED_IN'&&s)await redirect(s.user.id);
+  });
+})();
+</script>
