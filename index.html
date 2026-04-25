@@ -163,6 +163,20 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
 // SESSION CHECK
 (async()=>{
   const mode=new URLSearchParams(window.location.search).get('mode');
+  
+  // Handle post-payment redirect
+  if(mode==='check'){
+    const{data:{session}}=await sb.auth.getSession();
+    if(!session)return;
+    try{
+      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+        window.location.href='app.html';
+        return;
+      }
+    }catch(e){}
+  }
+  
   if(mode==='pricing') document.getElementById('pricingModal').classList.add('active');
   if(!window.supabase)return;
   const{data:{session}}=await sb.auth.getSession();
