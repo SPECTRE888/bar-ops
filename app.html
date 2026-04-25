@@ -20,7 +20,8 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     if(!session){window.location.href='index.html?mode=pricing';return;}
     
     try{
-      const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
+      const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1);
+      const subs=subsArr?.[0];
       const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
       if(!isActive){window.location.href='index.html?mode=pricing';return;}
     }catch(e){

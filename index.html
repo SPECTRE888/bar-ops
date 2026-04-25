@@ -174,7 +174,7 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
     
     // Retry subscription check (webhook delay)
     for(let i=0;i<5;i++){
-      const{data,error}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+      const{data,error}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1).then(r=>({data:r.data?.[0],error:r.error}));
       if(!error&&data?.status==='active'&&new Date(data.expires_at)>new Date()){
         console.log('Active subscription found');
         window.location.href='app.html';
@@ -199,7 +199,7 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
   }
   if(mode==='pricing')return;
   try{
-    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1).then(r=>({data:r.data?.[0],error:r.error}));
     if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
       window.location.href='app.html';
     }else{
