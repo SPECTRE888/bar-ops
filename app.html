@@ -1777,10 +1777,18 @@ function clientSearchFilter(){
 }
 
 function selectClientFromSearch(clientId){
+  console.log('selectClientFromSearch called with clientId:', clientId);
   const client=state.clients.find(c=>c.id===clientId);
+  console.log('found client:', client);
   if(!client) return;
   
   window._selectedClientId=clientId;
+  
+  console.log('Filling event form fields...');
+  console.log('ef-addr exists:', !!document.getElementById('ef-addr'));
+  console.log('ef-email exists:', !!document.getElementById('ef-email'));
+  console.log('ef-phone exists:', !!document.getElementById('ef-phone'));
+  console.log('ef-contact exists:', !!document.getElementById('ef-contact'));
   
   // Auto-fill ALL client fields into event form
   document.getElementById('ef-client-search').value=client.name||'';
@@ -1789,6 +1797,8 @@ function selectClientFromSearch(clientId){
   if(document.getElementById('ef-email')) document.getElementById('ef-email').value=client.email||'';
   if(document.getElementById('ef-phone')) document.getElementById('ef-phone').value=client.phone||'';
   if(document.getElementById('ef-notes')) document.getElementById('ef-notes').value=client.notes||'';
+  
+  console.log('Fields filled');
   
   document.getElementById('ef-client-list').style.display='none';
   document.getElementById('ef-client-form').style.display='none';
