@@ -110,7 +110,7 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
         <button onclick="goPay('pro', currentPeriod==='yearly'?1341:149)">Souscrire</button>
       </div>
     </div>
-    <div class="auth-cta">
+    <div class="auth-cta" id="auth-cta">
       <p>Vous avez déjà un compte ?</p>
       <button class="btn-auth-modal" onclick="window.location.href='auth.html'">Se connecter</button>
     </div>
@@ -130,25 +130,25 @@ let currentPeriod='monthly';
   const mode=new URLSearchParams(window.location.search).get('mode');
   if(mode==='pricing'){
     document.getElementById('pricingModal').classList.add('active');
-    return;
   }
   if(!window.supabase)return;
-  const hash=window.location.hash;
-  const isAuthRedirect=hash.includes('access_token')||hash.includes('type=signup');
-  if(!isAuthRedirect)return;
-  
   const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-  sb.auth.onAuthStateChange(async(event,session)=>{
-    if(!session)return;
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){
+    const cta=document.getElementById('auth-cta');
+    if(cta)cta.style.display='none';
+    if(mode==='pricing')return;
     try{
       const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
       if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
         window.location.href='app.html';
-        return;
+      }else{
+        document.getElementById('pricingModal').classList.add('active');
       }
-    }catch(e){}
-    document.getElementById('pricingModal').classList.add('active');
-  });
+    }catch(e){
+      document.getElementById('pricingModal').classList.add('active');
+    }
+  }
 })();
 </script>
 
