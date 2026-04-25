@@ -32,7 +32,6 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     
     window.cloudUser=session.user;
     window._userEmail=session.user.email;
-    // Display email in sidebar
     const sel=document.getElementById('sidebar-user');
     if(sel)sel.textContent='● '+session.user.email;
   }catch(e){
@@ -5700,7 +5699,7 @@ function confirmJSONProducts(products,cat){
 // ════════════════════════════════════════════════════════
 function renderProfile(){
   const el=document.getElementById('profile-content');if(!el)return;
-  const email=cloudUser?.user?.email||cloudUser?.email||'';
+  const email=cloudUser?.email||cloudUser?.user?.email||'';
   const isConnected=!!cloudUser;
 
   el.innerHTML=`<div style="max-width:480px">
