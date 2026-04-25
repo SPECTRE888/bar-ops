@@ -5699,8 +5699,8 @@ function confirmJSONProducts(products,cat){
 // ════════════════════════════════════════════════════════
 function renderProfile(){
   const el=document.getElementById('profile-content');if(!el)return;
-  const email=cloudUser?.email||cloudUser?.user?.email||'';
-  const isConnected=!!cloudUser;
+  const email=window._userEmail||cloudUser?.email||cloudUser?.user?.email||'';
+  const isConnected=!!email;
 
   el.innerHTML=`<div style="max-width:480px">
 
