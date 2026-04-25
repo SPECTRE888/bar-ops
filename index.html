@@ -7,6 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
+<script>
+function setPeriod(p){if(window._setPeriod)window._setPeriod(p);}
+function goPay(plan){if(window._goPay)window._goPay(plan);}
+</script>
 <style>
 :root{--bg:#080808;--surface:#0f0f0f;--text:#ede8e0;--text2:#a09890;--gold:#c4a46b;--gold2:#d4b47a}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -152,17 +156,16 @@ let currentPeriod='monthly';
 })();
 </script>
 
-function setPeriod(p){
+function _setPeriod(p){
   currentPeriod=p;
   document.getElementById('btn-monthly').classList.toggle('active',p==='monthly');
   document.getElementById('btn-yearly').classList.toggle('active',p==='yearly');
   document.getElementById('price-early').innerHTML=p==='yearly'?'801€<small>/an</small>':'89€<small>/mois</small>';
   document.getElementById('price-pro').innerHTML=p==='yearly'?'1341€<small>/an</small>':'149€<small>/mois</small>';
 }
+window._setPeriod=_setPeriod;
 
-const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
-
-async function goPay(plan){
+async function _goPay(plan){
   if(plan==='free'){window.location.href='app.html';return;}
   const price=PRICES[plan][currentPeriod];
   const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
@@ -178,6 +181,7 @@ async function goPay(plan){
     if(sessionId) Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
   }catch(e){alert('Erreur: '+e.message);}
 }
+window._goPay=_goPay;
 
 </script>
 </body>
