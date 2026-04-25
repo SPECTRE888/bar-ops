@@ -626,6 +626,8 @@ async function cloudSignIn(email,password){
     };
     cloudUser=normalized;
     localStorage.setItem('bcp_session',JSON.stringify(normalized));
+    // Create/ensure workspaces table row
+    await ensureWorkspace();
     return{ok:true};
   }catch(e){return{error:'Erreur réseau'};}
 }
@@ -658,10 +660,29 @@ async function cloudSignUp(email,password){
   }catch(e){return{error:'Erreur réseau'};}
 }
 
-function cloudSignOut(){
-  cloudUser=null;
-  localStorage.removeItem('bcp_session');
-  updateCloudStatus();
+async function ensureWorkspace(){
+  if(!cloudUser) return false;
+  const{url,key}=getSupabase();if(!url) return false;
+  const uid=extractUid(cloudUser);
+  const token=extractToken(cloudUser);
+  if(!uid||!token) return false;
+  try{
+    const r=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}`,{
+      headers:{'apikey':key,'Authorization':'Bearer '+token}
+    });
+    if(!r.ok) return false;
+    const rows=await r.json();
+    // If no row exists, create one
+    if(Array.isArray(rows)&&rows.length===0){
+      const cr=await fetch(`${url}/rest/v1/workspaces`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+token},
+        body:JSON.stringify({user_id:uid,data:JSON.stringify(state)})
+      });
+      return cr.ok;
+    }
+    return true;
+  }catch(e){return false;}
 }
 
 function deleteAccountModal(){
