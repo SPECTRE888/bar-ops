@@ -6,43 +6,35 @@
 <title>BAR OPS — Event Excellence Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://js.stripe.com/v3/"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.STRIPE_PUBLIC_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 
-</script>
 const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
-const sb=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
-
-async function logout(){
-  if(sb)await sb.auth.signOut();
-  window.location.href='index.html';
-}
 
 (async()=>{
   try{
-    if(!window.supabase||!sb)return;
+    if(!window.supabase)return;
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='index.html?mode=pricing';return;}
     
-    const el=document.getElementById('user-name');
-    const avatar=document.getElementById('user-avatar');
-    if(el){
-      el.textContent=session.user.email;
-      const first=session.user.email?.[0].toUpperCase();
-      if(avatar)avatar.textContent=first;
+    try{
+      const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
+      const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+      if(!isActive){window.location.href='index.html?mode=pricing';return;}
+    }catch(e){
+      console.log('No subscription found');
+      window.location.href='index.html?mode=pricing';
+      return;
     }
     
-    const{data:subs}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).single();
-    const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
-    
-    if(!isActive){window.location.href='index.html?mode=pricing';return;}
     window.cloudUser=session.user;
   }catch(e){
-    console.error('Auth:',e);
+    console.error('Paywall error:',e);
     window.location.href='index.html?mode=pricing';
   }
 })();
+</script>
 <style>
 :root{
   --bg:#080808;
@@ -246,17 +238,6 @@ select option{background:#151515}
 </style>
 </head>
 <body>
-<!-- USER PROFILE HEADER -->
-<div style="background:linear-gradient(90deg,#0f0f0f 0%,#1a1a1a 100%);border-bottom:1px solid #2a2a2a;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-size:12px">
-  <div style="display:flex;align-items:center;gap:12px">
-    <div style="width:32px;height:32px;border-radius:50%;background:#c4a46b;display:flex;align-items:center;justify-content:center;color:#080808;font-weight:600;font-size:14px" id="user-avatar">B</div>
-    <div>
-      <div style="color:#ede8e0;font-weight:500;font-size:13px" id="user-name">Connecté</div>
-      <div style="color:#a09890;font-size:11px;margin-top:2px">● ONLINE</div>
-    </div>
-  </div>
-  <button onclick="logout()" style="background:none;border:1px solid #2a2a2a;color:#c4a46b;padding:8px 14px;border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:.2s;hover:border-color:#d4b47a">Déconnexion</button>
-</div>
 <div class="shell">
 
 <!-- SIDEBAR -->
@@ -318,6 +299,11 @@ select option{background:#151515}
     </div>
 
   </nav>
+  <div class="save-status"><div class="save-dot" id="save-dot"></div><span id="save-text">Sauvegardé</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:5px;cursor:pointer" onclick="showCloudModal()" title="Synchronisation cloud">
+      <div id="cloud-dot" style="width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0"></div>
+      <span id="cloud-text" style="font-size:8px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Hors ligne</span>
+    </div>
   </div>
   <div style="padding:8px 18px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)">
     <div style="display:flex;gap:1px">
