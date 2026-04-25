@@ -4739,57 +4739,37 @@ function buildPrestHTML(ev){
 
 async function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
-  if(!ev||!ev.contactEmail){alert('Événement sans email contact.');return;}
-  
+  const email=ev?.contactEmail||ev?.email||'';
+  if(!ev||!email){alert('Aucun email trouvé sur cet événement.');return;}
+  const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
+  const devisHTML=buildDevisHTML(ev,devisNum);
+  const htmlBase64=btoa(unescape(encodeURIComponent(devisHTML)));
+  const body=`<div style="font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px">
+    <div style="font-size:22px;margin-bottom:8px">Votre devis — ${ev.name}</div>
+    <p style="color:#555;margin-bottom:16px">Bonjour,<br/><br/>Veuillez trouver ci-joint votre devis <strong>${devisNum}</strong>.<br/><br/>N'hésitez pas à nous contacter pour toute question.</p>
+    <p style="color:#555">Cordialement,<br/><strong>${sigName}</strong></p>
+  </div>`;
   try{
-    // Generate PDF as base64
-    const pdfWindow=window.open('','_blank');
-    const devisHTML=generateDevisHTML(ev,devisNum);
-    pdfWindow.document.write(devisHTML);
-    pdfWindow.document.close();
-    
-    // Get PDF content via print
-    const canvas=await html2canvas(pdfWindow.document.body);
-    const pdfBase64='data:application/pdf;base64,...'; // Placeholder
-    
-    const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
-    const emailHTML=`<p>Bonjour,</p>
-    <p>Veuillez trouver ci-joint votre devis ${devisNum}.</p>
-    <p>N'hésitez pas à nous contacter pour toute question.</p>
-    <p>Cordialement,<br/>${sigName}</p>`;
-    
-    const response=await fetch('/.netlify/functions/send-quote',{
+    const r=await fetch('/.netlify/functions/send-quote',{
       method:'POST',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        to:ev.contactEmail,
+        to:email,
         subject:`Devis ${devisNum} — ${ev.name}`,
-        html:emailHTML,
-        pdfBase64,
-        pdfFilename:`Devis-${devisNum}.pdf`,
-        fromEmail:state.profile?.email||'noreply@barops.app',
+        html:body,
+        pdfBase64:'data:text/html;base64,'+htmlBase64,
+        pdfFilename:`Devis-${devisNum}.html`,
+        fromEmail:'noreply@barops.app',
         fromName:sigName
       })
     });
-    
-    const result=await response.json();
-    if(result.success){
-      log('📧 Devis '+devisNum+' envoyé à '+ev.contactEmail);
-      toast('Devis envoyé à '+ev.contactEmail);
-    }else{
-      alert('Erreur envoi email: '+result.error);
-    }
-  }catch(e){
-    console.error('Send quote error:',e);
-    alert('Erreur: '+e.message);
-  }
+    const res=await r.json();
+    if(res.success){toast('📧 Devis envoyé à '+email);}
+    else{alert('Erreur: '+res.error);}
+  }catch(e){alert('Erreur: '+e.message);}
 }
 
-function generateDevis(){
-  const evId=parseInt(document.getElementById('prest-ev-sel')?.value||0);
-  if(!evId){alert('Sélectionne un événement dans le select.');return;}
-  const ev=state.events.find(x=>x.id===evId);
-  if(!ev){alert('Événement introuvable.');return;}
-
+function buildDevisHTML(ev,devisNum){
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const cocktailLines=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';
@@ -4803,6 +4783,74 @@ function generateDevis(){
       <td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:right">${totalTTC}€</td>
     </tr>`;
   }).filter(Boolean).join('');
+  const deliveryBill=ev.deliveryBillHT||0;
+  const extraBill=ev.extraBillHT||0;
+  const cocktailTotalHT=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT:0);},0);
+  const cocktailTotalTTC=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||10)/100):0);},0);
+  const today=new Date().toLocaleDateString('fr-FR');
+  const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
+  const staffLines=[];let staffTotalHT=0;
+  const staffRoles=[
+    {label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender','Head Bartender','Bar Supervisor']},
+    {label:'Serveur',n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',types:['Waiter/Server']},
+    {label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',types:['Bar Manager']},
+  ];
+  staffRoles.forEach(r=>{
+    if(!r.n)return;
+    const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));
+    const billHT=s?.billHT||0;let hrs=0;
+    if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);hrs=Math.max(0,((dh*60+dm)-(ah*60+am))/60);}
+    const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);staffTotalHT+=totalHT;
+    const hoursStr=hrs>0?`${hrs.toFixed(1)}h`:'—';const rateStr=billHT>0?(s?.per==='per event'?billHT.toFixed(2)+'€/event':billHT.toFixed(2)+'€/h'):'—';
+    staffLines.push(`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">${r.label}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.n}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.arr&&r.dep?r.arr+'–'+r.dep:'—'}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${hoursStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${rateStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${totalHT>0?totalHT.toFixed(2)+'€ HT':'—'}</td></tr>`);
+  });
+  const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill;
+  const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <title>Devis — ${ev.name}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;padding:48px 56px;max-width:860px;margin:0 auto}h1{font-family:'DM Serif Display',serif;font-weight:400}.label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#999;margin-bottom:6px}table{width:100%;border-collapse:collapse}thead tr{border-bottom:2px solid #1a1a1a}th{padding:10px 16px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:500}.section{margin-bottom:36px}.total-box{background:#f8f6f2;padding:20px 24px;border-radius:4px;margin-top:32px;max-width:300px;margin-left:auto}.total-line{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#555;border-bottom:1px solid #eee}.total-final{display:flex;justify-content:space-between;padding:12px 0 0;font-size:18px;font-family:'DM Serif Display',serif}@media print{.no-print{display:none!important};body{padding:24px}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
+  ${!isPro?`<div id="watermark">TRIAL</div>`:''}
+  <div style="text-align:center;margin-bottom:48px;padding-bottom:32px;border-bottom:2px solid #1a1a1a">
+    ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:72px;max-width:220px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto"/>`:''}
+    <div style="font-size:28px;font-family:'DM Serif Display',serif;letter-spacing:.02em">${state.profile?.barName||state.profile?.companyName||''}</div>
+    ${state.profile?.city?`<div style="color:#999;font-size:12px;margin-top:4px;letter-spacing:.06em">${state.profile.city}</div>`:''}
+    <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:flex-end">
+      <div style="text-align:left"><h1 style="font-size:38px;letter-spacing:-.01em">Devis</h1><div style="color:#999;font-size:12px;margin-top:4px;letter-spacing:.04em">${devisNum} · ${today}</div></div>
+      <div style="text-align:right">${state.profile?.email?`<div style="font-size:12px;color:#555">${state.profile.email}</div>`:''}${state.profile?.phone?`<div style="font-size:12px;color:#555">${state.profile.phone}</div>`:''}${state.profile?.siret?`<div style="font-size:11px;color:#999">SIRET ${state.profile.siret}</div>`:''}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:40px">
+    <div><div class="label">Prestation</div><div style="font-size:22px;font-family:'DM Serif Display',serif;margin-bottom:6px">${ev.name}</div>${fmtDate?`<div style="color:#555;font-size:13px;margin-bottom:2px">${fmtDate}</div>`:''}${ev.address?`<div style="color:#777;font-size:12px;margin-bottom:2px">${ev.address}</div>`:''}${ev.pax?`<div style="color:#777;font-size:12px">${ev.pax} personnes</div>`:''}</div>
+    <div style="text-align:right"><div class="label">Client</div>${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?`<div style="font-size:16px;font-weight:500;margin-bottom:4px">${cl.name}</div>${cl.company?`<div style="color:#555;font-size:13px;margin-bottom:2px">${cl.company}</div>`:''}${cl.email?`<div style="color:#777;font-size:12px;margin-bottom:2px">${cl.email}</div>`:''}${cl.phone?`<div style="color:#777;font-size:12px">${cl.phone}</div>`:''}`:'<div style="color:#bbb">—</div>';})()}</div>
+  </div>
+  ${cocktailLines?`<div class="section"><div class="label">Cocktails</div><table><thead><tr><th>Cocktail</th><th style="text-align:center">Qté</th><th style="text-align:right">Prix unitaire HT</th><th style="text-align:right">Total HT</th><th style="text-align:right">Total TTC</th></tr></thead><tbody>${cocktailLines}</tbody></table></div>`:''}
+  ${staffLines.length?`<div class="section"><div class="label">Équipe</div><table><thead><tr><th>Rôle</th><th style="text-align:center">Nb</th><th style="text-align:center">Horaires</th><th style="text-align:center">Durée</th><th style="text-align:right">Tarif</th><th style="text-align:right">Total HT</th></tr></thead><tbody>${staffLines.join('')}</tbody></table></div>`:''}
+  ${deliveryBill||extraBill?`<div class="section"><div class="label">Frais supplémentaires</div><table><tbody>${deliveryBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Livraison & matériel</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${deliveryBill.toFixed(2)}€ HT</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Frais divers</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${extraBill.toFixed(2)}€ HT</td></tr>`:''}</tbody></table></div>`:''}
+  <div class="total-box"><div class="total-line"><span>Total HT</span><span>${grandHT.toFixed(2)}€</span></div><div class="total-line"><span>TVA</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div><div class="total-final"><span>Total TTC</span><span>${grandTTC.toFixed(2)}€</span></div></div>
+  <div style="margin-top:56px;padding-top:20px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#999">Devis valable 30 jours · Acompte 30% à la signature · Solde à J-7</span><span style="font-size:10px;color:#ccc;font-style:italic">Propulsé par BAR OPS</span></div>
+  </body></html>`;
+}
+
+function generateDevis(){
+  const evId=parseInt(document.getElementById('prest-ev-sel')?.value||0);
+  if(!evId){alert('Sélectionne un événement dans le select.');return;}
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev){alert('Événement introuvable.');return;}
+  const devisNum='DEV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  const w=window.open('','_blank');
+  if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
+  const html=buildDevisHTML(ev,devisNum);
+  // Add print/send buttons
+  const withBtns=html.replace('</body></html>',`
+  <div class="no-print" style="text-align:center;margin-top:40px;display:flex;gap:12px;justify-content:center">
+    <button onclick="window.print()" style="padding:12px 28px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.04em">Enregistrer PDF</button>
+    <button onclick="opener.sendQuoteToClient('${ev.id}','${devisNum}')" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:.04em">Envoyer au client</button>
+  </div>
+  </body></html>`);
+  w.document.write(withBtns);
+  w.document.close();
+}
 
   const deliveryBill=ev.deliveryBillHT||0;
   const extraBill=ev.extraBillHT||0;

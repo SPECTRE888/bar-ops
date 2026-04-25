@@ -16,7 +16,7 @@ exports.handler = async (event) => {
 
     const msg = {
       to,
-      from: { email: fromEmail || 'noreply@barops.app', name: fromName || 'BAR OPS' },
+      from: { email: 'noreply@barops.app', name: fromName || 'BAR OPS' },
       subject,
       html,
       attachments: pdfBase64 ? [{
