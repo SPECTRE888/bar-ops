@@ -4723,8 +4723,11 @@ function buildPrestHTML(ev){
 function sendQuoteToClient(clientId,devisNum){
   const cl=state.clients.find(c=>c.id===parseInt(clientId));
   if(!cl||!cl.email){alert('Client sans email.');return;}
+  const ev=state.events.find(e=>e.clientId===parseInt(clientId));
+  const subject=encodeURIComponent(`Devis ${devisNum}${ev?' — '+ev.name:''}`);
+  const body=encodeURIComponent(`Bonjour ${cl.name||cl.firstName||''},\n\nVeuillez trouver ci-joint votre devis ${devisNum}.\n\nN'hésitez pas à nous contacter pour toute question.\n\nCordialement,\n${state.profile?.companyName||'BAR OPS'}`);
+  window.open(`mailto:${cl.email}?subject=${subject}&body=${body}`,'_blank');
   log('📧 Devis '+devisNum+' envoyé à '+cl.email);
-  alert('Devis envoyé à '+cl.email);
 }
 
 function generateDevis(){
