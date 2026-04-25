@@ -1724,6 +1724,7 @@ function delC(id){
 // ════════════════════════════════════════════════════════
 function loadCocktailPhoto(input){
   const file=input.files[0];if(!file)return;
+  window._cfPhotoFileName=file.name;
   const reader=new FileReader();
   reader.onload=e=>{
     const img=new Image();
@@ -1734,6 +1735,8 @@ function loadCocktailPhoto(input){
       canvas.width=img.width*ratio;canvas.height=img.height*ratio;
       canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
       window._cfPhotoData=canvas.toDataURL('image/jpeg',0.80);
+      const fnEl=document.getElementById('cf-photo-filename');
+      if(fnEl) fnEl.textContent=file.name;
       const prev=document.getElementById('cf-photo-new-preview');
       if(prev) prev.innerHTML=`<img src="${window._cfPhotoData}" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"/>`;
     };
@@ -1743,12 +1746,15 @@ function loadCocktailPhoto(input){
 }
 
 function showCocktailPhotoPreview(){
-  const src=document.getElementById('cf-photo-preview')?.src;if(!src)return;
+  const data=window._cfPhotoData;
+  const src=document.getElementById('cf-photo-preview')?.src;
+  const photoSrc=data||src;if(!photoSrc)return;
   const m=document.createElement('div');
-  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
-  m.onclick=()=>m.remove();
-  m.innerHTML=`<img src="${src}" style="max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain"/>`;
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s';
+  m.onclick=e=>{if(e.target===m)m.remove();};
+  m.innerHTML=`<img src="${photoSrc}" style="max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain"/>`;
   document.body.appendChild(m);
+  setTimeout(()=>m.style.opacity='1',10);
 }
 
 function handleStaffMenu(val){
@@ -1976,14 +1982,16 @@ function showCForm(c){
         </div>
         <div class="field"><label style="font-size:12px">Photo</label>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            ${c.photo?`<img src="${c.photo}" id="cf-photo-preview" style="height:50px;width:75px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="showCocktailPhotoPreview()"/>
-            <button class="btn btn-sm btn-ghost" onclick="document.getElementById('cf-photo-input').click()">Changer</button>
-            <button class="btn btn-sm btn-danger" onclick="document.getElementById('cf-photo-preview').remove();window._cfPhotoData=null;document.getElementById('cf-photo-del').value='1'">✕</button>`
-            :`<label class="btn btn-sm btn-ghost" style="cursor:pointer;padding:6px 10px">
+            ${c.photo?`<div style="display:flex;align-items:center;gap:6px;background:var(--bg2);padding:8px 12px;border-radius:4px;flex:1">
+              <span id="cf-photo-filename" style="font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="showCocktailPhotoPreview()" title="Cliquer pour voir">image.jpg</span>
+              <button class="btn btn-sm btn-ghost" onclick="document.getElementById('cf-photo-input').click()" style="padding:4px 8px">Changer</button>
+              <button class="btn btn-sm btn-danger" onclick="window._cfPhotoData=null;document.getElementById('cf-photo-del').value='1';document.getElementById('cf-photo-section').innerHTML='<label class=\\'btn btn-sm btn-ghost\\' style=\\'cursor:pointer;padding:6px 10px\\'>+ Photo<input type=\\'file\\' id=\\'cf-photo-input\\' accept=\\'image/*\\' style=\\'display:none\\' onchange=\\'loadCocktailPhoto(this)\\'/></label><input type=\\'hidden\\' id=\\'cf-photo-del\\' value=\\'0\\'/>';" style="padding:4px 8px">✕</button>
+            </div>`
+            :`<div id="cf-photo-section"><label class="btn btn-sm btn-ghost" style="cursor:pointer;padding:6px 10px">
                 + Photo
                 <input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>
-              </label>`}
-            ${c.photo?`<input type="hidden" id="cf-photo-del" value="0"/><input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>`:'<input type="hidden" id="cf-photo-del" value="0"/>'}
+              </label><input type="hidden" id="cf-photo-del" value="0"/></div>`}
+            ${c.photo?`<input type="hidden" id="cf-photo-del" value="0"/><input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>`:''}
           </div>
           <div id="cf-photo-new-preview" style="margin-top:4px"></div>
         </div>
