@@ -6750,8 +6750,10 @@ updateCloudStatus();
 
 // Async init: refresh session → pull → demo → render
 (async()=>{
+  console.log('Async init: cloudUser=',!!cloudUser);
   if(cloudUser){
     const refreshed=await cloudRefreshSession();
+    console.log('Session refresh result:',refreshed,'cloudUser after:',!!cloudUser);
     if(!refreshed){
       cloudUser=null;
       localStorage.removeItem('bcp_session');
