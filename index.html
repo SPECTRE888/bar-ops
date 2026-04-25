@@ -97,7 +97,7 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
           <li>Tout sans watermark</li><li>Devis PDF custom</li>
           <li>Multi-device</li><li>Support prioritaire</li>
         </ul>
-        <button onclick="goPay('early', currentPeriod==='yearly'?801:89)">Souscrire</button>
+        <button onclick="goPay('early')">Souscrire</button>
       </div>
       <div class="price-card">
         <h3>Professionnel</h3>
@@ -107,7 +107,7 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
           <li>Tout Anticipé +</li><li>Illimité sans restriction</li>
           <li>API access</li><li>Support 24/7</li>
         </ul>
-        <button onclick="goPay('pro', currentPeriod==='yearly'?1341:149)">Souscrire</button>
+        <button onclick="goPay('pro')">Souscrire</button>
       </div>
     </div>
     <div class="auth-cta" id="auth-cta">
@@ -160,8 +160,11 @@ function setPeriod(p){
   document.getElementById('price-pro').innerHTML=p==='yearly'?'1341€<small>/an</small>':'149€<small>/mois</small>';
 }
 
-async function goPay(plan, price){
-  if(price===0){window.location.href='app.html';return;}
+const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
+
+async function goPay(plan){
+  if(plan==='free'){window.location.href='app.html';return;}
+  const price=PRICES[plan][currentPeriod];
   const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
