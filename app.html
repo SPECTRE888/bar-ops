@@ -4717,7 +4717,7 @@ function generateDevis(){
   const devisNum='DEV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
   const today=new Date().toLocaleDateString('fr-FR');
   // Check if user is Pro from subscription data
-  const isPro=window._userPlan==='professional'||window._userPlan==='Professionnel';
+  const isPro=window._userPlan==='pro'||window._userPlan==='professional';
 
   const w=window.open('','_blank');
   if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
