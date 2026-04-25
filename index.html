@@ -125,22 +125,24 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 let currentPeriod='monthly';
 
-// CHECK SESSION ON LOAD
+// CHECK SESSION ONLY AFTER AUTH REDIRECT
 (async()=>{
   if(!window.supabase)return;
-  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  const hash=window.location.hash;
+  const isAuthRedirect=hash.includes('access_token')||hash.includes('type=signup');
+  if(!isAuthRedirect)return;
   
+  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   sb.auth.onAuthStateChange(async(event,session)=>{
-    if(session){
-      try{
-        const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
-        if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
-          window.location.href='app.html';
-          return;
-        }
-      }catch(e){}
-      document.getElementById('pricingModal').classList.add('active');
-    }
+    if(!session)return;
+    try{
+      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+        window.location.href='app.html';
+        return;
+      }
+    }catch(e){}
+    document.getElementById('pricingModal').classList.add('active');
   });
 })();
 </script>
