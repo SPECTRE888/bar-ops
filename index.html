@@ -13,6 +13,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
 let currentPeriod='monthly';
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
 function setPeriod(p){
   currentPeriod=p;
@@ -24,19 +25,26 @@ function setPeriod(p){
 
 async function goPay(plan){
   if(plan==='free'){window.location.href='app.html';return;}
-  const price=PRICES[plan][currentPeriod];
-  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
+  const price=PRICES[plan][currentPeriod];
+  const btn=event?.target;
+  if(btn){btn.disabled=true;btn.textContent='...';}
   try{
     const res=await fetch('/.netlify/functions/subscription',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100)})
     });
-    const{sessionId}=await res.json();
+    if(!res.ok){const e=await res.text();alert('Erreur serveur: '+e);return;}
+    const{sessionId,error}=await res.json();
+    if(error){alert('Erreur: '+error);return;}
     if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
-  }catch(e){alert('Erreur: '+e.message);}
+  }catch(e){
+    alert('Erreur: '+e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Souscrire';}
+  }
 }
 </script>
 <style>
@@ -157,7 +165,6 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
   const mode=new URLSearchParams(window.location.search).get('mode');
   if(mode==='pricing') document.getElementById('pricingModal').classList.add('active');
   if(!window.supabase)return;
-  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   const{data:{session}}=await sb.auth.getSession();
   if(!session)return;
   const cta=document.getElementById('auth-cta');
