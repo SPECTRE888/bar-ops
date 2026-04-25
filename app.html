@@ -1919,120 +1919,114 @@ function showCForm(c){
 
   const el=document.getElementById('c-content');
   el.innerHTML=`
-  <div class="g2" style="align-items:start">
-    <div>
-      <div class="card">
-        <div class="ctitle"> General info</div>
-        <div class="g2">
-          <div class="field"><label>Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule"/></div>
-          <div class="field"><label>Category</label><select id="cf-cat">
+  <div class="g2" style="align-items:start;gap:12px">
+    <div style="flex:1;min-width:0">
+      <div class="card" style="padding:12px">
+        <div class="ctitle" style="margin-bottom:8px"> General info</div>
+        <div class="g2" style="gap:6px;margin-bottom:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule" style="font-size:13px;padding:6px"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Category</label><select id="cf-cat" style="font-size:13px;padding:6px">
             <option${(c.category||'Cocktail Signature')==='Cocktail Signature'?' selected':''}>Cocktail Signature</option>
             <option${(c.category||'Cocktail Signature')==='Cocktail Classique'?' selected':''}>Cocktail Classique</option>
             <option${(c.category||'Cocktail Signature')==='Mocktail Signature'?' selected':''}>Mocktail Signature</option>
             <option${(c.category||'Cocktail Signature')==='Mocktail Classique'?' selected':''}>Mocktail Classique</option>
           </select></div>
         </div>
-        <div class="g2">
-          <div class="field"><label>Code Crafter <span class="txs tm">(intégration externe)</span></label>
+        <div class="g3" style="gap:6px;margin-bottom:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Code Crafter</label>
             <div style="position:relative">
-              <input id="cf-code" value="${(c.code||'').replace(/"/g,'&quot;')}" placeholder="ex: MM01, SP03..." style="font-family:monospace;width:100%" oninput="checkCodeDuplicate(this.value,${c.id||0})"/>
-              <div id="cf-code-status" style="font-size:11px;margin-top:4px;min-height:16px">${
-                c.code?(()=>{
-                  const dup=state.cocktails.find(x=>x.id!==c.id&&x.code&&x.code.toUpperCase()===(c.code||'').toUpperCase());
-                  return dup?`<span style="color:var(--red)">Déjà utilisé par : ${dup.name}</span>`:`<span style="color:var(--green)">Code disponible</span>`;
-                })():''
-              }</div>
+              <input id="cf-code" value="${(c.code||'').replace(/"/g,'&quot;')}" placeholder="ex: MM01" style="font-family:monospace;width:100%;font-size:13px;padding:6px" oninput="checkCodeDuplicate(this.value,${c.id||0})"/>
+              <div id="cf-code-status" style="font-size:10px;margin-top:2px;min-height:14px"></div>
             </div>
           </div>
-          <div class="field"><label>Verre</label><div id="cf-glass-ss"></div></div>
-          <div class="field"><label>Coût verre HT (€) <span class="ts tm">(auto)</span></label>
-            <input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" oninput="updCRecap()"/>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre</label><div id="cf-glass-ss"></div></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût verre €</label>
+            <input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px" oninput="updCRecap()"/>
           </div>
         </div>
-        <div class="g2">
-          <div class="field"><label>Préparation</label>
-            <select id="cf-technique" onchange="updIceCost()">
-              <option value="none"${(c.technique||'none')==='none'?' selected':''}>Direct / Sans préparation</option>
-              <option value="stirred"${c.technique==='stirred'?' selected':''}>Mélangé — verre mélangeur (×1.5 vol)</option>
-              <option value="shaken"${c.technique==='shaken'?' selected':''}>Shaké — shaker (×2.0 vol)</option>
-              <option value="blended"${c.technique==='blended'?' selected':''}>Blendé — blender (×2.5 vol)</option>
+        <div class="g2" style="gap:6px;margin-bottom:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Préparation</label>
+            <select id="cf-technique" style="font-size:13px;padding:6px" onchange="updIceCost()">
+              <option value="none"${(c.technique||'none')==='none'?' selected':''}>Direct</option>
+              <option value="stirred"${c.technique==='stirred'?' selected':''}>Mélangé (×1.5)</option>
+              <option value="shaken"${c.technique==='shaken'?' selected':''}>Shaké (×2.0)</option>
+              <option value="blended"${c.technique==='blended'?' selected':''}>Blendé (×2.5)</option>
             </select>
           </div>
-          <div class="field"><label>Service glace <span class="txs tm">(pour calcul coût recette)</span></label>
-            <select id="cf-service-ice" onchange="updIceCost()">
-              <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>— Sans glace —</option>
-              <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On the rocks (60% du verre)</option>
-              <option value="full"${c.serviceIce==='full'?' selected':''}>Plein de glace (90% du verre)</option>
-              <option value="one"${c.serviceIce==='one'?' selected':''}>Un glaçon (20% du verre)</option>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Service glace</label>
+            <select id="cf-service-ice" style="font-size:13px;padding:6px" onchange="updIceCost()">
+              <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Aucune</option>
+              <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks (60%)</option>
+              <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (90%)</option>
+              <option value="one"${c.serviceIce==='one'?' selected':''}>1 glaçon (20%)</option>
             </select>
           </div>
         </div>
-        <div class="field"><label>Type de glace <span class="txs tm">(pour calcul coût recette)</span></label>
-          <select id="cf-ice-type" onchange="updIceCost()">
+        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Type glace</label>
+          <select id="cf-ice-type" style="font-size:13px;padding:6px" onchange="updIceCost()">
             <option value="">— Sélectionner —</option>
             ${state.iceTypes.map(i=>`<option value="${i.id}"${(c.iceTypeId||'')==i.id?' selected':''}>${i.name}</option>`).join('')}
           </select>
         </div>
-        <div id="cf-ice-recap" style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.6"></div>
+        <div id="cf-ice-recap" style="font-size:10px;color:var(--text3);margin-bottom:6px;line-height:1.4"></div>
         <input type="hidden" id="cf-ice" value="${c.iceVal||0}"/>
         <input type="hidden" id="cf-ice-cl" value="${c.iceCl||0}"/>
-        <div class="field"><label>Description (client menu)</label>
-          <textarea id="cf-desc" rows="2" placeholder="e.g. Passion fruit, ginger beer, fresh lime...">${c.description||''}</textarea>
+        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
+          <textarea id="cf-desc" rows="2" placeholder="Passion fruit, ginger beer, lime..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
-        <div class="field"><label>Photo du cocktail <span class="txs tm">(visible dans le devis)</span></label>
-          <div style="display:flex;align-items:center;gap:10px">
-            ${c.photo?`<img src="${c.photo}" id="cf-photo-preview" style="height:60px;width:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer" onclick="showCocktailPhotoPreview()" title="Cliquer pour agrandir"/>
+        <div class="field"><label style="font-size:12px">Photo</label>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${c.photo?`<img src="${c.photo}" id="cf-photo-preview" style="height:50px;width:75px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="showCocktailPhotoPreview()"/>
             <button class="btn btn-sm btn-ghost" onclick="document.getElementById('cf-photo-input').click()">Changer</button>
             <button class="btn btn-sm btn-danger" onclick="document.getElementById('cf-photo-preview').remove();window._cfPhotoData=null;document.getElementById('cf-photo-del').value='1'">✕</button>`
-            :`<label class="btn btn-ghost" style="cursor:pointer">
-                Ajouter une photo
+            :`<label class="btn btn-sm btn-ghost" style="cursor:pointer;padding:6px 10px">
+                + Photo
                 <input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>
               </label>`}
             ${c.photo?`<input type="hidden" id="cf-photo-del" value="0"/><input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>`:'<input type="hidden" id="cf-photo-del" value="0"/>'}
           </div>
-          <div id="cf-photo-new-preview" style="margin-top:6px"></div>
+          <div id="cf-photo-new-preview" style="margin-top:4px"></div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="ctitle"> Pricing (HT)</div>
-        <div class="g3" style="margin-bottom:10px">
-          <div class="field">
-            <label>Multiplicateur prix</label>
-            <div style="display:flex;gap:6px;align-items:center">
-              <input type="number" id="cf-mult" value="${c.mult||4}" step="0.1" min="1" max="20" oninput="applyMult()" style="width:75px"/>
-              <span class="txs tm">× coût HT</span>
+      <div class="card" style="padding:12px">
+        <div class="ctitle" style="margin-bottom:8px"> Pricing (HT)</div>
+        <div class="g2" style="gap:8px;margin-bottom:8px">
+          <div class="field" style="margin-bottom:0">
+            <label style="font-size:12px">Multiplicateur</label>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="number" id="cf-mult" value="${c.mult||4}" step="0.1" min="1" max="20" style="width:60px;font-size:13px;padding:6px" oninput="applyMult()"/>
+              <span style="font-size:11px">× coût</span>
             </div>
           </div>
-          <div class="field">
-            <label>Raccourcis</label>
-            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:3px">
-              <button class="btn btn-sm btn-ghost" onclick="setMult(4)">×4 Classique</button>
-              <button class="btn btn-sm btn-ghost" onclick="setMult(5)">×5 Signature</button>
-              <button class="btn btn-sm btn-ghost" onclick="setMult(6)">×6 Premium</button>
+          <div class="field" style="margin-bottom:0">
+            <label style="font-size:12px">Raccourcis</label>
+            <div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px">
+              <button class="btn btn-xs" onclick="setMult(4)" style="font-size:11px;padding:4px 6px">×4</button>
+              <button class="btn btn-xs" onclick="setMult(5)" style="font-size:11px;padding:4px 6px">×5</button>
+              <button class="btn btn-xs" onclick="setMult(6)" style="font-size:11px;padding:4px 6px">×6</button>
             </div>
-          </div>
-          <div class="field">
-            <label>Prix suggéré</label>
-            <div id="cf-suggested-price" style="font-size:17px;font-family:'DM Serif Display',serif;color:var(--gold);padding-top:4px">—</div>
           </div>
         </div>
-        <button class="btn btn-sm btn-ghost mb1" onclick="applySuggestedPrice()" style="margin-bottom:10px">↓ Appliquer ce prix</button>
-        <div class="g2">
-          <div class="field"><label>Prix de vente HT (€)</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" oninput="updCRecap()"/></div>
-          <div class="field"><label>TVA</label><select id="cf-vat" onchange="updCRecap()">
-            <option value="10"${(c.vat||10)===10?' selected':''}>10% — F&B</option>
-            <option value="20"${c.vat===20?' selected':''}>20% — Standard</option>
+        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Prix suggéré</label>
+            <div id="cf-suggested-price" style="font-size:16px;font-family:'DM Serif Display',serif;color:var(--gold);padding:4px 0">—</div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="applySuggestedPrice()" style="margin-bottom:6px;width:100%;font-size:12px">Appliquer</button>
+        <div class="g2" style="gap:6px;margin-bottom:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" style="font-size:13px;padding:6px" oninput="updCRecap()"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px" onchange="updCRecap()">
+            <option value="10"${(c.vat||10)===10?' selected':''}>10% F&B</option>
+            <option value="20"${c.vat===20?' selected':''}>20% Std</option>
           </select></div>
         </div>
-        <div class="metrics">
-          <div class="metric"><div class="val" id="r-cost">0.00€</div><div class="lbl">Coût total HT</div></div>
-          <div class="metric"><div class="val" id="r-mg">—</div><div class="lbl">Marge HT</div></div>
-          <div class="metric"><div class="val" id="r-fc">—</div><div class="lbl">Food cost</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;font-size:12px">
+          <div style="text-align:center"><div style="font-weight:bold" id="r-cost">0.00€</div><div style="font-size:10px;color:var(--text3)">Coût HT</div></div>
+          <div style="text-align:center"><div style="font-weight:bold" id="r-mg">—</div><div style="font-size:10px;color:var(--text3)">Marge</div></div>
+          <div style="text-align:center"><div style="font-weight:bold" id="r-fc">—</div><div style="font-size:10px;color:var(--text3)">F.Cost</div></div>
         </div>
-        <div id="r-ttc" class="ts tm mb1"></div>
-        <div class="bar-wrap"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
-        <div class="txs mt1" id="bar-lbl" style="color:var(--text3)"></div>
+        <div id="r-ttc" style="font-size:11px;color:var(--text3);margin-bottom:4px"></div>
+        <div class="bar-wrap" style="height:8px;margin-bottom:2px"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text3)" id="bar-lbl"></div>
       </div>
       <div class="flex-g no-print">
         <button class="btn btn-gold" onclick="saveCocktail()">Save cocktail</button>
