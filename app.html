@@ -613,6 +613,7 @@ async function cloudSignIn(email,password){
       body:JSON.stringify({email,password})
     });
     const data=await r.json();
+    console.log('Login response:',{status:r.status,hasError:!!data.error,error:data.error});
     if(data.error||data.error_description||data.msg) return{error:data.error_description||data.error||data.msg};
     // Supabase returns access_token at root OR inside data.session
     const session=data.session||data;
@@ -626,10 +627,11 @@ async function cloudSignIn(email,password){
     };
     cloudUser=normalized;
     localStorage.setItem('bcp_session',JSON.stringify(normalized));
+    console.log('Login success, session stored');
     // Create/ensure workspaces table row
     await ensureWorkspace();
     return{ok:true};
-  }catch(e){return{error:'Erreur réseau'};}
+  }catch(e){console.error('Login catch error:',e);return{error:'Erreur réseau'};}
 }
 
 async function cloudSignUp(email,password){
