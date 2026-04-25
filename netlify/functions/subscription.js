@@ -1,11 +1,14 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405 };
 
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'STRIPE_SECRET_KEY not configured' }) };
+  }
+
   try {
+    const stripe = require('stripe')(key);
     const { plan, period, userId, priceInCents } = JSON.parse(event.body);
-    const isSubscription = true; // Always subscription mode
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -26,7 +29,7 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ sessionId: session.id }) };
   } catch (err) {
-    console.error('Stripe error:', err.message);
+    console.error('Error:', err.message);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
