@@ -4724,7 +4724,8 @@ function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   if(!ev||!ev.contactEmail){alert('Événement sans email contact.');return;}
   const subject=encodeURIComponent(`Devis ${devisNum}${ev?' — '+ev.name:''}`);
-  const body=encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint votre devis ${devisNum}.\n\nN'hésitez pas à nous contacter pour toute question.\n\nCordialement,\n${state.profile?.companyName||'BAR OPS'}`);
+  const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
+  const body=encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint votre devis ${devisNum}.\n\nN'hésitez pas à nous contacter pour toute question.\n\nCordialement,\n${sigName}`);
   window.open(`mailto:${ev.contactEmail}?subject=${subject}&body=${body}`,'_blank');
   log('📧 Devis '+devisNum+' envoyé à '+ev.contactEmail);
 }
