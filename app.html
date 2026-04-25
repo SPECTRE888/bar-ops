@@ -307,23 +307,36 @@ select option{background:#151515}
   </nav>
   <span id="save-dot" style="display:none"></span>
   <span id="save-text" style="display:none"></span>
-  <div style="padding:8px 18px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)">
-    <div style="display:flex;gap:1px">
-      <button onclick="setTheme('dark')" id="theme-dark" title="Sombre" style="font-size:9px;padding:3px 7px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:1px solid var(--border2);border-right:none;border-radius:3px 0 0 3px;background:none;cursor:pointer;letter-spacing:.04em;font-family:var(--font-body);color:var(--text3);transition:.15s">●</button>
-      <button onclick="setTheme('light')" id="theme-light" title="Clair" style="font-size:9px;padding:3px 7px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:none;border-right:none;background:none;cursor:pointer;letter-spacing:.04em;font-family:var(--font-body);color:var(--text3);transition:.15s">○</button>
-      <button onclick="setTheme('auto')" id="theme-auto" title="Auto" style="font-size:8px;padding:3px 7px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:none;border-right:1px solid var(--border2);border-radius:0 3px 3px 0;background:none;cursor:pointer;letter-spacing:.08em;font-family:var(--font-body);color:var(--text3);transition:.15s">A</button>
+
+  <!-- SIDEBAR BOTTOM -->
+  <div style="margin-top:auto;border-top:1px solid var(--border);padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+    
+    <!-- Theme + Lang -->
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;gap:1px">
+        <button onclick="setTheme('dark')" id="theme-dark" title="Sombre" style="font-size:9px;padding:4px 8px;border:1px solid var(--border2);border-right:none;border-radius:3px 0 0 3px;background:none;cursor:pointer;color:var(--text3);font-family:var(--font-body)">●</button>
+        <button onclick="setTheme('light')" id="theme-light" title="Clair" style="font-size:9px;padding:4px 8px;border:1px solid var(--border2);border-right:none;border-left:none;background:none;cursor:pointer;color:var(--text3);font-family:var(--font-body)">○</button>
+        <button onclick="setTheme('auto')" id="theme-auto" title="Auto" style="font-size:9px;padding:4px 8px;border:1px solid var(--border2);border-radius:0 3px 3px 0;background:none;cursor:pointer;color:var(--text3);font-family:var(--font-body)">A</button>
+      </div>
+      <div style="display:flex;gap:1px">
+        <button onclick="setLang('fr')" id="lang-fr" style="font-size:9px;padding:4px 8px;border:1px solid var(--border2);border-right:none;border-radius:3px 0 0 3px;background:none;cursor:pointer;color:var(--text3);font-family:var(--font-body)">FR</button>
+        <button onclick="setLang('en')" id="lang-en" style="font-size:9px;padding:4px 8px;border:1px solid var(--border2);border-right:none;border-left:none;background:none;cursor:pointer;color:var(--text3);font-family:var(--font-body)">EN</button>
+        <button onclick="setLang('es')" id="lang-es" style="font-size:9px;padding:4px 8px;border:1px solid var(--border2);border-radius:0 3px 3px 0;background:none;cursor:pointer;color:var(--text3);font-family:var(--font-body)">ES</button>
+      </div>
     </div>
-    <div style="display:flex;gap:1px">
-      <button onclick="setLang('fr')" id="lang-fr" style="font-size:8px;padding:3px 8px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:1px solid var(--border2);border-right:none;border-radius:3px 0 0 3px;background:none;cursor:pointer;letter-spacing:.1em;font-family:var(--font-body);color:var(--text3);transition:.15s">FR</button>
-      <button onclick="setLang('en')" id="lang-en" style="font-size:8px;padding:3px 8px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:none;border-right:none;background:none;cursor:pointer;letter-spacing:.1em;font-family:var(--font-body);color:var(--text3);transition:.15s">EN</button>
-      <button onclick="setLang('es')" id="lang-es" style="font-size:8px;padding:3px 8px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);border-left:none;border-right:1px solid var(--border2);border-radius:0 3px 3px 0;background:none;cursor:pointer;letter-spacing:.1em;font-family:var(--font-body);color:var(--text3);transition:.15s">ES</button>
+
+    <!-- User email -->
+    <div id="sidebar-user" style="font-size:10px;color:var(--text3);letter-spacing:.04em;opacity:.7;text-align:center"></div>
+
+    <!-- Logout -->
+    <button onclick="sidebarLogout()" style="font-size:10px;color:var(--text3);background:none;border:1px solid var(--border2);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body);padding:6px;border-radius:3px;width:100%">Déconnexion</button>
+
+    <!-- Delete + Legal -->
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button onclick="deleteAccountModal()" style="font-size:9px;color:var(--red);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body)">Supprimer</button>
+      <button onclick="showLegal()" style="font-size:9px;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.08em;font-family:var(--font-body)">© BAR OPS</button>
     </div>
-  </div>
-  <div style="padding:6px 18px 10px;text-align:center;border-top:1px solid var(--border)">
-    <div id="sidebar-user" style="font-size:10px;color:var(--text3);text-align:center;padding:6px 0;letter-spacing:.04em;opacity:.7" id="sidebar-email"></div>
-    <button onclick="sidebarLogout()" style="font-size:8px;color:var(--text3);background:none;border:1px solid var(--border2);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);display:block;width:calc(100% - 36px);margin:0 18px 6px;padding:5px;border-radius:3px">Déconnexion</button>
-    <button onclick="deleteAccountModal()" style="font-size:8px;color:var(--red);background:none;border:none;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);margin-bottom:8px">🗑️ Supprimer le compte</button>
-    <button onclick="showLegal()" style="font-size:8px;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);display:block;width:100%">© BAR OPS</button>
+
   </div>
 </div>
 
