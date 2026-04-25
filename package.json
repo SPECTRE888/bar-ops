@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
-    "stripe": "^22.1.0"
+    "stripe": "^22.1.0",
+    "@sendgrid/mail": "^8.1.3"
   }
 }
