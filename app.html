@@ -18,7 +18,7 @@ async function logout(){
   window.location.href='index.html';
 }
 
-document.addEventListener("DOMContentLoaded",async()=>=>{
+(async()=>{
   try{
     if(!window.supabase||!sb)return;
     const{data:{session}}=await sb.auth.getSession();
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded",async()=>=>{
     console.error('Auth:',e);
     window.location.href='index.html?mode=pricing';
   }
-});
+})();
 <style>
 :root{
   --bg:#080808;
@@ -6598,7 +6598,7 @@ applyLang();
 updateCloudStatus();
 
 // Async init: refresh session → pull → demo → render
-document.addEventListener("DOMContentLoaded",async()=>=>{
+(async()=>{
   if(cloudUser){
     const refreshed=await cloudRefreshSession();
     if(!refreshed){
@@ -6623,7 +6623,7 @@ document.addEventListener("DOMContentLoaded",async()=>=>{
   updateBadges();
   renderDashboard();
   applyTheme();
-});
+})();
 </script>
 </body>
 </html>
