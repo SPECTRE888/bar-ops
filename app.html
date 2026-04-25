@@ -3153,14 +3153,6 @@ function showEvForm(ev){
 
   </div>`;
 
-  // Restore client name in search input if client selected
-  if(ev.clientId){
-    const client=state.clients.find(x=>x.id===ev.clientId);
-    if(client && document.getElementById('ef-client-search')){
-      document.getElementById('ef-client-search').value=client.name;
-    }
-  }
-
   // Hidden compat fields (keep for saveEv compatibility)
   el.insertAdjacentHTML('beforeend',`
     <input type="hidden" id="ef-buf" value="${ev.buffer??0}"/>
@@ -3170,6 +3162,15 @@ function showEvForm(ev){
     <input type="hidden" id="ef-extra-bill" value="${ev.extraBillHT||0}"/>
     <input type="hidden" id="ef-brkd" value="${ev.breakdown||''}"/>
   `);
+
+  // Restore client name in input after DOM is ready
+  if(ev.clientId){
+    const client=state.clients.find(x=>x.id===ev.clientId);
+    if(client){
+      const inp=document.getElementById('ef-client-search');
+      if(inp) inp.value=client.name;
+    }
+  }
 
   el._sel={};
   (ev.cocktails||[]).forEach(c=>{
