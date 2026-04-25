@@ -5884,9 +5884,10 @@ function renderProfile(){
     <!-- Données -->
     <div class="card">
       <div class="ctitle">Données</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-ghost" onclick="exportData()">Exporter tout (JSON)</button>
-        <button class="btn btn-danger" onclick="confirmResetData()">Réinitialiser</button>
+        <button class="btn btn-danger" onclick="confirmResetData()">Réinitialiser les données</button>
+        <button class="btn btn-danger" onclick="confirmDeleteAccount()">Supprimer mon compte</button>
       </div>
     </div>
 
