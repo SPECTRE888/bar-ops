@@ -5250,7 +5250,7 @@ function renderClients(){
       <!-- Header — always visible -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:${isOpen?'var(--surface2)':'var(--surface)'}" onclick="toggleClient(${c.id})">
         <div style="min-width:0">
-          <div style="font-size:14px;font-weight:500">${c.name||'Sans nom'} ${c.company?'<span style="font-size:11px;color:var(--text3);font-weight:400">— '+c.company+'</span>':''}</div>
+          <div style="font-size:14px;font-weight:500">${c.name||'Sans nom'}</div>
           ${subtitle?`<div class="txs tm" style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtitle}</div>`:''}
           <div class="txs tm" style="margin-top:2px">${evCount} ${evCount!==1?t('client_events_pl'):t('client_events')}</div>
         </div>
