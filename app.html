@@ -5202,7 +5202,7 @@ function renderClients(){
   }
   el.innerHTML=state.clients.map(c=>{
     const evCount=state.events.filter(ev=>ev.clientId===c.id).length;
-    const isOpen=c._open||false;
+    const isOpen=c._open===true;
     const subtitle=[c.company,c.phone,c.email].filter(Boolean).join(' · ');
     return`<div class="card" style="margin-bottom:8px;padding:0;overflow:hidden">
       <!-- Header — always visible -->
