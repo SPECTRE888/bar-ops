@@ -5765,130 +5765,140 @@ function renderProfile(){
   const email=window._userEmail||cloudUser?.email||cloudUser?.user?.email||'';
   const isConnected=!!email;
 
-  el.innerHTML=`<div style="max-width:480px">
+  el.innerHTML=`<div style="max-width:1200px">
 
-    <!-- Compte -->
-    <div class="card">
-      <div class="ctitle">Compte</div>
-      ${isConnected?`
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);color:var(--gold)">
-            ${email.charAt(0).toUpperCase()}
+    <!-- ROW 1: Compte & Infos côte à côte -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+      <!-- Compte -->
+      <div class="card">
+        <div class="ctitle">Compte</div>
+        ${isConnected?`
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);color:var(--gold)">
+              ${email.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:500">${email}</div>
+              <div class="txs tm">Connecté · sync cloud actif</div>
+            </div>
           </div>
-          <div>
-            <div style="font-size:13px;font-weight:500">${email}</div>
-            <div class="txs tm">Connecté · sync cloud actif</div>
+
+          <!-- Changer email -->
+          <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Changer d'email</div>
+            <div style="display:flex;gap:8px">
+              <input id="prof-email" type="email" value="${email}" style="flex:1;font-size:12px"/>
+              <button class="btn btn-ghost" onclick="changeEmail()">Modifier</button>
+            </div>
+            <div id="prof-email-msg" style="font-size:11px;margin-top:6px;min-height:14px"></div>
+          </div>
+
+          <!-- Changer mot de passe -->
+          <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Changer le mot de passe</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <input id="prof-pass1" type="password" placeholder="Nouveau mot de passe" style="font-size:12px"/>
+              <input id="prof-pass2" type="password" placeholder="Confirmer le mot de passe" style="font-size:12px"/>
+              <button class="btn btn-ghost" onclick="changePassword()" style="align-self:flex-start">Modifier</button>
+            </div>
+            <div id="prof-pass-msg" style="font-size:11px;margin-top:6px;min-height:14px"></div>
+          </div>
+
+          <!-- Déconnexion -->
+          <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;gap:8px">
+            <button class="btn btn-ghost" onclick="cloudSignOut();goPage('dashboard')">Se déconnecter</button>
+          </div>
+        `:`
+          <div class="txs tm" style="margin-bottom:16px">Connecte-toi pour synchroniser tes données sur tous tes appareils.</div>
+          <button class="btn btn-gold" onclick="showCloudModal()">Se connecter</button>
+        `}
+      </div>
+
+      <!-- Informations société -->
+      <div class="card">
+        <div class="ctitle">Informations société</div>
+        <div id="prof-bar-view">
+          <div style="display:grid;gap:12px;margin-bottom:12px">
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Nom de la société</div>
+              <div style="font-size:13px">${state.profile?.barName||'—'}</div>
+            </div>
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Ville</div>
+              <div style="font-size:13px">${state.profile?.city||'—'}</div>
+            </div>
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Téléphone pro</div>
+              <div style="font-size:13px">${state.profile?.phone||'—'}</div>
+            </div>
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">SIRET</div>
+              <div style="font-size:13px;font-family:monospace">${state.profile?.siret||'—'}</div>
+            </div>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="toggleBarEdit(true)" style="width:100%">Modifier</button>
+        </div>
+        <div id="prof-bar-edit" style="display:none">
+          <div class="field" style="margin-bottom:10px">
+            <label>Nom de la société</label>
+            <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="Votre entreprise SARL"/>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Ville</label>
+            <input id="prof-city" value="${state.profile?.city||''}" placeholder="Paris"/>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Téléphone pro</label>
+            <input id="prof-phone" value="${state.profile?.phone||''}" placeholder="+33 6..."/>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>SIRET</label>
+            <input id="prof-siret" value="${state.profile?.siret||''}" placeholder="12345678901234" style="font-family:monospace"/>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(false)">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()">Confirmer</button>
           </div>
         </div>
+      </div>
 
-        <!-- Changer email -->
-        <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Changer d'email</div>
-          <div style="display:flex;gap:8px">
-            <input id="prof-email" type="email" value="${email}" style="flex:1;font-size:12px"/>
-            <button class="btn btn-ghost" onclick="changeEmail()">Modifier</button>
-          </div>
-          <div id="prof-email-msg" style="font-size:11px;margin-top:6px;min-height:14px"></div>
-        </div>
-
-        <!-- Changer mot de passe -->
-        <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Changer le mot de passe</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <input id="prof-pass1" type="password" placeholder="Nouveau mot de passe" style="font-size:12px"/>
-            <input id="prof-pass2" type="password" placeholder="Confirmer le mot de passe" style="font-size:12px"/>
-            <button class="btn btn-ghost" onclick="changePassword()" style="align-self:flex-start">Modifier</button>
-          </div>
-          <div id="prof-pass-msg" style="font-size:11px;margin-top:6px;min-height:14px"></div>
-        </div>
-
-        <!-- Déconnexion -->
-        <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;gap:8px">
-          <button class="btn btn-ghost" onclick="cloudSignOut();goPage('dashboard')">Se déconnecter</button>
-        </div>
-      `:`
-        <div class="txs tm" style="margin-bottom:16px">Connecte-toi pour synchroniser tes données sur tous tes appareils.</div>
-        <button class="btn btn-gold" onclick="showCloudModal()">Se connecter</button>
-      `}
     </div>
 
-    <!-- Mon bar -->
-    <div class="card">
-      <div class="ctitle">Informations société</div>
-      <div id="prof-bar-view">
-        <div style="display:grid;gap:12px;margin-bottom:12px">
-          <div>
-            <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Nom de la société</div>
-            <div style="font-size:13px">${state.profile?.barName||'—'}</div>
-          </div>
-          <div>
-            <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Ville</div>
-            <div style="font-size:13px">${state.profile?.city||'—'}</div>
-          </div>
-          <div>
-            <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Téléphone pro</div>
-            <div style="font-size:13px">${state.profile?.phone||'—'}</div>
-          </div>
-          <div>
-            <div class="txs tm" style="color:var(--text3);margin-bottom:4px">SIRET</div>
-            <div style="font-size:13px;font-family:monospace">${state.profile?.siret||'—'}</div>
-          </div>
-        </div>
-        <button class="btn btn-gold btn-sm" onclick="toggleBarEdit(true)" style="width:100%">Modifier</button>
-      </div>
-      <div id="prof-bar-edit" style="display:none">
-        <div class="field" style="margin-bottom:10px">
-          <label>Nom de la société</label>
-          <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="Votre entreprise SARL"/>
-        </div>
-        <div class="field" style="margin-bottom:10px">
-          <label>Ville</label>
-          <input id="prof-city" value="${state.profile?.city||''}" placeholder="Paris"/>
-        </div>
-        <div class="field" style="margin-bottom:10px">
-          <label>Téléphone pro</label>
-          <input id="prof-phone" value="${state.profile?.phone||''}" placeholder="+33 6..."/>
-        </div>
-        <div class="field" style="margin-bottom:14px">
-          <label>SIRET</label>
-          <input id="prof-siret" value="${state.profile?.siret||''}" placeholder="12345678901234" style="font-family:monospace"/>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(false)">Annuler</button>
-          <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()">Confirmer</button>
-        </div>
-      </div>
-    </div>
+    <!-- ROW 2: Logo & Données côte à côte -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 
-    <!-- Logo & Branding -->
-    <div class="card">
-      <div class="ctitle">Logo & Signature</div>
-      <div id="prof-logo-view">
-        <div style="margin-bottom:12px">
-          ${state.profile?.logo?`<div style="max-width:120px;margin-bottom:10px"><img src="${state.profile.logo}" style="max-width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--border)"/></div>`:'<div style="font-size:13px;color:var(--text3);margin-bottom:10px">Aucun logo</div>'}
+      <!-- Logo & Branding -->
+      <div class="card">
+        <div class="ctitle">Logo & Signature</div>
+        <div id="prof-logo-view">
+          <div style="margin-bottom:12px">
+            ${state.profile?.logo?`<div style="max-width:120px;margin-bottom:10px"><img src="${state.profile.logo}" style="max-width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--border)"/></div>`:'<div style="font-size:13px;color:var(--text3);margin-bottom:10px">Aucun logo</div>'}
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
         </div>
-        <button class="btn btn-gold btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
+        <div id="prof-logo-edit" style="display:none">
+          <div class="field" style="margin-bottom:14px">
+            <label>Logo (image)</label>
+            <input id="prof-logo-input" type="file" accept="image/*" style="padding:8px"/>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()">Confirmer</button>
+          </div>
+        </div>
       </div>
-      <div id="prof-logo-edit" style="display:none">
-        <div class="field" style="margin-bottom:14px">
-          <label>Logo (image)</label>
-          <input id="prof-logo-input" type="file" accept="image/*" style="padding:8px"/>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)">Annuler</button>
-          <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()">Confirmer</button>
-        </div>
-      </div>
-    </div>
 
-    <!-- Données -->
-    <div class="card">
-      <div class="ctitle">Données</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-ghost" onclick="exportData()">Exporter tout (JSON)</button>
-        <button class="btn btn-danger" onclick="confirmResetData()">Réinitialiser les données</button>
-        <button class="btn btn-danger" onclick="confirmDeleteAccount()">Supprimer mon compte</button>
+      <!-- Données -->
+      <div class="card">
+        <div class="ctitle">Données</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-ghost" onclick="exportData()">Exporter tout (JSON)</button>
+          <button class="btn btn-danger" onclick="confirmResetData()">Réinitialiser les données</button>
+          <button class="btn btn-danger" onclick="confirmDeleteAccount()">Supprimer mon compte</button>
+        </div>
       </div>
+
     </div>
 
   </div>`;
