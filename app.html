@@ -1929,7 +1929,7 @@ function linkClientToEvent(clientId){
   const ev=editEvId?state.events.find(x=>x.id===editEvId):null;
   if(ev) ev.clientId=clientId;
   else if(document.getElementById('ev-content')) document.getElementById('ev-content')._clientId=clientId;
-  showEvForm(ev||{});
+  showEvForm(ev||{clientId});
 }
 
 function newCocktail(){
@@ -3169,6 +3169,7 @@ function showEvForm(ev){
     if(client){
       const inp=document.getElementById('ef-client-search');
       if(inp) inp.value=client.name;
+      el._clientName=client.name;
     }
   }
 
