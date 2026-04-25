@@ -19,16 +19,20 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='index.html?mode=pricing';return;}
     
-    try{
-      const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1);
-      const subs=subsArr?.[0];
-      const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
-      if(!isActive){window.location.href='index.html?mode=pricing';return;}
-    }catch(e){
-      console.log('No subscription found');
-      window.location.href='index.html?mode=pricing';
-      return;
+    let subs=null;
+    let retries=0;
+    while(!subs&&retries<5){
+      try{
+        const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).eq('status','active').order('created_at',{ascending:false}).limit(1);
+        subs=subsArr?.[0];
+        if(!subs){await new Promise(r=>setTimeout(r,800));retries++;}
+      }catch(e){
+        await new Promise(r=>setTimeout(r,800));
+        retries++;
+      }
     }
+    const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+    if(!isActive){window.location.href='index.html?mode=pricing';return;}
     
     window.cloudUser=session.user;
     window._userEmail=session.user.email;
