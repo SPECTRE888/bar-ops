@@ -1000,6 +1000,7 @@ function save(){
     document.getElementById('save-dot').style.background='var(--green)';
     document.getElementById('save-text').textContent='Saved — '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     // Trigger cloud push (debounced)
+    console.log('save() called, cloudUser:',!!cloudUser);
     if(cloudUser) schedulePush();
   }catch(e){
     document.getElementById('save-dot').style.background='var(--red)';
