@@ -48,6 +48,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       }
     }
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+    console.log('isActive:',isActive,'status:',subs?.status,'expires:',subs?.expires_at,'plan:',subs?.plan);
     // Fallback: if no subscription after retries, allow trial access
     if(!isActive&&!subs){
       console.log('No subscription found - allowing trial access');
