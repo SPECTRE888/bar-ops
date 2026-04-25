@@ -747,11 +747,12 @@ async function cloudRefreshSession(){
 // ── SYNC ──────────────────────────────────────────────
 async function cloudPush(){
   if(!cloudUser) return false;
-  const{url,key}=getSupabase();if(!url) return false;
+  const{url,key}=getSupabase();if(!url||!key) return false;
   const uid=extractUid(cloudUser);
   const token=extractToken(cloudUser);
   if(!uid||!token){console.warn('cloudPush: missing uid or token',{uid,token:!!token});return false;}
   try{
+    console.log('cloudPush attempt',{uid,hasToken:!!token,hasKey:!!key,url});
     const r=await fetch(`${url}/rest/v1/workspaces`,{
       method:'POST',
       headers:{
@@ -762,6 +763,7 @@ async function cloudPush(){
       },
       body:JSON.stringify({user_id:uid,data:JSON.stringify(state),updated_at:new Date().toISOString()})
     });
+    console.log('cloudPush response',r.status);
     return r.ok||r.status===201||r.status===200;
   }catch(e){console.warn('cloudPush error:',e);return false;}
 }
