@@ -2896,8 +2896,16 @@ function showEvForm(ev){
         </div>
       </div>
 
-      <div class="field"><label>Contact / Responsable</label>
-        <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
+      <div class="g3" style="margin-bottom:12px;gap:10px">
+        <div class="field"><label>Contact / Responsable</label>
+          <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
+        </div>
+        <div class="field"><label>Email Contact</label>
+          <input type="email" value="${(ev.contactEmail||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com" onchange="const ev=state.events.find(x=>x.id===${editEvId});if(ev)ev.contactEmail=this.value;save()"/>
+        </div>
+        <div class="field"><label>Tél. Contact</label>
+          <input value="${(ev.contactPhone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..." onchange="const ev=state.events.find(x=>x.id===${editEvId});if(ev)ev.contactPhone=this.value;save()"/>
+        </div>
       </div>
     </div>
 
@@ -3418,6 +3426,8 @@ function saveEv(){
     end:document.getElementById('ef-end')?.value||'',
     breakdown:document.getElementById('ef-brkd')?.value||'',
     contact:document.getElementById('ef-contact')?.value||'',
+    contactEmail:document.querySelector('input[placeholder="contact@example.com"]')?.value||'',
+    contactPhone:document.querySelector('input[placeholder="+33 6..."]')?.value||'',
     notes:document.getElementById('ef-notes')?.value||'',
     dressCodes:[...document.querySelectorAll('.ev-dc-chk:checked')].map(el=>parseInt(el.dataset.dcid)),
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,
