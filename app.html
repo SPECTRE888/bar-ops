@@ -780,8 +780,13 @@ async function cloudPull(){
 
 function schedulePush(){
   clearTimeout(syncDebounceTimer);
-  syncDebounceTimer=setTimeout(()=>{
-    cloudPush().then(()=>updateCloudStatus());
+  syncDebounceTimer=setTimeout(async()=>{
+    if(cloudUser&&!extractToken(cloudUser)){
+      await cloudRefreshSession();
+    }
+    if(cloudUser){
+      cloudPush().then(()=>updateCloudStatus());
+    }
   },2000);
 }
 
