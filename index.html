@@ -148,25 +148,22 @@ async function goPay(plan, price){
 
 // Handle redirects from auth
 (async()=>{
-  const mode=new URLSearchParams(window.location.search).get('mode');
-  if(!mode||!window.supabase)return;
+  if(!window.supabase)return;
   const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   const{data:{session}}=await sb.auth.getSession();
   if(!session)return;
 
-  if(mode==='check'){
-    try{
-      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
-      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
-        window.location.href='app.html';return;
-      }
-    }catch(e){}
-    window.location.href='auth.html';
-  }
-
-  if(mode==='pricing'){
-    document.getElementById('pricingModal').classList.add('active');
-  }
+  // After Google auth — check subscription
+  try{
+    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+    if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+      window.location.href='app.html';
+      return;
+    }
+  }catch(e){}
+  
+  // No active subscription → show pricing
+  document.getElementById('pricingModal').classList.add('active');
 })();
 </script>
 </body>
