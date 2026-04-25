@@ -154,6 +154,9 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
       <p>Vous avez déjà un compte ?</p>
       <button class="btn-auth-modal" onclick="window.location.href='auth.html'">Se connecter</button>
     </div>
+    <div id="user-status" style="display:none;text-align:center;margin-top:32px;padding-top:32px;border-top:1px solid #222;font-size:12px;color:var(--text2)">
+      ✓ Connecté en tant que <strong id="user-email"></strong>
+    </div>
   </div>
 </div>
 
@@ -182,7 +185,12 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
   const{data:{session}}=await sb.auth.getSession();
   if(!session)return;
   const cta=document.getElementById('auth-cta');
+  const status=document.getElementById('user-status');
   if(cta)cta.style.display='none';
+  if(status){
+    status.style.display='block';
+    document.getElementById('user-email').textContent=session.user.email;
+  }
   if(mode==='pricing')return;
   try{
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
