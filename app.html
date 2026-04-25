@@ -2827,9 +2827,9 @@ function showEvForm(ev){
   el.innerHTML=`
   <div style="max-width:900px">
 
-    <!-- SECTION 1: ESSENTIEL -->
+    <!-- SECTION 1: BASE EVENT -->
     <div class="card">
-      <div class="ctitle">Prestation</div>
+      <div class="ctitle">Événement</div>
       <div class="g2" style="margin-bottom:12px">
         <div class="field"><label>${t('ev_name')}</label>
           <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
@@ -2838,17 +2838,20 @@ function showEvForm(ev){
           <input type="date" id="ef-date" value="${ev.date||''}"/>
         </div>
       </div>
-      <div class="g2" style="margin-bottom:12px">
-        <div class="field"><label>${t('ev_client')}</label>
-          <div style="position:relative">
-            <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()"/>
-            <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
-          </div>
-          ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold)">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
+      <div class="field" style="margin-bottom:12px"><label>${t('ev_pax')}</label>
+        <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
+      </div>
+    </div>
+
+    <!-- SECTION 2: CLIENT & CONTACT -->
+    <div class="card">
+      <div class="ctitle">Client & Contact</div>
+      <div class="field" style="margin-bottom:12px"><label>${t('ev_client')}</label>
+        <div style="position:relative">
+          <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()"/>
+          <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
         </div>
-        <div class="field"><label>${t('ev_pax')}</label>
-          <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
-        </div>
+        ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold)">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
       </div>
 
       <!-- Client inline form (shown when new client needed) -->
@@ -2884,14 +2887,7 @@ function showEvForm(ev){
           <button class="btn btn-gold btn-sm" onclick="createClientFromForm()">Créer & Lier</button>
         </div>
       </div>
-      <div class="g2" style="margin-bottom:12px">
-        <div class="field"><label>${t('ev_address')}</label>
-          <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
-        </div>
-        <div class="field"><label>${t('ev_access')}</label>
-          <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte, parking..."/>
-        </div>
-      </div>
+
       <div class="g2" style="margin-bottom:12px">
         <div class="field"><label>Email</label>
           <input id="ef-email" type="email" value="${(ev.email||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com"/>
@@ -2900,16 +2896,22 @@ function showEvForm(ev){
           <input id="ef-phone" value="${(ev.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..."/>
         </div>
       </div>
-      <div class="g3">
-        <div class="field"><label>Contact</label>
-          <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
-        </div>
-        <div class="field"><label>${t('ev_setup')}</label>${mkTimeSel('ef-setup',ev.setup||'')}</div>
-        <div class="field"><label>${t('ev_bar_open')}</label>${mkTimeSel('ef-start',ev.start||'')}</div>
+      <div class="field"><label>Contact / Responsable</label>
+        <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
       </div>
-      <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
+    </div>
+
+    <!-- SECTION 3: LIEU & ACCÈS -->
+    <div class="card">
+      <div class="ctitle">Lieu & Accès</div>
+      <div class="field" style="margin-bottom:12px"><label>${t('ev_address')}</label>
+        <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
+      </div>
+      <div class="field" style="margin-bottom:12px"><label>${t('ev_access')}</label>
+        <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte, parking..."/>
+      </div>
       ${state.dressCodes.length?`
-      <div class="field" style="margin-top:12px"><label>${t('ev_dresscode')}</label>
+      <div class="field" style="margin-bottom:12px"><label>${t('ev_dresscode')}</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
           ${state.dressCodes.map(dc=>`
             <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid ${(ev.dressCodes||[]).includes(dc.id)?'var(--gold)':'var(--border2)'};border-radius:20px;cursor:pointer;font-size:11px;background:${(ev.dressCodes||[]).includes(dc.id)?'var(--gold-bg)':'none'};transition:.15s">
@@ -2918,12 +2920,27 @@ function showEvForm(ev){
             </label>`).join('')}
         </div>
       </div>`:''}
-      <div class="field" style="margin-top:12px"><label>${t('ev_notes')}</label>
+    </div>
+
+    <!-- SECTION 4: HORAIRES & SETUP -->
+    <div class="card">
+      <div class="ctitle">Horaires</div>
+      <div class="g3">
+        <div class="field"><label>${t('ev_setup')}</label>${mkTimeSel('ef-setup',ev.setup||'')}</div>
+        <div class="field"><label>${t('ev_bar_open')}</label>${mkTimeSel('ef-start',ev.start||'')}</div>
+        <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: NOTES -->
+    <div class="card">
+      <div class="ctitle">Notes & Remarques</div>
+      <div class="field"><label>${t('ev_notes')}</label>
         <input id="ef-notes" value="${(ev.notes||'').replace(/"/g,'&quot;')}" placeholder="Allergies, exigences particulières..."/>
       </div>
     </div>
 
-    <!-- SECTION 2: COCKTAILS -->
+    <!-- SECTION 6: COCKTAILS -->
     <div class="card">
       <div class="ctitle">${t('ev_cocktails_qty')}</div>
       <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
