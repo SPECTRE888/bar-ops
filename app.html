@@ -1780,19 +1780,19 @@ function selectClientFromSearch(clientId){
   const client=state.clients.find(c=>c.id===clientId);
   if(!client) return;
   
-  // Store clientId for later save
   window._selectedClientId=clientId;
   
-  // Auto-fill event form with all client fields
-  document.getElementById('ef-client-search').value=client.name;
+  // Auto-fill ALL client fields into event form
+  document.getElementById('ef-client-search').value=client.name||'';
   if(document.getElementById('ef-addr')) document.getElementById('ef-addr').value=client.address||'';
+  if(document.getElementById('ef-contact')) document.getElementById('ef-contact').value=client.name+(client.phone?` · ${client.phone}`:'')||'';
+  if(document.getElementById('ef-email')) document.getElementById('ef-email').value=client.email||'';
+  if(document.getElementById('ef-phone')) document.getElementById('ef-phone').value=client.phone||'';
   if(document.getElementById('ef-notes')) document.getElementById('ef-notes').value=client.notes||'';
   
-  // Hide form & list
   document.getElementById('ef-client-list').style.display='none';
   document.getElementById('ef-client-form').style.display='none';
   
-  // Link client to event
   linkClientToEvent(clientId);
 }
 
@@ -2892,11 +2892,22 @@ function showEvForm(ev){
           <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte, parking..."/>
         </div>
       </div>
+      <div class="g2" style="margin-bottom:12px">
+        <div class="field"><label>Email</label>
+          <input id="ef-email" type="email" value="${(ev.email||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com"/>
+        </div>
+        <div class="field"><label>Téléphone</label>
+          <input id="ef-phone" value="${(ev.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..."/>
+        </div>
+      </div>
       <div class="g3">
+        <div class="field"><label>Contact</label>
+          <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
+        </div>
         <div class="field"><label>${t('ev_setup')}</label>${mkTimeSel('ef-setup',ev.setup||'')}</div>
         <div class="field"><label>${t('ev_bar_open')}</label>${mkTimeSel('ef-start',ev.start||'')}</div>
-        <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
       </div>
+      <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
       ${state.dressCodes.length?`
       <div class="field" style="margin-top:12px"><label>${t('ev_dresscode')}</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
@@ -3381,6 +3392,8 @@ function saveEv(){
     date:document.getElementById('ef-date')?.value||'',
     address:document.getElementById('ef-addr')?.value||'',
     access:document.getElementById('ef-access')?.value||'',
+    email:document.getElementById('ef-email')?.value||'',
+    phone:document.getElementById('ef-phone')?.value||'',
     setup:document.getElementById('ef-setup')?.value||'',
     start:document.getElementById('ef-start')?.value||'',
     end:document.getElementById('ef-end')?.value||'',
