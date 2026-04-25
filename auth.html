@@ -98,7 +98,7 @@ async function redirect(userId){
 async function googleAuth(){
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://resonant-hamster-8d8f0d.netlify.app/auth.html'}
+    options:{redirectTo:'https://melodic-cupcake-725483.netlify.app/auth.html'}
   });
   if(error)msg(error.message,'err');
 }

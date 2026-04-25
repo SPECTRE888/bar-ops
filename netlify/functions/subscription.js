@@ -22,8 +22,8 @@ exports.handler = async (event) => {
         quantity: 1,
       }],
       mode: 'subscription',
-      success_url: `${process.env.URL || 'https://resonant-hamster-8d8f0d.netlify.app'}/index.html?mode=check`,
-      cancel_url: `${process.env.URL || 'https://resonant-hamster-8d8f0d.netlify.app'}/index.html?mode=pricing`,
+      success_url: `${process.env.URL || 'https://melodic-cupcake-725483.netlify.app'}/index.html?mode=check`,
+      cancel_url: `${process.env.URL || 'https://melodic-cupcake-725483.netlify.app'}/index.html?mode=pricing`,
       metadata: { user_id: userId, plan, period },
     });
 
