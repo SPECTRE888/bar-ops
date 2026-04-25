@@ -2911,7 +2911,7 @@ function showEvForm(ev){
       <div class="g3" style="margin-bottom:12px;gap:10px">
         <div class="field" style="grid-column:span 1"><label>${t('ev_client')}</label>
           <div style="position:relative">
-            <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()" value="${ev.clientId?(state.clients.find(x=>x.id===ev.clientId)||{}).name||'':''}"/>
+            <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()" value="${ev.clientId?(state.clients.find(x=>x.id===ev.clientId)||{}).name||ev.clientName||'':ev.clientName||''}"/>
             <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
           </div>
           ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold);margin-top:3px">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
@@ -3505,9 +3505,11 @@ function saveEv(){
   if(!name){alert('Please enter an event name.');return;}
   const sel=document.getElementById('ev-content')?._sel||{};
   const existingEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+  const _clientId=parseInt(document.getElementById('ev-content')?._clientId||0)||existingEv?.clientId||null;
   const ev={
     id:editEvId||Date.now(),name,
-    clientId:parseInt(document.getElementById('ev-content')?._clientId||document.querySelector('#ef-client-name')?.dataset?.clientId||0)||existingEv?.clientId||null,
+    clientId:_clientId,
+    clientName:(state.clients.find(x=>x.id===_clientId)||{}).name||existingEv?.clientName||document.getElementById('ef-client-search')?.value||'',
     date:document.getElementById('ef-date')?.value||'',
     address:document.getElementById('ef-addr')?.value||'',
     access:document.getElementById('ef-access')?.value||'',
