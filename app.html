@@ -2900,6 +2900,7 @@ function showEvForm(ev){
   document.getElementById('btn-evback').style.display='flex';
   document.getElementById('btn-evnew').style.display='none';
   const el=document.getElementById('ev-content');
+  if(ev.clientId) el._clientId=ev.clientId;
 
   el.innerHTML=`
   <div style="max-width:1200px">
