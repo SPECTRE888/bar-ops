@@ -1278,6 +1278,12 @@ function goPage(p){
   if(pageEl) pageEl.classList.add('active');
   const navEl=document.getElementById('nav-'+p);
   if(navEl) navEl.classList.add('active');
+  
+  // Update page title
+  const titleMap={'dashboard':'Dashboard','profile':'Profil','catalogue':'Catalogue','clients':'Clients','staff':'Équipe','events':'Événements','cocktails':'Cocktails','historique':'Historique','suivi':'Suivi','planning':'Planning'};
+  const h2=pageEl?.querySelector('h2');
+  if(h2 && titleMap[p]) h2.textContent=titleMap[p];
+  
   if(p==='dashboard') renderDashboard();
   else if(p==='profile') renderProfile();
   else if(p==='catalogue') renderCatalogue();
@@ -6639,7 +6645,7 @@ function setLang(l){
   lang=l;
   localStorage.setItem('bcp_lang',l);
   applyLang();
-  // Re-render current page
+  // Re-render current page completely
   const active=document.querySelector('.page.active');
   if(active){
     const p=active.id.replace('page-','');
