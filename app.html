@@ -1924,8 +1924,8 @@ function showCForm(c){
       <div class="card" style="padding:12px">
         <div class="ctitle" style="margin-bottom:8px"> General info</div>
         <div class="g2" style="gap:6px;margin-bottom:6px">
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule" style="font-size:13px;padding:6px"/></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Category</label><select id="cf-cat" style="font-size:13px;padding:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Category</label><select id="cf-cat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box">
             <option${(c.category||'Cocktail Signature')==='Cocktail Signature'?' selected':''}>Cocktail Signature</option>
             <option${(c.category||'Cocktail Signature')==='Cocktail Classique'?' selected':''}>Cocktail Classique</option>
             <option${(c.category||'Cocktail Signature')==='Mocktail Signature'?' selected':''}>Mocktail Signature</option>
@@ -1935,18 +1935,18 @@ function showCForm(c){
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Code Crafter</label>
             <div style="position:relative">
-              <input id="cf-code" value="${(c.code||'').replace(/"/g,'&quot;')}" placeholder="ex: MM01" style="font-family:monospace;width:100%;font-size:13px;padding:6px" oninput="checkCodeDuplicate(this.value,${c.id||0})"/>
+              <input id="cf-code" value="${(c.code||'').replace(/"/g,'&quot;')}" placeholder="ex: MM01" style="font-family:monospace;width:100%;font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="checkCodeDuplicate(this.value,${c.id||0})"/>
               <div id="cf-code-status" style="font-size:10px;margin-top:2px;min-height:14px"></div>
             </div>
           </div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre</label><div id="cf-glass-ss"></div></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût verre €</label>
-            <input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px" oninput="updCRecap()"/>
+            <input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/>
           </div>
         </div>
         <div class="g2" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Préparation</label>
-            <select id="cf-technique" style="font-size:13px;padding:6px" onchange="updIceCost()">
+            <select id="cf-technique" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
               <option value="none"${(c.technique||'none')==='none'?' selected':''}>Direct</option>
               <option value="stirred"${c.technique==='stirred'?' selected':''}>Mélangé (×1.5)</option>
               <option value="shaken"${c.technique==='shaken'?' selected':''}>Shaké (×2.0)</option>
@@ -1954,7 +1954,7 @@ function showCForm(c){
             </select>
           </div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Service glace</label>
-            <select id="cf-service-ice" style="font-size:13px;padding:6px" onchange="updIceCost()">
+            <select id="cf-service-ice" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
               <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Aucune</option>
               <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks (60%)</option>
               <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (90%)</option>
@@ -1963,7 +1963,7 @@ function showCForm(c){
           </div>
         </div>
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Type glace</label>
-          <select id="cf-ice-type" style="font-size:13px;padding:6px" onchange="updIceCost()">
+          <select id="cf-ice-type" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
             <option value="">— Sélectionner —</option>
             ${state.iceTypes.map(i=>`<option value="${i.id}"${(c.iceTypeId||'')==i.id?' selected':''}>${i.name}</option>`).join('')}
           </select>
@@ -2013,10 +2013,10 @@ function showCForm(c){
         </div>
         <button class="btn btn-sm btn-ghost" onclick="applySuggestedPrice()" style="margin-bottom:6px;width:100%;font-size:12px">Appliquer</button>
         <div class="g2" style="gap:6px;margin-bottom:6px">
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" style="font-size:13px;padding:6px" oninput="updCRecap()"/></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px" onchange="updCRecap()">
-            <option value="10"${(c.vat||10)===10?' selected':''}>10% F&B</option>
-            <option value="20"${c.vat===20?' selected':''}>20% Std</option>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
+            <option value="10"${(c.vat||20)===10?' selected':''}>10% F&B</option>
+            <option value="20"${(c.vat||20)===20?' selected':''}>20% Std</option>
           </select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;font-size:12px">
