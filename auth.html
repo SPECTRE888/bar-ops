@@ -132,6 +132,19 @@ function toggleEmailForm(type){
   form.style.display=form.style.display==='none'?'block':'none';
 }
 
+async function checkSubAndRedirect(userId){
+  try{
+    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
+    if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+      window.location.href='app.html';
+    }else{
+      window.location.href='index.html?mode=pricing';
+    }
+  }catch(e){
+    window.location.href='index.html?mode=pricing';
+  }
+}
+
 async function signupGoogle(){
   try{
     const{error}=await sb.auth.signInWithOAuth({
@@ -175,12 +188,9 @@ async function signupEmail(){
   btn.textContent='...';
   
   try{
-    const{error}=await sb.auth.signUp({email,password});
+    const{data:{user},error}=await sb.auth.signUp({email,password});
     if(error)throw error;
-    
-    localStorage.setItem('bcp_user',email);
-    showMessage('Inscription réussie! Redirection...','success');
-    setTimeout(()=>{window.location.href='index.html?mode=pricing'},2000);
+    await checkSubAndRedirect(user.id);
   }catch(e){
     showMessage('Erreur: '+e.message,'error');
   }finally{
@@ -203,12 +213,9 @@ async function loginEmail(){
   btn.textContent='...';
   
   try{
-    const{error}=await sb.auth.signInWithPassword({email,password});
+    const{data:{user},error}=await sb.auth.signInWithPassword({email,password});
     if(error)throw error;
-    
-    localStorage.setItem('bcp_user',email);
-    showMessage('Connexion réussie!','success');
-    setTimeout(()=>{window.location.href='index.html?mode=check'},2000);
+    await checkSubAndRedirect(user.id);
   }catch(e){
     showMessage('Email/mot de passe incorrect','error');
   }finally{

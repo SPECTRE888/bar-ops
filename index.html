@@ -127,6 +127,11 @@ let currentPeriod='monthly';
 
 // CHECK SESSION ONLY AFTER AUTH REDIRECT
 (async()=>{
+  const mode=new URLSearchParams(window.location.search).get('mode');
+  if(mode==='pricing'){
+    document.getElementById('pricingModal').classList.add('active');
+    return;
+  }
   if(!window.supabase)return;
   const hash=window.location.hash;
   const isAuthRedirect=hash.includes('access_token')||hash.includes('type=signup');
