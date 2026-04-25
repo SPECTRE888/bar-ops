@@ -19,6 +19,9 @@ exports.handler = async (event) => {
     const session = stripeEvent.data.object;
     const { user_id, plan, period } = session.metadata;
 
+    // Cancel all old active subscriptions for this user
+    await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('user_id', user_id).eq('status', 'active');
+
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + (period === 'yearly' ? 12 : 1));
 
