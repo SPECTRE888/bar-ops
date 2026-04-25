@@ -58,16 +58,21 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     // Fallback: if no subscription after retries, allow trial access
     if(!isActive&&!subs){
       console.log('No subscription found - allowing trial access');
-      window.cloudUser=session.user;
+      window.cloudUser={access_token:session.access_token,refresh_token:session.refresh_token,user:session.user};
       window._userEmail=session.user.email;
       window._userPlan='trial';
       return;
     }
     if(!isActive){window.location.href='index.html?mode=pricing';return;}
     
-    window.cloudUser=session.user;
+    window.cloudUser={
+      access_token:session.access_token,
+      refresh_token:session.refresh_token,
+      user:session.user
+    };
     window._userEmail=session.user.email;
     window._userPlan=subs?.plan||'trial';
+    localStorage.setItem('bcp_session',JSON.stringify(window.cloudUser));
   }catch(e){
     console.error('Paywall error:',e);
     window.location.href='index.html?mode=pricing';
