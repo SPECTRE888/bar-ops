@@ -4847,12 +4847,22 @@ function generateDevis(){
       ${ev.address?`<div style="color:#777;font-size:12px;margin-bottom:2px">${ev.address}</div>`:''}
       ${ev.pax?`<div style="color:#777;font-size:12px">${ev.pax} personnes</div>`:''}
     </div>
-    <div>
+    <div style="text-align:right">
       <div class="label">Client</div>
       ${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);
         return cl?`<div style="font-size:16px;font-weight:500;margin-bottom:4px">${cl.name}</div>${cl.company?`<div style="color:#555;font-size:13px;margin-bottom:2px">${cl.company}</div>`:''}${cl.email?`<div style="color:#777;font-size:12px;margin-bottom:2px">${cl.email}</div>`:''}${cl.phone?`<div style="color:#777;font-size:12px">${cl.phone}</div>`:''}`:'<div style="color:#bbb">—</div>';})()}
     </div>
   </div>
+
+  <!-- BAR -->
+  ${(ev.nBar||ev.barLength||ev.barType)?`<div class="section">
+    <div class="label">Bar</div>
+    <table><tbody>
+      ${ev.barType?`<tr><td style="padding:10px 16px;border-bottom:1px solid #f0ede8;color:#555">Type de bar</td><td style="padding:10px 16px;border-bottom:1px solid #f0ede8;text-align:right">${ev.barType}</td></tr>`:''}
+      ${ev.nBar?`<tr><td style="padding:10px 16px;border-bottom:1px solid #f0ede8;color:#555">Nombre de bars</td><td style="padding:10px 16px;border-bottom:1px solid #f0ede8;text-align:right">${ev.nBar}</td></tr>`:''}
+      ${ev.barLength?`<tr><td style="padding:10px 16px;border-bottom:1px solid #f0ede8;color:#555">Longueur</td><td style="padding:10px 16px;border-bottom:1px solid #f0ede8;text-align:right">${ev.barLength}m</td></tr>`:''}
+    </tbody></table>
+  </div>`:''}
 
   <!-- COCKTAILS -->
   ${cocktailLines?`<div class="section">
