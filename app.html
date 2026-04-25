@@ -2911,7 +2911,7 @@ function showEvForm(ev){
       <div class="g3" style="margin-bottom:12px;gap:10px">
         <div class="field" style="grid-column:span 1"><label>${t('ev_client')}</label>
           <div style="position:relative">
-            <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()"/>
+            <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()" value="${ev.clientId?(state.clients.find(x=>x.id===ev.clientId)||{}).name||'':''}"/>
             <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
           </div>
           ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold);margin-top:3px">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
