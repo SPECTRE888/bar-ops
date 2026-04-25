@@ -1791,7 +1791,6 @@ function selectClientFromSearch(clientId){
   setTimeout(()=>{
     console.log('Filling event form fields...');
     if(document.getElementById('ef-addr')) document.getElementById('ef-addr').value=client.address||'';
-    if(document.getElementById('ef-contact')) document.getElementById('ef-contact').value=client.name||'';
     if(document.getElementById('ef-email')) document.getElementById('ef-email').value=client.email||'';
     if(document.getElementById('ef-phone')) document.getElementById('ef-phone').value=client.phone||'';
     if(document.getElementById('ef-notes')) document.getElementById('ef-notes').value=client.notes||'';
