@@ -2846,12 +2846,20 @@ function showEvForm(ev){
     <!-- SECTION 2: CLIENT & CONTACT -->
     <div class="card">
       <div class="ctitle">Client & Contact</div>
-      <div class="field" style="margin-bottom:12px"><label>${t('ev_client')}</label>
-        <div style="position:relative">
-          <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()"/>
-          <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
+      <div class="g3" style="margin-bottom:12px;gap:10px">
+        <div class="field" style="grid-column:span 1"><label>${t('ev_client')}</label>
+          <div style="position:relative">
+            <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()"/>
+            <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
+          </div>
+          ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold);margin-top:3px">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
         </div>
-        ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold)">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
+        <div class="field" style="grid-column:span 1"><label>Email</label>
+          <input id="ef-email" type="email" value="${(ev.email||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com"/>
+        </div>
+        <div class="field" style="grid-column:span 1"><label>Téléphone</label>
+          <input id="ef-phone" value="${(ev.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..."/>
+        </div>
       </div>
 
       <!-- Client inline form (shown when new client needed) -->
@@ -2888,14 +2896,6 @@ function showEvForm(ev){
         </div>
       </div>
 
-      <div class="g2" style="margin-bottom:12px">
-        <div class="field"><label>Email</label>
-          <input id="ef-email" type="email" value="${(ev.email||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com"/>
-        </div>
-        <div class="field"><label>Téléphone</label>
-          <input id="ef-phone" value="${(ev.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..."/>
-        </div>
-      </div>
       <div class="field"><label>Contact / Responsable</label>
         <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
       </div>
