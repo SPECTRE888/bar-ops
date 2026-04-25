@@ -2904,11 +2904,13 @@ function showEvForm(ev){
     <!-- SECTION 3: LIEU & ACCÈS -->
     <div class="card">
       <div class="ctitle">Lieu & Accès</div>
-      <div class="field" style="margin-bottom:12px"><label>${t('ev_address')}</label>
-        <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
-      </div>
-      <div class="field" style="margin-bottom:12px"><label>${t('ev_access')}</label>
-        <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte, parking..."/>
+      <div style="display:grid;grid-template-columns:1.4fr 0.6fr;gap:10px;margin-bottom:12px">
+        <div class="field"><label>${t('ev_address')}</label>
+          <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
+        </div>
+        <div class="field"><label>${t('ev_access')}</label>
+          <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte..."/>
+        </div>
       </div>
       ${state.dressCodes.length?`
       <div class="field" style="margin-bottom:12px"><label>${t('ev_dresscode')}</label>
