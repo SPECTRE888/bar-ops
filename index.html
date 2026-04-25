@@ -170,14 +170,20 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
   // Handle post-payment redirect
   if(mode==='check'){
     const{data:{session}}=await sb.auth.getSession();
-    if(!session)return;
-    try{
-      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
-      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
-        window.location.href='app.html';
-        return;
-      }
-    }catch(e){}
+    if(!session){console.log('No session');return;}
+    
+    // Retry subscription check (webhook delay)
+    for(let i=0;i<5;i++){
+      try{
+        const{data,error}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single().catch(e=>({error:e}));
+        if(!error&&data?.status==='active'&&new Date(data.expires_at)>new Date()){
+          window.location.href='app.html';
+          return;
+        }
+      }catch(e){console.log('Retry',i,e);}
+      await new Promise(r=>setTimeout(r,1000));
+    }
+    console.log('No active subscription found');
   }
   
   if(mode==='pricing') document.getElementById('pricingModal').classList.add('active');
