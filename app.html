@@ -4845,7 +4845,7 @@ function generateDevis(){
   const withBtns=html.replace('</body></html>',`
   <div class="no-print" style="text-align:center;margin-top:40px;display:flex;gap:12px;justify-content:center">
     <button onclick="window.print()" style="padding:12px 28px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.04em">Enregistrer PDF</button>
-    <button onclick="sendQuoteToClient('${ev.id}','${devisNum}')" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:.04em">Envoyer au client</button>
+    <button onclick="localStorage.setItem('sendQuote',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));window.close()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:.04em">Envoyer au client</button>
   </div>
   </body></html>`);
   w.document.write(withBtns);
@@ -6752,6 +6752,15 @@ updateCloudStatus();
   updateBadges();
   renderDashboard();
   applyTheme();
+  
+  // Listen for devis send from popup
+  window.addEventListener('storage',(e)=>{
+    if(e.key==='sendQuote'&&e.newValue){
+      const data=JSON.parse(e.newValue);
+      sendQuoteToClient(data.evId,data.devisNum);
+      localStorage.removeItem('sendQuote');
+    }
+  });
 })();
 </script>
 </body>
