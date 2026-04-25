@@ -19,6 +19,29 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='index.html?mode=pricing';return;}
     
+    // Check multi-device limit (max 3 sessions)
+    const sessionId=Math.random().toString(36).slice(2);
+    const deviceId=localStorage.getItem('bcp_device_id')||sessionId;
+    if(!localStorage.getItem('bcp_device_id')) localStorage.setItem('bcp_device_id',deviceId);
+    
+    try{
+      // Record this session
+      const{error:insertErr}=await sb.from('user_sessions').insert([{
+        user_id:session.user.id,
+        session_id:sessionId,
+        device_id:deviceId,
+        device_name:navigator.userAgent.split(' ').pop(),
+        ip_address:'unknown'
+      }]);
+      
+      if(!insertErr){
+        // Cleanup old sessions (keep only 3)
+        await sb.rpc('cleanup_old_sessions',[session.user.id]);
+      }
+    }catch(e){
+      console.log('Session tracking failed (non-critical)');
+    }
+    
     let subs=null;
     let retries=0;
     while(!subs&&retries<5){
