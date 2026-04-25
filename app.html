@@ -2830,16 +2830,16 @@ function showEvForm(ev){
     <!-- SECTION 1: BASE EVENT -->
     <div class="card">
       <div class="ctitle">Événement</div>
-      <div class="g2" style="margin-bottom:12px">
+      <div class="g3" style="margin-bottom:12px">
         <div class="field"><label>${t('ev_name')}</label>
           <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
         </div>
         <div class="field"><label>${t('ev_date')}</label>
           <input type="date" id="ef-date" value="${ev.date||''}"/>
         </div>
-      </div>
-      <div class="field" style="margin-bottom:12px"><label>${t('ev_pax')}</label>
-        <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
+        <div class="field"><label>${t('ev_pax')}</label>
+          <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
+        </div>
       </div>
     </div>
 
