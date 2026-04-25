@@ -618,7 +618,6 @@ async function cloudSignIn(email,password){
       body:JSON.stringify({email,password})
     });
     const data=await r.json();
-    console.log('Login response:',{status:r.status,hasError:!!data.error,error:data.error});
     if(data.error||data.error_description||data.msg) return{error:data.error_description||data.error||data.msg};
     // Supabase returns access_token at root OR inside data.session
     const session=data.session||data;
@@ -632,11 +631,9 @@ async function cloudSignIn(email,password){
     };
     cloudUser=normalized;
     localStorage.setItem('bcp_session',JSON.stringify(normalized));
-    console.log('Login success, session stored');
-    // Create/ensure workspaces table row
     await ensureWorkspace();
     return{ok:true};
-  }catch(e){console.error('Login catch error:',e);return{error:'Erreur réseau'};}
+  }catch(e){console.warn('Login error:',e);return{error:'Erreur réseau'};}
 }
 
 async function cloudSignUp(email,password){
@@ -762,7 +759,6 @@ async function cloudPush(){
   const token=extractToken(cloudUser);
   if(!uid||!token){console.warn('cloudPush: missing uid or token',{uid,token:!!token});return false;}
   try{
-    console.log('cloudPush attempt',{uid,hasToken:!!token,hasKey:!!key,url});
     const r=await fetch(`${url}/rest/v1/workspaces`,{
       method:'POST',
       headers:{
@@ -773,7 +769,6 @@ async function cloudPush(){
       },
       body:JSON.stringify({user_id:uid,data:JSON.stringify(state),updated_at:new Date().toISOString()})
     });
-    console.log('cloudPush response',r.status);
     return r.ok||r.status===201||r.status===200;
   }catch(e){console.warn('cloudPush error:',e);return false;}
 }
@@ -1009,8 +1004,6 @@ function save(){
     localStorage.setItem(SK, JSON.stringify(state));
     document.getElementById('save-dot').style.background='var(--green)';
     document.getElementById('save-text').textContent='Saved — '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    // Trigger cloud push (debounced)
-    console.log('save() called, cloudUser:',!!cloudUser);
     if(cloudUser) schedulePush();
   }catch(e){
     document.getElementById('save-dot').style.background='var(--red)';
@@ -6762,10 +6755,8 @@ updateCloudStatus();
 
 // Async init: refresh session → pull → demo → render
 (async()=>{
-  console.log('Async init: cloudUser=',!!cloudUser);
   if(cloudUser){
     const refreshed=await cloudRefreshSession();
-    console.log('Session refresh result:',refreshed,'cloudUser after:',!!cloudUser);
     if(!refreshed&&!cloudUser){
       localStorage.removeItem('bcp_session');
       updateCloudStatus();
