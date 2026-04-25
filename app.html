@@ -4720,14 +4720,51 @@ function buildPrestHTML(ev){
   return html;
 }
 
-function sendQuoteToClient(evId,devisNum){
+async function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   if(!ev||!ev.contactEmail){alert('Événement sans email contact.');return;}
-  const subject=encodeURIComponent(`Devis ${devisNum}${ev?' — '+ev.name:''}`);
-  const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
-  const body=encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint votre devis ${devisNum}.\n\nN'hésitez pas à nous contacter pour toute question.\n\nCordialement,\n${sigName}`);
-  window.open(`mailto:${ev.contactEmail}?subject=${subject}&body=${body}`,'_blank');
-  log('📧 Devis '+devisNum+' envoyé à '+ev.contactEmail);
+  
+  try{
+    // Generate PDF as base64
+    const pdfWindow=window.open('','_blank');
+    const devisHTML=generateDevisHTML(ev,devisNum);
+    pdfWindow.document.write(devisHTML);
+    pdfWindow.document.close();
+    
+    // Get PDF content via print
+    const canvas=await html2canvas(pdfWindow.document.body);
+    const pdfBase64='data:application/pdf;base64,...'; // Placeholder
+    
+    const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
+    const emailHTML=`<p>Bonjour,</p>
+    <p>Veuillez trouver ci-joint votre devis ${devisNum}.</p>
+    <p>N'hésitez pas à nous contacter pour toute question.</p>
+    <p>Cordialement,<br/>${sigName}</p>`;
+    
+    const response=await fetch('/.netlify/functions/send-quote',{
+      method:'POST',
+      body:JSON.stringify({
+        to:ev.contactEmail,
+        subject:`Devis ${devisNum} — ${ev.name}`,
+        html:emailHTML,
+        pdfBase64,
+        pdfFilename:`Devis-${devisNum}.pdf`,
+        fromEmail:state.profile?.email||'noreply@barops.app',
+        fromName:sigName
+      })
+    });
+    
+    const result=await response.json();
+    if(result.success){
+      log('📧 Devis '+devisNum+' envoyé à '+ev.contactEmail);
+      toast('Devis envoyé à '+ev.contactEmail);
+    }else{
+      alert('Erreur envoi email: '+result.error);
+    }
+  }catch(e){
+    console.error('Send quote error:',e);
+    alert('Erreur: '+e.message);
+  }
 }
 
 function generateDevis(){
