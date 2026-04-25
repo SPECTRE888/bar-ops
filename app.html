@@ -32,8 +32,6 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     
     window.cloudUser=session.user;
     window._userEmail=session.user.email;
-    const sel=document.getElementById('sidebar-user');
-    if(sel)sel.textContent='● '+session.user.email;
   }catch(e){
     console.error('Paywall error:',e);
     window.location.href='index.html?mode=pricing';
@@ -324,17 +322,11 @@ select option{background:#151515}
       </div>
     </div>
 
-    <!-- User email -->
-    <div id="sidebar-user" style="font-size:10px;color:var(--text3);letter-spacing:.04em;opacity:.7;text-align:center"></div>
-
     <!-- Logout -->
     <button onclick="sidebarLogout()" style="font-size:10px;color:var(--text3);background:none;border:1px solid var(--border2);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body);padding:6px;border-radius:3px;width:100%">Déconnexion</button>
 
-    <!-- Delete + Legal -->
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <button onclick="deleteAccountModal()" style="font-size:9px;color:var(--red);background:none;border:none;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body)">Supprimer</button>
-      <button onclick="showLegal()" style="font-size:9px;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.08em;font-family:var(--font-body)">© BAR OPS</button>
-    </div>
+    <!-- Legal -->
+    <button onclick="showLegal()" style="font-size:9px;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.08em;font-family:var(--font-body);width:100%">© BAR OPS</button>
 
   </div>
 </div>
