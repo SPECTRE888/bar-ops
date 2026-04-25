@@ -2905,23 +2905,7 @@ function showEvForm(ev){
   el.innerHTML=`
   <div style="max-width:1200px">
 
-    <!-- SECTION 1: BASE EVENT -->
-    <div class="card">
-      <div class="ctitle">Événement</div>
-      <div class="g3" style="margin-bottom:12px">
-        <div class="field"><label>${t('ev_name')}</label>
-          <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
-        </div>
-        <div class="field"><label>${t('ev_date')}</label>
-          <input type="date" id="ef-date" value="${ev.date||''}"/>
-        </div>
-        <div class="field"><label>${t('ev_pax')}</label>
-          <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
-        </div>
-      </div>
-    </div>
-
-    <!-- SECTION 2: CLIENT & CONTACT -->
+    <!-- SECTION 1: CLIENT & CONTACT -->
     <div class="card">
       <div class="ctitle">Client & Contact</div>
       <div class="g3" style="margin-bottom:12px;gap:10px">
@@ -2987,7 +2971,21 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 3: LIEU & ACCÈS -->
+    <!-- SECTION 2: BASE EVENT -->
+    <div class="card">
+      <div class="ctitle">Événement</div>
+      <div class="g3" style="margin-bottom:12px">
+        <div class="field"><label>${t('ev_name')}</label>
+          <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
+        </div>
+        <div class="field"><label>${t('ev_date')}</label>
+          <input type="date" id="ef-date" value="${ev.date||''}"/>
+        </div>
+        <div class="field"><label>${t('ev_pax')}</label>
+          <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <div class="ctitle">Lieu & Accès</div>
       <div style="display:grid;grid-template-columns:1.4fr 0.6fr;gap:10px;margin-bottom:12px">
