@@ -25,22 +25,15 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     if(!localStorage.getItem('bcp_device_id')) localStorage.setItem('bcp_device_id',deviceId);
     
     try{
-      // Record this session
-      const{error:insertErr}=await sb.from('user_sessions').insert([{
+      await sb.from('user_sessions').upsert([{
         user_id:session.user.id,
         session_id:sessionId,
         device_id:deviceId,
         device_name:navigator.userAgent.split(' ').pop(),
-        ip_address:'unknown'
-      }]);
-      
-      if(!insertErr){
-        // Cleanup old sessions (keep only 3)
-        await sb.rpc('cleanup_old_sessions',[session.user.id]);
-      }
-    }catch(e){
-      console.log('Session tracking failed (non-critical)');
-    }
+        ip_address:'unknown',
+        last_active:new Date().toISOString()
+      }],{onConflict:'user_id,device_id'});
+    }catch(e){}
     
     let subs=null;
     let retries=0;
