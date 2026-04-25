@@ -3170,6 +3170,12 @@ function showEvForm(ev){
       const inp=document.getElementById('ef-client-search');
       if(inp) inp.value=client.name;
       el._clientName=client.name;
+    } else {
+      // clients may not be loaded yet (cloudPull pending) — retry
+      setTimeout(()=>{
+        const c=state.clients.find(x=>x.id===ev.clientId);
+        if(c){const inp=document.getElementById('ef-client-search');if(inp)inp.value=c.name;}
+      },3000);
     }
   }
 
@@ -3503,7 +3509,7 @@ function saveEv(){
   const existingEv=editEvId?state.events.find(x=>x.id===editEvId):null;
   const ev={
     id:editEvId||Date.now(),name,
-    clientId:parseInt(document.getElementById('ev-content')?._clientId||document.querySelector('#ef-client-name')?.dataset?.clientId||0)||null,
+    clientId:parseInt(document.getElementById('ev-content')?._clientId||document.querySelector('#ef-client-name')?.dataset?.clientId||0)||existingEv?.clientId||null,
     date:document.getElementById('ef-date')?.value||'',
     address:document.getElementById('ef-addr')?.value||'',
     access:document.getElementById('ef-access')?.value||'',
@@ -6857,6 +6863,12 @@ updateCloudStatus();
         state=freshState();
         injectDemoData();
         await cloudPush();
+      }
+      // Re-restore client name if event form is open
+      const evContent=document.getElementById('ev-content');
+      if(evContent&&evContent._clientId){
+        const client=state.clients.find(x=>x.id===evContent._clientId);
+        if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
       }
       updateCloudStatus();
     }
