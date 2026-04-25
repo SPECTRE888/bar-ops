@@ -8,8 +8,36 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-function setPeriod(p){if(window._setPeriod)window._setPeriod(p);}
-function goPay(plan){if(window._goPay)window._goPay(plan);}
+const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
+const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
+let currentPeriod='monthly';
+
+function setPeriod(p){
+  currentPeriod=p;
+  document.getElementById('btn-monthly').classList.toggle('active',p==='monthly');
+  document.getElementById('btn-yearly').classList.toggle('active',p==='yearly');
+  document.getElementById('price-early').innerHTML=p==='yearly'?'801€<small>/an</small>':'89€<small>/mois</small>';
+  document.getElementById('price-pro').innerHTML=p==='yearly'?'1341€<small>/an</small>':'149€<small>/mois</small>';
+}
+
+async function goPay(plan){
+  if(plan==='free'){window.location.href='app.html';return;}
+  const price=PRICES[plan][currentPeriod];
+  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='auth.html';return;}
+  try{
+    const res=await fetch('/.netlify/functions/subscription',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100)})
+    });
+    const{sessionId}=await res.json();
+    if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
+  }catch(e){alert('Erreur: '+e.message);}
+}
 </script>
 <style>
 :root{--bg:#080808;--surface:#0f0f0f;--text:#ede8e0;--text2:#a09890;--gold:#c4a46b;--gold2:#d4b47a}
@@ -124,65 +152,28 @@ footer{margin-top:80px;padding:40px 20px;border-top:1px solid #222;text-align:ce
 <footer><p>© 2025 BAR OPS. Tous droits réservés.</p></footer>
 
 <script>
-const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
-const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
-let currentPeriod='monthly';
-
-// CHECK SESSION ONLY AFTER AUTH REDIRECT
+// SESSION CHECK
 (async()=>{
   const mode=new URLSearchParams(window.location.search).get('mode');
-  if(mode==='pricing'){
-    document.getElementById('pricingModal').classList.add('active');
-  }
+  if(mode==='pricing') document.getElementById('pricingModal').classList.add('active');
   if(!window.supabase)return;
   const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   const{data:{session}}=await sb.auth.getSession();
-  if(session){
-    const cta=document.getElementById('auth-cta');
-    if(cta)cta.style.display='none';
-    if(mode==='pricing')return;
-    try{
-      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
-      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
-        window.location.href='app.html';
-      }else{
-        document.getElementById('pricingModal').classList.add('active');
-      }
-    }catch(e){
+  if(!session)return;
+  const cta=document.getElementById('auth-cta');
+  if(cta)cta.style.display='none';
+  if(mode==='pricing')return;
+  try{
+    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).single();
+    if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+      window.location.href='app.html';
+    }else{
       document.getElementById('pricingModal').classList.add('active');
     }
+  }catch(e){
+    document.getElementById('pricingModal').classList.add('active');
   }
 })();
-</script>
-
-function _setPeriod(p){
-  currentPeriod=p;
-  document.getElementById('btn-monthly').classList.toggle('active',p==='monthly');
-  document.getElementById('btn-yearly').classList.toggle('active',p==='yearly');
-  document.getElementById('price-early').innerHTML=p==='yearly'?'801€<small>/an</small>':'89€<small>/mois</small>';
-  document.getElementById('price-pro').innerHTML=p==='yearly'?'1341€<small>/an</small>':'149€<small>/mois</small>';
-}
-window._setPeriod=_setPeriod;
-
-async function _goPay(plan){
-  if(plan==='free'){window.location.href='app.html';return;}
-  const price=PRICES[plan][currentPeriod];
-  const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session){window.location.href='auth.html';return;}
-  try{
-    const res=await fetch('/.netlify/functions/subscription',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100)})
-    });
-    const{sessionId}=await res.json();
-    if(sessionId) Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
-  }catch(e){alert('Erreur: '+e.message);}
-}
-window._goPay=_goPay;
-
 </script>
 </body>
 </html>
