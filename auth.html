@@ -136,7 +136,7 @@ async function signupGoogle(){
   try{
     const{error}=await sb.auth.signInWithOAuth({
       provider:'google',
-      options:{redirectTo:window.location.origin+'/index.html?mode=pricing'}
+      options:{redirectTo:window.location.origin+'/'}
     });
     if(error)throw error;
   }catch(e){
@@ -148,7 +148,7 @@ async function loginGoogle(){
   try{
     const{error}=await sb.auth.signInWithOAuth({
       provider:'google',
-      options:{redirectTo:window.location.origin+'/index.html?mode=check'}
+      options:{redirectTo:window.location.origin+'/'}
     });
     if(error)throw error;
   }catch(e){
