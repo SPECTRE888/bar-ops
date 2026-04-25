@@ -6,6 +6,7 @@
 <title>BAR OPS — Event Excellence Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.STRIPE_PUBLIC_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
 
 const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
@@ -29,6 +30,10 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     }
     
     window.cloudUser=session.user;
+    window._userEmail=session.user.email;
+    // Display email in sidebar
+    const sel=document.getElementById('sidebar-user');
+    if(sel)sel.textContent='● '+session.user.email;
   }catch(e){
     console.error('Paywall error:',e);
     window.location.href='index.html?mode=pricing';
@@ -318,8 +323,10 @@ select option{background:#151515}
     </div>
   </div>
   <div style="padding:6px 18px 10px;text-align:center;border-top:1px solid var(--border)">
+    <div id="sidebar-user" style="font-size:10px;color:var(--text3);text-align:center;padding:6px 0;letter-spacing:.04em;opacity:.7" id="sidebar-email"></div>
+    <button onclick="sidebarLogout()" style="font-size:8px;color:var(--text3);background:none;border:1px solid var(--border2);cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);display:block;width:calc(100% - 36px);margin:0 18px 6px;padding:5px;border-radius:3px">Déconnexion</button>
     <button onclick="deleteAccountModal()" style="font-size:8px;color:var(--red);background:none;border:none;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);margin-bottom:8px">🗑️ Supprimer le compte</button>
-    <button onclick="showLegal()" style="font-size:8px;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);display:block;width:100%">© Intelligence Spotlighted</button>
+    <button onclick="showLegal()" style="font-size:8px;color:var(--text3);background:none;border:none;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);display:block;width:100%">© BAR OPS</button>
   </div>
 </div>
 
@@ -522,7 +529,13 @@ let cloudUser=null;
 let syncDebounceTimer=null;
 
 function showCloudModal(){} // Stub - real impl below
-function deleteAccountModal(){}
+function deleteAccountModal(){} // Stub
+
+async function sidebarLogout(){
+  const sb=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
+  if(sb)await sb.auth.signOut();
+  window.location.href='index.html';
+}
 
 function getSupabase(){
   return{url:SUPA_URL,key:SUPA_KEY};
