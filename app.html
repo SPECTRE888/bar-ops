@@ -5808,24 +5808,23 @@ function renderProfile(){
 
   el.innerHTML=`<div style="max-width:1200px">
 
-    <!-- ROW 1: Compte & Infos côte à côte -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <!-- ROW 1: Compte & Email/SendGrid (2/3) + Logo/Signature (1/3) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px">
 
-      <!-- Compte -->
-      <div class="card">
+      <!-- Compte (full left section height) -->
+      <div class="card" style="grid-column:span 2;display:flex;flex-direction:column">
         <div class="ctitle">Compte</div>
         ${isConnected?`
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex:1">
             <div style="width:40px;height:40px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:16px;font-family:var(--font-display);color:var(--gold)">
               ${email.charAt(0).toUpperCase()}
             </div>
             <div>
               <div style="font-size:13px;font-weight:500">${email}</div>
-              <div class="txs tm">Connecté · sync cloud actif</div>
+              <div class="txs tm">Connecté • Sync cloud actif</div>
             </div>
           </div>
 
-          <!-- Changer email -->
           <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Changer d'email</div>
             <div style="display:flex;gap:8px">
@@ -5835,7 +5834,6 @@ function renderProfile(){
             <div id="prof-email-msg" style="font-size:11px;margin-top:6px;min-height:14px"></div>
           </div>
 
-          <!-- Changer mot de passe -->
           <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:14px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Changer le mot de passe</div>
             <div style="display:flex;flex-direction:column;gap:8px">
@@ -5846,23 +5844,93 @@ function renderProfile(){
             <div id="prof-pass-msg" style="font-size:11px;margin-top:6px;min-height:14px"></div>
           </div>
 
-          <!-- Déconnexion -->
-          <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;gap:8px">
+          <div style="border-top:1px solid var(--border);padding-top:14px;display:flex;gap:8px;margin-top:auto">
+            <button class="btn btn-ghost" onclick="cloudSignOut();goPage('dashboard')">Se deconnecter</button>
+          </div>
             <button class="btn btn-ghost" onclick="cloudSignOut();goPage('dashboard')">Se déconnecter</button>
           </div>
         `:`
-          <div class="txs tm" style="margin-bottom:16px">Connecte-toi pour synchroniser tes données sur tous tes appareils.</div>
+          <div class="txs tm" style="margin-bottom:16px">Connecte-toi pour synchroniser tes donnees sur tous tes appareils.</div>
           <button class="btn btn-gold" onclick="showCloudModal()">Se connecter</button>
         `}
       </div>
 
-      <!-- Informations société -->
+      <!-- Email & SendGrid (spans 2 columns left) -->
+      <div class="card" style="grid-column:span 2;display:flex;flex-direction:column">
+        <div class="ctitle">Email & SendGrid</div>
+        <div id="prof-sendgrid-view">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;flex:1">
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:6px">Email d'envoi</div>
+              <div style="font-size:13px;font-family:monospace">${state.profile?.senderEmail||'Non configure'}</div>
+            </div>
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:6px">Cle SendGrid</div>
+              <div style="font-size:13px;font-family:monospace;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'Configuree':'Non configuree'}</div>
+            </div>
+          </div>
+          <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;margin-bottom:14px;font-size:11px;color:var(--text2);line-height:1.5">
+            <div style="font-weight:500;margin-bottom:8px">Comment configurer :</div>
+            <ol style="margin:0;padding-left:18px;color:var(--text2)">
+              <li style="margin-bottom:6px">Cree un compte SendGrid gratuit : <a href="https://sendgrid.com/free" target="_blank" style="color:var(--gold);text-decoration:none">sendgrid.com/free</a></li>
+              <li style="margin-bottom:6px">Genere une cle API dans Settings → API Keys → Create API Key (Full Access)</li>
+              <li>Rentre tes infos ci-dessous et valide</li>
+            </ol>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%;margin-top:auto">Configurer</button>
+        </div>
+        <div id="prof-sendgrid-edit" style="display:none">
+          <div class="field" style="margin-bottom:10px">
+            <label>Email d'envoi</label>
+            <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com"/>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Cle API SendGrid</label>
+            <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxxxxxxxxxxxxxxxxxxxx" style="font-family:monospace"/>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:14px;padding:8px;background:var(--surface);border-radius:4px">
+            Securite : Ta cle est chiffree et ne sera jamais visible apres confirmation.
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()">Confirmer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logo & Branding (right 1/3) -->
+      <div class="card" style="display:flex;flex-direction:column">
+        <div class="ctitle">Logo & Signature</div>
+        <div id="prof-logo-view" style="flex:1;display:flex;flex-direction:column">
+          <div style="margin-bottom:12px;flex:1">
+            ${state.profile?.logo?`<div style="max-width:100%;margin-bottom:10px"><img src="${state.profile.logo}" style="max-width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--border)"/></div>`:'<div style="font-size:13px;color:var(--text3);margin-bottom:10px">Aucun logo</div>'}
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
+        </div>
+        <div id="prof-logo-edit" style="display:none;flex:1;display:flex;flex-direction:column">
+          <div class="field" style="margin-bottom:14px;flex:1">
+            <label>Logo (image)</label>
+            <input id="prof-logo-input" type="file" accept="image/*" style="padding:8px"/>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:auto">
+            <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()">Confirmer</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROW 2: Company Info & Data -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+
+      <!-- Company Info -->
       <div class="card">
-        <div class="ctitle">Informations société</div>
+        <div class="ctitle">Informations societe</div>
         <div id="prof-bar-view">
           <div style="display:grid;gap:12px;margin-bottom:12px">
             <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Nom de la société</div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Nom de la societe</div>
               <div style="font-size:13px">${state.profile?.barName||'—'}</div>
             </div>
             <div>
@@ -5870,7 +5938,7 @@ function renderProfile(){
               <div style="font-size:13px">${state.profile?.city||'—'}</div>
             </div>
             <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Téléphone pro</div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Telephone pro</div>
               <div style="font-size:13px">${state.profile?.phone||'—'}</div>
             </div>
             <div>
@@ -5882,7 +5950,7 @@ function renderProfile(){
         </div>
         <div id="prof-bar-edit" style="display:none">
           <div class="field" style="margin-bottom:10px">
-            <label>Nom de la société</label>
+            <label>Nom de la societe</label>
             <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="Votre entreprise SARL"/>
           </div>
           <div class="field" style="margin-bottom:10px">
@@ -5890,7 +5958,7 @@ function renderProfile(){
             <input id="prof-city" value="${state.profile?.city||''}" placeholder="Paris"/>
           </div>
           <div class="field" style="margin-bottom:10px">
-            <label>Téléphone pro</label>
+            <label>Telephone pro</label>
             <input id="prof-phone" value="${state.profile?.phone||''}" placeholder="+33 6..."/>
           </div>
           <div class="field" style="margin-bottom:14px">
@@ -5902,102 +5970,14 @@ function renderProfile(){
             <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()">Confirmer</button>
           </div>
         </div>
-
-    </div>
-
-    <!-- FULL WIDTH: Email & SendGrid Setup -->
-    <div class="card">
-      <div class="ctitle">Email & SendGrid — Envoie tes devis directement</div>
-      <div id="prof-sendgrid-view">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
-          <div>
-            <div class="txs tm" style="color:var(--text3);margin-bottom:6px">📧 Email d'envoi</div>
-            <div style="font-size:13px;font-family:monospace">${state.profile?.senderEmail||'Non configuré'}</div>
-          </div>
-          <div>
-            <div class="txs tm" style="color:var(--text3);margin-bottom:6px">🔐 Clé SendGrid</div>
-            <div style="font-size:13px;font-family:monospace;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'✓ Configurée':'Non configurée'}</div>
-          </div>
-          <div style="text-align:right">
-            <button class="btn btn-gold btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer</button>
-          </div>
-        </div>
-
-        <div style="background:var(--surface2);border-radius:var(--radius);padding:20px;margin-top:16px">
-          <div style="font-size:12px;color:var(--text2);line-height:1.6">
-            <div style="font-weight:500;margin-bottom:12px">📖 Comment configurer :</div>
-            <ol style="margin:0;padding-left:20px;color:var(--text2)">
-              <li style="margin-bottom:8px">
-                <strong>Crée un compte SendGrid gratuit</strong> : <a href="https://sendgrid.com/free" target="_blank" style="color:var(--gold);text-decoration:none">sendgrid.com/free →</a>
-              </li>
-              <li style="margin-bottom:8px">
-                <strong>Génère une clé API</strong> : Connecte-toi → Settings → API Keys → Create API Key → Full Access → Copie la clé (elle commence par <code style="background:var(--surface);padding:2px 6px;border-radius:2px">SG.</code>)
-              </li>
-              <li style="margin-bottom:8px">
-                <strong>Configure un sender email</strong> : Tu peux utiliser n'importe quel email (ex: <code style="background:var(--surface);padding:2px 6px;border-radius:2px">noreply@tonentreprise.com</code>). SendGrid accepte tous les emails en mode gratuit.
-              </li>
-              <li style="margin-bottom:0">
-                <strong>Rentre les infos ci-dessous</strong> et clique "Confirmer". Prêt ! 🚀
-              </li>
-            </ol>
-            <div style="margin-top:12px;padding:10px;background:rgba(196,164,107,.1);border-radius:4px;border-left:3px solid var(--gold)">
-              <span style="font-size:11px">💡 Tes devis seront envoyés directement depuis ton email avec ta signature personnelle.</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div id="prof-sendgrid-edit" style="display:none;background:var(--surface2);border-radius:var(--radius);padding:20px;margin-top:16px">
-        <div class="field" style="margin-bottom:14px">
-          <label>Email d'envoi</label>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Exemple: noreply@tonentreprise.com ou contact@tonsite.com</div>
-          <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com"/>
-        </div>
-        <div class="field" style="margin-bottom:14px">
-          <label>Clé API SendGrid</label>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Commence par <code style="background:var(--surface);padding:2px 6px">SG.</code> — ne la partage avec personne</div>
-          <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxxxxxxxxxxxxxxxxxxxx" style="font-family:monospace"/>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:16px;padding:10px;background:var(--surface);border-radius:4px">
-          🔒 <strong>Sécurité</strong> : Ta clé API est chiffrée et stockée de manière sécurisée. Elle ne sera jamais visible en clair après confirmation.
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)">Annuler</button>
-          <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()">Confirmer & Activer</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ROW 2: Logo & Données côte à côte -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
-
-      <!-- Logo & Branding -->
+      <!-- Data -->
       <div class="card">
-        <div class="ctitle">Logo & Signature</div>
-        <div id="prof-logo-view">
-          <div style="margin-bottom:12px">
-            ${state.profile?.logo?`<div style="max-width:120px;margin-bottom:10px"><img src="${state.profile.logo}" style="max-width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--border)"/></div>`:'<div style="font-size:13px;color:var(--text3);margin-bottom:10px">Aucun logo</div>'}
-          </div>
-          <button class="btn btn-gold btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
-        </div>
-        <div id="prof-logo-edit" style="display:none">
-          <div class="field" style="margin-bottom:14px">
-            <label>Logo (image)</label>
-            <input id="prof-logo-input" type="file" accept="image/*" style="padding:8px"/>
-          </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end">
-            <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()">Confirmer</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Données -->
-      <div class="card">
-        <div class="ctitle">Données</div>
+        <div class="ctitle">Donnees & Compte</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <button class="btn btn-ghost" onclick="exportData()">Exporter tout (JSON)</button>
-          <button class="btn btn-danger" onclick="confirmResetData()">Réinitialiser les données</button>
+          <button class="btn btn-danger" onclick="confirmResetData()">Reinitialiser les donnees</button>
           <button class="btn btn-danger" onclick="confirmDeleteAccount()">Supprimer mon compte</button>
         </div>
       </div>
