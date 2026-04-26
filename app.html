@@ -5902,45 +5902,74 @@ function renderProfile(){
             <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()">Confirmer</button>
           </div>
         </div>
-      </div>
-
-      <!-- Email & SendGrid -->
-      <div class="card">
-        <div class="ctitle">Email & SendGrid</div>
-        <div id="prof-sendgrid-view">
-          <div style="display:grid;gap:12px;margin-bottom:12px">
-            <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Email d'envoi</div>
-              <div style="font-size:13px">${state.profile?.senderEmail||'—'}</div>
-            </div>
-            <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Clé SendGrid</div>
-              <div style="font-size:13px;font-family:monospace;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'●●●●●●●●●●●●●●●●●●●●':'Non configuré'}</div>
-            </div>
-          </div>
-          <button class="btn btn-gold btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer SendGrid</button>
-        </div>
-        <div id="prof-sendgrid-edit" style="display:none">
-          <div class="field" style="margin-bottom:10px">
-            <label>Email d'envoi (ex: noreply@tonentreprise.com)</label>
-            <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com"/>
-          </div>
-          <div class="field" style="margin-bottom:14px">
-            <label>Clé API SendGrid</label>
-            <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxxxxxxxxxxxxxxxxxxxx"/>
-          </div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:14px">🔒 Ta clé API est stockée de manière sécurisée. <a href="https://app.sendgrid.com/settings/api_keys" target="_blank" style="color:var(--gold);text-decoration:none">Créer une clé →</a></div>
-          <div style="display:flex;gap:8px;justify-content:flex-end">
-            <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()">Confirmer</button>
-          </div>
-        </div>
-      </div>
 
     </div>
 
+    <!-- FULL WIDTH: Email & SendGrid Setup -->
+    <div class="card">
+      <div class="ctitle">Email & SendGrid — Envoie tes devis directement</div>
+      <div id="prof-sendgrid-view">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <div class="txs tm" style="color:var(--text3);margin-bottom:6px">📧 Email d'envoi</div>
+            <div style="font-size:13px;font-family:monospace">${state.profile?.senderEmail||'Non configuré'}</div>
+          </div>
+          <div>
+            <div class="txs tm" style="color:var(--text3);margin-bottom:6px">🔐 Clé SendGrid</div>
+            <div style="font-size:13px;font-family:monospace;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'✓ Configurée':'Non configurée'}</div>
+          </div>
+          <div style="text-align:right">
+            <button class="btn btn-gold btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer</button>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border-radius:var(--radius);padding:20px;margin-top:16px">
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">
+            <div style="font-weight:500;margin-bottom:12px">📖 Comment configurer :</div>
+            <ol style="margin:0;padding-left:20px;color:var(--text2)">
+              <li style="margin-bottom:8px">
+                <strong>Crée un compte SendGrid gratuit</strong> : <a href="https://sendgrid.com/free" target="_blank" style="color:var(--gold);text-decoration:none">sendgrid.com/free →</a>
+              </li>
+              <li style="margin-bottom:8px">
+                <strong>Génère une clé API</strong> : Connecte-toi → Settings → API Keys → Create API Key → Full Access → Copie la clé (elle commence par <code style="background:var(--surface);padding:2px 6px;border-radius:2px">SG.</code>)
+              </li>
+              <li style="margin-bottom:8px">
+                <strong>Configure un sender email</strong> : Tu peux utiliser n'importe quel email (ex: <code style="background:var(--surface);padding:2px 6px;border-radius:2px">noreply@tonentreprise.com</code>). SendGrid accepte tous les emails en mode gratuit.
+              </li>
+              <li style="margin-bottom:0">
+                <strong>Rentre les infos ci-dessous</strong> et clique "Confirmer". Prêt ! 🚀
+              </li>
+            </ol>
+            <div style="margin-top:12px;padding:10px;background:rgba(196,164,107,.1);border-radius:4px;border-left:3px solid var(--gold)">
+              <span style="font-size:11px">💡 Tes devis seront envoyés directement depuis ton email avec ta signature personnelle.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="prof-sendgrid-edit" style="display:none;background:var(--surface2);border-radius:var(--radius);padding:20px;margin-top:16px">
+        <div class="field" style="margin-bottom:14px">
+          <label>Email d'envoi</label>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Exemple: noreply@tonentreprise.com ou contact@tonsite.com</div>
+          <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com"/>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Clé API SendGrid</label>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Commence par <code style="background:var(--surface);padding:2px 6px">SG.</code> — ne la partage avec personne</div>
+          <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxxxxxxxxxxxxxxxxxxxx" style="font-family:monospace"/>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:16px;padding:10px;background:var(--surface);border-radius:4px">
+          🔒 <strong>Sécurité</strong> : Ta clé API est chiffrée et stockée de manière sécurisée. Elle ne sera jamais visible en clair après confirmation.
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)">Annuler</button>
+          <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()">Confirmer & Activer</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ROW 2: Logo & Données côte à côte -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
 
       <!-- Logo & Branding -->
       <div class="card">
