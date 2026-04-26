@@ -5929,14 +5929,16 @@ function renderProfile(){
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.siret||'—'}</div>
             </div>
           </div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-xs" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
-            <button class="btn btn-ghost btn-xs" onclick="exportData()" style="flex:1">Exporter</button>
-            <button class="btn btn-danger btn-xs" onclick="confirmResetData()" style="flex:1">Reinit</button>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-xs" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
+              <button class="btn btn-ghost btn-xs" onclick="exportData()" style="flex:1">Exporter</button>
+              <button class="btn btn-danger btn-xs" onclick="confirmResetData()" style="flex:1">Reinit</button>
+            </div>
+            <button class="btn btn-danger btn-xs" onclick="confirmDeleteAccount()" style="width:100%">Supprimer compte</button>
           </div>
-          <button class="btn btn-danger btn-xs" onclick="confirmDeleteAccount()" style="width:100%;margin-top:6px">Supprimer compte</button>
         </div>
-        <div id="prof-bar-edit" style="display:none;flex:1;display:flex;flex-direction:column;justify-content:space-between">
+        <div id="prof-bar-edit" style="display:none;flex-direction:column;justify-content:space-between">
           <div style="display:grid;gap:8px">
             <div>
               <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Nom</label>
@@ -5980,17 +5982,6 @@ function renderProfile(){
             <button class="btn btn-ghost btn-xs" onclick="toggleLogoEdit(false)" style="flex:1">Annuler</button>
             <button class="btn btn-gold btn-xs" onclick="confirmLogoUpload()" style="flex:1">Confirmer</button>
           </div>
-        </div>
-      </div>
-
-      <!-- Delete Account (compact) -->
-      <div class="card" style="display:flex;flex-direction:column">
-        <div class="ctitle">Danger Zone</div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
-          <div style="font-size:10px;color:var(--text3);line-height:1.4">
-            Actions irreversibles. Utilise avec precaution.
-          </div>
-          <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()" style="width:100%;margin-top:auto">Supprimer mon compte</button>
         </div>
       </div>
 
