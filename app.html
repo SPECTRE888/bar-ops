@@ -4741,6 +4741,7 @@ async function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   const email=ev?.contactEmail||ev?.email||'';
   if(!ev||!email){alert('Aucun email trouvé sur cet événement.');return;}
+  if(!state.profile?.sendgridApiKey){alert('Configure d\'abord ta clé SendGrid dans les paramètres.');return;}
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
   const devisHTML=buildDevisHTML(ev,devisNum);
   const htmlBase64=btoa(unescape(encodeURIComponent(devisHTML)));
@@ -4759,8 +4760,9 @@ async function sendQuoteToClient(evId,devisNum){
         html:body,
         pdfBase64:'data:text/html;base64,'+htmlBase64,
         pdfFilename:`Devis-${devisNum}.html`,
-        fromEmail:'noreply@barops.app',
-        fromName:sigName
+        fromEmail:state.profile?.senderEmail||'noreply@barops.app',
+        fromName:sigName,
+        sendgridApiKey:state.profile?.sendgridApiKey
       })
     });
     const res=await r.json();
@@ -5902,6 +5904,39 @@ function renderProfile(){
         </div>
       </div>
 
+      <!-- Email & SendGrid -->
+      <div class="card">
+        <div class="ctitle">Email & SendGrid</div>
+        <div id="prof-sendgrid-view">
+          <div style="display:grid;gap:12px;margin-bottom:12px">
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Email d'envoi</div>
+              <div style="font-size:13px">${state.profile?.senderEmail||'—'}</div>
+            </div>
+            <div>
+              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Clé SendGrid</div>
+              <div style="font-size:13px;font-family:monospace;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'●●●●●●●●●●●●●●●●●●●●':'Non configuré'}</div>
+            </div>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer SendGrid</button>
+        </div>
+        <div id="prof-sendgrid-edit" style="display:none">
+          <div class="field" style="margin-bottom:10px">
+            <label>Email d'envoi (ex: noreply@tonentreprise.com)</label>
+            <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com"/>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Clé API SendGrid</label>
+            <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxxxxxxxxxxxxxxxxxxxx"/>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:14px">🔒 Ta clé API est stockée de manière sécurisée. <a href="https://app.sendgrid.com/settings/api_keys" target="_blank" style="color:var(--gold);text-decoration:none">Créer une clé →</a></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()">Confirmer</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ROW 2: Logo & Données côte à côte -->
@@ -5975,6 +6010,23 @@ function toggleLogoEdit(show){
   const edit=document.getElementById('prof-logo-edit');
   if(view) view.style.display=show?'none':'block';
   if(edit) edit.style.display=show?'block':'none';
+}
+
+function toggleSendgridEdit(show){
+  const view=document.getElementById('prof-sendgrid-view');
+  const edit=document.getElementById('prof-sendgrid-edit');
+  if(view) view.style.display=show?'none':'block';
+  if(edit) edit.style.display=show?'block':'none';
+}
+
+function confirmSendgridEdit(){
+  if(!confirm('✓ Configurer SendGrid ?\n\nTa clé API sera utilisée pour envoyer les devis.')){return;}
+  if(!state.profile) state.profile={};
+  state.profile.senderEmail=document.getElementById('prof-sender-email')?.value||'';
+  state.profile.sendgridApiKey=document.getElementById('prof-sendgrid-key')?.value||'';
+  save();
+  toast('✅ SendGrid configuré');
+  renderProfile();
 }
 
 function confirmLogoUpload(){
