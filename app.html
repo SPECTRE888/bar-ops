@@ -5907,34 +5907,38 @@ function renderProfile(){
     <!-- ROW 2: Company Info + Logo + Data (equal heights) -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
 
-      <!-- Company Info -->
-      <div class="card">
-        <div class="ctitle">Informations societe</div>
-        <div id="prof-bar-view">
-          <div style="display:grid;gap:12px;margin-bottom:12px">
+      <!-- Company Info & Data (unified single card) -->
+      <div class="card" style="display:flex;flex-direction:column">
+        <div class="ctitle">Informations & Donnees</div>
+        <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="display:grid;gap:10px;margin-bottom:12px">
             <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Nom de la societe</div>
-              <div style="font-size:13px">${state.profile?.barName||'—'}</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Nom</div>
+              <div style="font-size:12px;color:var(--text2)">${state.profile?.barName||'—'}</div>
             </div>
             <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Ville</div>
-              <div style="font-size:13px">${state.profile?.city||'—'}</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Ville</div>
+              <div style="font-size:12px;color:var(--text2)">${state.profile?.city||'—'}</div>
             </div>
             <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">Telephone pro</div>
-              <div style="font-size:13px">${state.profile?.phone||'—'}</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Telephone</div>
+              <div style="font-size:12px;color:var(--text2)">${state.profile?.phone||'—'}</div>
             </div>
             <div>
-              <div class="txs tm" style="color:var(--text3);margin-bottom:4px">SIRET</div>
-              <div style="font-size:13px;font-family:monospace">${state.profile?.siret||'—'}</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">SIRET</div>
+              <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.siret||'—'}</div>
             </div>
           </div>
-          <button class="btn btn-gold btn-sm" onclick="toggleBarEdit(true)" style="width:100%">Modifier</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-xs" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
+            <button class="btn btn-ghost btn-xs" onclick="exportData()" style="flex:1">Exporter</button>
+            <button class="btn btn-danger btn-xs" onclick="confirmResetData()" style="flex:1">Reinit</button>
+          </div>
         </div>
         <div id="prof-bar-edit" style="display:none;flex:1;display:flex;flex-direction:column;justify-content:space-between">
           <div style="display:grid;gap:8px">
             <div>
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Nom de la societe</label>
+              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Nom</label>
               <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="Votre entreprise" style="width:100%;font-size:11px"/>
             </div>
             <div>
@@ -5978,18 +5982,14 @@ function renderProfile(){
         </div>
       </div>
 
-      <!-- Data & Exports -->
+      <!-- Delete Account (compact) -->
       <div class="card" style="display:flex;flex-direction:column">
-        <div class="ctitle">Donnees & Export</div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:8px">
+        <div class="ctitle">Danger Zone</div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
           <div style="font-size:10px;color:var(--text3);line-height:1.4">
-            Exporte ou reinitialise tes donnees. Ces actions sont irreversibles.
+            Actions irreversibles. Utilise avec precaution.
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="exportData()">Exporter (JSON)</button>
-            <button class="btn btn-danger btn-sm" onclick="confirmResetData()">Reinitialiser</button>
-            <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()">Supprimer compte</button>
-          </div>
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()" style="width:100%;margin-top:auto">Supprimer mon compte</button>
         </div>
       </div>
 
