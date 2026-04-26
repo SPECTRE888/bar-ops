@@ -5904,10 +5904,10 @@ function renderProfile(){
 
     </div>
 
-    <!-- ROW 2: Company Info + Logo + Data (equal heights) -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
+    <!-- ROW 2: Company Info + Logo (50/50) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
 
-      <!-- Company Info & Data (unified single card) -->
+      <!-- Company Info & Data & Delete (unified) -->
       <div class="card" style="display:flex;flex-direction:column">
         <div class="ctitle">Informations & Donnees</div>
         <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
@@ -5934,6 +5934,7 @@ function renderProfile(){
             <button class="btn btn-ghost btn-xs" onclick="exportData()" style="flex:1">Exporter</button>
             <button class="btn btn-danger btn-xs" onclick="confirmResetData()" style="flex:1">Reinit</button>
           </div>
+          <button class="btn btn-danger btn-xs" onclick="confirmDeleteAccount()" style="width:100%;margin-top:6px">Supprimer compte</button>
         </div>
         <div id="prof-bar-edit" style="display:none;flex:1;display:flex;flex-direction:column;justify-content:space-between">
           <div style="display:grid;gap:8px">
