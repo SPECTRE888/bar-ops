@@ -5808,110 +5808,97 @@ function renderProfile(){
 
   el.innerHTML=`<div style="max-width:1200px">
 
-    <!-- SINGLE ROW: 3-column grid with equal heights -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+    <!-- ROW 1: 3 colonnes egales -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
 
-      <!-- LEFT: Account (1/3) -->
-      <div class="card" style="display:flex;flex-direction:column">
+      <!-- Compte -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Compte</div>
         ${isConnected?`
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-            <div style="width:36px;height:36px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:14px;font-family:var(--font-display);color:var(--gold)">
-              ${email.charAt(0).toUpperCase()}
-            </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis">${email}</div>
-              <div class="txs tm">Connecte</div>
-            </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold);flex-shrink:0">${email.charAt(0).toUpperCase()}</div>
+            <div style="min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${email}</div><div style="font-size:10px;color:var(--text3)">Connecte</div></div>
           </div>
-
-          <div style="display:flex;flex-direction:column;gap:10px;flex:1;justify-content:space-between">
+          <div style="border-top:1px solid var(--border);padding-top:12px;flex:1;display:flex;flex-direction:column;gap:8px">
             <div>
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:6px">Email</label>
-              <input id="prof-email" type="email" value="${email}" style="width:100%;font-size:12px"/>
-              <div id="prof-email-msg" style="font-size:10px;margin-top:4px;min-height:12px;color:var(--text3)"></div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Email</div>
+              <input id="prof-email" type="email" value="${email}" style="width:100%;font-size:11px"/>
+              <div id="prof-email-msg" style="font-size:10px;margin-top:3px;min-height:10px;color:var(--text3)"></div>
             </div>
             <button class="btn btn-ghost btn-sm" onclick="changeEmail()" style="width:100%">Modifier email</button>
           </div>
-
-          <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="cloudSignOut();goPage('dashboard')" style="flex:1">Deconnecter</button>
+          <div style="border-top:1px solid var(--border);padding-top:10px">
+            <button class="btn btn-ghost btn-sm" onclick="cloudSignOut();goPage('dashboard')" style="width:100%">Se deconnecter</button>
           </div>
         `:`
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
-            <div class="txs tm" style="margin-bottom:12px;color:var(--text2)">Synchronise tes donnees</div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px">
+            <div style="font-size:11px;color:var(--text3)">Synchronise tes donnees</div>
             <button class="btn btn-gold btn-sm" onclick="showCloudModal()" style="width:100%">Se connecter</button>
           </div>
         `}
       </div>
 
-      <!-- CENTER: Mot de passe (1/3) -->
-      <div class="card" style="display:flex;flex-direction:column">
+      <!-- Securite -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Securite</div>
-        <div style="display:flex;flex-direction:column;gap:10px;flex:1;justify-content:space-between">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
           <div>
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:6px">Nouveau mot de passe</label>
-            <input id="prof-pass1" type="password" placeholder="••••••••" style="width:100%;font-size:12px;margin-bottom:6px"/>
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:6px">Confirmer</label>
-            <input id="prof-pass2" type="password" placeholder="••••••••" style="width:100%;font-size:12px"/>
-            <div id="prof-pass-msg" style="font-size:10px;margin-top:6px;min-height:12px;color:var(--text3)"></div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Nouveau mot de passe</div>
+            <input id="prof-pass1" type="password" placeholder="••••••••" style="width:100%;font-size:11px"/>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="changePassword()" style="width:100%">Modifier mot de passe</button>
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Confirmer</div>
+            <input id="prof-pass2" type="password" placeholder="••••••••" style="width:100%;font-size:11px"/>
+            <div id="prof-pass-msg" style="font-size:10px;margin-top:3px;min-height:10px;color:var(--text3)"></div>
+          </div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="changePassword()" style="width:100%">Modifier mot de passe</button>
       </div>
 
-      <!-- RIGHT: Email & SendGrid (1/3) -->
-      <div class="card" style="display:flex;flex-direction:column">
+      <!-- Email & SendGrid -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Email & SendGrid</div>
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
-          <div style="display:grid;gap:8px;margin-bottom:12px">
-            <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Email d'envoi</div>
-              <div style="font-size:12px;color:var(--text2)">${state.profile?.senderEmail||'Non configure'}</div>
-            </div>
-            <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Cle SendGrid</div>
-              <div style="font-size:12px;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'Configuree':'Non configuree'}</div>
-            </div>
+        <div id="prof-sendgrid-view" style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Email d'envoi</div>
+            <div style="font-size:12px;color:var(--text2)">${state.profile?.senderEmail||'Non configure'}</div>
           </div>
-          <div id="prof-sendgrid-view" style="flex:1">
-            <div style="font-size:10px;color:var(--text3);line-height:1.4;margin-bottom:10px">
-              <div style="font-weight:500;margin-bottom:6px">Comment :</div>
-              <ol style="margin:0;padding-left:14px">
-                <li>Cree compte SendGrid</li>
-                <li>API Keys → Full Access</li>
-                <li>Rentre infos ci-dessous</li>
-              </ol>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer</button>
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Cle SendGrid</div>
+            <div style="font-size:12px;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'Configuree':'Non configuree'}</div>
           </div>
-          <div id="prof-sendgrid-edit" style="display:none;flex:1">
-            <div style="margin-bottom:8px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Email</label>
-              <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com" style="width:100%;font-size:11px"/>
-            </div>
-            <div style="margin-bottom:10px">
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Cle API</label>
-              <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxx" style="width:100%;font-size:11px;font-family:monospace"/>
-            </div>
-            <div style="display:flex;gap:6px;margin-top:auto">
-              <button class="btn btn-ghost btn-xs" onclick="toggleSendgridEdit(false)" style="flex:1">Annuler</button>
-              <button class="btn btn-gold btn-xs" onclick="confirmSendgridEdit()" style="flex:1">Confirmer</button>
-            </div>
+          <div style="flex:1;font-size:10px;color:var(--text3);line-height:1.5;border-top:1px solid var(--border);padding-top:8px">
+            <div style="font-weight:500;margin-bottom:4px">Configuration :</div>
+            <ol style="margin:0;padding-left:14px"><li>Cree compte SendGrid</li><li>API Keys → Full Access</li><li>Configure ci-dessous</li></ol>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer</button>
+        </div>
+        <div id="prof-sendgrid-edit" style="display:none;flex:1;display:flex;flex-direction:column;gap:8px">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Email d'envoi</div>
+            <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com" style="width:100%;font-size:11px"/>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Cle API SendGrid</div>
+            <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxx" style="width:100%;font-size:11px;font-family:monospace"/>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)" style="flex:1">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()" style="flex:1">Confirmer</button>
           </div>
         </div>
       </div>
 
     </div>
 
-    <!-- ROW 2: Company Info + Logo (50/50) -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+    <!-- ROW 2: 50/50 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 
-      <!-- Company Info & Data & Delete (unified) -->
-      <div class="card" style="display:flex;flex-direction:column">
+      <!-- Informations & Donnees -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Informations & Donnees</div>
-        <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
-          <div style="display:grid;gap:10px;margin-bottom:12px">
+        <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1">
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Nom</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.barName||'—'}</div>
@@ -5929,58 +5916,56 @@ function renderProfile(){
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.siret||'—'}</div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-ghost btn-xs" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
-              <button class="btn btn-ghost btn-xs" onclick="exportData()" style="flex:1">Exporter</button>
-              <button class="btn btn-danger btn-xs" onclick="confirmResetData()" style="flex:1">Reinit</button>
-            </div>
-            <button class="btn btn-danger btn-xs" onclick="confirmDeleteAccount()" style="width:100%">Supprimer compte</button>
+          <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
+            <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportData()" style="flex:1">Exporter</button>
+            <button class="btn btn-ghost btn-sm" onclick="confirmResetData()" style="flex:1">Reinit</button>
           </div>
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()" style="width:100%">Supprimer compte</button>
         </div>
-        <div id="prof-bar-edit" style="display:none;flex-direction:column;justify-content:space-between">
-          <div style="display:grid;gap:8px">
+        <div id="prof-bar-edit" style="display:none;flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1">
             <div>
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Nom</label>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Nom</div>
               <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="Votre entreprise" style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Ville</label>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Ville</div>
               <input id="prof-city" value="${state.profile?.city||''}" placeholder="Paris" style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">Telephone</label>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Telephone</div>
               <input id="prof-phone" value="${state.profile?.phone||''}" placeholder="+33 6..." style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:4px">SIRET</label>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">SIRET</div>
               <input id="prof-siret" value="${state.profile?.siret||''}" placeholder="12345678901234" style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
           </div>
-          <div style="display:flex;gap:6px;margin-top:12px">
-            <button class="btn btn-ghost btn-xs" onclick="toggleBarEdit(false)" style="flex:1">Annuler</button>
-            <button class="btn btn-gold btn-xs" onclick="confirmBarEdit()" style="flex:1">Confirmer</button>
+          <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
+            <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(false)" style="flex:1">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()" style="flex:1">Confirmer</button>
           </div>
         </div>
       </div>
 
-      <!-- Logo & Branding -->
-      <div class="card" style="display:flex;flex-direction:column">
+      <!-- Logo & Signature -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Logo & Signature</div>
-        <div id="prof-logo-view" style="flex:1;display:flex;flex-direction:column;justify-content:space-between">
-          <div style="flex:1;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--surface2);border-radius:var(--radius);padding:12px;min-height:80px">
-            ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:100%;object-fit:contain"/>`:'<div style="font-size:11px;color:var(--text3);text-align:center">Aucun logo</div>'}
+        <div id="prof-logo-view" style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:16px;min-height:120px">
+            ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:140px;object-fit:contain"/>`:`<div style="font-size:11px;color:var(--text3)">Aucun logo</div>`}
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
         </div>
-        <div id="prof-logo-edit" style="display:none;flex:1;display:flex;flex-direction:column;justify-content:space-between">
-          <div>
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:6px">Logo (image)</label>
+        <div id="prof-logo-edit" style="display:none;flex:1;display:flex;flex-direction:column;gap:12px">
+          <div style="flex:1">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Fichier image</div>
             <input id="prof-logo-input" type="file" accept="image/*" style="width:100%;font-size:11px;padding:6px"/>
           </div>
-          <div style="display:flex;gap:6px;margin-top:12px">
-            <button class="btn btn-ghost btn-xs" onclick="toggleLogoEdit(false)" style="flex:1">Annuler</button>
-            <button class="btn btn-gold btn-xs" onclick="confirmLogoUpload()" style="flex:1">Confirmer</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)" style="flex:1">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()" style="flex:1">Confirmer</button>
           </div>
         </div>
       </div>
