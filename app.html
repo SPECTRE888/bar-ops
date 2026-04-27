@@ -39,7 +39,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     let retries=0;
     while(!subs&&retries<5){
       try{
-        const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).eq('status','active').order('created_at',{ascending:false}).limit(1);
+        const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
         subs=subsArr?.[0];
         if(!subs){await new Promise(r=>setTimeout(r,800));retries++;}
       }catch(e){
@@ -48,7 +48,9 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       }
     }
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
-    if(!isActive){window.location.href='index.html';return;}
+    const isDemo=subs?.status==='demo'||subs?.plan==='demo';
+    
+    if(!isActive&&!isDemo){window.location.href='index.html';return;}
     
     window.cloudUser={
       access_token:session.access_token,
@@ -57,7 +59,9 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     };
     window._userEmail=session.user.email;
     window._userPlan=subs?.plan||subs?.tier||'trial';
+    window._isDemo=isDemo;
     localStorage.setItem('bcp_session',JSON.stringify(window.cloudUser));
+    localStorage.setItem('bcp_demo',isDemo?'true':'false');
   }catch(e){
     console.error('Paywall error:',e);
     window.location.href='index.html';

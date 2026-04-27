@@ -225,6 +225,21 @@ function setPeriod(p){
 async function goPay(plan){
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
+  
+  if(plan==='demo'){
+    try{
+      await sb.from('subscriptions').upsert([{
+        user_id:session.user.id,
+        status:'demo',
+        plan:'demo',
+        created_at:new Date().toISOString(),
+        expires_at:new Date(Date.now()+30*24*60*60*1000).toISOString()
+      }],{onConflict:'user_id'});
+      window.location.href='app.html';
+    }catch(e){alert('Erreur: '+e.message);}
+    return;
+  }
+  
   const price=PRICES[plan][currentPeriod];
   const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='...';}
   try{
