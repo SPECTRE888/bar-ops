@@ -20,7 +20,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 .period-btn:hover{border-color:var(--gold);color:var(--gold)}
 .discount{font-size:10px;color:var(--gold);margin-left:8px}
 .content{flex:1;overflow:hidden;padding:24px 20px;display:flex;align-items:center}
-.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;height:auto;width:100%}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
 .card{background:var(--surface);border:1px solid #2a2a2a;border-radius:8px;padding:24px;display:flex;flex-direction:column;font-size:13px}
 .card.popular{border:2px solid var(--gold);position:relative}
 .card.popular::before{content:'POPULAIRE';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:3px 10px;font-size:9px;font-weight:600;letter-spacing:.1em}
@@ -60,37 +60,6 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 
 <div class="content">
   <div class="pricing-grid">
-    <!-- DEMO (Trial) -->
-    <div class="card demo">
-      <h2>DÉMO</h2>
-      <div class="trial-label">Version d'essai</div>
-      <div class="price">Gratuit</div>
-      <div class="period">Accès limité</div>
-      <div class="features">
-        <div class="feature-group">
-          <div class="feature-group-title">Événements</div>
-          <ul>
-            <li>Visualisation seulement</li>
-            <li>Pas d'édition</li>
-          </ul>
-        </div>
-        <div class="feature-group">
-          <div class="feature-group-title">Catalogue</div>
-          <ul>
-            <li>Voir les cocktails</li>
-            <li>Pas de modification</li>
-          </ul>
-        </div>
-        <div class="feature-group">
-          <div class="feature-group-title">Gestion</div>
-          <ul>
-            <li>Consulter seulement</li>
-            <li>Support email</li>
-          </ul>
-        </div>
-      </div>
-      <button class="btn" onclick="goPay('demo')">Accéder</button>
-    </div>
 
     <!-- EARLY ACCESS -->
     <div class="card early-access">

@@ -13,6 +13,10 @@ const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
 
 (async()=>{
+  if(new URLSearchParams(window.location.search).get('demo')==='1'){
+    window._isDemo=true;
+    return;
+  }
   try{
     if(!window.supabase)return;
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
@@ -21,30 +25,16 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
     const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
     const subs=subsArr?.[0];
-
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
-    const isDemo=(subs?.status==='demo'||subs?.plan==='demo')&&new Date(subs.expires_at)>new Date();
+    if(!isActive){window.location.href='paying.html';return;}
 
-    if(!isActive&&!isDemo){window.location.href='paying.html';return;}
-
-    window.cloudUser={
-      access_token:session.access_token,
-      refresh_token:session.refresh_token,
-      user:session.user
-    };
+    window.cloudUser={access_token:session.access_token,refresh_token:session.refresh_token,user:session.user};
     window._userEmail=session.user.email;
-    window._userPlan=isDemo?'demo':(subs?.plan||'pro');
-    window._isDemo=isDemo;
+    window._userPlan=subs?.plan||'pro';
+    window._isDemo=false;
     window._userId=session.user.id;
     window._sb=sb;
-
-    // Auto-kick demo after 30min
-    if(isDemo){
-      setTimeout(()=>{ window.location.href='paying.html'; }, 30*60*1000);
-    }
-  }catch(e){
-    console.error('Paywall error:',e);
-  }
+  }catch(e){console.error('Paywall error:',e);}
 })();
 </script>
 <style>
@@ -6704,31 +6694,27 @@ injectMoninSyrups();
 applyLang();
 updateCloudStatus();
 
-// Async init: refresh session → pull → demo → render
+// Async init: refresh session → pull → render
 (async()=>{
+  if(window._isDemo){
+    state=freshState();
+    injectDemoData();
+    updateBadges();renderDashboard();applyTheme();
+    return;
+  }
   if(cloudUser){
-    if(window._isDemo){
-      // Demo: skip all cloud ops, just show fresh state
-      state=freshState();
-      injectDemoData();
-    } else {
-      const refreshed=await cloudRefreshSession();
-      if(!refreshed&&!cloudUser){
-        updateCloudStatus();
-        injectDemoData();
-        updateBadges();renderDashboard();applyTheme();
-        return;
-      }
-      const pulled=await cloudPull();
-      if(!pulled){
-        // Do NOT push empty state - just use fresh local state
-        state=freshState();
-      }
-      const evContent=document.getElementById('ev-content');
-      if(evContent&&evContent._clientId){
-        const client=state.clients.find(x=>x.id===evContent._clientId);
-        if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
-      }
+    const refreshed=await cloudRefreshSession();
+    if(!refreshed&&!cloudUser){
+      updateCloudStatus();
+      updateBadges();renderDashboard();applyTheme();
+      return;
+    }
+    const pulled=await cloudPull();
+    if(!pulled) state=freshState();
+    const evContent=document.getElementById('ev-content');
+    if(evContent&&evContent._clientId){
+      const client=state.clients.find(x=>x.id===evContent._clientId);
+      if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
     }
     updateCloudStatus();
   } else {
