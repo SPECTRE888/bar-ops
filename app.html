@@ -426,7 +426,7 @@ select option{background:#151515}
     <div class="topbar-actions no-print">
       <select id="staff-menu" onchange="handleStaffMenu(this.value)" style="width:155px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font-body)">
         <option value="staff">Équipe</option>
-        <option value="dresscode">Tenues & Dress codes</option>
+        <option value="dresscode">Tenues</option>
       </select>
       <button class="btn btn-gold" onclick="addStaff()">+ Ajouter staff</button>
     </div>
@@ -4704,10 +4704,18 @@ function buildPrestHTML(ev){
 async function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   const email=ev?.contactEmail||ev?.email||'';
-  if(!ev||!email){alert('Aucun email trouvé sur cet événement.');return;}
+  const contactName=ev?.contact||ev?.clientName||(ev?.clientId&&state.clients.find(x=>x.id===ev.clientId)?.name)||'';
+  if(!ev||!email){alert('Aucun email trouvé sur cet événement. Renseigne le dans la fiche événement.');return;}
   if(!state.profile?.sendgridApiKey){alert('Configure ta clé SendGrid dans Profil.');return;}
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);
+  const emailBody=devisHTML.replace('</body>','<div style="font-family:\'DM Sans\',sans-serif;max-width:700px;margin:40px auto;padding:32px 40px;border-top:2px solid #111;color:#333">'+
+    '<p style="margin-bottom:12px">Bonjour '+(contactName||'')+(contactName?',':'')</p>+
+    '<p style="margin-bottom:12px">Veuillez trouver ci-dessous le devis <strong>'+devisNum+'</strong> pour la prestation <strong>'+ev.name+'</strong>'+(fmtDate?' du <strong>'+fmtDate+'</strong>':'')+'.</p>'+
+    '<p style="margin-bottom:20px">N\'hésitez pas à nous contacter pour toute question ou ajustement.</p>'+
+    '<p>Cordialement,<br/><strong>'+sigName+'</strong></p>'+
+  '</div></body>');
   try{
     const r=await fetch('/.netlify/functions/send-quote',{
       method:'POST',
@@ -4715,7 +4723,7 @@ async function sendQuoteToClient(evId,devisNum){
       body:JSON.stringify({
         to:email,
         subject:'Devis '+devisNum+' — '+ev.name,
-        devisHTML,
+        devisHTML:emailBody,
         fromEmail:state.profile?.senderEmail,
         fromName:sigName,
         sendgridApiKey:state.profile?.sendgridApiKey
@@ -4800,7 +4808,7 @@ function generateDevis(){
   const withBtns=html.replace('</body></html>',`
   <div class="no-print" style="text-align:center;margin-top:40px;display:flex;gap:12px;justify-content:center">
     <button onclick="window.print()" style="padding:12px 28px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Enregistrer PDF</button>
-    <button onclick="sessionStorage.setItem('pendingSend',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));history.back()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Envoyer au client</button>
+    <button onclick="sessionStorage.setItem('pendingSend',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));history.back()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Envoyer au contact</button>
     <button onclick="history.back()" style="padding:12px 28px;background:none;color:#888;border:1px solid #ccc;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">← Retour</button>
   </div>
   </body></html>`);
