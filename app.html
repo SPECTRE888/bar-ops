@@ -4758,7 +4758,7 @@ function generateDevis(){
     <button onclick="localStorage.setItem('sendQuote',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));history.back()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Envoyer au client</button>
     <button onclick="history.back()" style="padding:12px 28px;background:none;color:#888;border:1px solid #ccc;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">← Retour</button>
   </div>
-  </body></html>\`);
+  </body></html>`);
   const blob=new Blob([withBtns],{type:'text/html'});
   window.location.href=URL.createObjectURL(blob);
 }
