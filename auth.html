@@ -36,21 +36,10 @@ input:focus{outline:none;border-color:var(--gold)}
 <body>
 <div class="box">
   <h1>BAR OPS</h1>
-  <p class="sub" id="sub">Créez votre compte</p>
+  <p class="sub" id="sub">Connectez-vous</p>
   <div class="msg" id="msg"></div>
 
-  <div id="view-signup">
-    <button class="btn gold" onclick="googleAuthSignup()">S'inscrire avec Google</button>
-    <div class="divider">ou</div>
-    <label>Email</label>
-    <input type="email" id="s-email" placeholder="vous@example.com"/>
-    <label>Mot de passe</label>
-    <input type="password" id="s-pass" placeholder="6+ caractères"/>
-    <button class="btn fill" id="s-btn" onclick="emailSignup()">S'inscrire</button>
-    <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
-  </div>
-
-  <div id="view-login" style="display:none">
+  <div id="view-login">
     <button class="btn gold" onclick="googleAuthLogin()">Se connecter avec Google</button>
     <div class="divider">ou</div>
     <label>Email</label>
@@ -59,6 +48,17 @@ input:focus{outline:none;border-color:var(--gold)}
     <input type="password" id="l-pass" placeholder="••••••••"/>
     <button class="btn fill" id="l-btn" onclick="emailLogin()">Se connecter</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
+  </div>
+
+  <div id="view-signup" style="display:none">
+    <button class="btn gold" onclick="googleAuthSignup()">S'inscrire avec Google</button>
+    <div class="divider">ou</div>
+    <label>Email</label>
+    <input type="email" id="s-email" placeholder="vous@example.com"/>
+    <label>Mot de passe</label>
+    <input type="password" id="s-pass" placeholder="6+ caractères"/>
+    <button class="btn fill" id="s-btn" onclick="emailSignup()">S'inscrire</button>
+    <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
   </div>
 
   <div class="back"><a href="index.html">← Retour</a></div>
