@@ -3181,11 +3181,8 @@ function showEvForm(ev){
 
     <!-- SECTION 3: STAFF -->
     <div class="card">
-      <div class="ctitle" style="display:flex;justify-content:space-between;align-items:center">
-        ${t('ev_staff_section')}
-        ${state.dressCodes.length?`<button class="btn btn-sm btn-ghost no-print" onclick="showDresscodeModal(${editEvId||0})">🎽 Tenue</button>`:''}
-      </div>
-      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:4px 0;margin-bottom:4px;font-size:10px">
+      <div class="ctitle">${t('ev_staff_section')}</div>
+      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:2px 0;margin-bottom:2px;font-size:9px;color:var(--text3)">
         <span>Rôle</span><span>Nb</span><span>Arrivée</span><span>Départ</span><span>H.</span><span style="color:var(--red)">Coût</span><span style="color:var(--green)">Fact.</span><span>Marge</span>
       </div>
       ${[
@@ -3193,36 +3190,45 @@ function showEvForm(ev){
         {key:'wtr',label:'Serveur',  n:ev.nWaiters||0,  arr:ev.arrWtr||'',dep:ev.depWtr||''},
         {key:'mgr',label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||''},
       ].map(r=>`
-      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:2px 0;border-bottom:1px solid var(--border);font-size:10px">
         <span>${r.label}</span>
-        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:4px;font-size:11px" oninput="updEvCalc()"/>
-        <select id="ef-arr${r.key}" style="width:100%;font-size:11px;padding:3px 4px" onchange="updEvCalc()">${mkTimeOpts(r.arr)}</select>
-        <select id="ef-dep${r.key}" style="width:100%;font-size:11px;padding:3px 4px" onchange="updEvCalc()">${mkTimeOpts(r.dep)}</select>
-        <span class="txs" id="ef-hrs${r.key}" style="color:var(--gold)">—</span>
-        <span class="txs" id="ef-cost${r.key}" style="color:var(--red)">—</span>
-        <span class="txs" id="ef-bill${r.key}" style="color:var(--green)">—</span>
-        <span class="txs" id="ef-mg${r.key}">—</span>
+        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:3px 4px;font-size:10px;height:24px" oninput="updEvCalc()"/>
+        <select id="ef-arr${r.key}" style="width:100%;font-size:10px;padding:3px 4px;height:24px" onchange="updEvCalc()">${mkTimeOpts(r.arr)}</select>
+        <select id="ef-dep${r.key}" style="width:100%;font-size:10px;padding:3px 4px;height:24px" onchange="updEvCalc()">${mkTimeOpts(r.dep)}</select>
+        <span class="txs" id="ef-hrs${r.key}" style="color:var(--gold);font-size:9px">—</span>
+        <span class="txs" id="ef-cost${r.key}" style="color:var(--red);font-size:9px">—</span>
+        <span class="txs" id="ef-bill${r.key}" style="color:var(--green);font-size:9px">—</span>
+        <span class="txs" id="ef-mg${r.key}" style="font-size:9px">—</span>
       </div>`).join('')}
-      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;padding:4px 0;margin-top:4px;font-size:11px;font-weight:500;border-top:1px solid var(--border);padding-top:6px">
+      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;padding:2px 0;margin-top:2px;font-size:10px;font-weight:500;border-top:1px solid var(--border);padding-top:4px">
         <span>Total</span><span></span><span></span><span></span><span></span>
         <span id="ef-total-cost" style="color:var(--red)">—</span>
         <span id="ef-total-bill" style="color:var(--green)">—</span>
         <span id="ef-total-mg">—</span>
       </div>
 
+      <!-- Tenue -->
+      ${state.dressCodes.length?`
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <label style="font-size:11px">Tenue</label>
+        <select id="ef-tenue-select" style="width:100%;font-size:10px;padding:3px 4px;height:24px">
+          <option value="">— Aucune —</option>
+          ${(state.dressCodes||[]).map(dc=>{const sel=(ev.dressCodes||[]).includes(dc.id);return`<option value="${dc.id}" ${sel?'selected':''}>${dc.name}</option>`;}).join('')}
+        </select>
+      </div>
+      `:''}
+
       <!-- Livraison -->
-      <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border)">
-        <div class="field" style="margin:0">
-          <label style="font-size:11px">Livraison</label>
-          <select id="ef-delivery-select" style="width:100%" onchange="(function(){const v=this.value;if(v==='custom'){document.getElementById('ef-delivery-bill').style.display='block';}else{document.getElementById('ef-delivery-bill').value=v;document.getElementById('ef-delivery-bill').style.display='none';}updEvCalc();}).call(this)">
-            <option value="0" ${ev.deliveryBillHT===0?'selected':''}>Aucune (0€)</option>
-            <option value="90" ${ev.deliveryBillHT===90?'selected':''}>Paris (90€)</option>
-            <option value="150" ${ev.deliveryBillHT===150?'selected':''}>IDF (150€)</option>
-            <option value="200" ${ev.deliveryBillHT===200?'selected':''}>Province (200€)</option>
-            <option value="custom" ${![0,90,150,200].includes(ev.deliveryBillHT)?'selected':''}>Custom</option>
-          </select>
-          <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:100%;padding:6px 8px;font-size:12px;margin-top:6px;display:${![0,90,150,200].includes(ev.deliveryBillHT)?'block':'none'}" onchange="updEvCalc()" placeholder="Montant (€)"/>
-        </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <label style="font-size:11px">Livraison</label>
+        <select id="ef-delivery-select" style="width:100%;font-size:10px;padding:3px 4px;height:24px" onchange="(function(){const v=this.value;if(v==='custom'){document.getElementById('ef-delivery-bill').style.display='block';}else{document.getElementById('ef-delivery-bill').value=v;document.getElementById('ef-delivery-bill').style.display='none';}updEvCalc();}).call(this)">
+          <option value="0" ${ev.deliveryBillHT===0?'selected':''}>Aucune (0€)</option>
+          <option value="90" ${ev.deliveryBillHT===90?'selected':''}>Paris (90€)</option>
+          <option value="150" ${ev.deliveryBillHT===150?'selected':''}>IDF (150€)</option>
+          <option value="200" ${ev.deliveryBillHT===200?'selected':''}>Province (200€)</option>
+          <option value="custom" ${![0,90,150,200].includes(ev.deliveryBillHT)?'selected':''}>Custom</option>
+        </select>
+        <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:100%;padding:3px 4px;font-size:10px;height:24px;margin-top:4px;display:${![0,90,150,200].includes(ev.deliveryBillHT)?'block':'none'}" onchange="updEvCalc()" placeholder="€"/>
       </div>
     </div>
 
@@ -3650,7 +3656,7 @@ function saveEv(){
     barType:document.getElementById('ef-bar-type')?.options[document.getElementById('ef-bar-type')?.selectedIndex]?.text||'',
     barLength:parseFloat(document.getElementById('ef-bar-length')?.value)||0,
     barPrice:parseFloat(document.getElementById('ef-bar-price')?.value)||0,
-    dressCodes:[...document.querySelectorAll('.ev-dc-chk:checked')].map(el=>parseInt(el.dataset.dcid)),
+    dressCodes:(function(){const v=document.getElementById('ef-tenue-select')?.value;return v?[parseInt(v)]:[];})()
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,
     cppax:parseFloat(document.getElementById('ef-cpp')?.value)||3,
     buffer:parseFloat(document.getElementById('ef-buf')?.value||'0'),
