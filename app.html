@@ -770,8 +770,9 @@ async function cloudPull(){
     // No workspace yet — do not push, let user save explicitly
     if(Array.isArray(rows)&&rows.length===0){
       console.log('cloudPull: no workspace found yet');
+      injectDemoData();
+      return false;
     }
-    return false;
   }catch(e){console.warn('cloudPull error:',e);return false;}
 }
 
