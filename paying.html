@@ -27,7 +27,6 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 .card h2{font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:6px;font-weight:400}
 .trial-label{font-size:9px;display:block;color:var(--text2);font-weight:400;margin-top:4px;letter-spacing:.05em}
 .promo-label{font-size:9px;display:block;color:var(--gold);font-weight:600;margin-top:4px;letter-spacing:.05em;line-height:1.3}
-.card.early-access{border-color:var(--gold);border-width:1px}
 .card.demo{opacity:.7}
 .coming-soon{font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:12px}
 .card.disabled{opacity:.6}
@@ -61,10 +60,42 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 
 <div class="content">
   <div class="pricing-grid">
+    <!-- DEMO (Trial) -->
+    <div class="card demo">
+      <h2>DÉMO</h2>
+      <div class="trial-label">Version d'essai</div>
+      <div class="price">Gratuit</div>
+      <div class="period">Accès limité</div>
+      <div class="features">
+        <div class="feature-group">
+          <div class="feature-group-title">Événements</div>
+          <ul>
+            <li>Visualisation seulement</li>
+            <li>Pas d'édition</li>
+          </ul>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Catalogue</div>
+          <ul>
+            <li>Voir les cocktails</li>
+            <li>Pas de modification</li>
+          </ul>
+        </div>
+        <div class="feature-group">
+          <div class="feature-group-title">Gestion</div>
+          <ul>
+            <li>Consulter seulement</li>
+            <li>Support email</li>
+          </ul>
+        </div>
+      </div>
+      <button class="btn" onclick="goPay('demo')">Accéder</button>
+    </div>
+
     <!-- EARLY ACCESS -->
     <div class="card early-access">
-      <h2>EARLY ACCESS</h2>
-      <div class="promo-label">20 premiers clients<br/>6 mois</div>
+      <h2>ACCÈS ANTICIPÉ</h2>
+      <div class="promo-label">20 premiers clients pendant 6 mois</div>
       <div class="price" id="price-early">89€</div>
       <div class="period">/mois (puis 149€)</div>
       <div class="features">
@@ -78,7 +109,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
         <div class="feature-group">
           <div class="feature-group-title">Catalogue</div>
           <ul>
-            <li>Jusqu'à 60 ingrédients/section</li>
+            <li>Jusqu'à 100 produits/section</li>
             <li>Sections illimitées</li>
           </ul>
         </div>
@@ -111,7 +142,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
         <div class="feature-group">
           <div class="feature-group-title">Catalogue</div>
           <ul>
-            <li>Jusqu'à 60 ingrédients/section</li>
+            <li>Jusqu'à 100 produits/section</li>
             <li>Sections illimitées</li>
           </ul>
         </div>
@@ -161,38 +192,6 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
         </div>
       </div>
       <button class="btn disabled" disabled>À venir</button>
-    </div>
-
-    <!-- DEMO (Trial) -->
-    <div class="card demo">
-      <h2>DÉMO</h2>
-      <div class="trial-label">Version d'essai</div>
-      <div class="price">Gratuit</div>
-      <div class="period">Accès limité</div>
-      <div class="features">
-        <div class="feature-group">
-          <div class="feature-group-title">Événements</div>
-          <ul>
-            <li>Visualisation seulement</li>
-            <li>Pas d'édition</li>
-          </ul>
-        </div>
-        <div class="feature-group">
-          <div class="feature-group-title">Catalogue</div>
-          <ul>
-            <li>Voir les cocktails</li>
-            <li>Pas de modification</li>
-          </ul>
-        </div>
-        <div class="feature-group">
-          <div class="feature-group-title">Gestion</div>
-          <ul>
-            <li>Consulter seulement</li>
-            <li>Support email</li>
-          </ul>
-        </div>
-      </div>
-      <button class="btn" onclick="goPay('demo')">Accéder</button>
     </div>
   </div>
 </div>
