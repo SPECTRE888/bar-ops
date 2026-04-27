@@ -110,8 +110,14 @@ async function emailSignup(){
   const btn=document.getElementById('s-btn');
   btn.disabled=true;btn.textContent='...';
   const{data,error}=await sb.auth.signUp({email,password:pass});
-  if(error){msg(error.message,'err');btn.disabled=false;btn.textContent="S'inscrire";return;}
-  await redirect(data.user.id);
+  if(error){
+    const already=error.status===422||error.message?.toLowerCase().includes('already')||error.message?.toLowerCase().includes('registered');
+    msg(already?'Cette adresse email est déjà utilisée. Connecte-toi.':error.message,'err');
+    btn.disabled=false;btn.textContent="S'inscrire";
+    return;
+  }
+  // New user → go to pricing
+  window.location.href='index.html?mode=pricing';
 }
 
 async function emailLogin(){
