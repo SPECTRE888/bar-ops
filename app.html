@@ -1182,7 +1182,20 @@ function injectMoninSyrups(){
       iceTypeId:now+30,
       iceQty:15,
       tasks:[],
-      devis:[]
+      devis:[{
+        num:'DEMO-001',
+        date:new Date().toISOString().split('T')[0],
+        total:2850,
+        margin:950,
+        status:'sent',
+        items:[
+          {cocktail:'Moscow Mule',qty:60,priceUnit:12,total:720},
+          {cocktail:'Daiquiri',qty:60,priceUnit:11,total:660},
+          {staff:'Alex Martin (Head Bartender)',qty:5,rate:30,total:150},
+          {staff:'Sara Dubois (Bartender)',qty:5,rate:22,total:110},
+          {staff:'Thomas Rey (Waiter)',qty:6,rate:18,total:108}
+        ]
+      }]
     }
   ];
 
