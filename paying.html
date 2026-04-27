@@ -10,45 +10,56 @@
 <style>
 :root{--bg:#080808;--surface:#0f0f0f;--text:#ede8e0;--text2:#a09890;--gold:#c4a46b;--gold2:#d4b47a}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);padding:40px 20px}
-.container{max-width:1200px;margin:0 auto}
-h1{font-family:'Cormorant Garamond',serif;font-size:48px;text-align:center;margin-bottom:8px}
-.subtitle{text-align:center;color:var(--text2);margin-bottom:60px;font-size:16px}
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:40px}
-@media(max-width:1024px){.pricing-grid{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid #2a2a2a;border-radius:8px;padding:32px;display:flex;flex-direction:column}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+.header{padding:24px 20px;border-bottom:1px solid #2a2a2a;text-align:center}
+h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font-weight:400}
+.period-selector{display:flex;gap:12px;justify-content:center;margin-bottom:0}
+.period-btn{padding:8px 24px;background:none;border:1px solid #2a2a2a;color:var(--text2);border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
+.period-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.1)}
+.period-btn:hover{border-color:var(--gold);color:var(--gold)}
+.discount{font-size:10px;color:var(--gold);margin-left:8px}
+.content{flex:1;overflow:hidden;padding:24px 20px}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;height:100%}
+@media(max-width:1200px){.pricing-grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid #2a2a2a;border-radius:8px;padding:24px;display:flex;flex-direction:column;overflow-y:auto;font-size:13px}
 .card.popular{border:2px solid var(--gold);position:relative}
-.card.popular::before{content:'POPULAIRE';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:4px 12px;font-size:10px;font-weight:600;letter-spacing:.1em}
-.card h2{font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:8px;font-weight:400}
-.price{font-size:42px;font-weight:600;color:var(--gold);margin:16px 0}
-.period{font-size:12px;color:var(--text2);margin-bottom:24px}
-.features{flex:1;margin:24px 0}
-.feature-group{margin-bottom:20px}
-.feature-group-title{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:10px}
-.features li{list-style:none;padding:8px 0;color:var(--text2);font-size:12px;border-bottom:1px solid #1a1a1a}
+.card.popular::before{content:'POPULAIRE';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:3px 10px;font-size:9px;font-weight:600;letter-spacing:.1em}
+.card h2{font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:6px;font-weight:400}
+.price{font-size:32px;font-weight:600;color:var(--gold);margin:12px 0}
+.period{font-size:10px;color:var(--text2);margin-bottom:16px}
+.features{flex:1;margin:16px 0}
+.feature-group{margin-bottom:14px}
+.feature-group-title{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:8px}
+.features li{list-style:none;padding:6px 0;color:var(--text2);font-size:11px;border-bottom:1px solid #1a1a1a}
 .features li:last-child{border-bottom:none}
-.features li:before{content:"✓ ";color:var(--gold);font-weight:600;margin-right:8px}
-.btn{width:100%;padding:12px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:12px;letter-spacing:.1em;transition:.2s}
+.features li:before{content:"✓ ";color:var(--gold);font-weight:600;margin-right:6px}
+.btn{width:100%;padding:10px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:11px;letter-spacing:.1em;transition:.2s;margin-top:12px}
 .btn:hover{background:var(--gold2)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.back{margin-bottom:40px}
+.back{position:absolute;top:24px;left:20px}
 .back a{color:var(--text2);text-decoration:none;font-size:12px}
 .back a:hover{color:var(--gold)}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="back"><a href="index.html">← Retour</a></div>
-  
-  <h1>Plans</h1>
-  <p class="subtitle">Choisissez le plan adapté à vos besoins</p>
-  
+<div class="back"><a href="index.html">← Retour</a></div>
+
+<div class="header">
+  <h1>BAR OPS — Plans</h1>
+  <div class="period-selector">
+    <button class="period-btn active" onclick="setPeriod('monthly')">Mensuel</button>
+    <button class="period-btn" onclick="setPeriod('yearly')">Annuel <span class="discount">-10%</span></button>
+  </div>
+</div>
+
+<div class="content">
   <div class="pricing-grid">
     <!-- EARLY -->
     <div class="card">
       <h2>EARLY</h2>
-      <div class="price">89€</div>
-      <div class="period">/mois ou 801€/an</div>
+      <div class="price" id="price-early">89€</div>
+      <div class="period">/mois</div>
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Événements</div>
@@ -79,8 +90,8 @@ h1{font-family:'Cormorant Garamond',serif;font-size:48px;text-align:center;margi
     <!-- PRO (Popular) -->
     <div class="card popular">
       <h2>PRO</h2>
-      <div class="price">149€</div>
-      <div class="period">/mois ou 1 341€/an</div>
+      <div class="price" id="price-pro">149€</div>
+      <div class="period">/mois</div>
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Événements</div>
@@ -112,8 +123,8 @@ h1{font-family:'Cormorant Garamond',serif;font-size:48px;text-align:center;margi
     <!-- AI INTELLIGENT -->
     <div class="card">
       <h2>AI INTELLIGENT</h2>
-      <div class="price">299€</div>
-      <div class="period">/mois ou 2 690€/an</div>
+      <div class="price" id="price-ai">299€</div>
+      <div class="period">/mois</div>
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Tout Pro +</div>
@@ -152,6 +163,18 @@ const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mT
 const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341},ai:{monthly:299,yearly:2690}};
 let currentPeriod='monthly';
 const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+
+function setPeriod(p){
+  currentPeriod=p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('price-early').textContent=(PRICES.early[p]/12).toFixed(0)+'€';
+  document.getElementById('price-pro').textContent=(PRICES.pro[p]/12).toFixed(0)+'€';
+  document.getElementById('price-ai').textContent=(PRICES.ai[p]/12).toFixed(0)+'€';
+  document.querySelectorAll('.period').forEach(el=>{
+    el.textContent=p==='yearly'?'/mois (annuel)':'/mois';
+  });
+}
 
 async function goPay(plan){
   const{data:{session}}=await sb.auth.getSession();
