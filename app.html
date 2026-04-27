@@ -6809,9 +6809,16 @@ function applyLang(){
   const active=document.querySelector('.page.active');
   if(active){
     const p=active.id.replace('page-','');
-    if(p==='catalogue') renderCatalogue();
+    if(p==='dashboard') renderDashboard();
+    else if(p==='catalogue') renderCatalogue();
     else if(p==='cocktails') showCList();
     else if(p==='events') showEvList();
+    else if(p==='historique') renderHistorique();
+    else if(p==='suivi') renderSuivi();
+    else if(p==='planning') renderPlanning();
+    else if(p==='staff') {renderStaff();renderDressCodes();}
+    else if(p==='clients') renderClients();
+    else if(p==='profile') renderProfile();
   }
 }
 
