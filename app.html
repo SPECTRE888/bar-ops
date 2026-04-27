@@ -2864,6 +2864,18 @@ function saveCocktail(){
 // ════════════════════════════════════════════════════════
 function showEvList(){
   editEvId=null;
+  // Auto-create demo event if empty
+  if(window._isDemo&&!state.events.length){
+    const now=Date.now();
+    const tomorrow=new Date();
+    tomorrow.setDate(tomorrow.getDate()+1);
+    state.events=[{
+      id:now+200,clientId:now+100,name:'Mariage - Famille Dupont',date:tomorrow.toISOString().split('T')[0],
+      startTime:'18:00',endTime:'23:00',location:'Château de Versailles',type:'Wedding',guests:120,budget:3500,
+      notes:'Événement test — Personnalisez ce dernier',status:'pending',cocktailsSelected:[now+60,now+61],
+      staffSelected:[now+40,now+41],iceTypeId:now+30,iceQty:15,tasks:[],devis:[]
+    }];
+  }
   document.getElementById('ev-page-title').textContent=t('nav_events');
   document.getElementById('btn-evback').style.display='none';
   document.getElementById('btn-evnew').style.display='flex';
