@@ -4416,7 +4416,7 @@ function sendBriefFromClient(evId){
     '_Envoyé via BAR OPS_'
   ];
   const msg=lines.filter(l=>l!==undefined).join('\n');
-  window.open('https://wa.me/'+waPhone(client.whatsapp)+'?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://web.whatsapp.com/send?phone='+waPhone(client.whatsapp)+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 function buildDispoMsg(ev, s){
