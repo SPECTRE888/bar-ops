@@ -1513,7 +1513,7 @@ function renderCatPage(cat){
         <th>${t('cat_cpu')}</th>
         <th>${t('cat_supplier')}</th>
         <th>${t('cat_code')}</th>
-        <th style="color:var(--gold)">${t('cat_stock')}</th>
+        <th style="color:var(--gold)">${lowStock.length?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}${t('cat_stock')}</th>
         <th style="color:var(--text3);font-size:8px">${t('cat_alert')}</th>
         <th></th>
       </tr></thead>
@@ -1536,7 +1536,6 @@ function renderCatPage(cat){
       <td><input value="${(p.supplier||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplier',this.value)" placeholder="Metro, Promocash..." style="min-width:100px"/></td>
       <td><input value="${(p.supplierCode||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
       <td>
-        ${stockLow?`<span style="color:var(--red);font-size:10px;margin-right:4px;font-weight:600">✕ min</span>`:''}
         <input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
         style="width:65px;border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"
@@ -2614,7 +2613,6 @@ function renderDashboard(){
       <div style="height:1px;background:var(--gold-border);margin:16px 0"></div>
       <div style="font-size:11px;color:var(--text2);line-height:1.6">
         <div>OK | ALERTE</div>
-        ${lowStock.slice(0,2).map(p=>`<div style="margin-top:6px;color:var(--red)">✕ sous min — ${p.brand?p.brand+' ':''}${p.productType}</div>`).join('')}
       </div>
     </div>
   </div>`;
