@@ -5519,7 +5519,139 @@ function handleExternalParams(){
 // ════════════════════════════════════════════════════════
 // HISTORIQUE
 // ════════════════════════════════════════════════════════
-function renderHistorique(){
+function downloadEventPDF(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const html=buildEventSummaryHTML(ev);
+  const element=document.createElement('div');
+  element.innerHTML=html;
+  const opt={margin:10,filename:`${ev.name}-recap.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}};
+  if(window.html2pdf) window.html2pdf().set(opt).from(element).save();
+  else alert('PDF library not loaded. Using HTML view instead.'),openEventHTML(evId);
+}
+
+function openEventHTML(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const html=buildEventSummaryHTML(ev);
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  window.open(url);
+}
+
+function buildEventSummaryHTML(ev){
+  const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
+  const cl=state.clients.find(c=>c.id===ev.clientId);
+  const cktDetails=(ev.cocktails||[]).map(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);
+    if(!c)return'';
+    const price=((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))).toFixed(2);
+    return`<tr><td>${c.name}</td><td style="text-align:right">${cfg.qty}</td><td style="text-align:right">${price}€</td><td style="text-align:right">${(cfg.qty*price).toFixed(0)}€</td></tr>`;
+  }).join('');
+  return`
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>${ev.name} - Récapitulatif</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f5f3ef;margin:0;padding:20px}
+    .container{background:white;max-width:800px;margin:0 auto;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    h1{color:#2a2a2a;font-size:28px;margin:0 0 30px}
+    .header{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px;border-bottom:2px solid #e0e0e0;padding-bottom:20px}
+    .header-item{font-size:14px}
+    .header-label{color:#999;font-size:12px;text-transform:uppercase;margin-bottom:4px}
+    .header-value{font-size:16px;font-weight:500;color:#1a1a1a}
+    table{width:100%;border-collapse:collapse;margin:20px 0}
+    th{background:#f0f0f0;padding:10px;text-align:left;font-weight:600;border-bottom:2px solid #ddd;color:#333}
+    td{padding:10px;border-bottom:1px solid #eee}
+    .total-row{font-weight:600;background:#f9f9f9;border-top:2px solid #ddd}
+    .financial{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:30px;padding-top:20px;border-top:2px solid #e0e0e0}
+    .financial-item{text-align:center}
+    .financial-label{color:#999;font-size:12px;text-transform:uppercase}
+    .financial-value{font-size:24px;font-weight:600;color:#d4a574;margin-top:8px}
+    .planning{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:30px 0}
+    .planning-item{background:#f9f9f9;padding:12px;border-radius:6px;text-align:center}
+    .planning-label{font-size:12px;color:#999;margin-bottom:8px}
+    .planning-time{font-size:18px;font-weight:600;color:#333}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${ev.name}</h1>
+    
+    <div class="header">
+      <div class="header-item">
+        <div class="header-label">Date</div>
+        <div class="header-value">${fmtDate}</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">Client</div>
+        <div class="header-value">${cl?cl.name:'—'}</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">Pax</div>
+        <div class="header-value">${ev.pax||'—'}</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">Cocktails</div>
+        <div class="header-value">${(ev.cocktails||[]).reduce((s,c)=>s+(c.qty||0),0)}</div>
+      </div>
+    </div>
+
+    <div class="planning">
+      <div class="planning-item">
+        <div class="planning-label">Montage</div>
+        <div class="planning-time">${ev.setup||'—'}</div>
+      </div>
+      <div class="planning-item">
+        <div class="planning-label">Ouverture bar</div>
+        <div class="planning-time">${ev.start||'—'}</div>
+      </div>
+      <div class="planning-item">
+        <div class="planning-label">Fermeture bar</div>
+        <div class="planning-time">${ev.end||'—'}</div>
+      </div>
+      <div class="planning-item">
+        <div class="planning-label">Fin prestation</div>
+        <div class="planning-time">${ev.breakdown||'—'}</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:30px">Cocktails servis</h3>
+    <table>
+      <thead>
+        <tr><th>Cocktail</th><th style="text-align:right">Qty</th><th style="text-align:right">PU HT</th><th style="text-align:right">Total</th></tr>
+      </thead>
+      <tbody>
+        ${cktDetails}
+        <tr class="total-row">
+          <td colspan="3" style="text-align:right">Ventes cocktails:</td>
+          <td style="text-align:right">${((ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))):0);},0)).toFixed(0)}€</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="financial">
+      <div class="financial-item">
+        <div class="financial-label">CA HT</div>
+        <div class="financial-value">${rev.toFixed(0)}€</div>
+      </div>
+      <div class="financial-item">
+        <div class="financial-label">Coût</div>
+        <div class="financial-value">${cost.toFixed(0)}€</div>
+      </div>
+      <div class="financial-item">
+        <div class="financial-label">Marge</div>
+        <div class="financial-value" style="color:${mg>=0?'#5a9b6f':'#c47070'}">${mg.toFixed(0)}€</div>
+      </div>
+    </div>
+
+    ${ev.notes?`<div style="margin-top:30px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
+  </div>
+</body>
+</html>`;
+}
+
   const el=document.getElementById('historique-content');if(!el)return;
   const now=new Date();
   const past=[...state.events]
@@ -5593,14 +5725,18 @@ function renderHistorique(){
       const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
       const fmtDate=new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       const cktCount=evTot(ev);
-      html+=`<div class="card" style="padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="goToEventSuivi(${ev.id})">
-        <div>
+      html+=`<div class="card" style="padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+        <div style="flex:1;cursor:pointer" onclick="goToEventSuivi(${ev.id})">
           <div style="font-size:13px;font-weight:500">${ev.name}</div>
           <div class="txs tm">${fmtDate}${ev.pax?' · '+ev.pax+' pax':''}${cktCount?' · '+cktCount+' cocktails':''}</div>
         </div>
-        <div style="text-align:right">
+        <div style="text-align:right;margin-right:12px">
           <div style="font-size:14px;font-weight:500;color:var(--gold)">${rev.toFixed(0)}€ HT</div>
           <div class="txs" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>=0?'+':''}${mg.toFixed(0)}€ marge</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-sm btn-ghost" onclick="downloadEventPDF(${ev.id})">PDF</button>
+          <button class="btn btn-sm btn-ghost" onclick="openEventHTML(${ev.id})">HTML</button>
         </div>
       </div>`;
     });
