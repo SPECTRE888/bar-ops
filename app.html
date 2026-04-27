@@ -24,17 +24,6 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     const deviceId=localStorage.getItem('bcp_device_id')||sessionId;
     if(!localStorage.getItem('bcp_device_id')) localStorage.setItem('bcp_device_id',deviceId);
     
-    try{
-      await sb.from('user_sessions').upsert([{
-        user_id:session.user.id,
-        session_id:sessionId,
-        device_id:deviceId,
-        device_name:navigator.userAgent.split(' ').pop(),
-        ip_address:'unknown',
-        last_active:new Date().toISOString()
-      }],{onConflict:'user_id,device_id'});
-    }catch(e){}
-    
     let subs=null;
     let retries=0;
     while(!subs&&retries<5){
@@ -60,8 +49,6 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     window._userEmail=session.user.email;
     window._userPlan=subs?.plan||subs?.tier||'trial';
     window._isDemo=isDemo;
-    localStorage.setItem('bcp_session',JSON.stringify(window.cloudUser));
-    localStorage.setItem('bcp_demo',isDemo?'true':'false');
   }catch(e){
     console.error('Paywall error:',e);
     window.location.href='index.html';
@@ -1008,19 +995,8 @@ function save(){
 
 function load(){
   state = freshState();
-  try{
-    // Try current key
-    let raw = localStorage.getItem(SK);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      // Merge, never overwrite existing keys with empty
-      Object.keys(state).forEach(k=>{ if(parsed[k]!==undefined) state[k]=parsed[k]; });
-      if(!state.barItems) state.barItems=[];
-    } else {
-      // Try migrating from old v2 key
-      const oldRaw = localStorage.getItem('barcraft_pro_v2');
-      if(oldRaw){
-        const old = JSON.parse(oldRaw);
+  // Data now loads from Supabase per user session, not localStorage
+}
         // Migrate resources -> products (add productType field)
         if(old.resources) state.products = old.resources.map(r=>({
           ...r,
