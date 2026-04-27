@@ -168,8 +168,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
-const PRICES={early:{monthly:89,yearly:Math.round(89*12*0.9)},pro:{monthly:149,yearly:Math.round(149*12*0.9)},ai:{monthly:299,yearly:Math.round(299*12*0.9)}};
-// yearly = 12 mois * prix mois * 0.9 = prix annuel -10%
+const PRICES={early:{monthly:89,yearly:961},pro:{monthly:149,yearly:1609},ai:{monthly:299,yearly:3228}};
 let currentPeriod='monthly';
 const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
