@@ -6145,7 +6145,13 @@ function renderSuivi(){
     return;
   }
 
-  const sorted=[...state.events].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+  const sorted=[...state.events]
+    .filter(ev=>{
+      const isPast=ev.date&&new Date(ev.date)<now;
+      if(isPast&&ev.paid&&ev.stockRetourDone) return false;
+      return true;
+    })
+    .sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
   const now=new Date();
 
   el.innerHTML=sorted.map(ev=>{
