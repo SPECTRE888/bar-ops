@@ -4747,22 +4747,20 @@ function buildDevisHTML(ev,devisNum){
 
 function generateDevis(){
   const evId=parseInt(document.getElementById('prest-ev-sel')?.value||0);
-  if(!evId){alert('Sélectionne un événement dans le select.');return;}
+  if(!evId){alert('Sélectionne un événement.');return;}
   const ev=state.events.find(x=>x.id===evId);
-  if(!ev){alert('Événement introuvable.');return;}
+  if(!ev)return;
   const devisNum='DEV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
-  const w=window.open('','_blank');
-  if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
   const html=buildDevisHTML(ev,devisNum);
-  // Add print/send buttons
   const withBtns=html.replace('</body></html>',`
   <div class="no-print" style="text-align:center;margin-top:40px;display:flex;gap:12px;justify-content:center">
-    <button onclick="window.print()" style="padding:12px 28px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.04em">Enregistrer PDF</button>
-    <button onclick="localStorage.setItem('sendQuote',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));window.close()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:.04em">Envoyer au client</button>
+    <button onclick="window.print()" style="padding:12px 28px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Enregistrer PDF</button>
+    <button onclick="localStorage.setItem('sendQuote',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));history.back()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Envoyer au client</button>
+    <button onclick="history.back()" style="padding:12px 28px;background:none;color:#888;border:1px solid #ccc;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">← Retour</button>
   </div>
-  </body></html>`);
-  w.document.write(withBtns);
-  w.document.close();
+  </body></html>\`);
+  const blob=new Blob([withBtns],{type:'text/html'});
+  window.location.href=URL.createObjectURL(blob);
 }
 
 function printPrestation(){
@@ -5785,8 +5783,17 @@ function renderProfile(){
             <div style="font-size:12px;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'Configuree':'Non configuree'}</div>
           </div>
           <div style="flex:1;font-size:10px;color:var(--text3);line-height:1.5;border-top:1px solid var(--border);padding-top:8px">
-            <div style="font-weight:500;margin-bottom:4px">Configuration :</div>
-            <ol style="margin:0;padding-left:14px"><li>Cree compte SendGrid</li><li>API Keys → Full Access</li><li>Configure ci-dessous</li></ol>
+            <div style="font-weight:600;color:var(--text2);margin-bottom:6px;font-size:11px">📧 Comment configurer :</div>
+            <ol style="margin:0;padding-left:14px;line-height:2">
+              <li>Va sur <strong style="color:var(--gold)">sendgrid.com</strong> → créer un compte gratuit</li>
+              <li>Menu <strong>Settings → Sender Authentication</strong></li>
+              <li>Clique <strong>Verify a Single Sender</strong></li>
+              <li>Entre ton email pro → vérifie dans ta boîte mail</li>
+              <li>Menu <strong>Settings → API Keys → Create API Key</strong></li>
+              <li>Choisis <strong>Full Access</strong> → copie la clé <code>SG.xxx</code></li>
+              <li>Colle la clé ci-dessous + ton email vérifié → Confirmer</li>
+            </ol>
+            <div style="margin-top:8px;padding:6px 8px;background:rgba(201,169,110,0.1);border-radius:4px;color:var(--gold);font-size:10px">⚠️ L'email d'envoi doit être exactement celui vérifié sur SendGrid</div>
           </div>
           <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer</button>
         </div>
