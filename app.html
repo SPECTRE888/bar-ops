@@ -49,6 +49,15 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     window._userEmail=session.user.email;
     window._userPlan=subs?.plan||subs?.tier||'trial';
     window._isDemo=isDemo;
+    // Isolate localStorage per user - clear if different user
+    const storedUid=localStorage.getItem('bcp_uid');
+    if(storedUid&&storedUid!==session.user.id){
+      // Different user - wipe all app data
+      ['barcraft_v3','barcraft_pro_v2','bcp_session','bcp_demo_injected'].forEach(k=>localStorage.removeItem(k));
+    }
+    localStorage.setItem('bcp_uid',session.user.id);
+    // Set user-scoped storage key
+    SK='barcraft_v3_'+session.user.id;
   }catch(e){
     console.error('Paywall error:',e);
     window.location.href='index.html';
@@ -935,7 +944,8 @@ function toast(msg,color='var(--green)'){
   n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),2800);
 }
 
-const SK='barcraft_v3';
+// SK is set per-user after auth to isolate data
+let SK='barcraft_v3';
 
 // Product type presets per category
 const TYPE_PRESETS = {
