@@ -25,10 +25,14 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 .card.popular{border:2px solid var(--gold);position:relative}
 .card.popular::before{content:'POPULAIRE';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:3px 10px;font-size:9px;font-weight:600;letter-spacing:.1em}
 .card h2{font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:6px;font-weight:400}
+.trial-label{font-size:9px;display:block;color:var(--text2);font-weight:400;margin-top:4px;letter-spacing:.05em}
+.coming-soon{font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:12px}
+.card.disabled{opacity:.6}
+.card.disabled .btn{opacity:.5;cursor:not-allowed}
 .price{font-size:32px;font-weight:600;color:var(--gold);margin:12px 0}
 .period{font-size:10px;color:var(--text2);margin-bottom:16px}
-.features{flex:1;margin:16px 0}
-.feature-group{margin-bottom:14px}
+.features{flex:1;margin:12px 0}
+.feature-group{margin-bottom:10px}
 .feature-group-title{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:8px}
 .features li{list-style:none;padding:6px 0;color:var(--text2);font-size:11px;border-bottom:1px solid #1a1a1a}
 .features li:last-child{border-bottom:none}
@@ -54,9 +58,9 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 
 <div class="content">
   <div class="pricing-grid">
-    <!-- EARLY -->
-    <div class="card">
-      <h2>EARLY</h2>
+    <!-- BASIC (Trial) -->
+    <div class="card trial">
+      <h2>BASIC<span class="trial-label">Version d'essai</span></h2>
       <div class="price" id="price-early">89€</div>
       <div class="period">/mois</div>
       <div class="features">
@@ -77,8 +81,8 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
         <div class="feature-group">
           <div class="feature-group-title">Gestion</div>
           <ul>
-            <li>Staff basique</li>
-            <li>Devis manuel</li>
+            <li>Visualisation seulement</li>
+            <li>Pas d'édition</li>
             <li>Support email</li>
           </ul>
         </div>
@@ -119,11 +123,12 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
       <button class="btn" onclick="goPay('pro')">Souscrire</button>
     </div>
 
-    <!-- AI INTELLIGENT -->
-    <div class="card">
-      <h2>AI INTELLIGENT</h2>
+    <!-- INTELLIGENT (Coming Soon) -->
+    <div class="card disabled">
+      <h2>INTELLIGENT</h2>
       <div class="price" id="price-ai">299€</div>
       <div class="period">/mois</div>
+      <div class="coming-soon">À VENIR</div>
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Tout Pro +</div>
@@ -150,7 +155,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
           </ul>
         </div>
       </div>
-      <button class="btn" onclick="goPay('ai')">Souscrire</button>
+      <button class="btn disabled" disabled>À venir</button>
     </div>
   </div>
 </div>
