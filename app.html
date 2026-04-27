@@ -2642,12 +2642,12 @@ function renderDashboard(){
     return r-rem;
   };
   const caPayees=state.events.filter(ev=>ev.paid).reduce((s,ev)=>s+evRev(ev),0);
-  const aRecevoir=state.events.filter(ev=>!ev.paid&&evRev(ev)>0).reduce((s,ev)=>s+evRev(ev)-(ev.acompte||0),0);
+  const aRecevoir=state.events.filter(ev=>!ev.paid&&evRev(ev)>0).reduce((s,ev)=>s+evRev(ev),0);
   
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:10px;text-align:center">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">CA (prestations payées)</div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">CA</div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1">${caPayees.toFixed(0)}€</div>
       <div style="font-size:11px;color:var(--text2)">À recevoir: <span style="color:var(--gold);font-weight:500">${aRecevoir.toFixed(0)}€</span></div>
     </div>
