@@ -6786,7 +6786,7 @@ updateCloudStatus();
       return;
     }
     const pulled=await cloudPull();
-    if(!pulled) state=freshState();
+    if(!pulled){state=freshState();injectDemoData();}
     const evContent=document.getElementById('ev-content');
     if(evContent&&evContent._clientId){
       const client=state.clients.find(x=>x.id===evContent._clientId);
