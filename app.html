@@ -1033,7 +1033,7 @@ const MONIN_SYRUPS=[
 
 function injectDemoData(){
   // Inject if workspace is truly empty (no products, no cocktails, no events)
-  if(state.products.length||state.cocktails.length||state.events.length) return;
+  if((state.products?.length||0)+(state.cocktails?.length||0)+(state.events?.length||0)>0) return;
 
   const now=Date.now();
 
