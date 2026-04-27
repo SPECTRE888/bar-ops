@@ -996,24 +996,10 @@ function save(){
 function load(){
   state = freshState();
   // Data now loads from Supabase per user session, not localStorage
-}
-        // Migrate resources -> products (add productType field)
-        if(old.resources) state.products = old.resources.map(r=>({
-          ...r,
-          productType: r.name||'',   // old name becomes type
-          brand: '',                  // new field
-          // keep name for backward compat in cocktail lookup
-        }));
-        if(old.glasses)    state.glasses    = old.glasses;
-        if(old.iceTypes)   state.iceTypes   = old.iceTypes;
-        if(old.staffItems) state.staffItems = old.staffItems;
-        if(old.cocktails)  state.cocktails  = old.cocktails;
-        if(old.events)     state.events     = old.events;
-        save(); // write to new key
-      }
-    }
-  }catch(e){ state = freshState(); }
   // Ensure all arrays exist
+  ['products','glasses','iceTypes','staffItems','cocktails','events','contacts','dressCodes','clients'].forEach(k=>{
+    if(!Array.isArray(state[k])) state[k]=[];
+  });
   // Migrate glass labels — strip appellation/volume suffixes from c.glass
   state.cocktails.forEach(c=>{
     if(c.glass&&c.glass.includes(' — ')){
@@ -1021,9 +1007,6 @@ function load(){
       if(glassObj) c.glass=glassObj.name;
       else c.glass=c.glass.split(' — ')[0].trim();
     }
-  });
-  ['products','glasses','iceTypes','staffItems','cocktails','events','contacts','dressCodes','clients'].forEach(k=>{
-    if(!Array.isArray(state[k])) state[k]=[];
   });
 }
 
