@@ -3484,9 +3484,9 @@ function updEvPayment(){
   const paid=document.getElementById('ef-paid')?.checked||false;
   const statusEl=document.getElementById('ef-payment-status');
   if(!statusEl) return;
-  // Get total revenue from summary
+  // Get total revenue from summary (includes cocktails + staff + delivery)
   const revEl=document.getElementById('es-rev');
-  const totalRev=revEl?parseFloat(revEl.textContent.replace('€','').replace(',','.'))||0:0;
+  const totalRev=revEl?parseFloat(revEl.textContent.replace('€','').trim())||0:0;
   if(paid){
     statusEl.style.color='var(--green)';
     statusEl.textContent='✓ Payé intégralement';
@@ -6430,23 +6430,23 @@ function renderSuivi(){
     const check=(done,label,action)=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:14px">${done?'✓':'◇'}</span>
-          <span style="font-size:11px;color:${done?'var(--text)':'var(--text3)'}${done?';font-weight:500':''}">${label}</span>
+          <span style="font-size:16px">${done?'✓':'◇'}</span>
+          <span style="font-size:12px;color:${done?'var(--text)':'var(--text3)'}${done?';font-weight:500':''}">${label}</span>
         </div>
         ${action||''}
       </div>`;
 
     return`<div class="card" style="margin-bottom:6px;border-left:3px solid ${borderColor}">
       <!-- Header -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
         <div>
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
-          <div style="font-size:15px;font-weight:600">${ev.name}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">${ev.pax||'?'} pax · ${total} cocktails</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
+          <div style="font-size:17px;font-weight:600;line-height:1.2">${ev.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">${ev.pax||'?'} pax · ${total} cocktails</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:20px;font-family:'DM Serif Display',serif;color:${statusColor};font-weight:500">${pct}%</div>
-          <div style="font-size:9px;color:var(--text3)">${score}/${total6}</div>
+          <div style="font-size:24px;font-family:'DM Serif Display',serif;color:${statusColor};font-weight:500">${pct}%</div>
+          <div style="font-size:10px;color:var(--text3)">${score}/${total6}</div>
         </div>
       </div>
 
