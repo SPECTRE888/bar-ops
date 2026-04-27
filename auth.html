@@ -40,7 +40,7 @@ input:focus{outline:none;border-color:var(--gold)}
   <div class="msg" id="msg"></div>
 
   <div id="view-signup">
-    <button class="btn gold" onclick="googleAuth()">S'inscrire avec Google</button>
+    <button class="btn gold" onclick="googleAuthSignup()">S'inscrire avec Google</button>
     <div class="divider">ou</div>
     <label>Email</label>
     <input type="email" id="s-email" placeholder="vous@example.com"/>
@@ -51,7 +51,7 @@ input:focus{outline:none;border-color:var(--gold)}
   </div>
 
   <div id="view-login" style="display:none">
-    <button class="btn gold" onclick="googleAuth()">Se connecter avec Google</button>
+    <button class="btn gold" onclick="googleAuthLogin()">Se connecter avec Google</button>
     <div class="divider">ou</div>
     <label>Email</label>
     <input type="email" id="l-email" placeholder="vous@example.com"/>
@@ -95,10 +95,20 @@ async function redirect(userId){
   window.location.href='index.html?mode=pricing';
 }
 
-async function googleAuth(){
+async function googleAuthSignup(){
+  await sb.auth.signOut();
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://melodic-cupcake-725483.netlify.app/auth.html'}
+    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=signup'}
+  });
+  if(error)msg(error.message,'err');
+}
+
+async function googleAuthLogin(){
+  await sb.auth.signOut();
+  const{error}=await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=login'}
   });
   if(error)msg(error.message,'err');
 }
@@ -138,9 +148,16 @@ async function emailLogin(){
 // Only redirect if coming from Google OAuth (hash contains token)
 (async()=>{
   const hash=window.location.hash;
+  const action=new URLSearchParams(window.location.search).get('action');
   if(!hash.includes('access_token'))return;
   sb.auth.onAuthStateChange(async(e,s)=>{
-    if(e==='SIGNED_IN'&&s)await redirect(s.user.id);
+    if(e==='SIGNED_IN'&&s){
+      if(action==='signup'){
+        window.location.href='index.html?mode=pricing';
+      }else{
+        await redirect(s.user.id);
+      }
+    }
   });
 })();
 </script>
