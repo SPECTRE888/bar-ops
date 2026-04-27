@@ -5538,7 +5538,9 @@ function openEventHTML(evId){
 }
 
 function buildEventSummaryHTML(ev){
-  const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
+  const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0)):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
+  const cost=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*c.totalCost:0);},0)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0);
+  const mg=rev-cost;
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
   const cl=state.clients.find(c=>c.id===ev.clientId);
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
@@ -5735,9 +5737,9 @@ function renderHistorique(){
           <div style="font-size:14px;font-weight:500;color:var(--gold)">${rev.toFixed(0)}€ HT</div>
           <div class="txs" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>=0?'+':''}${mg.toFixed(0)}€ marge</div>
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button class="btn btn-sm btn-ghost" onclick="downloadEventPDF(${ev.id})">PDF</button>
-          <button class="btn btn-sm btn-ghost" onclick="openEventHTML(${ev.id})">HTML</button>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
+          <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">HTML</button>
         </div>
       </div>`;
     });
