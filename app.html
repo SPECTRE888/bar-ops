@@ -2148,18 +2148,18 @@ function showCForm(c){
     if(g){
       const newGlassCost=parseFloat(((g.priceTTC||g.priceHT||0)/1.10).toFixed(3));
       document.getElementById('cf-glass-cost').value=newGlassCost;
-      updCRecap();
-      // After updCRecap, recalc price HT to maintain multiplier
+      updIceCost();updCRecap();
       setTimeout(()=>{
-        const mult=parseFloat(document.getElementById('cf-mult')?.value)||4;
-        const costRaw=document.getElementById('r-cost')?.textContent||'0';
-        const cost=parseFloat(costRaw.replace('€','').replace(',','.'))||0;
-        if(cost>0){
-          const newPriceHT=cost*mult;
-          document.getElementById('cf-pht').value=newPriceHT.toFixed(2);
-          updCRecap();
+        const mult=parseFloat(document.getElementById('cf-mult')?.value)||0;
+        if(mult>0){
+          const costRaw=document.getElementById('r-cost')?.textContent||'0';
+          const cost=parseFloat(costRaw.replace('€',''))||0;
+          if(cost>0){
+            document.getElementById('cf-pht').value=(cost*mult).toFixed(2);
+            updCRecap();
+          }
         }
-      },10);
+      },20);
     }
   },glassInitVal());
   
@@ -2494,15 +2494,7 @@ function applySuggestedPrice(){
 // DASHBOARD
 // ════════════════════════════════════════════════════════
 function goToEventSuivi(eventId){
-  editEv(eventId);
-  goPage('events');
-  setTimeout(()=>{
-    const tabs=document.querySelectorAll('[data-tab]');
-    tabs.forEach(t=>t.classList.remove('active'));
-    const suiviTab=document.querySelector('[data-tab="suivi"]');
-    if(suiviTab) suiviTab.classList.add('active');
-    renderSuivi();
-  },100);
+  goPage('suivi');
 }
 
 function renderDashboard(){
