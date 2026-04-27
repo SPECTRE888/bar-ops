@@ -4235,172 +4235,61 @@ function renderPrestation(){
   const assignedIds=ev.assignedStaff||[];
 
   el.innerHTML=`
-  <div class="g2" style="align-items:start;gap:14px;max-height:calc(100vh - 180px)">
+  <!-- STAFF SECTION TOP FULL-WIDTH -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="ctitle">‍ Staff assigné</div>
+    ${state.staffItems.length===0
+      ?`<p class="ts tm">Aucun staff — <span class="tg" style="cursor:pointer" onclick="goPage('staff')">ajouter ↗</span></p>`
+      :state.staffItems.map(s=>{
+        const isOn=assignedIds.includes(s.id);
+        const contact=state.contacts.find(c=>c.staffId===s.id||c.name===s.name);
+        const phone=contact?.phone||s.phone||'';
+        const manualUnavail=(ev.staffUnavail||[]).includes(s.id);
+        const eventRole=(ev.staffRoles||{})[s.id]||s.type||'';
+        const statusTag=manualUnavail?`<span class="txs tm" style="color:var(--red)">indispo</span>`:(isOn?`<span class="txs tm" style="color:var(--green)"></span>`:'');
+        return isOn?`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px">
+          <span style="color:${manualUnavail?'var(--red)':'var(--green)'}">${manualUnavail?'':'✓'}</span>
+          <span style="flex:1;${manualUnavail?'text-decoration:line-through':''}">${s.name||s.type}</span>
+          <input value="${eventRole.replace(/"/g,'&quot;')}" placeholder="Rôle" onchange="setStaffRole(${evId},${s.id},this.value)" style="width:150px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:4px"/>
+          <button class="btn btn-sm btn-ghost" onclick="toggleAssignStaff(${evId},${s.id},false)">×</button>
+        </div>`:'';
+      }).join('')}
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="width:100%;font-size:11px;padding:6px">
+        <option value="">+ Ajouter staff...</option>
+        ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type}</option>`).join('')}
+      </select>
+    </div>
+  </div>
 
-    <!-- LEFT: Client + Staff assignment + Brief -->
-    <div style="overflow-y:auto;max-height:100%;padding-right:8px">
-      <!-- CLIENT SELECTION -->
-      <div class="card">
-        <div class="ctitle">👤 Client</div>
-        <div style="position:relative;margin-bottom:12px">
-          <input id="prest-client-search" placeholder="Rechercher ou créer client..." style="width:100%;margin-bottom:8px" oninput="prestClientSearchFilter(${evId})"/>
-          <div id="prest-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
-        </div>
-        
-        <!-- Selected client display -->
-        <div id="prest-client-display" style="display:${ev.clientId?'block':'none'};padding:10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:10px">
-          ${ev.clientId?(()=>{
-            const c=state.clients.find(x=>x.id===ev.clientId);
-            return c?`
-            <div style="font-weight:500;margin-bottom:8px">${c.name||'—'}</div>
-            ${c.company?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">Société: ${c.company}</div>`:''}
-            ${c.email?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">Email: ${c.email}</div>`:''}
-            ${c.phone?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">Tél: ${c.phone}</div>`:''}
-            ${c.address?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px">Adresse: ${c.address}</div>`:''}
-            ${c.notes?`<div style="font-size:11px;color:var(--text3)">Notes: ${c.notes}</div>`:''}
-            `:''
-          })():''}
-        </div>
-        
-        <!-- Create new client form -->
-        <div id="prest-client-form" style="display:none;padding:10px;background:var(--surface2);border-radius:var(--radius)">
-          <div style="font-size:9px;font-weight:500;color:var(--text3);margin-bottom:8px;text-transform:uppercase">Créer nouveau client</div>
-          <div class="field" style="margin-bottom:8px"><label style="font-size:9px">Nom</label>
-            <input id="prest-client-name" placeholder="Nom complet" style="font-size:11px;padding:5px 8px"/>
-          </div>
-          <div class="field" style="margin-bottom:8px"><label style="font-size:9px">Société</label>
-            <input id="prest-client-company" placeholder="Entreprise" style="font-size:11px;padding:5px 8px"/>
-          </div>
-          <div class="field" style="margin-bottom:8px"><label style="font-size:9px">Email</label>
-            <input id="prest-client-email" type="email" placeholder="email@example.com" style="font-size:11px;padding:5px 8px"/>
-          </div>
-          <div class="field" style="margin-bottom:8px"><label style="font-size:9px">Téléphone</label>
-            <input id="prest-client-phone" placeholder="+33 6..." style="font-size:11px;padding:5px 8px"/>
-          </div>
-          <div class="field" style="margin-bottom:8px"><label style="font-size:9px">Adresse</label>
-            <input id="prest-client-address" placeholder="Adresse" style="font-size:11px;padding:5px 8px"/>
-          </div>
-          <div class="field" style="margin-bottom:10px"><label style="font-size:9px">Notes</label>
-            <input id="prest-client-notes" placeholder="Remarques" style="font-size:11px;padding:5px 8px"/>
-          </div>
-          <div style="display:flex;gap:6px;justify-content:flex-end">
-            <button class="btn btn-sm btn-ghost" onclick="prestCancelClientForm()">Annuler</button>
-            <button class="btn btn-sm btn-gold" onclick="prestCreateClient(${evId})">Créer</button>
-          </div>
-        </div>
-      </div>
+  <!-- FICHE SECTION MIDDLE FULL-WIDTH -->
+  <div style="margin-bottom:14px">${buildPrestHTML(ev)}</div>
 
-      <!-- STAFF ASSIGNMENT -->
-      <div class="card">
-        <div class="ctitle">‍ Staff assigné à cet événement</div>
-        ${state.staffItems.length===0
-          ?`<p class="ts tm">Aucun staff dans le catalogue — <span class="tg" style="cursor:pointer" onclick="goPage('staff')">ajouter ↗</span></p>`
-          :state.staffItems.map(s=>{
-            const isOn=assignedIds.includes(s.id);
-            const contact=state.contacts.find(c=>c.staffId===s.id||c.name===s.name);
-            const phone=contact?.phone||s.phone||'';
-
-            // Conflict check: same date, another event
-            const conflict=state.events.find(otherEv=>
-              otherEv.id!==evId &&
-              otherEv.date===ev.date &&
-              (otherEv.assignedStaff||[]).includes(s.id)
-            );
-
-            // Same-day check (event date === today)
-            const evDate=ev.date?new Date(ev.date):null;
-            const today=new Date();
-            const isToday=evDate&&evDate.toDateString()===today.toDateString();
-
-            // Manual unavailable flag (last-minute)
-            const manualUnavail=(ev.staffUnavail||[]).includes(s.id);
-
-            // Effective status
-            let status; // 'conflict' | 'today-unavail' | 'manual-unavail' | 'dispo'
-            if(conflict) status='conflict';
-            else if(isToday && manualUnavail) status='today-unavail';
-            else if(manualUnavail) status='manual-unavail';
-            else status='dispo';
-
-            // Confirmation status (OUI reçu → brief auto)
-            const confirmed=(ev.staffConfirmed||[]).includes(s.id);
-
-            const statusTag = conflict
-              ? `<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:rgba(201,110,110,0.15);color:var(--red)">Occupé — ${conflict?.name}</span>`
-              : manualUnavail && isToday
-                ? `<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:rgba(201,110,110,0.15);color:var(--red)">Indispo (J)</span>`
-                : manualUnavail
-                  ? `<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:rgba(201,110,110,0.15);color:var(--red)">Indispo</span>`
-                  : confirmed
-                    ? `<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:rgba(110,201,138,0.15);color:var(--green)">Confirmé</span>`
-                    : `<span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;background:var(--surface3);color:var(--text3)">En attente</span>`;
-
-            // Modifier indispo button — always shown for assigned staff (except cross-event conflict)
-            // Same-day: can mark indispo but NOT back to dispo
-            const editBtn = isOn && status!=='conflict' ? (
-              isToday && !manualUnavail
-                ? `<button onclick="markUnavail(${evId},${s.id},true)" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--red);cursor:pointer">Indispo</button>`
-                : !isToday && manualUnavail
-                  ? `<button onclick="markUnavail(${evId},${s.id},false)" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--green);cursor:pointer">Remettre dispo</button>`
-                  : isToday && manualUnavail
-                    ? `<span class="txs tm">Verrouillé (J)</span>`
-                    : ''
-            ) : '';
-
-            // Brief button — on send, assigns to planning
-            const briefBtn = isOn && phone
-              ? `<a href="https://wa.me/${waPhone(phone)}?text=${encodeURIComponent('Bonjour '+(s.name||'')+'\n\n'+buildShareMsg(ev))}"
-                  target="_blank"
-                  onclick="onBriefSent(${evId},${s.id})"
-                  style="padding:4px 9px;background:#25D366;color:#fff;border-radius:7px;font-size:11px;text-decoration:none">Brief</a>`
-              : isOn ? `<span class="txs" style="color:var(--text3)">Pas de n°</span>` : '';
-
-            // Confirm toggle — check OUI → brief fires automatically
-            const confirmBtn = phone && !conflict && !manualUnavail
-              ? `<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:${confirmed?'var(--green)':'var(--text3)'}">
-                  <input type="checkbox" ${confirmed?'checked':''} style="width:auto;accent-color:var(--green)"
-                    onchange="confirmStaff(${evId},${s.id},this.checked,'${waPhone(phone)}')"/>
-                  OUI reçu
-                </label>`
-              : '';
-
-            // Dispo request button
-            const dispoBtn = phone && !conflict && !manualUnavail && !confirmed
-              ? `<a href="https://wa.me/${waPhone(phone)}?text=${encodeURIComponent(buildDispoMsg(ev,s))}"
-                  target="_blank"
-                  style="padding:4px 9px;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:7px;font-size:11px;text-decoration:none">Dispo ?</a>`
-              : '';
-
-            // Per-event role (editable, stored in ev.staffRoles)
-            const eventRole=(ev.staffRoles||{})[s.id]||s.type||'';
-
-            return`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);gap:8px">
-              <label style="display:flex;align-items:center;gap:9px;cursor:pointer;flex:1;min-width:0">
-                <input type="checkbox" ${isOn?'checked':''} style="width:auto;accent-color:var(--gold);flex-shrink:0"
-                  onchange="toggleAssignStaff(${evId},${s.id},this.checked)"/>
-                <div style="min-width:0">
-                  <div style="font-size:13px;font-weight:${isOn?'500':'400'}">${s.name||s.type}</div>
-                  ${isOn
-                    ? `<input value="${eventRole.replace(/"/g,'&quot;')}"
-                        onchange="setStaffRole(${evId},${s.id},this.value)"
-                        placeholder="Rôle pour cet event (ex: Head Bartender)"
-                        style="margin-top:3px;font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);width:100%;max-width:200px"/>`
-                    : `<div class="txs tm">${s.type}${phone?' · '+phone:''}</div>`}
-                </div>
-              </label>
-              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                ${statusTag}
-                ${editBtn}
-                ${dispoBtn}
-                ${confirmBtn}
-                ${confirmed ? briefBtn : ''}
-              </div>
-            </div>`;
-          }).join('')}
-      </div>
-
+  <!-- LEFT/RIGHT: INFOS | COCKTAILS -->
+  <div class="g2" style="gap:14px">
+    <!-- LEFT: EVENT INFOS -->
+    <div class="card">
+      <div class="ctitle">📋 Informations</div>
+      ${ev.name?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Nom</span><div style="font-size:13px;font-weight:500">${ev.name}</div></div>`:''}
+      ${ev.date?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Date</span><div style="font-size:13px">${new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div></div>`:''}
+      ${ev.pax?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Pax</span><div style="font-size:13px">${ev.pax} personnes</div></div>`:''}
+      ${ev.address?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Lieu</span><div style="font-size:13px">${ev.address}</div></div>`:''}
+      ${ev.start||ev.end?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Horaires</span><div style="font-size:13px">${ev.start||'?'} — ${ev.end||'?'}</div></div>`:''}
+      ${ev.contact?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Contact</span><div style="font-size:13px">${ev.contact}${ev.contactPhone?' · '+ev.contactPhone:''}</div></div>`:''}
     </div>
 
+    <!-- RIGHT: COCKTAILS -->
+    <div class="card">
+      <div class="ctitle">🍹 Cocktails</div>
+      ${(ev.cocktails||[]).length===0?`<p class="ts tm">Aucun cocktail sélectionné</p>`:(ev.cocktails||[]).map(cfg=>{
+        const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return'';
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+          <div><strong>${c.name}</strong> <span style="color:var(--text3)">×${cfg.qty}</span></div>
+          <span style="color:var(--gold)">${(cfg.qty*c.priceHT).toFixed(2)}€</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
     <!-- RIGHT: Fiche preview -->
     <div>
       <div style="position:sticky;top:0">${buildPrestHTML(ev)}</div>
