@@ -1911,6 +1911,7 @@ function createClientFromForm(){
   const name=(fname+' '+lname).trim();
   const email=(document.getElementById('ef-client-email')?.value||'').trim();
   const phone=(document.getElementById('ef-client-phone')?.value||'').trim();
+  const whatsapp=(document.getElementById('ef-client-whatsapp')?.value||'').trim();
   const company=(document.getElementById('ef-client-company')?.value||'').trim();
   const address=(document.getElementById('ef-client-address')?.value||'').trim();
   const notes=(document.getElementById('ef-client-notes')?.value||'').trim();
@@ -1934,6 +1935,7 @@ function createClientFromForm(){
     name,
     email:email||'',
     phone:phone||'',
+    whatsapp:whatsapp||'',
     company:company||'',
     address:address||'',
     notes:notes||'',
@@ -3021,6 +3023,9 @@ function showEvForm(ev){
           </div>
           <div class="field"><label>Téléphone</label>
             <input id="ef-client-phone" placeholder="+33 6..."/>
+          </div>
+          <div class="field"><label>WhatsApp (pour envoyer briefs)</label>
+            <input id="ef-client-whatsapp" placeholder="+33 6..."/>
           </div>
         </div>
         <div class="field" style="margin-bottom:10px"><label>Adresse</label>
@@ -4381,6 +4386,37 @@ function sendBriefWA(evId,sid){
   ];
   const msg=lines.filter(l=>l!==undefined).join('\n');
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+function sendBriefFromClient(evId){
+  const ev=state.events.find(x=>x.id===evId);
+  const client=state.clients.find(x=>x.id===ev?.clientId);
+  if(!ev||!client||!client.whatsapp){alert('WhatsApp du client manquant');return;}
+  
+  const staffNames=(ev.assignedStaff||[]).map(sid=>{
+    const s=state.staffItems.find(x=>x.id===sid);
+    return s?.name||'Staff';
+  }).join(', ')||'équipe';
+  
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
+  const lines=[
+    'Bonjour '+staffNames+',',
+    '',
+    'Ceci est le BRIEF pour l\'événement:',
+    '',
+    '📌 '+ev.name,
+    '📅 '+fmtDate,
+    '📍 '+(ev.location||'?'),
+    '🕐 '+(ev.startTime||'?')+' - '+(ev.endTime||'?'),
+    '👥 '+ev.guests+' pax',
+    '',
+    (ev.notes?'Notes: '+ev.notes+'\n':''),
+    'Merci pour votre implication !',
+    '',
+    '_Envoyé via BAR OPS_'
+  ];
+  const msg=lines.filter(l=>l!==undefined).join('\n');
+  window.open('https://wa.me/'+waPhone(client.whatsapp)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 function buildDispoMsg(ev, s){
