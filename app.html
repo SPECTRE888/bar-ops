@@ -4235,48 +4235,49 @@ function renderPrestation(){
   const unavail=ev.staffUnavail||[];
 
   el.innerHTML=`
-  <!-- STAFF -->
-  <div class="card" style="margin-bottom:14px;padding:14px">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Staff</div>
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 120px auto;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)">
-      <div>Nom</div><div>Rôle</div><div>Téléphone</div><div>Disponibilité</div><div></div>
-    </div>
-    ${assignedIds.length?assignedIds.map(sid=>{
-      const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
-      const role=(ev.staffRoles||{})[sid]||s.type||'';
-      const isConfirmed=confirmed.includes(sid);
-      const isUnavail=unavail.includes(sid);
-      const phone=s.phone||'';
-      const statusBadge=isConfirmed?`<span style="color:var(--green);font-size:11px">✓ Dispo</span>`:isUnavail?`<span style="color:var(--red);font-size:11px">✗ Indispo</span>`:`<div style="display:flex;gap:6px;align-items:center">
-        <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-${sid}" onchange="markStaffDispo(${evId},${sid},true)" style="accent-color:var(--green)"/>Oui</label>
-        <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-${sid}" onchange="markStaffDispo(${evId},${sid},false)" style="accent-color:var(--red)"/>Non</label>
-      </div>`;
-      return`<div style="display:grid;grid-template-columns:2fr 1fr 1fr 120px auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <span style="${isUnavail?'text-decoration:line-through;color:var(--text3)':''}">${s.name||s.type}</span>
-        <span style="color:var(--text3)">${role}</span>
-        <span style="color:var(--text3)">${phone}</span>
-        <span>${statusBadge}</span>
-        <div style="display:flex;gap:4px">
-          ${!isConfirmed&&!isUnavail?`<button class="btn btn-sm btn-ghost" onclick="sendDispoWA(${evId},${sid})" title="Envoyer message dispo WhatsApp">Dispo?</button>`:''}
-          ${isConfirmed?`<button class="btn btn-sm btn-gold" onclick="sendBriefWA(${evId},${sid})" title="Envoyer brief WhatsApp">Brief</button>`:''}
-          <button class="btn btn-sm" style="padding:2px 6px;background:none;color:var(--text3)" onclick="toggleAssignStaff(${evId},${sid},false)">×</button>
-        </div>
-      </div>`;
-    }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun staff assigné</div>'}
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-      <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="width:100%;font-size:11px;padding:6px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
-        <option value="">+ Ajouter staff...</option>
-        ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type} — ${s.type}</option>`).join('')}
-      </select>
-    </div>
-  </div>
+  <div style="max-width:900px;margin:0 auto">
 
-  <!-- FICHE FULL WIDTH -->
-  <div style="width:100%">${buildPrestHTML(ev)}</div>
+    <!-- ÉQUIPE -->
+    <div class="card" style="margin-bottom:14px;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Équipe</div>
+        <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="font-size:11px;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
+          <option value="">+ Ajouter</option>
+          ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type} — ${s.type}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)">
+        <div>Nom</div><div>Rôle</div><div>Téléphone</div><div>Disponibilité</div><div></div>
+      </div>
+      ${assignedIds.length?assignedIds.map(sid=>{
+        const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
+        const role=(ev.staffRoles||{})[sid]||s.type||'';
+        const isConfirmed=confirmed.includes(sid);
+        const isUnavail=unavail.includes(sid);
+        const phone=s.phone||'—';
+        const dispo=isConfirmed?'<span style="color:var(--green);font-size:11px;font-weight:500">✓ Dispo</span>':
+          isUnavail?'<span style="color:var(--red);font-size:11px;font-weight:500">✗ Indispo</span>':
+          '<div style="display:flex;gap:8px">'+
+            '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-'+sid+'" onchange="markStaffDispo('+evId+','+sid+',true)" style="accent-color:var(--green)"/> Oui</label>'+
+            '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-'+sid+'" onchange="markStaffDispo('+evId+','+sid+',false)" style="accent-color:var(--red)"/> Non</label>'+
+          '</div>';
+        return'<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
+          '<span style="'+(isUnavail?'text-decoration:line-through;color:var(--text3)':'')+'">'+(s.name||s.type)+'</span>'+
+          '<span style="color:var(--text3)">'+role+'</span>'+
+          '<span style="color:var(--text3)">'+phone+'</span>'+
+          '<span>'+dispo+'</span>'+
+          '<div style="display:flex;gap:4px">'+
+            (!isConfirmed&&!isUnavail?'<button class="btn btn-sm btn-ghost" onclick="sendDispoWA('+evId+','+sid+')">Dispo?</button>':'')+
+            (isConfirmed?'<button class="btn btn-sm btn-gold" onclick="sendBriefWA('+evId+','+sid+')">Brief</button>':'')+
+            '<button class="btn btn-sm" style="padding:2px 6px;background:none;color:var(--text3)" onclick="toggleAssignStaff('+evId+','+sid+',false)">×</button>'+
+          '</div>'+
+        '</div>';
+      }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun membre assigné</div>'}
+    </div>
 
-  <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;padding:16px;border-top:1px solid var(--border)">
-    <button class="btn btn-gold" onclick="generateDevis()">Devis PDF</button>
-    <button class="btn btn-ghost" onclick="sharePrestation()">Partager WhatsApp</button>
+    <!-- FICHE PRESTATION -->
+    <div style="width:100%">${buildPrestHTML(ev)}</div>
+
   </div>`;
 }
 
@@ -4310,10 +4311,35 @@ function sendBriefWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
   if(!ev||!s||!s.phone){alert('Numero manquant pour ce staff.');return;}
-  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
-  const cktList=(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);return c?c.name+' x'+cfg.qty:'';}).filter(Boolean).join(', ')||'—';
-  const msg='BRIEF - '+ev.name+'\n\nBonjour '+s.name+',\n\nDate: '+fmtDate+'\nLieu: '+(ev.address||'?')+(ev.access?' ('+ev.access+')':'')+'\nSetup: '+(ev.setup||'?')+' | Bar: '+(ev.start||'?')+' - '+(ev.end||'?')+'\nPoste: '+role+'\nPax: '+(ev.pax||'?')+'\n\nCocktails: '+cktList+(ev.notes?'\n\nNotes: '+ev.notes:'')+'\n\nBonne prestation !';
+  const tenue=(ev.dressCodes||[]).map(dcId=>{const dc=state.dressCodes.find(x=>x.id===dcId);return dc?dc.name:dcId;}).join(', ')||'Non précisée';
+  const cktList=(ev.cocktails||[]).map(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
+    const ings=(c.ingredients||[]).map(i=>{const p=state.products.find(x=>x.id===i.productId);return p?'- '+p.name+(i.qty?' '+i.qty+(i.unit||'ml'):''):''}).filter(Boolean).join(', ');
+    return c.name+' x'+cfg.qty+(ings?' ('+ings+')':'');
+  }).filter(Boolean).join('\n')||'—';
+  const lines=[
+    'BRIEF - '+ev.name,
+    '',
+    'Bonjour '+s.name+',',
+    '',
+    'Date: '+fmtDate,
+    'Lieu: '+(ev.address||'?')+(ev.access?' | Acces: '+ev.access:''),
+    'Setup: '+(ev.setup||'?'),
+    'Ouverture bar: '+(ev.start||'?'),
+    'Fermeture bar: '+(ev.end||'?'),
+    'Pax: '+(ev.pax||'?'),
+    'Poste: '+role,
+    'Tenue: '+tenue,
+    '',
+    'Cocktails:',
+    cktList,
+    (ev.notes?'\nNotes: '+ev.notes:''),
+    '',
+    'Bonne prestation !'
+  ];
+  const msg=lines.filter(l=>l!==undefined).join('\n');
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
