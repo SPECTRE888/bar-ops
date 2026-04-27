@@ -698,15 +698,11 @@ function deleteAccountModal(){
 }
 
 function cloudRestoreSession(){
-  try{
-    const s=JSON.parse(localStorage.getItem('bcp_session')||'null');
-    if(s&&extractToken(s)) cloudUser=s;
-  }catch(e){}
+  // Session already set by paywall - no localStorage restore needed
 }
 
 async function cloudRefreshSession(){
-  const s=JSON.parse(localStorage.getItem('bcp_session')||'null');
-  const refreshToken=extractRefreshToken(s);
+  const refreshToken=extractRefreshToken(window.cloudUser);
   if(!refreshToken) return false;
   const{url,key}=getSupabase();
   try{
@@ -717,11 +713,7 @@ async function cloudRefreshSession(){
     });
     if(!r.ok){
       if(r.status===400||r.status===401){
-        // Only clear if no existing valid token
-        if(!extractToken(cloudUser)){
-          cloudUser=null;
-          localStorage.removeItem('bcp_session');
-        }
+        if(!extractToken(cloudUser)){cloudUser=null;}
       }
       return false;
     }
@@ -735,7 +727,6 @@ async function cloudRefreshSession(){
         user:session.user||data.user||cloudUser?.user||{}
       };
       cloudUser=normalized;
-      localStorage.setItem('bcp_session',JSON.stringify(normalized));
       return true;
     }
   }catch(e){console.warn('Refresh network error:',e);}
