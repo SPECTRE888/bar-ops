@@ -6817,9 +6817,10 @@ updateCloudStatus();
     banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99998;background:linear-gradient(90deg,rgba(196,164,107,0.1),rgba(196,164,107,0.08));border-bottom:1px solid rgba(196,164,107,0.3);backdrop-filter:blur(4px);padding:10px;text-align:center;font-size:12px;color:var(--gold);letter-spacing:.08em;font-family:Jost,sans-serif;font-weight:400';
     banner.innerHTML='MODE VISUALISATION — <a href="paying.html" style="color:var(--gold);text-decoration:none;font-weight:500;cursor:pointer;opacity:0.9;transition:opacity.2s">Souscrire</a>';
     document.body.appendChild(banner);
+    console.log('Demo data injected, events:', state.events);
     updateBadges();
-    goPage('events');
     applyTheme();
+    setTimeout(()=>goPage('events'),100);
     return;
   }
   if(!cloudUser) await cloudRestoreSessionAsync();
