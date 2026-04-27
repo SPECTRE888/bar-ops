@@ -3136,10 +3136,7 @@ function showEvForm(ev){
           <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="ctitle">Lieu & Accès</div>
-      <div style="display:grid;grid-template-columns:1.4fr 0.6fr;gap:10px;margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:6px">
         <div class="field"><label>${t('ev_address')}</label>
           <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
         </div>
@@ -3656,7 +3653,7 @@ function saveEv(){
     barType:document.getElementById('ef-bar-type')?.options[document.getElementById('ef-bar-type')?.selectedIndex]?.text||'',
     barLength:parseFloat(document.getElementById('ef-bar-length')?.value)||0,
     barPrice:parseFloat(document.getElementById('ef-bar-price')?.value)||0,
-    dressCodes:(function(){const v=document.getElementById('ef-tenue-select')?.value;return v?[parseInt(v)]:[];})()
+    dressCodes:(function(){const v=document.getElementById('ef-tenue-select')?.value;return v?[parseInt(v)]:[];})(),
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,
     cppax:parseFloat(document.getElementById('ef-cpp')?.value)||3,
     buffer:parseFloat(document.getElementById('ef-buf')?.value||'0'),
