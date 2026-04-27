@@ -2146,16 +2146,20 @@ function showCForm(c){
   mkSS('cf-glass-ss',glassOpts,'e.g. Highball...',(v)=>{
     const g=state.glasses.find(x=>v.startsWith(x.name));
     if(g){
-      const oldGlassCost=parseFloat(document.getElementById('cf-glass-cost').value)||0;
       const newGlassCost=parseFloat(((g.priceTTC||g.priceHT||0)/1.10).toFixed(3));
-      const glassDiff=newGlassCost-oldGlassCost;
       document.getElementById('cf-glass-cost').value=newGlassCost;
-      const priceHtEl=document.getElementById('cf-pht');
-      if(priceHtEl&&priceHtEl.value){
-        const oldPrice=parseFloat(priceHtEl.value)||0;
-        priceHtEl.value=(oldPrice+glassDiff).toFixed(2);
-      }
-      updIceCost();updCRecap();
+      updCRecap();
+      // After updCRecap, recalc price HT to maintain multiplier
+      setTimeout(()=>{
+        const mult=parseFloat(document.getElementById('cf-mult')?.value)||4;
+        const costRaw=document.getElementById('r-cost')?.textContent||'0';
+        const cost=parseFloat(costRaw.replace('€','').replace(',','.'))||0;
+        if(cost>0){
+          const newPriceHT=cost*mult;
+          document.getElementById('cf-pht').value=newPriceHT.toFixed(2);
+          updCRecap();
+        }
+      },10);
     }
   },glassInitVal());
   
