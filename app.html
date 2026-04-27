@@ -20,6 +20,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
   try{
     if(!window.supabase)return;
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    window._sb=sb;
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
 
@@ -33,7 +34,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     window._userPlan=subs?.plan||'pro';
     window._isDemo=false;
     window._userId=session.user.id;
-    window._sb=sb;
+    window._paywallDone=true;
   }catch(e){console.error('Paywall error:',e);}
 })();
 </script>
@@ -6764,6 +6765,17 @@ updateCloudStatus();
 
 // Async init: refresh session → pull → render
 (async()=>{
+  // Attendre que le paywall ait fini (max 5s)
+  if(!window._isDemo){
+    await new Promise(resolve=>{
+      const t=Date.now();
+      const check=()=>{
+        if(window._paywallDone||window._isDemo||(Date.now()-t>5000)) resolve();
+        else setTimeout(check,50);
+      };
+      check();
+    });
+  }
   if(window._isDemo){
     state=freshState();
     injectDemoData();
