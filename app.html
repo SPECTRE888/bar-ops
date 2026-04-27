@@ -123,7 +123,7 @@ h1,h2,h3{font-family:var(--font-display)}
 .logo p{font-size:8px;color:var(--text3);margin-top:5px;letter-spacing:.18em;text-transform:uppercase;font-weight:400}
 .logo-rule{width:24px;height:1px;background:var(--gold-border);margin:10px 0 0}
 .nav{padding:12px 8px;flex:1;overflow-y:auto}
-.nav-sec{font-size:8px;text-transform:uppercase;letter-spacing:.2em;color:var(--text3);padding:16px 12px 5px;font-weight:400}
+.nav-sec{font-size:8px;text-transform:uppercase;letter-spacing:.2em;color:var(--text3);padding:10px 12px 5px;font-weight:400}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);cursor:pointer;color:var(--text3);font-size:12px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;transition:all .2s;margin-bottom:1px}
 .nav-item:hover{color:var(--text2);background:var(--surface2)}
 .nav-item.active{color:var(--gold);background:var(--gold-bg);border-left:1px solid var(--gold-border)}
@@ -136,7 +136,7 @@ h1,h2,h3{font-family:var(--font-display)}
 
 /* ── MAIN ── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
-.topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:30px}
+.topbar{padding:10px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:15px}
 .topbar h2{font-size:22px;font-weight:300;letter-spacing:.04em;color:var(--text)}
 .topbar-rule{width:1px;height:16px;background:var(--border2);margin:0 4px}
 .topbar-actions{display:flex;gap:8px;align-items:center}
@@ -209,7 +209,7 @@ select{color-scheme:dark}
 
 /* ── COCKTAIL GRID ── */
 .c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.c-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:.25s;display:flex;flex-direction:column}
+.c-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px;cursor:pointer;transition:.25s;display:flex;flex-direction:column}
 .c-card:hover{border-color:var(--gold-border);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .c-card h3{font-size:15px;margin-bottom:4px;font-weight:400}
 .c-card .cat{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px;font-weight:400}
@@ -230,7 +230,7 @@ select{color-scheme:dark}
 .shop-item:last-child{border-bottom:none}
 .shop-qty{color:var(--gold);font-weight:400;font-size:11px;letter-spacing:.04em}
 .empty{text-align:center;padding:48px 16px;color:var(--text3)}
-.empty-icon{font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;color:var(--text3)}
+.empty-icon{font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;color:var(--text3)}
 .empty p{font-size:11px;font-weight:300;letter-spacing:.04em}
 .flex-b{display:flex;justify-content:space-between;align-items:center}
 .flex-g{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -410,10 +410,10 @@ select{color-scheme:dark}
     </div>
 
     <div id="dresscode-section" style="display:none">
-      <div class="topbar" style="border:none;padding:0;margin-bottom:12px">
+      <div class="topbar" style="border:none;padding:0;margin-bottom:6px">
         <span style="color:var(--text3);font-size:12px">Présets rapides</span>
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
         <button class="btn btn-sm btn-ghost" onclick="addDressCode('Full Black','Chemise noire, pantalon noir, chaussures noires')">Full Black</button>
         <button class="btn btn-sm btn-ghost" onclick="addDressCode('Smart Casual','Chino beige, chemise blanche, ceinture marron')">Smart Casual</button>
         <button class="btn btn-sm btn-ghost" onclick="addDressCode('White Service','Chemise blanche, pantalon noir, tablier noir')">White Service</button>
@@ -850,7 +850,7 @@ function showCloudModal(){
       <input id="cloud-pass" type="password" placeholder="••••••••" autocomplete="current-password"
         onkeydown="if(event.key==='Enter')doCloudLogin()"/>
     </div>
-    <div style="text-align:right;margin-bottom:12px">
+    <div style="text-align:right;margin-bottom:6px">
       <span onclick="doForgotPassword()" style="font-size:9px;color:var(--text3);cursor:pointer;letter-spacing:.06em;text-transform:uppercase">Mot de passe oublié ?</span>
     </div>
     <div id="cloud-err" style="color:var(--red);font-size:11px;margin-bottom:10px;min-height:16px"></div>
@@ -1712,7 +1712,7 @@ function showCList(){
   const el=document.getElementById('c-content');
   if(!state.cocktails.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div>
-      <p style="margin-bottom:12px">${t('c_empty')}</p>
+      <p style="margin-bottom:6px">${t('c_empty')}</p>
       <button class="btn btn-gold" onclick="newCocktail()">${t('btn_new_cocktail')}</button>
     </div>`;
     return;
@@ -2068,8 +2068,8 @@ function showCForm(c){
       </div>
 
       <div class="card" style="padding:12px">
-        <div class="ctitle" style="margin-bottom:12px"> Pricing (HT)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="ctitle" style="margin-bottom:6px"> Pricing (HT)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px">
           <div>
             <label style="font-size:12px;display:block;margin-bottom:4px">Multiplicateur</label>
             <div style="display:flex;gap:6px;align-items:center">
@@ -2086,7 +2086,7 @@ function showCForm(c){
             </div>
           </div>
         </div>
-        <div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:12px;text-align:center">
+        <div style="background:var(--bg2);padding:10px;border-radius:6px;margin-bottom:6px;text-align:center">
           <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Prix suggéré</div>
           <div id="cf-suggested-price" style="font-size:18px;font-family:'DM Serif Display',serif;color:var(--gold);font-weight:bold">—</div>
         </div>
@@ -2532,7 +2532,7 @@ function renderDashboard(){
             </div>
           </div>`).join('')}
 
-        <div style="margin-top:24px;padding:16px;background:var(--surface2);border-radius:var(--radius-lg);border:1px solid var(--border)">
+        <div style="margin-top:24px;padding:10px;background:var(--surface2);border-radius:var(--radius-lg);border:1px solid var(--border)">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:8px">Raccourcis utiles</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()">Import CSV catalogue</button>
@@ -2639,12 +2639,12 @@ function renderDashboard(){
   
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    <div class="card" style="padding:16px;text-align:center">
+    <div class="card" style="padding:10px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">CA</div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1">${totalFacture.toFixed(0)}€</div>
       <div style="font-size:11px;color:var(--text2)">À recevoir: <span style="color:var(--gold);font-weight:500">${totalPending.toFixed(0)}€</span></div>
     </div>
-    <div class="card" style="padding:16px;text-align:center">
+    <div class="card" style="padding:10px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
       <div style="height:1px;background:var(--gold-border);margin:16px 0"></div>
@@ -2725,7 +2725,7 @@ function renderDashboard(){
       if(ev.paid){payIcon='✔';payColor='var(--green)';}
       else if(ev.acompte>0){payIcon='◐';payColor='var(--gold)';}
       
-      html+=`<div class="card" style="padding:16px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between" onclick="goToEventSuivi(${ev.id})">
+      html+=`<div class="card" style="padding:10px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between" onclick="goToEventSuivi(${ev.id})">
         <div>
           <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} • ${days}j</div>
@@ -2766,7 +2766,7 @@ function renderDashboard(){
   // No events CTA
   if(!state.events.length){
     html+=`<div class="empty"><div class="empty-icon">📋</div>
-      <p style="margin-bottom:12px">Aucune prestation. Commence par créer un événement.</p>
+      <p style="margin-bottom:6px">Aucune prestation. Commence par créer un événement.</p>
       <button class="btn btn-gold" onclick="newEv();goPage('events')">+ Créer un événement</button>
     </div>`;
   }
@@ -2934,7 +2934,7 @@ function showEvList(){
   const el=document.getElementById('ev-content');
   if(!state.events.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div>
-      <p style="margin-bottom:12px">${t('ev_empty')}</p>
+      <p style="margin-bottom:6px">${t('ev_empty')}</p>
       <button class="btn btn-gold" onclick="newEv()">${t('btn_new_event')}</button>
     </div>`;
     return;
@@ -3043,7 +3043,7 @@ function showEvForm(ev){
     <!-- SECTION 1: CLIENT & CONTACT -->
     <div class="card">
       <div class="ctitle">Client & Contact</div>
-      <div class="g3" style="margin-bottom:12px;gap:10px">
+      <div class="g3" style="margin-bottom:6px;gap:10px">
         <div class="field" style="grid-column:span 1"><label>${t('ev_client')}</label>
           <div style="position:relative">
             <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()" value="${ev.clientId?(state.clients.find(x=>x.id===ev.clientId)||{}).name||ev.clientName||'':ev.clientName||''}"/>
@@ -3060,7 +3060,7 @@ function showEvForm(ev){
       </div>
 
       <!-- Client inline form (shown when new client needed) -->
-      <div id="ef-client-form" style="display:none;padding:12px;background:var(--surface2);border-radius:var(--radius);margin-bottom:12px">
+      <div id="ef-client-form" style="display:none;padding:12px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px">
         <div class="ctitle">Créer nouveau client</div>
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Prénom</label>
@@ -3087,7 +3087,7 @@ function showEvForm(ev){
         <div class="field" style="margin-bottom:10px"><label>Adresse</label>
           <input id="ef-client-address" placeholder="12 rue de la Paix, Paris"/>
         </div>
-        <div class="field" style="margin-bottom:12px"><label>Notes</label>
+        <div class="field" style="margin-bottom:6px"><label>Notes</label>
           <input id="ef-client-notes" placeholder="Remarques, préférences..."/>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -3096,7 +3096,7 @@ function showEvForm(ev){
         </div>
       </div>
 
-      <div class="g3" style="margin-bottom:12px;gap:10px">
+      <div class="g3" style="margin-bottom:6px;gap:10px">
         <div class="field"><label>Contact / Responsable</label>
           <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
         </div>
@@ -3112,7 +3112,7 @@ function showEvForm(ev){
     <!-- SECTION 2: BASE EVENT -->
     <div class="card">
       <div class="ctitle">Événement</div>
-      <div class="g3" style="margin-bottom:12px">
+      <div class="g3" style="margin-bottom:6px">
         <div class="field"><label>${t('ev_name')}</label>
           <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
         </div>
@@ -3126,7 +3126,7 @@ function showEvForm(ev){
     </div>
     <div class="card">
       <div class="ctitle">Lieu & Accès</div>
-      <div style="display:grid;grid-template-columns:1.4fr 0.6fr;gap:10px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1.4fr 0.6fr;gap:10px;margin-bottom:6px">
         <div class="field"><label>${t('ev_address')}</label>
           <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
         </div>
@@ -3134,19 +3134,9 @@ function showEvForm(ev){
           <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte..."/>
         </div>
       </div>
-      ${state.dressCodes.length?`
-      <div class="field" style="margin-bottom:12px"><label>${t('ev_dresscode')}</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-          ${state.dressCodes.map(dc=>`
-            <label style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid ${(ev.dressCodes||[]).includes(dc.id)?'var(--gold)':'var(--border2)'};border-radius:20px;cursor:pointer;font-size:11px;background:${(ev.dressCodes||[]).includes(dc.id)?'var(--gold-bg)':'none'};transition:.15s">
-              <input type="checkbox" ${(ev.dressCodes||[]).includes(dc.id)?'checked':''} data-dcid="${dc.id}" class="ev-dc-chk" style="width:auto;accent-color:var(--gold)"/>
-              ${dc.name}
-            </label>`).join('')}
-        </div>
-      </div>`:''}
     </div>
 
-    <!-- SECTION 4: HORAIRES & SETUP -->
+    <!-- SECTION 2: HORAIRES & SETUP -->
     <div class="card">
       <div class="ctitle">Horaires</div>
       <div class="g3" style="grid-template-columns:1fr 1fr 1fr 1fr">
@@ -3157,68 +3147,32 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 5: BAR -->
+    <!-- SECTION 5: BAR (SELECT ONLY) -->
     <div class="card">
-      <div class="ctitle">Configuration bar</div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr>
-            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Nom / Modèle</th>
-            <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Longueur</th>
-            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Couleur</th>
-            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Style</th>
-            <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Prix HT</th>
-            <th style="padding:6px 8px;border-bottom:1px solid var(--border)"></th>
-          </tr></thead>
-          <tbody>
-            ${(state.barItems||[]).length?
-              (state.barItems||[]).map(b=>{
-                const sel=ev.barItemId===b.id;
-                return`<tr style="background:${sel?'var(--gold-bg)':'transparent'};cursor:pointer" onclick="(function(){document.getElementById('ef-bar-type').value='${b.id}';document.getElementById('ef-bar-price').value='${b.priceHT||0}';document.getElementById('ef-bar-length').value='${b.lengthM||0}';this.closest('table').querySelectorAll('tr').forEach(r=>r.style.background='transparent');this.style.background='var(--gold-bg)';}).call(this)">
-                  <td style="padding:8px">${b.name||'—'}</td>
-                  <td style="padding:8px;text-align:right">${b.lengthM?b.lengthM+'m':'—'}</td>
-                  <td style="padding:8px">${b.color||'—'}</td>
-                  <td style="padding:8px">${b.style||'—'}</td>
-                  <td style="padding:8px;text-align:right;color:var(--gold);font-weight:500">${b.priceHT?b.priceHT.toFixed(2)+'€':'—'}</td>
-                  <td style="padding:8px;text-align:center">${sel?'<span style="color:var(--gold);font-weight:600">✔</span>':''}</td>
-                </tr>`;
-              }).join('')
-            :`<tr><td colspan="6" style="padding:12px;text-align:center;color:var(--text3)">Aucun bar dans le catalogue — <button class="btn btn-sm btn-ghost" onclick="goPage('catalogue')">Ajouter un bar →</button></td></tr>`}
-          </tbody>
-        </table>
+      <div style="display:flex;gap:12px;align-items:flex-end">
+        <div class="field" style="flex:1">
+          <label style="font-size:12px">Bar (optionnel)</label>
+          <select id="ef-bar-type" style="width:100%" onchange="(function(){const b=state.barItems.find(x=>x.id==this.value);if(b){document.getElementById('ef-bar-length').value=b.lengthM||0;document.getElementById('ef-bar-price').value=b.priceHT||0;}else{document.getElementById('ef-bar-length').value='';document.getElementById('ef-bar-price').value='';}}).call(this)">
+            <option value="">— Sélectionner —</option>
+            ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name||'Bar'}${b.color?' ('+b.color+')':''} • ${b.lengthM}m • ${b.priceHT.toFixed(0)}€</option>`).join('')}
+          </select>
+        </div>
       </div>
-      <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
     </div>
 
-    <!-- SECTION 6: NOTES -->
-    <div class="card">
-      <div class="ctitle">Notes & Remarques</div>
-      <div class="field"><label>${t('ev_notes')}</label>
-        <input id="ef-notes" value="${(ev.notes||'').replace(/"/g,'&quot;')}" placeholder="Allergies, exigences particulières..."/>
-      </div>
-    </div>
-
-    <!-- SECTION 7: COCKTAILS -->
+    <!-- SECTION 6: COCKTAILS (MOVED UP) -->
     <div class="card">
       <div class="ctitle">${t('ev_cocktails_qty')}</div>
-      <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px">
-          <input type="checkbox" id="ef-dryice" ${ev.dryIce?'checked':''} style="width:auto;accent-color:var(--gold)"/>
-          <span>Glaçe carbonique (dry ice)</span>
-          <span class="txs tm" style="color:var(--text3)">5kg inclus</span>
-        </label>
-      </div>
       <div id="ev-picker"></div>
     </div>
 
     <!-- SECTION 3: STAFF -->
     <div class="card">
-      <div class="ctitle" style="display:flex;align-items:center;gap:10px">
+      <div class="ctitle" style="display:flex;justify-content:space-between;align-items:center">
         ${t('ev_staff_section')}
-        <button class="btn btn-sm btn-ghost no-print" onclick="showAvailabilityModal(${editEvId||0})">Vérifier dispos</button>
-      </div>
+        ${state.dressCodes.length?`<button class="btn btn-sm btn-ghost no-print" onclick="showDresscodeModal(${editEvId||0})">🎽 Tenue</button>`:''}
       <div style="display:grid;grid-template-columns:160px 60px 100px 100px 80px 100px 100px 80px;gap:6px;align-items:center;padding:4px 0;margin-bottom:6px">
         <span class="txs tm">Rôle</span><span class="txs tm">Nb</span>
         <span class="txs tm">Arrivée</span><span class="txs tm">Départ</span>
@@ -3250,19 +3204,19 @@ function showEvForm(ev){
       </div>
 
       <!-- Livraison -->
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:8px">${t('ev_delivery')}</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
-          <button type="button" class="btn btn-sm btn-ghost" onclick="setDelivery(0)">${t('ev_delivery_none')}</button>
-          <button type="button" class="btn btn-sm btn-ghost" onclick="setDelivery(80)">${t('ev_delivery_paris')}</button>
-          <button type="button" class="btn btn-sm btn-ghost" onclick="setDelivery(150)">${t('ev_delivery_idf')}</button>
-          <button type="button" class="btn btn-sm btn-ghost" onclick="setDelivery(250)">${t('ev_delivery_province')}</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input type="number" id="ef-delivery" value="${ev.deliveryCostHT||0}" step="1" min="0" style="width:90px" oninput="updEvCalc()"/>
-          <span class="txs tm">€ coût</span>
-          <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" step="1" min="0" style="width:90px" oninput="updEvCalc()"/>
-          <span class="txs tm">€ facturé</span>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div class="field" style="flex:1;margin:0">
+            <label style="font-size:10px">Livraison (€)</label>
+            <select id="ef-delivery-select" style="width:100%" onchange="(function(){const v=this.value;if(v==='custom'){document.getElementById('ef-delivery-bill').style.display='block';}else{document.getElementById('ef-delivery-bill').value=v;document.getElementById('ef-delivery-bill').style.display='none';}updEvCalc();}).call(this)">
+              <option value="0" ${ev.deliveryBillHT===0?'selected':''}>Aucune (0€)</option>
+              <option value="90" ${ev.deliveryBillHT===90?'selected':''}>Paris (90€)</option>
+              <option value="150" ${ev.deliveryBillHT===150?'selected':''}>IDF (150€)</option>
+              <option value="200" ${ev.deliveryBillHT===200?'selected':''}>Province (200€)</option>
+              <option value="custom" ${![0,90,150,200].includes(ev.deliveryBillHT)?'selected':''}>Personnalisé</option>
+            </select>
+          </div>
+          <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:80px;padding:6px 8px;font-size:12px;display:${![0,90,150,200].includes(ev.deliveryBillHT)?'block':'none'}" onchange="updEvCalc()"/>
         </div>
       </div>
     </div>
@@ -3270,7 +3224,7 @@ function showEvForm(ev){
     <!-- SECTION 4: SUMMARY -->
     <div class="card">
       <div class="ctitle">${t('ev_summary')}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px">
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px">${t('ev_cost')}</div>
           <div style="font-size:22px;font-family:var(--font-display);color:var(--red)" id="es-total">—</div>
@@ -3835,7 +3789,7 @@ function openIceOrderModal(msgKey){
     <div style="font-size:15px;font-weight:500;margin-bottom:4px;color:var(--text)">Commande glace${supplierName?' — '+supplierName:''}</div>
     <div class="txs tm" style="margin-bottom:14px">Modifie le message avant envoi</div>
 
-    <div class="field" style="margin-bottom:12px">
+    <div class="field" style="margin-bottom:6px">
       <label style="font-size:11px;color:var(--text3);margin-bottom:4px;display:block">Contact sur place (staff confirmé sur cet event)</label>
       ${assignedStaff.length
         ? `<select id="ice-contact-sel" onchange="updateIceOrderMsg('${msgKey}')" style="font-size:13px;width:100%">
@@ -4814,8 +4768,8 @@ function buildPrestHTML(ev){
             </div>
           </div>
           <!-- Body -->
-          <div style="padding:16px 18px">
-            ${c.description?`<div style="font-style:italic;color:#888;font-size:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f0ede8">${c.description}</div>`:''}
+          <div style="padding:10px 18px">
+            ${c.description?`<div style="font-style:italic;color:#888;font-size:12px;margin-bottom:6px;padding-bottom:10px;border-bottom:1px solid #f0ede8">${c.description}</div>`:''}
 
             <!-- Ingrédients -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -4891,8 +4845,8 @@ async function sendQuoteToClient(evId,devisNum){
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);
   const intro='<div style="font-family:\'DM Sans\',sans-serif;max-width:700px;margin:0 auto;padding:32px 40px 0;color:#333">'+
-    '<p style="margin-bottom:12px">Bonjour '+(contactName||'')+(contactName?',':'')+'</p>'+
-    '<p style="margin-bottom:12px">Veuillez trouver ci-dessous le devis <strong>'+devisNum+'</strong> pour la prestation <strong>'+ev.name+'</strong>'+(fmtDate?' du <strong>'+fmtDate+'</strong>':'')+'.</p>'+
+    '<p style="margin-bottom:6px">Bonjour '+(contactName||'')+(contactName?',':'')+'</p>'+
+    '<p style="margin-bottom:6px">Veuillez trouver ci-dessous le devis <strong>'+devisNum+'</strong> pour la prestation <strong>'+ev.name+'</strong>'+(fmtDate?' du <strong>'+fmtDate+'</strong>':'')+'.</p>'+
     '<p style="margin-bottom:20px">N\'hésitez pas à nous contacter pour toute question ou ajustement.</p>'+
     '<p style="margin-bottom:32px">Cordialement,<br/><strong>'+sigName+'</strong></p>'+
   '</div>';
@@ -4959,7 +4913,7 @@ function buildDevisHTML(ev,devisNum){
   <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;padding:48px 56px;max-width:860px;margin:0 auto}h1{font-family:'DM Serif Display',serif;font-weight:400}.label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#999;margin-bottom:6px}table{width:100%;border-collapse:collapse}thead tr{border-bottom:2px solid #1a1a1a}th{padding:10px 16px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:500}.section{margin-bottom:36px}.total-box{background:#f8f6f2;padding:20px 24px;border-radius:4px;margin-top:32px;max-width:300px;margin-left:auto}.total-line{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#555;border-bottom:1px solid #eee}.total-final{display:flex;justify-content:space-between;padding:12px 0 0;font-size:18px;font-family:'DM Serif Display',serif}@media print{.no-print{display:none!important};body{padding:24px}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
   ${!isPro?`<div id="watermark">TRIAL</div>`:''}
   <div style="text-align:center;margin-bottom:48px;padding-bottom:32px;border-bottom:2px solid #1a1a1a">
-    ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:72px;max-width:220px;object-fit:contain;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto"/>`:''}
+    ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:72px;max-width:220px;object-fit:contain;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto"/>`:''}
     <div style="font-size:28px;font-family:'DM Serif Display',serif;letter-spacing:.02em">${state.profile?.barName||state.profile?.companyName||''}</div>
     ${state.profile?.city?`<div style="color:#999;font-size:12px;margin-top:4px;letter-spacing:.06em">${state.profile.city}</div>`:''}
     <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:flex-end">
@@ -4975,7 +4929,7 @@ function buildDevisHTML(ev,devisNum){
   ${staffLines.length?`<div class="section"><div class="label">Équipe</div><table><thead><tr><th>Rôle</th><th style="text-align:center">Nb</th><th style="text-align:center">Horaires</th><th style="text-align:center">Durée</th><th style="text-align:right">Tarif</th><th style="text-align:right">Total HT</th></tr></thead><tbody>${staffLines.join('')}</tbody></table></div>`:''}
   ${deliveryBill||extraBill?`<div class="section"><div class="label">Frais supplémentaires</div><table><tbody>${deliveryBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Livraison & matériel</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${deliveryBill.toFixed(2)}€ HT</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Frais divers</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${extraBill.toFixed(2)}€ HT</td></tr>`:''}</tbody></table></div>`:''}
   <div class="total-box"><div class="total-line"><span>Total HT</span><span>${grandHT.toFixed(2)}€</span></div><div class="total-line"><span>TVA</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div><div class="total-final"><span>Total TTC</span><span>${grandTTC.toFixed(2)}€</span></div></div>
-  <div style="margin-top:56px;padding-top:20px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#999">Devis valable 30 jours · Acompte 30% à la signature · Solde à J-7</span><span style="font-size:10px;color:#ccc;font-style:italic">Propulsé par BAR OPS</span></div>
+  <div style="margin-top:56px;padding-top:10px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#999">Devis valable 30 jours · Acompte 30% à la signature · Solde à J-7</span><span style="font-size:10px;color:#ccc;font-style:italic">Propulsé par BAR OPS</span></div>
   </body></html>`;
 }
 
@@ -5044,7 +4998,7 @@ function renderContacts(){
 
   // Import suggestions from staff
   if(unimported.length){
-    html+=`<div style="background:var(--gold-bg);border:1px solid rgba(201,169,110,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+    html+=`<div style="background:var(--gold-bg);border:1px solid rgba(201,169,110,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
       <div>
         <span class="ts" style="color:var(--gold)">‍ ${unimported.length} membre${unimported.length>1?'s':''} du staff non importé${unimported.length>1?'s':''} :</span>
         <span class="txs tm" style="margin-left:6px">${unimported.map(s=>s.name).join(', ')}</span>
@@ -5320,7 +5274,7 @@ function renderPlanning(){
 
   let html=`<div style="margin-bottom:20px">
     <!-- Calendar -->
-    <div class="card" style="padding:16px">
+    <div class="card" style="padding:10px">
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px">
         ${DAY_LABELS.map(d=>`<div style="text-align:center;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px">${d}</div>`).join('')}
       </div>
@@ -5423,7 +5377,7 @@ function renderClients(){
         <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label>
           <input value="${(c.address||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/>
         </div>
-        <div class="field" style="margin-bottom:12px"><label>Notes</label>
+        <div class="field" style="margin-bottom:6px"><label>Notes</label>
           <input value="${(c.notes||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/>
         </div>
         <div style="display:flex;justify-content:flex-end">
@@ -5454,6 +5408,31 @@ function applyClientToEvent(){
   // Pre-fill contact if empty
   const contact=document.getElementById('ef-contact');
   if(contact&&!contact.value&&cl.name) contact.value=cl.name+(cl.phone?' · '+cl.phone:'');
+}
+
+function showDresscodeModal(evId){
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev||!state.dressCodes.length) return;
+  let html=`<div style="background:var(--surface);padding:20px;border-radius:var(--radius);max-width:400px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)">Tenue du staff</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">`;
+  state.dressCodes.forEach(dc=>{
+    const chk=(ev.dressCodes||[]).includes(dc.id);
+    html+=`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px">
+      <input type="checkbox" ${chk?'checked':''} data-dcid="${dc.id}" class="modal-dc-chk" style="width:auto;accent-color:var(--gold)"/>
+      <span>${dc.name}</span>
+    </label>`;
+  });
+  html+=`</div><div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn btn-sm btn-ghost" onclick="document.querySelector('[data-modal-dc]').remove()">Annuler</button>
+    <button class="btn btn-sm btn-primary" onclick="(function(){const selected=[...document.querySelectorAll('.modal-dc-chk:checked')].map(el=>parseInt(el.dataset.dcid));state.events.find(x=>x.id===parseInt(${evId})).dressCodes=selected;save();document.querySelector('[data-modal-dc]').remove();renderEventForm();toast('✓ Tenue enregistrée');}).call(this)">Enregistrer</button>
+  </div></div>`;
+  const backdrop=document.createElement('div');
+  backdrop.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+  backdrop.innerHTML=html;
+  backdrop.setAttribute('data-modal-dc','1');
+  backdrop.onclick=e=>{if(e.target===backdrop) backdrop.remove();};
+  document.body.appendChild(backdrop);
 }
 
 function showAvailabilityModal(evId){
@@ -5502,18 +5481,18 @@ function showLegal(){
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:20px">by Intelligence Spotlighted</div>
 
     <div style="font-size:11px;color:var(--text2);line-height:1.8">
-      <p style="margin-bottom:12px"><strong style="color:var(--text)">© ${new Date().getFullYear()} Intelligence Spotlighted. Tous droits réservés.</strong></p>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">© ${new Date().getFullYear()} Intelligence Spotlighted. Tous droits réservés.</strong></p>
 
-      <p style="margin-bottom:12px"><strong style="color:var(--text)">Propriété intellectuelle</strong><br/>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Propriété intellectuelle</strong><br/>
       BAR OPS est une création originale d'Intelligence Spotlighted. Le code source, le design, les fonctionnalités, et les contenus de l'application sont protégés par le droit d'auteur français et les conventions internationales sur la propriété intellectuelle. Toute reproduction, copie, modification, distribution ou utilisation commerciale sans autorisation écrite est strictement interdite.</p>
 
-      <p style="margin-bottom:12px"><strong style="color:var(--text)">Licence d'utilisation</strong><br/>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Licence d'utilisation</strong><br/>
       L'abonnement à BAR OPS confère une licence personnelle, non-exclusive et non-transférable d'utilisation de l'application. Cette licence est strictement limitée à un usage professionnel individuel. La revente, le partage de compte, ou la mise à disposition à des tiers est interdite.</p>
 
-      <p style="margin-bottom:12px"><strong style="color:var(--text)">Données utilisateur</strong><br/>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Données utilisateur</strong><br/>
       Les données saisies dans l'application (recettes, événements, contacts) sont stockées localement sur votre appareil (localStorage). Intelligence Spotlighted n'accède pas à ces données. L'utilisateur est seul responsable de la sauvegarde de ses données.</p>
 
-      <p style="margin-bottom:12px"><strong style="color:var(--text)">Limitation de responsabilité</strong><br/>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Limitation de responsabilité</strong><br/>
       BAR OPS est fourni "tel quel". Intelligence Spotlighted ne saurait être tenu responsable de pertes de données, d'erreurs de calcul, ou de tout préjudice commercial résultant de l'utilisation de l'application.</p>
 
       <p><strong style="color:var(--text)">Contact</strong><br/>
@@ -5607,7 +5586,7 @@ function buildEventSummaryHTML(ev){
     body{font-family:Arial,sans-serif;background:#f5f3ef;margin:0;padding:20px}
     .container{background:white;max-width:800px;margin:0 auto;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
     h1{color:#2a2a2a;font-size:28px;margin:0 0 30px}
-    .header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;margin-bottom:30px;border-bottom:2px solid #e0e0e0;padding-bottom:20px}
+    .header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:30px;border-bottom:2px solid #e0e0e0;padding-bottom:10px}
     .header-item{font-size:14px}
     .header-label{color:#999;font-size:12px;text-transform:uppercase;margin-bottom:4px}
     .header-value{font-size:16px;font-weight:500;color:#1a1a1a}
@@ -5615,7 +5594,7 @@ function buildEventSummaryHTML(ev){
     th{background:#f0f0f0;padding:10px;text-align:left;font-weight:600;border-bottom:2px solid #ddd;color:#333}
     td{padding:10px;border-bottom:1px solid #eee}
     .total-row{font-weight:600;background:#f9f9f9;border-top:2px solid #ddd}
-    .financial{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:30px;padding-top:20px;border-top:2px solid #e0e0e0}
+    .financial{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:15px;padding-top:10px;border-top:2px solid #e0e0e0}
     .financial-item{text-align:center}
     .financial-label{color:#999;font-size:12px;text-transform:uppercase}
     .financial-value{font-size:24px;font-weight:600;color:#d4a574;margin-top:8px}
@@ -5683,7 +5662,7 @@ function buildEventSummaryHTML(ev){
       </div>
     </div>
 
-    <h3 style="margin-top:30px">Configuration bar</h3>
+    <h3 style="margin-top:15px">Configuration bar</h3>
     ${ev.barType?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px">
       <div><strong>Type:</strong> ${ev.barType}</div>
       <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
@@ -5725,7 +5704,7 @@ function buildEventSummaryHTML(ev){
       </div>
     </div>
 
-    ${ev.notes?`<div style="margin-top:30px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
+    ${ev.notes?`<div style="margin-top:15px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
   </div>
 </body>
 </html>`;
@@ -5843,13 +5822,13 @@ function mkImportModal(title, subtitle){
   document.getElementById('import-modal')?.remove();
   const modal=document.createElement('div');
   modal.id='import-modal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column">
     <div style="padding:20px 24px 0">
       <div style="font-size:17px;font-family:var(--font-display);color:var(--text)">${title}</div>
       <div id="import-subtitle" class="txs tm" style="margin-top:3px">${subtitle}</div>
     </div>
-    <div id="import-body" style="padding:16px 24px;overflow-y:auto;flex:1"></div>
+    <div id="import-body" style="padding:10px 24px;overflow-y:auto;flex:1"></div>
     <div id="import-actions" style="padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end"></div>
   </div>`;
   document.body.appendChild(modal);
@@ -5984,7 +5963,7 @@ function importJSON(input){
         staffItems:(parsed.staffItems||[]).length,
       };
       body.innerHTML=`
-        <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:12px">
+        <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:6px">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:10px">Contenu du fichier</div>
           ${Object.entries(counts).filter(([,v])=>v>0).map(([k,v])=>`
             <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
@@ -5992,7 +5971,7 @@ function importJSON(input){
               <span style="color:var(--gold);font-weight:500">${v}</span>
             </div>`).join('')}
         </div>
-        <div style="margin-bottom:12px">
+        <div style="margin-bottom:6px">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:8px">Mode d'import</div>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px;font-size:12px">
             <input type="radio" name="json-mode" value="merge" checked/> Fusionner avec les données existantes
@@ -6226,7 +6205,7 @@ function renderProfile(){
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Logo & Signature</div>
         <div id="prof-logo-view" style="flex:1;display:flex;flex-direction:column;gap:12px">
-          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:16px;min-height:120px">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:10px;min-height:120px">
             ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:140px;object-fit:contain"/>`:`<div style="font-size:11px;color:var(--text3)">Aucun logo</div>`}
           </div>
           <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
@@ -6448,9 +6427,9 @@ function renderSuivi(){
         ${action||''}
       </div>`;
 
-    return`<div class="card" style="margin-bottom:12px;border-left:3px solid ${borderColor}">
+    return`<div class="card" style="margin-bottom:6px;border-left:3px solid ${borderColor}">
       <!-- Header -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
         <div>
           <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
           <div style="font-size:16px;font-weight:500;margin-top:2px">${ev.name}</div>
@@ -6463,7 +6442,7 @@ function renderSuivi(){
       </div>
 
       <!-- Progress bar -->
-      <div style="height:3px;background:var(--surface3);border-radius:2px;margin-bottom:12px">
+      <div style="height:3px;background:var(--surface3);border-radius:2px;margin-bottom:6px">
         <div style="width:${pct}%;height:100%;background:${statusColor};border-radius:2px;transition:.4s"></div>
       </div>
 
@@ -6649,7 +6628,7 @@ function filterSuivi(){
         </div>
         <div style="text-align:right"><div style="font-size:18px;font-weight:500;color:var(--${pct===100?'green':'text2'})">${pct}%</div><div style="font-size:9px;color:var(--text3)">complétée</div></div>
       </div>
-      <div style="height:3px;background:var(--surface3);border-radius:2px;margin-bottom:12px"><div style="width:${pct}%;height:100%;background:var(--${pct===100?'green':'gold'});border-radius:2px;transition:.4s"></div></div>
+      <div style="height:3px;background:var(--surface3);border-radius:2px;margin-bottom:6px"><div style="width:${pct}%;height:100%;background:var(--${pct===100?'green':'gold'});border-radius:2px;transition:.4s"></div></div>
       ${check(hasCocktails,`Cocktails sélectionnés${hasCocktails?' ('+ev.cocktails.length+')':''}`,`<button class="btn btn-sm btn-ghost" onclick="goToEventSuivi(${ev.id})">Configurer</button>`)}
       ${check(hasStaff,`Staff assigné (${assigned}${needed>0?' / '+needed:''})`,`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`)}
       ${check(allConfirmed,`Staff confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer dispo ?</button>`:'')}
