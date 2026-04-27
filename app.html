@@ -4242,7 +4242,7 @@ function renderPrestation(){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Équipe</div>
       </div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.4fr 1.2fr 100px;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)">
         <div>Nom</div><div>Rôle</div><div>Téléphone</div><div>Disponibilité</div><div></div>
       </div>
       ${assignedIds.length?assignedIds.map(sid=>{
@@ -4257,7 +4257,7 @@ function renderPrestation(){
             '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-'+sid+'" onchange="markStaffDispo('+evId+','+sid+',true)" style="accent-color:var(--green)"/> Oui</label>'+
             '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-'+sid+'" onchange="markStaffDispo('+evId+','+sid+',false)" style="accent-color:var(--red)"/> Non</label>'+
           '</div>';
-        return'<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
+        return'<div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.4fr 1.2fr 100px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
           '<span style="'+(isUnavail?'text-decoration:line-through;color:var(--text3)':'')+'">'+(s.name||s.type)+'</span>'+
           '<span style="color:var(--text3)">'+role+'</span>'+
           '<span style="color:var(--text3)">'+phone+'</span>'+
@@ -4711,7 +4711,7 @@ async function sendQuoteToClient(evId,devisNum){
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);
   const emailBody=devisHTML.replace('</body>','<div style="font-family:\'DM Sans\',sans-serif;max-width:700px;margin:40px auto;padding:32px 40px;border-top:2px solid #111;color:#333">'+
-    '<p style="margin-bottom:12px">Bonjour '+(contactName||'')+(contactName?',':'')</p>+
+    '<p style="margin-bottom:12px">Bonjour '+(contactName||'')+(contactName?',':'')+'</p>'+
     '<p style="margin-bottom:12px">Veuillez trouver ci-dessous le devis <strong>'+devisNum+'</strong> pour la prestation <strong>'+ev.name+'</strong>'+(fmtDate?' du <strong>'+fmtDate+'</strong>':'')+'.</p>'+
     '<p style="margin-bottom:20px">N\'hésitez pas à nous contacter pour toute question ou ajustement.</p>'+
     '<p>Cordialement,<br/><strong>'+sigName+'</strong></p>'+
