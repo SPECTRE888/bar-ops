@@ -775,10 +775,9 @@ async function cloudPull(){
       localStorage.setItem(SK,JSON.stringify(state));
       return true;
     }
-    // No workspace yet — push current local data to create it
+    // No workspace yet — do not push, let user save explicitly
     if(Array.isArray(rows)&&rows.length===0){
-      console.log('cloudPull: no workspace found, pushing local data');
-      await cloudPush();
+      console.log('cloudPull: no workspace found yet');
     }
     return false;
   }catch(e){console.warn('cloudPull error:',e);return false;}
@@ -6722,8 +6721,8 @@ updateCloudStatus();
       }
       const pulled=await cloudPull();
       if(!pulled){
+        // Do NOT push empty state - just use fresh local state
         state=freshState();
-        await cloudPush();
       }
       const evContent=document.getElementById('ev-content');
       if(evContent&&evContent._clientId){
