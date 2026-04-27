@@ -15,22 +15,12 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 (async()=>{
   try{
     if(!window.supabase)return;
-    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
 
-    let subs=null;
-    let retries=0;
-    while(!subs&&retries<5){
-      try{
-        const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
-        subs=subsArr?.[0];
-        if(!subs){await new Promise(r=>setTimeout(r,800));retries++;}
-      }catch(e){
-        await new Promise(r=>setTimeout(r,800));
-        retries++;
-      }
-    }
+    const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+    const subs=subsArr?.[0];
 
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
     const isDemo=subs?.status==='demo'||subs?.plan==='demo';
@@ -43,12 +33,12 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
       user:session.user
     };
     window._userEmail=session.user.email;
-    window._userPlan=subs?.plan||subs?.tier||'demo';
+    window._userPlan=isDemo?'demo':(subs?.plan||'pro');
     window._isDemo=isDemo;
     window._userId=session.user.id;
+    window._sb=sb;
   }catch(e){
     console.error('Paywall error:',e);
-    window.location.href='paying.html';
   }
 })();
 </script>
@@ -690,6 +680,20 @@ function cloudRestoreSession(){
 }
 
 async function cloudRefreshSession(){
+  // Use Supabase SDK auto-refresh if available
+  if(window._sb){
+    const{data:{session}}=await window._sb.auth.getSession();
+    if(session?.access_token){
+      cloudUser={
+        access_token:session.access_token,
+        refresh_token:session.refresh_token,
+        user:session.user
+      };
+      window.cloudUser=cloudUser;
+      return true;
+    }
+    return false;
+  }
   const refreshToken=extractRefreshToken(window.cloudUser);
   if(!refreshToken) return false;
   const{url,key}=getSupabase();
@@ -709,12 +713,11 @@ async function cloudRefreshSession(){
     const session=data.session||data;
     const token=session.access_token||data.access_token;
     if(token){
-      const normalized={
+      cloudUser={
         access_token:token,
         refresh_token:session.refresh_token||data.refresh_token||refreshToken,
         user:session.user||data.user||cloudUser?.user||{}
       };
-      cloudUser=normalized;
       return true;
     }
   }catch(e){console.warn('Refresh network error:',e);}
