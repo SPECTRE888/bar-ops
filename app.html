@@ -3147,27 +3147,26 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 5: BAR (FULLY SELECTABLE) -->
+    <!-- SECTION 5: BAR (SELECT ONLY) -->
     <div class="card">
-      <div class="ctitle">Configuration bar</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field">
-          <label style="font-size:12px">Type</label>
+      <div style="display:flex;gap:12px;align-items:flex-end">
+        <div class="field" style="flex:1">
+          <label style="font-size:12px">Bar (optionnel)</label>
           <select id="ef-bar-type" style="width:100%" onchange="(function(){const b=state.barItems.find(x=>x.id==this.value);if(b){document.getElementById('ef-bar-length').value=b.lengthM||0;document.getElementById('ef-bar-price').value=b.priceHT||0;}else{document.getElementById('ef-bar-length').value='';document.getElementById('ef-bar-price').value='';}}).call(this)">
-            <option value="">— Aucun —</option>
-            ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name||'Bar'}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field">
-          <label style="font-size:12px">Créateur</label>
-          <select id="ef-event-creator" style="width:100%">
-            <option value="">— Aucun —</option>
-            ${(state.staff||[]).filter(s=>s.role).map(s=>`<option value="${s.id}" ${ev.eventCreator===s.id?'selected':''}>${s.name}</option>`).join('')}
+            <option value="">— Sélectionner —</option>
+            ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name||'Bar'}${b.color?' ('+b.color+')':''} • ${b.lengthM}m • ${b.priceHT.toFixed(0)}€</option>`).join('')}
           </select>
         </div>
       </div>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <label style="font-size:11px;color:var(--text3)">Créateur</label>
+        <select id="ef-event-creator" style="width:100%;font-size:12px">
+          <option value="">— Aucun —</option>
+          ${(state.staff||[]).filter(s=>s.role).map(s=>`<option value="${s.id}" ${ev.eventCreator===s.id?'selected':''}>${s.name||'Staff'}</option>`).join('')}
+        </select>
+      </div>
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
@@ -3317,6 +3316,11 @@ function renderEvPicker(){
   const f=(document.getElementById('ef-c-srch')?.value||'').toLowerCase();
   const filtered=unselected.filter(c=>c.name.toLowerCase().includes(f)||(c.category||'').toLowerCase().includes(f));
 
+  // Dry ice notice
+  const dryIceActive=document.getElementById('ef-dryice')?.checked||false;
+  const dryIceNote=dryIceActive?`<div style="padding:10px 12px;margin-bottom:10px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--radius);font-size:11px;color:var(--blue)">
+    ❄️ <strong>Glaçe carbonique</strong> — 5kg commandés (coût événement, non répercuté par cocktail)
+  </div>`:'';
 
   const cards=selected.map(c=>{
     const cfg=sel[c.id]||{};
@@ -3424,7 +3428,7 @@ function renderEvPicker(){
       </select>
     </div>`:'';
 
-  el.innerHTML=(selected.length?cards:'<p class="txs tm" style="padding:8px 0;color:var(--text3)">Aucun cocktail sélectionné.</p>')+addRow;
+  el.innerHTML=dryIceNote+(selected.length?cards:'<p class="txs tm" style="padding:8px 0;color:var(--text3)">Aucun cocktail sélectionné.</p>')+addRow;
 }
 function updEvCGlass(cid, glassIdStr){
   const sel=document.getElementById('ev-content')?._sel;
@@ -3674,7 +3678,8 @@ function saveEv(){
     remiseHT:parseFloat(document.getElementById('ef-remise-ht')?.value)||0,
     cocktails:Object.entries(sel).map(([id,cfg])=>({id:parseInt(id),qty:cfg.qty,pct:cfg.pct||0,glass:cfg.glass||'',glassId:cfg.glassId||null,glassCostHT:cfg.glassCostHT||0,iceTypeId:cfg.iceTypeId??null,serviceIce:cfg.serviceIce??null})),
     exchanges:document.getElementById('ef-exchanges')?.value||'',
-    exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||''
+    exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||'',
+    dryIce:document.getElementById('ef-dryice')?.checked||false
   };
   if(editEvId)state.events=state.events.map(e=>e.id===editEvId?ev:e);
   else state.events.push(ev);
