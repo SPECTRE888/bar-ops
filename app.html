@@ -1313,6 +1313,19 @@ function mkTimeSel(id, val='', onchange=''){
   return `<select id="${id}" style="padding:5px 6px;font-size:12px;width:100%" ${onchange?`onchange="${onchange}"`:''}>${opts.join('')}</select>`;
 }
 
+function mkTimeOpts(val=''){
+  const opts=['<option value="">—</option>'];
+  for(let h=0;h<24;h++){
+    for(let m=0;m<60;m+=15){
+      const hh=h.toString().padStart(2,'0');
+      const mm=m.toString().padStart(2,'0');
+      const v=`${hh}:${mm}`;
+      opts.push(`<option value="${v}"${val===v?' selected':''}>${v}</option>`);
+    }
+  }
+  return opts.join('');
+}
+
 
 // ════════════════════════════════════════════════════════
 // LOGOUT
@@ -3147,26 +3160,17 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 5: BAR (SELECT ONLY) -->
+    <!-- SECTION 5: BAR (SIMPLE DROPDOWN) -->
     <div class="card">
-      <div style="display:flex;gap:12px;align-items:flex-end">
-        <div class="field" style="flex:1">
-          <label style="font-size:12px">Bar (optionnel)</label>
-          <select id="ef-bar-type" style="width:100%" onchange="(function(){const b=state.barItems.find(x=>x.id==this.value);if(b){document.getElementById('ef-bar-length').value=b.lengthM||0;document.getElementById('ef-bar-price').value=b.priceHT||0;}else{document.getElementById('ef-bar-length').value='';document.getElementById('ef-bar-price').value='';}}).call(this)">
-            <option value="">— Sélectionner —</option>
-            ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name||'Bar'}${b.color?' ('+b.color+')':''} • ${b.lengthM}m • ${b.priceHT.toFixed(0)}€</option>`).join('')}
-          </select>
-        </div>
+      <div class="field">
+        <label style="font-size:12px">Bar (optionnel)</label>
+        <select id="ef-bar-type" style="width:100%" onchange="(function(){const b=state.barItems.find(x=>x.id==this.value);if(b){document.getElementById('ef-bar-length').value=b.lengthM||0;document.getElementById('ef-bar-price').value=b.priceHT||0;}else{document.getElementById('ef-bar-length').value='';document.getElementById('ef-bar-price').value='';}updEvCalc();}).call(this)">
+          <option value="">— Aucun —</option>
+          ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name}${b.style?' • '+b.style:''} • ${b.lengthM}m • ${b.priceHT}€</option>`).join('')}
+        </select>
       </div>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
-      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
-        <label style="font-size:11px;color:var(--text3)">Créateur</label>
-        <select id="ef-event-creator" style="width:100%;font-size:12px">
-          <option value="">— Aucun —</option>
-          ${(state.staff||[]).filter(s=>s.role).map(s=>`<option value="${s.id}" ${ev.eventCreator===s.id?'selected':''}>${s.name||'Staff'}</option>`).join('')}
-        </select>
-      </div>
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
@@ -3180,50 +3184,44 @@ function showEvForm(ev){
       <div class="ctitle" style="display:flex;justify-content:space-between;align-items:center">
         ${t('ev_staff_section')}
         ${state.dressCodes.length?`<button class="btn btn-sm btn-ghost no-print" onclick="showDresscodeModal(${editEvId||0})">🎽 Tenue</button>`:''}
-      <div style="display:grid;grid-template-columns:160px 60px 100px 100px 80px 100px 100px 80px;gap:6px;align-items:center;padding:4px 0;margin-bottom:6px">
-        <span class="txs tm">Rôle</span><span class="txs tm">Nb</span>
-        <span class="txs tm">Arrivée</span><span class="txs tm">Départ</span>
-        <span class="txs tm">H.</span>
-        <span class="txs" style="color:var(--red);font-size:9px">Coût HT</span>
-        <span class="txs" style="color:var(--green);font-size:9px">Facturé HT</span>
-        <span class="txs tm">Marge</span>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:4px 0;margin-bottom:4px;font-size:10px">
+        <span>Rôle</span><span>Nb</span><span>Arrivée</span><span>Départ</span><span>H.</span><span style="color:var(--red)">Coût</span><span style="color:var(--green)">Fact.</span><span>Marge</span>
       </div>
       ${[
-        {key:'brt',label:'Bartender',n:ev.nBartenders||1,arr:ev.arrBrt||'',dep:ev.depBrt||''},
+        {key:'brt',label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||''},
         {key:'wtr',label:'Serveur',  n:ev.nWaiters||0,  arr:ev.arrWtr||'',dep:ev.depWtr||''},
         {key:'mgr',label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||''},
       ].map(r=>`
-      <div style="display:grid;grid-template-columns:160px 60px 100px 100px 80px 100px 100px 80px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
-        <span class="ts" style="color:var(--text2)">${r.label}</span>
-        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:50px;padding:5px 6px;font-size:12px" oninput="updEvCalc()"/>
-        <div style="font-size:11px">${mkTimeSel('ef-arr'+r.key,r.arr,'updEvCalc()')}</div>
-        <div style="font-size:11px">${mkTimeSel('ef-dep'+r.key,r.dep,'updEvCalc()')}</div>
-        <span class="txs" id="ef-hrs${r.key}" style="color:var(--gold);font-weight:500">—</span>
+      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px">
+        <span>${r.label}</span>
+        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:4px;font-size:11px" oninput="updEvCalc()"/>
+        <select id="ef-arr${r.key}" style="width:100%;font-size:11px;padding:3px 4px" onchange="updEvCalc()">${mkTimeOpts(r.arr)}</select>
+        <select id="ef-dep${r.key}" style="width:100%;font-size:11px;padding:3px 4px" onchange="updEvCalc()">${mkTimeOpts(r.dep)}</select>
+        <span class="txs" id="ef-hrs${r.key}" style="color:var(--gold)">—</span>
         <span class="txs" id="ef-cost${r.key}" style="color:var(--red)">—</span>
         <span class="txs" id="ef-bill${r.key}" style="color:var(--green)">—</span>
-        <span class="txs" id="ef-mg${r.key}" style="color:var(--text3)">—</span>
+        <span class="txs" id="ef-mg${r.key}">—</span>
       </div>`).join('')}
-      <div style="display:grid;grid-template-columns:160px 60px 100px 100px 80px 100px 100px 80px;gap:6px;padding:8px 0">
-        <span class="txs tm">Total</span><span></span><span></span><span></span><span></span>
-        <span class="txs" id="ef-total-cost" style="color:var(--red);font-weight:500">—</span>
-        <span class="txs" id="ef-total-bill" style="color:var(--green);font-weight:500">—</span>
-        <span class="txs" id="ef-total-mg" style="color:var(--text2);font-weight:500">—</span>
+      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;padding:4px 0;margin-top:4px;font-size:11px;font-weight:500;border-top:1px solid var(--border);padding-top:6px">
+        <span>Total</span><span></span><span></span><span></span><span></span>
+        <span id="ef-total-cost" style="color:var(--red)">—</span>
+        <span id="ef-total-bill" style="color:var(--green)">—</span>
+        <span id="ef-total-mg">—</span>
       </div>
 
       <!-- Livraison -->
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <div style="display:flex;gap:8px;align-items:flex-end">
-          <div class="field" style="flex:1;margin:0">
-            <label style="font-size:10px">Livraison (€)</label>
-            <select id="ef-delivery-select" style="width:100%" onchange="(function(){const v=this.value;if(v==='custom'){document.getElementById('ef-delivery-bill').style.display='block';}else{document.getElementById('ef-delivery-bill').value=v;document.getElementById('ef-delivery-bill').style.display='none';}updEvCalc();}).call(this)">
-              <option value="0" ${ev.deliveryBillHT===0?'selected':''}>Aucune (0€)</option>
-              <option value="90" ${ev.deliveryBillHT===90?'selected':''}>Paris (90€)</option>
-              <option value="150" ${ev.deliveryBillHT===150?'selected':''}>IDF (150€)</option>
-              <option value="200" ${ev.deliveryBillHT===200?'selected':''}>Province (200€)</option>
-              <option value="custom" ${![0,90,150,200].includes(ev.deliveryBillHT)?'selected':''}>Personnalisé</option>
-            </select>
-          </div>
-          <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:80px;padding:6px 8px;font-size:12px;display:${![0,90,150,200].includes(ev.deliveryBillHT)?'block':'none'}" onchange="updEvCalc()"/>
+      <div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border)">
+        <div class="field" style="margin:0">
+          <label style="font-size:11px">Livraison</label>
+          <select id="ef-delivery-select" style="width:100%" onchange="(function(){const v=this.value;if(v==='custom'){document.getElementById('ef-delivery-bill').style.display='block';}else{document.getElementById('ef-delivery-bill').value=v;document.getElementById('ef-delivery-bill').style.display='none';}updEvCalc();}).call(this)">
+            <option value="0" ${ev.deliveryBillHT===0?'selected':''}>Aucune (0€)</option>
+            <option value="90" ${ev.deliveryBillHT===90?'selected':''}>Paris (90€)</option>
+            <option value="150" ${ev.deliveryBillHT===150?'selected':''}>IDF (150€)</option>
+            <option value="200" ${ev.deliveryBillHT===200?'selected':''}>Province (200€)</option>
+            <option value="custom" ${![0,90,150,200].includes(ev.deliveryBillHT)?'selected':''}>Custom</option>
+          </select>
+          <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:100%;padding:6px 8px;font-size:12px;margin-top:6px;display:${![0,90,150,200].includes(ev.deliveryBillHT)?'block':'none'}" onchange="updEvCalc()" placeholder="Montant (€)"/>
         </div>
       </div>
     </div>
