@@ -4321,12 +4321,22 @@ function markStaffDispo(evId,sid,dispo){
     if(!ev.staffConfirmed)ev.staffConfirmed=[];
     if(!ev.staffConfirmed.includes(sid))ev.staffConfirmed.push(sid);
     ev.staffUnavail=(ev.staffUnavail||[]).filter(x=>x!==sid);
+    
+    // Auto-validate staff if all confirmed + brief sent
+    const assigned=(ev.assignedStaff||[]).length;
+    const confirmed=ev.staffConfirmed.length;
+    const briefSent=confirmed>0;
+    if(assigned>0&&confirmed>=assigned&&briefSent){
+      ev.staffValidated=true;
+    }
+    
     save();renderPrestation();
     setTimeout(()=>sendBriefWA(evId,sid),300);
   } else {
     if(!ev.staffUnavail)ev.staffUnavail=[];
     if(!ev.staffUnavail.includes(sid))ev.staffUnavail.push(sid);
     ev.staffConfirmed=(ev.staffConfirmed||[]).filter(x=>x!==sid);
+    ev.staffValidated=false;
     save();renderPrestation();
   }
 }
