@@ -3160,6 +3160,13 @@ function showEvForm(ev){
       </div>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
+      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <label style="font-size:11px;color:var(--text3)">Créateur</label>
+        <select id="ef-event-creator" style="width:100%;font-size:12px">
+          <option value="">— Aucun —</option>
+          ${(state.staff||[]).filter(s=>s.role).map(s=>`<option value="${s.id}" ${ev.eventCreator===s.id?'selected':''}>${s.name||'Staff'}</option>`).join('')}
+        </select>
+      </div>
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
@@ -3641,6 +3648,7 @@ function saveEv(){
     contactPhone:document.querySelector('input[placeholder="+33 6..."]')?.value||'',
     notes:document.getElementById('ef-notes')?.value||'',
     barItemId:parseInt(document.getElementById('ef-bar-type')?.value)||null,
+    eventCreator:parseInt(document.getElementById('ef-event-creator')?.value)||null,
     barType:document.getElementById('ef-bar-type')?.options[document.getElementById('ef-bar-type')?.selectedIndex]?.text||'',
     barLength:parseFloat(document.getElementById('ef-bar-length')?.value)||0,
     barPrice:parseFloat(document.getElementById('ef-bar-price')?.value)||0,
