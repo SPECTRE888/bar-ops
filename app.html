@@ -6709,7 +6709,6 @@ updateCloudStatus();
 // Async init: refresh session → pull → demo → render
 (async()=>{
   if(cloudUser){
-    // Skip refresh for demo users
     if(!window._isDemo){
       const refreshed=await cloudRefreshSession();
       if(!refreshed&&!cloudUser){
@@ -6725,23 +6724,18 @@ updateCloudStatus();
       injectDemoData();
       if(!window._isDemo) await cloudPush();
     }
-      // Re-restore client name if event form is open
-      const evContent=document.getElementById('ev-content');
-      if(evContent&&evContent._clientId){
-        const client=state.clients.find(x=>x.id===evContent._clientId);
-        if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
-      }
-      updateCloudStatus();
+    const evContent=document.getElementById('ev-content');
+    if(evContent&&evContent._clientId){
+      const client=state.clients.find(x=>x.id===evContent._clientId);
+      if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
     }
+    updateCloudStatus();
   } else {
-    // No session — inject demo if local workspace empty
     injectDemoData();
   }
   updateBadges();
   renderDashboard();
   applyTheme();
-  
-  // Handle pending devis send on return from devis page
   window.addEventListener('pageshow',()=>{
     const pending=sessionStorage.getItem('pendingSend');
     if(pending){
