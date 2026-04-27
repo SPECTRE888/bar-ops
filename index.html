@@ -39,19 +39,19 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif}
 /* HERO */
 .hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
 .logo{font-size:54px;font-weight:300;letter-spacing:.1em;margin-bottom:18px}
-.tagline{font-size:17px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:44px;max-width:600px}
+.tagline{font-size:20px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:44px;max-width:600px}
 .btn-primary{padding:14px 52px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s;margin-bottom:0}
 .btn-primary:hover{background:var(--gold2)}
 
 /* FOOTER */
 footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
-.sub{text-align:center;font-size:12px;color:var(--text2);padding:18px 24px 0;max-width:600px;margin:0 auto;line-height:1.6}
+.sub{text-align:center;font-size:14px;color:var(--text2);padding:18px 24px 0;max-width:600px;margin:0 auto;line-height:1.6}
 .features{display:grid;grid-template-columns:repeat(5,1fr);width:100%;border-top:1px solid rgba(255,255,255,.07);margin-top:18px}
 .feature{padding:18px 16px;border-right:1px solid rgba(255,255,255,.07);text-align:center}
 .feature:last-child{border-right:none}
-.feature h3{font-size:12px;font-weight:400;letter-spacing:.05em;margin-bottom:5px;color:var(--text)}
-.feature p{color:var(--text2);font-size:10px;line-height:1.5;font-weight:300}
-.legal{text-align:center;font-size:12px;color:var(--text2);padding:14px 24px;border-top:1px solid rgba(255,255,255,.07);line-height:1.8;opacity:.8}
+.feature h3{font-size:13px;font-weight:400;letter-spacing:.05em;margin-bottom:5px;color:var(--text)}
+.feature p{color:var(--text2);font-size:12px;line-height:1.5;font-weight:300}
+.legal{text-align:center;font-size:13px;color:var(--text2);padding:16px 24px;border-top:1px solid rgba(255,255,255,.07);line-height:1.8;opacity:1}
 .legal-link{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .legal-link:hover{color:var(--gold)}
 #legal-modal{display:none}
@@ -115,7 +115,7 @@ footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
 <script>
 const LEGAL={
   rgpd:'Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d\'un droit d\'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n\'est cédée à des tiers. Données hébergées par Netlify Inc. (USA) dans le cadre du Privacy Shield. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com',
-  mentions:'Mentions légales obligatoires — Éditeur : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil, France. Email : contact@intelligencespotlighted.com. Directeur de publication : Jérôme. Hébergement : Netlify Inc., 44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA. Activité : Édition de logiciels SaaS. N° SIRET à compléter. En application de la loi n°2004-575 du 21 juin 2004 pour la confiance en l\'économie numérique.'
+  mentions:'Mentions légales — Éditeur : Intelligence Spotlighted\n63 avenue Pasteur, 93100 Montreuil, France\nEmail : contact@intelligencespotlighted.com\nDirecteur de publication : Jérôme\nHébergement : Netlify Inc., 44 Montgomery Street, San Francisco, CA 94104, USA'
 };
 function showLegal(type){
   document.getElementById('legal-content').textContent=LEGAL[type];
