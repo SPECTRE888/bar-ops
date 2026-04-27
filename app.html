@@ -1322,7 +1322,7 @@ function goPage(p){
   else if(p==='glassware') renderGlassware();
   else if(p==='staff'){renderStaff();renderDressCodes();}
   else if(p==='clients') renderClients();
-  else if(p==='prestation') {renderPrestEvSel(); renderPrestation();}
+  else if(p==='prestation') {renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
   else if(p==='shopping') {renderShopping(); renderShopEvSel();}
   else if(p==='cocktails') showCList();
   else if(p==='events') showEvList();
@@ -3416,9 +3416,8 @@ function updEvCalc(){
     const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
     const qty=cfg.qty||0;
     ingCost+=qty*c.totalCost;
-    revenue+=qty*c.priceHT;
-    // Event-level glass gamme cost only
     const gc=cfg.glassCostHT||0;
+    revenue+=qty*(c.priceHT+gc);
     glassCost+=qty*gc;
   });
   ingCost+=glassCost;
@@ -5224,62 +5223,6 @@ function renderPlanning(){
 
   html+=`</div></div></div>`;
 
-  // Event list with staff
-  if(monthEvents.length){
-    html+=`<div>`;
-    monthEvents.forEach(ev=>{
-      const d=new Date(ev.date);
-      const fmtDate=d.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'});
-      const staffRows=[
-        {role:'Bartender',icon:'',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||''},
-        {role:'Waiter/Server',icon:'',n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||''},
-        {role:'Bar Manager',icon:'',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||''},
-      ].filter(s=>s.n>0);
-
-      html+=`<div class="card" id="plan-ev-${ev.date}" style="border-left:3px solid var(--gold);padding-left:16px">
-        <div class="flex-b mb1">
-          <div>
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">${fmtDate}</div>
-            <div style="font-size:16px;font-family:'DM Serif Display',serif;margin-top:2px">${ev.name}</div>
-          </div>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-ghost" onclick="editEv(${ev.id});goPage('events')">Modifier</button>
-            <button class="btn btn-sm btn-ghost" onclick="sharePrestation();document.getElementById('prest-ev-sel').value=${ev.id};renderPrestation()"> Envoyer</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:10px">
-          ${ev.address?`<span> ${ev.address}</span>`:''}
-          ${ev.start?`<span> ${ev.start}${ev.end?' – '+ev.end:''}</span>`:''}
-          ${ev.setup?`<span> ${ev.setup}</span>`:''}
-          ${ev.pax?`<span> ${ev.pax} pax</span>`:''}
-        </div>
-        ${staffRows.length||ev.assignedStaff?.length
-          ?`<div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${staffRows.map(s=>`<div style="background:var(--surface2);border-radius:var(--radius);padding:7px 12px;font-size:12px">
-            <span>${s.icon} <strong>${s.n}×</strong> ${s.role}</span>
-            ${s.arr&&s.dep?`<span style="color:var(--text3);margin-left:6px">${s.arr}→${s.dep}</span>`:''}
-          </div>`).join('')}
-          ${(ev.assignedStaff||[]).map(sid=>{
-            const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
-            const unavail=(ev.staffUnavail||[]).includes(sid);
-            return`<div style="background:${unavail?'rgba(201,110,110,0.08)':'var(--gold-bg)'};border:1px solid ${unavail?'rgba(201,110,110,0.2)':'rgba(201,169,110,0.2)'};border-radius:var(--radius);padding:5px 10px;font-size:11px;display:flex;align-items:center;gap:5px">
-              <span style="color:${unavail?'var(--red)':'var(--green)'}">${unavail?'':''}</span>
-              <span style="${unavail?'text-decoration:line-through;color:var(--text3)':''}">${s.name||s.type}</span>
-              ${unavail?`<span style="font-size:9px;color:var(--red)">indispo</span>`:''}
-              ${!unavail&&s.phone?`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" style="color:#25D366;text-decoration:none;font-size:12px"></a>`:''}
-            </div>`;
-          }).join('')}
-        </div>`
-          :'<span class="txs tm">Aucun staff assigné — <span style="color:var(--gold);cursor:pointer" onclick="goPage(\'prestation\')">assigner ↗</span></span>'}
-      </div>`;
-    });
-    html+=`</div>`;
-  } else {
-    html+=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation ce mois-ci.</p></div>`;
-  }
-
-  el.innerHTML=html;
-}
 
 function scrollToPlanEvent(dateStr){
   const el=document.getElementById('plan-ev-'+dateStr);
