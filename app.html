@@ -6430,8 +6430,8 @@ function renderSuivi(){
     const check=(done,label,action)=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:15px">${done?'':'◇'}</span>
-          <span style="font-size:12px;color:${done?'var(--text)':'var(--text3)'};${done?'':'text-decoration:none'}">${label}</span>
+          <span style="font-size:14px">${done?'✓':'◇'}</span>
+          <span style="font-size:11px;color:${done?'var(--text)':'var(--text3)'}${done?';font-weight:500':''}">${label}</span>
         </div>
         ${action||''}
       </div>`;
@@ -6440,13 +6440,13 @@ function renderSuivi(){
       <!-- Header -->
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
         <div>
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
-          <div style="font-size:16px;font-weight:500;margin-top:2px">${ev.name}</div>
-          <div class="txs tm">${ev.pax||'?'} pax · ${total} cocktails</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
+          <div style="font-size:15px;font-weight:600">${ev.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${ev.pax||'?'} pax · ${total} cocktails</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:22px;font-family:'DM Serif Display',serif;color:${statusColor}">${pct}%</div>
-          <div style="font-size:9px;color:var(--text3)">${score}/${total6} étapes</div>
+          <div style="font-size:20px;font-family:'DM Serif Display',serif;color:${statusColor};font-weight:500">${pct}%</div>
+          <div style="font-size:9px;color:var(--text3)">${score}/${total6}</div>
         </div>
       </div>
 
@@ -6483,24 +6483,24 @@ function renderSuivi(){
 
       <!-- Paiement -->
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Paiement</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;font-weight:500">Paiement</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
           <div class="field" style="margin:0">
-            <label style="font-size:9px">Acompte versé (€)</label>
+            <label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Acompte (€)</label>
             <input type="number" value="${ev.acompte||''}" min="0" step="1" placeholder="0"
-              style="width:100px;padding:4px 8px;font-size:12px"
+              style="width:100px;padding:4px 8px;font-size:11px;height:24px"
               onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
           </div>
           <div class="field" style="margin:0">
-            <label style="font-size:9px">Date acompte</label>
+            <label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Date</label>
             <input type="date" value="${ev.acompteDate||''}"
-              style="padding:4px 8px;font-size:12px"
+              style="padding:4px 8px;font-size:11px;height:24px"
               onchange="updEvField(${ev.id},'acompteDate',this.value)"/>
           </div>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;margin-bottom:2px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;margin-bottom:2px">
             <input type="checkbox" ${ev.paid?'checked':''} style="width:auto;accent-color:var(--green)"
               onchange="updEvField(${ev.id},'paid',this.checked);renderSuivi()"/>
-            <span>Entièrement payée</span>
+            <span>Payée</span>
           </label>
         </div>
         ${(()=>{
@@ -6519,34 +6519,6 @@ function renderSuivi(){
           if(total>0) return `<div style="margin-top:6px;font-size:11px;color:var(--text3)">Total : ${total.toFixed(0)}€ HT — aucun paiement reçu</div>`;
           return '';
         })()}
-      </div>
-
-      <!-- Événement terminé -->
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">✓ Événement terminé</div>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${hasCocktails?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
-            <span>Cocktails sélectionnés</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${allConfirmed?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
-            <span>Staff confirmé</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${ev.acompte>0||ev.paid?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
-            <span>Acompte reçu</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${ev.paid?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
-            <span>Entièrement payée</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${ev.stockRetourDone?'checked':''} style="width:auto;accent-color:var(--gold)" onchange="updEvField(${ev.id},'stockRetourDone',this.checked);renderSuivi()"/>
-            <span>Retour effectué</span>
-          </label>
-        </div>
-        ${(hasCocktails&&allConfirmed&&(ev.acompte>0||ev.paid)&&ev.paid&&ev.stockRetourDone)?`<div style="margin-top:10px;padding:8px;background:var(--green-bg);border-radius:var(--radius);color:var(--green);font-size:11px;text-align:center;font-weight:500">✓ Prestation terminée - Passage en historique automatique</div>`:''}
       </div>
       ${isPast?(()=>{
         const ingredients={};
