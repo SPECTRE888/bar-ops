@@ -5223,6 +5223,8 @@ function renderPlanning(){
 
   html+=`</div></div></div>`;
 
+  el.innerHTML=html;
+}
 
 function scrollToPlanEvent(dateStr){
   const el=document.getElementById('plan-ev-'+dateStr);
