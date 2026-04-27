@@ -2611,7 +2611,7 @@ function renderDashboard(){
   
   const allEvWithRev=state.events.filter(ev=>{
     const isPast=ev.date&&new Date(ev.date)<now;
-    if(isPast&&ev.paid&&ev.stockRetourDone) return false;
+    if(isPast) return false;
     const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
     return rev>0||ev.acompte>0||ev.paid;
   });
