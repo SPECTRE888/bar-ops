@@ -25,7 +25,7 @@ exports.handler = async (event) => {
       subject,
       html,
       attachments: pdfBase64 ? [{
-        content: pdfBase64.split(',')[1] || pdfBase64,
+        content: pdfBase64.includes(',') ? pdfBase64.split(',')[1] : pdfBase64,
         filename: pdfFilename || 'devis.html',
         type: 'text/html',
         disposition: 'attachment'

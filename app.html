@@ -4235,10 +4235,10 @@ function renderPrestation(){
   const assignedIds=ev.assignedStaff||[];
 
   el.innerHTML=`
-  <div class="g2" style="align-items:start;gap:14px">
+  <div class="g2" style="align-items:start;gap:14px;max-height:calc(100vh - 180px)">
 
     <!-- LEFT: Client + Staff assignment + Brief -->
-    <div>
+    <div style="overflow-y:auto;max-height:100%;padding-right:8px">
       <!-- CLIENT SELECTION -->
       <div class="card">
         <div class="ctitle">👤 Client</div>
