@@ -217,7 +217,8 @@ function setPeriod(p){
     document.getElementById('price-pro').textContent='112€';
     document.getElementById('price-ai').textContent='224€';
   }
-  document.querySelectorAll('.period').forEach(el=>{
+  document.querySelectorAll('.period').forEach((el,i)=>{
+    if(i===0||i===4)return;
     el.textContent=p==='yearly'?'/mois (annuel)':'/mois';
   });
 }
