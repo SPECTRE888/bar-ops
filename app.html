@@ -135,7 +135,7 @@ h1,h2,h3{font-family:var(--font-display)}
 
 /* ── MAIN ── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0}
-.topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg)}
+.topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:30px}
 .topbar h2{font-size:22px;font-weight:300;letter-spacing:.04em;color:var(--text)}
 .topbar-rule{width:1px;height:16px;background:var(--border2);margin:0 4px}
 .topbar-actions{display:flex;gap:8px;align-items:center}
@@ -176,6 +176,8 @@ select option{background:#151515}
 .btn-danger:hover{border-color:var(--red);background:rgba(196,112,112,0.14)}
 .btn-ghost{border-color:transparent;color:var(--text3)}
 .btn-ghost:hover{color:var(--text2);background:var(--surface2);border-color:var(--border)}
+.btn-logout{border-color:var(--border2);color:var(--text3);font-size:11px}
+.btn-logout:hover{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
 
 /* ── PRODUCT TABLE ── */
 .ptable{width:100%;border-collapse:collapse}
@@ -335,7 +337,7 @@ select option{background:#151515}
 
 <!-- ═══ DASHBOARD ═══ -->
 <div id="page-dashboard" class="page active">
-  <div class="topbar"><h2>Dashboard</h2></div>
+  <div class="topbar"><h2>Dashboard</h2><div class="topbar-actions"><button class="btn btn-logout" onclick="doLogout()">↪ Déconnexion</button></div></div>
   <div class="content" id="dashboard-content"></div>
 </div>
 
@@ -1132,6 +1134,38 @@ function injectMoninSyrups(){
       name:'Monin — '+s.type
     });
   });
+
+  // ── TEST EVENT ──────────────────────────────────────────
+  const tomorrow=new Date();
+  tomorrow.setDate(tomorrow.getDate()+1);
+  
+  state.clients=[
+    {id:now+100,name:'Client Test',email:'test@example.com',phone:'+33601020304',type:'private',notes:'Événement de démonstration'}
+  ];
+
+  state.events=[
+    {
+      id:now+200,
+      clientId:now+100,
+      name:'Mariage - Famille Dupont',
+      date:tomorrow.toISOString().split('T')[0],
+      startTime:'18:00',
+      endTime:'23:00',
+      location:'Château de Versailles',
+      type:'Wedding',
+      guests:120,
+      budget:3500,
+      notes:'Événement test — Personnalisez ce dernier',
+      status:'pending',
+      cocktailsSelected:[now+60,now+61],
+      staffSelected:[now+40,now+41],
+      iceTypeId:now+30,
+      iceQty:15,
+      tasks:[],
+      devis:[]
+    }
+  ];
+
   save();
 }
 
@@ -1245,6 +1279,21 @@ function mkTimeSel(id, val='', onchange=''){
   return `<select id="${id}" style="padding:5px 6px;font-size:12px;width:100%" ${onchange?`onchange="${onchange}"`:''}>${opts.join('')}</select>`;
 }
 
+
+// ════════════════════════════════════════════════════════
+// LOGOUT
+// ════════════════════════════════════════════════════════
+function doLogout(){
+  if(!confirm('Déconnexion confirmée ?')) return;
+  if(window._sb){
+    window._sb.auth.signOut().then(()=>{
+      localStorage.removeItem(SK);
+      window.location.href='auth.html';
+    });
+  } else {
+    window.location.href='auth.html';
+  }
+}
 
 function goPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
@@ -6721,7 +6770,7 @@ updateCloudStatus();
     });
     // Demo banner
     const banner=document.createElement('div');
-    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(196,164,107,0.15);border-bottom:1px solid var(--gold);padding:8px;text-align:center;font-size:11px;color:var(--gold);letter-spacing:.1em;font-family:Jost,sans-serif';
+    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99998;background:rgba(196,164,107,0.15);border-bottom:1px solid var(--gold);padding:12px;text-align:center;font-size:11px;color:var(--gold);letter-spacing:.1em;font-family:Jost,sans-serif';
     banner.innerHTML='MODE VISUALISATION — <a href="paying.html" style="color:var(--gold);text-decoration:underline;font-weight:600">Souscrire pour accéder</a>';
     document.body.appendChild(banner);
     updateBadges();renderDashboard();applyTheme();
