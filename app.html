@@ -4299,49 +4299,21 @@ function markStaffDispo(evId,sid,dispo){
 function sendDispoWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
-  if(!ev||!s||!s.phone){alert('Numéro manquant pour ce staff.');return;}
+  if(!ev||!s||!s.phone){alert('Numero manquant pour ce staff.');return;}
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
-  const msg=`Bonjour ${s.name} 👋
-
-Serais-tu disponible pour cette prestation ?
-
-📅 ${ev.name}
-📍 ${ev.address||'?'}
-🗓 ${fmtDate}
-🕐 ${ev.start||'?'} — ${ev.end||'?'}
-💼 Poste : ${role}
-
-Réponds OUI ou NON stp.`;
+  const msg='Bonjour '+s.name+',\n\nEs-tu disponible pour cette prestation ?\n\n'+ev.name+'\n'+fmtDate+'\nLieu: '+(ev.address||'?')+'\nHoraires: '+(ev.start||'?')+' - '+(ev.end||'?')+'\nPoste: '+role+'\n\nReponds OUI ou NON stp.';
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 function sendBriefWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
-  if(!ev||!s||!s.phone){alert('Numéro manquant pour ce staff.');return;}
+  if(!ev||!s||!s.phone){alert('Numero manquant pour ce staff.');return;}
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
-  const cktList=(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);return c?`• ${c.name} x${cfg.qty}`:''}).filter(Boolean).join('
-')||'—';
-  const msg=`📋 BRIEF — ${ev.name}
-
-Bonjour ${s.name},
-
-📅 ${fmtDate}
-📍 ${ev.address||'?'}${ev.access?' ('+ev.access+')':''}
-🕐 Setup : ${ev.setup||'?'} | Bar : ${ev.start||'?'} — ${ev.end||'?'}
-💼 Poste : ${role}
-👥 ${ev.pax||'?'} pax
-
-🍹 Cocktails :
-${cktList}${ev.dressCodes?.length?'
-
-👔 Dress code : '+ev.dressCodes.join(', '):''}${ev.notes?'
-
-📝 Notes : '+ev.notes:''}
-
-Bonne prestation ! 🎉`;
+  const cktList=(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);return c?c.name+' x'+cfg.qty:'';}).filter(Boolean).join(', ')||'—';
+  const msg='BRIEF - '+ev.name+'\n\nBonjour '+s.name+',\n\nDate: '+fmtDate+'\nLieu: '+(ev.address||'?')+(ev.access?' ('+ev.access+')':'')+'\nSetup: '+(ev.setup||'?')+' | Bar: '+(ev.start||'?')+' - '+(ev.end||'?')+'\nPoste: '+role+'\nPax: '+(ev.pax||'?')+'\n\nCocktails: '+cktList+(ev.notes?'\n\nNotes: '+ev.notes:'')+'\n\nBonne prestation !';
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
