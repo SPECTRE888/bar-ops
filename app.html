@@ -2622,40 +2622,21 @@ function renderDashboard(){
   const trackingCount=state.products.filter(p=>p.stock!=null).length;
   const stockOk=state.products.filter(p=>p.stock!=null&&(p.stockAlert==null||p.stock>p.stockAlert)).length;
   
-  const allEvWithRev=state.events.filter(ev=>{
-    const isPast=ev.date&&new Date(ev.date)<now;
-    if(isPast){
-      const assigned=(ev.assignedStaff||[]).length;
-      const confirmed=(ev.staffConfirmed||[]).length;
-      const hasCocktails=(ev.cocktails||[]).length>0;
-      if(hasCocktails&&assigned>0&&confirmed>=assigned&&(ev.acompte>0||ev.paid)&&ev.paid&&ev.stockRetourDone) return false;
-    }
-    const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0)+(ev.barPrice||0);
-    return rev>0||ev.acompte>0||ev.paid;
-  });
-  const totalFacture=allEvWithRev.reduce((s,ev)=>{
-    const rev=(ev.cocktails||[]).reduce((cs,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return cs+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
-    const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-    return s+rev-remise;
-  },0);
-  const totalAcompte=allEvWithRev.reduce((s,ev)=>s+(ev.acompte||0),0);
-  const totalPaid=allEvWithRev.reduce((s,ev)=>{
-    if(ev.paid){
-      const rev=(ev.cocktails||[]).reduce((cs,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return cs+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
-      const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-      return s+rev-remise;
-    }
-    return s;
-  },0);
-  const totalEncaisse=totalAcompte+totalPaid;
-  const totalPending=totalFacture-totalEncaisse;
+  // CA = prestations entièrement payées
+  const evRev=ev=>{
+    const r=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0)+(ev.barPrice||0);
+    const rem=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?r*ev.remisePct/100:0);
+    return r-rem;
+  };
+  const caPayees=state.events.filter(ev=>ev.paid).reduce((s,ev)=>s+evRev(ev),0);
+  const aRecevoir=state.events.filter(ev=>!ev.paid&&evRev(ev)>0).reduce((s,ev)=>s+evRev(ev)-(ev.acompte||0),0);
   
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:10px;text-align:center">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">CA</div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1">${totalFacture.toFixed(0)}€</div>
-      <div style="font-size:11px;color:var(--text2)">À recevoir: <span style="color:var(--gold);font-weight:500">${totalPending.toFixed(0)}€</span></div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">CA (prestations payées)</div>
+      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1">${caPayees.toFixed(0)}€</div>
+      <div style="font-size:11px;color:var(--text2)">À recevoir: <span style="color:var(--gold);font-weight:500">${aRecevoir.toFixed(0)}€</span></div>
     </div>
     <div class="card" style="padding:10px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
@@ -3179,7 +3160,7 @@ function showEvForm(ev){
     <!-- SECTION 3: STAFF -->
     <div class="card">
       <div class="ctitle">${t('ev_staff_section')}</div>
-      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:2px 0;margin-bottom:2px;font-size:9px;color:var(--text3)">
+      <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;align-items:center;padding:4px 0;margin-bottom:4px;font-size:11px;color:var(--text3);font-weight:500">
         <span>Rôle</span><span>Nb</span><span>Arrivée</span><span>Départ</span><span>H.</span><span style="color:var(--red)">Coût</span><span style="color:var(--green)">Fact.</span><span>Marge</span>
       </div>
       ${[
@@ -3187,17 +3168,17 @@ function showEvForm(ev){
         {key:'wtr',label:'Serveur',  n:ev.nWaiters||0,  arr:ev.arrWtr||'',dep:ev.depWtr||''},
         {key:'mgr',label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||''},
       ].map(r=>`
-      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;align-items:center;padding:2px 0;border-bottom:1px solid var(--border);font-size:10px">
-        <span>${r.label}</span>
-        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:3px 4px;font-size:10px;height:24px" oninput="updEvCalc()"/>
-        <select id="ef-arr${r.key}" style="width:100%;font-size:10px;padding:3px 4px;height:24px" onchange="updEvCalc()">${mkTimeOpts(r.arr)}</select>
-        <select id="ef-dep${r.key}" style="width:100%;font-size:10px;padding:3px 4px;height:24px" onchange="updEvCalc()">${mkTimeOpts(r.dep)}</select>
-        <span class="txs" id="ef-hrs${r.key}" style="color:var(--gold);font-size:9px">—</span>
-        <span class="txs" id="ef-cost${r.key}" style="color:var(--red);font-size:9px">—</span>
-        <span class="txs" id="ef-bill${r.key}" style="color:var(--green);font-size:9px">—</span>
-        <span class="txs" id="ef-mg${r.key}" style="font-size:9px">—</span>
+      <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="font-weight:500">${r.label}</span>
+        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:4px 6px;font-size:12px;height:28px" oninput="updEvCalc()"/>
+        <select id="ef-arr${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvCalc()">${mkTimeOpts(r.arr)}</select>
+        <select id="ef-dep${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvCalc()">${mkTimeOpts(r.dep)}</select>
+        <span id="ef-hrs${r.key}" style="color:var(--gold);font-size:11px;font-weight:500">—</span>
+        <span id="ef-cost${r.key}" style="color:var(--red);font-size:11px">—</span>
+        <span id="ef-bill${r.key}" style="color:var(--green);font-size:11px">—</span>
+        <span id="ef-mg${r.key}" style="font-size:11px">—</span>
       </div>`).join('')}
-      <div style="display:grid;grid-template-columns:120px 50px 80px 80px 70px 80px 80px 60px;gap:6px;padding:2px 0;margin-top:2px;font-size:10px;font-weight:500;border-top:1px solid var(--border);padding-top:4px">
+      <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;padding:6px 0;font-size:12px;font-weight:600;border-top:1px solid var(--border)">
         <span>Total</span><span></span><span></span><span></span><span></span>
         <span id="ef-total-cost" style="color:var(--red)">—</span>
         <span id="ef-total-bill" style="color:var(--green)">—</span>
