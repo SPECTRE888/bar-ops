@@ -38,11 +38,12 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     window._userId=session.user.id;
     window._sb=sb;
 
+    // Cleanup expired demos on each load
+    try{ await sb.rpc('cleanup_demo'); }catch(e){}
+
     // Auto-kick demo after 30min
     if(isDemo){
-      setTimeout(()=>{
-        window.location.href='paying.html';
-      }, 30*60*1000);
+      setTimeout(()=>{ window.location.href='paying.html'; }, 30*60*1000);
     }
   }catch(e){
     console.error('Paywall error:',e);
