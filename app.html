@@ -425,7 +425,7 @@ select option{background:#151515}
   <div class="topbar"><h2>Mon équipe</h2>
     <div class="topbar-actions no-print">
       <select id="staff-menu" onchange="handleStaffMenu(this.value)" style="width:155px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font-body)">
-        <option value="staff">Staff & Equipment</option>
+        <option value="staff">Équipe</option>
         <option value="dresscode">Tenues & Dress codes</option>
       </select>
       <button class="btn btn-gold" onclick="addStaff()">+ Ajouter staff</button>
@@ -434,7 +434,7 @@ select option{background:#151515}
   <div class="content">
     <div id="staff-section">
       <div class="card" style="padding:0;overflow:hidden">
-        <table class="ptable"><thead><tr><th>Name</th><th>Rôle</th><th>Téléphone</th><th>Coût HT (€)</th><th>Facturé HT (€)</th><th>Per</th><th>Marge</th><th>${t('cat_glass_notes')}</th><th></th></tr></thead>
+        <table class="ptable"><thead><tr><th>Nom &amp; Prénom</th><th>Rôle</th><th>Téléphone</th><th>Coût HT (€)</th><th>Facturé HT (€)</th><th>Par</th><th>Marge</th><th>${t('cat_glass_notes')}</th><th></th></tr></thead>
         <tbody id="staff-tb"></tbody></table>
       </div>
       <div id="staff-empty" class="empty" style="display:none"><div class="empty-icon">‍</div><p>Aucun staff.</p></div>
@@ -981,7 +981,7 @@ const CAT_ICONS  = {Spirit:'',Juice:'',Mixer:'',Syrup:'',Garnish:'',Consumable:'
 const UNITS = ['cl','ml','L','g','kg','pc'];
 const STAFF_ROLES = ['Bartender','Head Bartender','Bar Supervisor','Waiter/Server','Bar Manager','Other'];
 const STAFF_ROLES_DISPLAY = {'Bartender':'Bartender','Head Bartender':'Head Bartender','Bar Supervisor':'Bar Supervisor','Waiter/Server':'Server','Bar Manager':'Bar Manager','Other':'Other'};
-const STAFF_PER   = ['per event','per hour','per meter'];
+const STAFF_PER   = ['par événement','par heure'];
 
 const GLASS_TYPES=['Rocks','Highball','Verre','Martini','Coupe','Collins','Flûte','Tiki mug','Copper mug','Hurricane','Snifter','Shot glass','Wine glass','Goblet','Jam jar','Stemless wine','Sling glass'];
 
@@ -4235,16 +4235,12 @@ function renderPrestation(){
   const unavail=ev.staffUnavail||[];
 
   el.innerHTML=`
-  <div style="max-width:900px;margin:0 auto">
+  <div style="width:100%">
 
     <!-- ÉQUIPE -->
     <div class="card" style="margin-bottom:14px;padding:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Équipe</div>
-        <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="font-size:11px;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
-          <option value="">+ Ajouter</option>
-          ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type} — ${s.type}</option>`).join('')}
-        </select>
       </div>
       <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)">
         <div>Nom</div><div>Rôle</div><div>Téléphone</div><div>Disponibilité</div><div></div>
@@ -4273,10 +4269,16 @@ function renderPrestation(){
           '</div>'+
         '</div>';
       }).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0">Aucun membre assigné</div>'}
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="width:100%;font-size:11px;padding:6px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
+          <option value="">+ Ajouter un membre...</option>
+          ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type} — ${s.type}</option>`).join('')}
+        </select>
+      </div>
     </div>
 
     <!-- FICHE PRESTATION -->
-    <div style="width:100%">${buildPrestHTML(ev)}</div>
+    <div style="width:100%;max-height:70vh;overflow-y:auto;border-radius:var(--radius)">${buildPrestHTML(ev)}</div>
 
   </div>`;
 }
@@ -4703,32 +4705,24 @@ async function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   const email=ev?.contactEmail||ev?.email||'';
   if(!ev||!email){alert('Aucun email trouvé sur cet événement.');return;}
-  if(!state.profile?.sendgridApiKey){alert('Configure d\'abord ta clé SendGrid dans les paramètres.');return;}
+  if(!state.profile?.sendgridApiKey){alert('Configure ta clé SendGrid dans Profil.');return;}
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
   const devisHTML=buildDevisHTML(ev,devisNum);
-  const htmlBase64=btoa(unescape(encodeURIComponent(devisHTML)));
-  const body=`<div style="font-family:'DM Sans',sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:32px">
-    <div style="font-size:22px;margin-bottom:8px">Votre devis — ${ev.name}</div>
-    <p style="color:#555;margin-bottom:16px">Bonjour,<br/><br/>Veuillez trouver ci-joint votre devis <strong>${devisNum}</strong>.<br/><br/>N'hésitez pas à nous contacter pour toute question.</p>
-    <p style="color:#555">Cordialement,<br/><strong>${sigName}</strong></p>
-  </div>`;
   try{
     const r=await fetch('/.netlify/functions/send-quote',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         to:email,
-        subject:`Devis ${devisNum} — ${ev.name}`,
-        html:body,
-        pdfBase64:'data:text/html;base64,'+htmlBase64,
-        pdfFilename:`Devis-${devisNum}.html`,
-        fromEmail:state.profile?.senderEmail||'noreply@barops.app',
+        subject:'Devis '+devisNum+' — '+ev.name,
+        devisHTML,
+        fromEmail:state.profile?.senderEmail,
         fromName:sigName,
         sendgridApiKey:state.profile?.sendgridApiKey
       })
     });
     const res=await r.json();
-    if(res.success){toast('📧 Devis envoyé à '+email);}
+    if(res.success){toast('Devis envoyé à '+email);}
     else{alert('Erreur: '+res.error);}
   }catch(e){alert('Erreur: '+e.message);}
 }
