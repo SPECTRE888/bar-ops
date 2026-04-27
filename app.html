@@ -3160,23 +3160,36 @@ function showEvForm(ev){
     <!-- SECTION 5: BAR -->
     <div class="card">
       <div class="ctitle">Configuration bar</div>
-      <div class="g3">
-        <div class="field"><label>Type de bar</label>
-          <select id="ef-bar-type" style="width:100%" onchange="(function(){const b=state.barItems.find(x=>x.id==this.value);if(b){document.getElementById('ef-bar-length').value=b.lengthM||'';document.getElementById('ef-bar-price').value=b.priceHT||'';}}).call(this)">
-            <option value="">— Sélectionner —</option>
-            ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name||'Bar'}${b.lengthM?' · '+b.lengthM+'m':''}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field"><label>Longueur (m)</label>
-          <input type="number" id="ef-bar-length" value="${ev.barLength||''}" min="0" step="0.5" placeholder="ex: 2.5"/>
-        </div>
-        <div class="field"><label>Prix TTC (€)</label>
-          <input type="number" id="ef-bar-price" value="${ev.barPrice||''}" min="0" step="0.01" placeholder="0.00"/>
-        </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr>
+            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Nom / Modèle</th>
+            <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Longueur</th>
+            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Couleur</th>
+            <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Style</th>
+            <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:400;font-size:10px;text-transform:uppercase">Prix HT</th>
+            <th style="padding:6px 8px;border-bottom:1px solid var(--border)"></th>
+          </tr></thead>
+          <tbody>
+            ${(state.barItems||[]).length?
+              (state.barItems||[]).map(b=>{
+                const sel=ev.barItemId===b.id;
+                return`<tr style="background:${sel?'var(--gold-bg)':'transparent'};cursor:pointer" onclick="(function(){document.getElementById('ef-bar-type').value='${b.id}';document.getElementById('ef-bar-price').value='${b.priceHT||0}';document.getElementById('ef-bar-length').value='${b.lengthM||0}';this.closest('table').querySelectorAll('tr').forEach(r=>r.style.background='transparent');this.style.background='var(--gold-bg)';}).call(this)">
+                  <td style="padding:8px">${b.name||'—'}</td>
+                  <td style="padding:8px;text-align:right">${b.lengthM?b.lengthM+'m':'—'}</td>
+                  <td style="padding:8px">${b.color||'—'}</td>
+                  <td style="padding:8px">${b.style||'—'}</td>
+                  <td style="padding:8px;text-align:right;color:var(--gold);font-weight:500">${b.priceHT?b.priceHT.toFixed(2)+'€':'—'}</td>
+                  <td style="padding:8px;text-align:center">${sel?'<span style="color:var(--gold);font-weight:600">✔</span>':''}</td>
+                </tr>`;
+              }).join('')
+            :`<tr><td colspan="6" style="padding:12px;text-align:center;color:var(--text3)">Aucun bar dans le catalogue — <button class="btn btn-sm btn-ghost" onclick="goPage('catalogue')">Ajouter un bar →</button></td></tr>`}
+          </tbody>
+        </table>
       </div>
-      <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:var(--radius);font-size:11px;color:var(--text2)">
-        📌 La prestation bar s'ajoute au devis (cocktails + livraison + bar)
-      </div>
+      <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
+      <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
+      <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
     </div>
 
     <!-- SECTION 6: NOTES -->
@@ -5718,6 +5731,12 @@ function buildEventSummaryHTML(ev){
 </html>`;
 }
 
+function delEvHistorique(id){
+  if(!confirm('Supprimer définitivement cette prestation de l\'historique ?'))return;
+  state.events=state.events.filter(x=>x.id!==id);
+  save();renderHistorique();updateBadges();
+}
+
 function renderHistorique(){
   const el=document.getElementById('historique-content');if(!el)return;
   const now=new Date();
@@ -5804,6 +5823,7 @@ function renderHistorique(){
         <div style="display:flex;gap:8px;flex-shrink:0">
           <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
           <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">HTML</button>
+          <button style="padding:8px 12px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:4px;cursor:pointer;font-size:14px;transition:.2s" onmouseover="this.style.background='var(--red-bg)'" onmouseout="this.style.background='transparent'" onclick="delEvHistorique(${ev.id})">×</button>
         </div>
       </div>`;
     });
