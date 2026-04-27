@@ -3140,7 +3140,7 @@ function showEvForm(ev){
     <!-- SECTION 4: HORAIRES & SETUP -->
     <div class="card">
       <div class="ctitle">Horaires</div>
-      <div class="g3">
+      <div class="g3" style="grid-template-columns:1fr 1fr 1fr 1fr">
         <div class="field"><label>${t('ev_setup')}</label>${mkTimeSel('ef-setup',ev.setup||'')}</div>
         <div class="field"><label>${t('ev_bar_open')}</label>${mkTimeSel('ef-start',ev.start||'')}</div>
         <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
