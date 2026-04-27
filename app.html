@@ -964,6 +964,7 @@ const GLASS_TYPES=['Rocks','Highball','Verre','Martini','Coupe','Collins','Flût
 // STATE
 // ════════════════════════════════════════════════════════
 let state = {};
+let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
 function freshState(){
@@ -1035,7 +1036,7 @@ function injectDemoData(){
   // Inject if workspace is truly empty (no products, no cocktails, no events)
   if((state.products?.length||0)+(state.cocktails?.length||0)+(state.events?.length||0)>0) return;
 
-  const now=Date.now();
+  now=Date.now();
 
   // ── PRODUCTS ──────────────────────────────────────────
   state.products=[
