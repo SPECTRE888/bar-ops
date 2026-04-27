@@ -3133,17 +3133,48 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 5: BAR (SIMPLE DROPDOWN) -->
+    <!-- SECTION 5: BAR (5 DROPDOWNS) -->
     <div class="card">
-      <div class="field">
-        <label style="font-size:12px">Bar (optionnel)</label>
-        <select id="ef-bar-type" style="width:100%" onchange="(function(){const b=state.barItems.find(x=>x.id==this.value);if(b){document.getElementById('ef-bar-length').value=b.lengthM||0;document.getElementById('ef-bar-price').value=b.priceHT||0;}else{document.getElementById('ef-bar-length').value='';document.getElementById('ef-bar-price').value='';}updEvCalc();}).call(this)">
-          <option value="">— Aucun —</option>
-          ${(state.barItems||[]).map(b=>`<option value="${b.id}" ${ev.barItemId===b.id?'selected':''}>${b.name}${b.style?' • '+b.style:''} • ${b.lengthM}m • ${b.priceHT}€</option>`).join('')}
-        </select>
+      <div class="ctitle">Bar</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div class="field" style="margin:0">
+          <label style="font-size:10px">Modèle</label>
+          <select id="ef-bar-model" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+            <option value="">— Aucun —</option>
+            ${[...new Set((state.barItems||[]).map(b=>b.name))].map(name=>`<option value="${name}" ${ev.barType?.split('•')[0]?.trim()===name?'selected':''}>${name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:10px">Longueur</label>
+          <select id="ef-bar-length-sel" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+            <option value="">—</option>
+            ${[...new Set((state.barItems||[]).map(b=>b.lengthM))].sort((a,b)=>a-b).map(len=>`<option value="${len}">${len}m</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field" style="margin:0">
+          <label style="font-size:10px">Couleur</label>
+          <select id="ef-bar-color" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+            <option value="">—</option>
+            ${[...new Set((state.barItems||[]).filter(b=>b.color).map(b=>b.color))].map(color=>`<option value="${color}">${color}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:10px">Style</label>
+          <select id="ef-bar-style" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+            <option value="">—</option>
+            ${[...new Set((state.barItems||[]).filter(b=>b.style).map(b=>b.style))].map(style=>`<option value="${style}">${style}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:var(--surface2);border-radius:6px;text-align:center">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRIX</div>
+        <div style="font-size:18px;font-weight:600;color:var(--gold)" id="ef-bar-prix">—</div>
       </div>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
+      <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
@@ -3476,6 +3507,34 @@ function updEvPayment(){
   } else {
     statusEl.textContent='';
   }
+}
+
+function updBarSelection(){
+  const model=document.getElementById('ef-bar-model')?.value||'';
+  const length=document.getElementById('ef-bar-length-sel')?.value||'';
+  const color=document.getElementById('ef-bar-color')?.value||'';
+  const style=document.getElementById('ef-bar-style')?.value||'';
+  
+  // Chercher bar matching tous les critères
+  let match=state.barItems?.find(b=>
+    (model===''||b.name===model)&&
+    (length===''||b.lengthM==length)&&
+    (color===''||b.color===color)&&
+    (style===''||b.style===style)
+  );
+  
+  if(match){
+    document.getElementById('ef-bar-type').value=match.id;
+    document.getElementById('ef-bar-length').value=match.lengthM||0;
+    document.getElementById('ef-bar-price').value=match.priceHT||0;
+    document.getElementById('ef-bar-prix').textContent=match.priceHT+'€';
+  }else{
+    document.getElementById('ef-bar-type').value='';
+    document.getElementById('ef-bar-length').value='';
+    document.getElementById('ef-bar-price').value='';
+    document.getElementById('ef-bar-prix').textContent='—';
+  }
+  updEvCalc();
 }
 
 function updEvCalc(){
