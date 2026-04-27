@@ -551,7 +551,7 @@ select option{background:#151515}
       <button class="btn btn-ghost" onclick="planningNav(1)" id="plan-next-btn">${t('plan_next')}</button>
     </div>
   </div>
-  <div class="content" id="planning-content"></div>
+  <div class="content" id="planning-content" style="display:flex;flex-direction:column;flex:1;overflow-y:auto"></div>
 </div>
 
 </div><!-- /main -->
@@ -4399,6 +4399,11 @@ function renderPrestation(){
           }).join('')}
       </div>
 
+    </div>
+
+    <!-- RIGHT: Fiche preview -->
+    <div>
+      <div style="position:sticky;top:0">${buildPrestHTML(ev)}</div>
     </div>
 
   </div>`;
