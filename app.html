@@ -6757,60 +6757,42 @@ function setLang(l){
 }
 
 function applyLang(){
-  // Language buttons — segmented rectangle highlight
+  // Language buttons
   const langStyles={
-    fr:{active:{borderTop:'1px solid var(--gold)',borderBottom:'1px solid var(--gold)',borderLeft:'1px solid var(--gold)',borderRight:'none',color:'var(--gold)',background:'var(--gold-bg)'},
-        inactive:{borderTop:'1px solid var(--border2)',borderBottom:'1px solid var(--border2)',borderLeft:'1px solid var(--border2)',borderRight:'none',color:'var(--text3)',background:'none'}},
-    en:{active:{borderTop:'1px solid var(--gold)',borderBottom:'1px solid var(--gold)',borderLeft:'none',borderRight:'none',color:'var(--gold)',background:'var(--gold-bg)'},
-        inactive:{borderTop:'1px solid var(--border2)',borderBottom:'1px solid var(--border2)',borderLeft:'none',borderRight:'none',color:'var(--text3)',background:'none'}},
-    es:{active:{borderTop:'1px solid var(--gold)',borderBottom:'1px solid var(--gold)',borderLeft:'none',borderRight:'1px solid var(--gold)',color:'var(--gold)',background:'var(--gold-bg)'},
-        inactive:{borderTop:'1px solid var(--border2)',borderBottom:'1px solid var(--border2)',borderLeft:'none',borderRight:'1px solid var(--border2)',color:'var(--text3)',background:'none'}},
+    fr:{active:{borderTop:'1px solid var(--gold)',borderBottom:'1px solid var(--gold)',borderLeft:'1px solid var(--gold)',borderRight:'none',color:'var(--gold)',background:'var(--gold-bg)'},inactive:{borderTop:'1px solid var(--border2)',borderBottom:'1px solid var(--border2)',borderLeft:'1px solid var(--border2)',borderRight:'none',color:'var(--text3)',background:'none'}},
+    en:{active:{borderTop:'1px solid var(--gold)',borderBottom:'1px solid var(--gold)',borderLeft:'none',borderRight:'none',color:'var(--gold)',background:'var(--gold-bg)'},inactive:{borderTop:'1px solid var(--border2)',borderBottom:'1px solid var(--border2)',borderLeft:'none',borderRight:'none',color:'var(--text3)',background:'none'}},
+    es:{active:{borderTop:'1px solid var(--gold)',borderBottom:'1px solid var(--gold)',borderLeft:'none',borderRight:'1px solid var(--gold)',color:'var(--gold)',background:'var(--gold-bg)'},inactive:{borderTop:'1px solid var(--border2)',borderBottom:'1px solid var(--border2)',borderLeft:'none',borderRight:'1px solid var(--border2)',color:'var(--text3)',background:'none'}},
   };
   ['fr','en','es'].forEach(l=>{
     const btn=document.getElementById('lang-'+l);if(!btn)return;
     const s=langStyles[l][l===lang?'active':'inactive'];
     Object.assign(btn.style,s);
   });
-  // Update nav labels
-  document.querySelector('#nav-dashboard')?.lastChild && (document.querySelector('#nav-dashboard').lastChild.textContent='\n      '+t('nav_dashboard')+'\n    ');
+
+  // Update ALL nav labels with t() values
+  const navLabels={
+    'nav-dashboard':'nav_dashboard','nav-catalogue':'nav_catalogue','nav-cocktails':'nav_cocktails',
+    'nav-events':'nav_events','nav-suivi':'nav_suivi','nav-historique':'nav_historique',
+    'nav-planning':'nav_planning','nav-staff':'nav_staff','nav-clients':'nav_clients'
+  };
+  
+  Object.entries(navLabels).forEach(([id,key])=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const label=t(key);
+    const nodes=[...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim()&&!n.nextSibling?.classList?.contains('nb'));
+    if(nodes.length) nodes[0].textContent='\n      '+label+'\n    ';
+  });
 
   // Update save text
   document.getElementById('save-text').textContent=t('save');
-
-  // Clients topbar
   const btnClientNew=document.querySelector('#page-clients .btn-gold');
   if(btnClientNew) btnClientNew.textContent=t('client_new');
-
-  // Update topbar buttons that are always visible
   const btnBack=document.getElementById('btn-cback');if(btnBack)btnBack.textContent=t('btn_back');
   const btnNew=document.getElementById('btn-cnew');if(btnNew)btnNew.textContent=t('btn_new_cocktail');
   const btnEvBack=document.getElementById('btn-evback');if(btnEvBack)btnEvBack.textContent=t('btn_back');
   const btnEvNew=document.getElementById('btn-evnew');if(btnEvNew)btnEvNew.textContent=t('btn_new_event');
   const btnAdd=document.getElementById('cat-add-btn');if(btnAdd)btnAdd.textContent=t('btn_add');
-
-  // Update nav item text nodes
-  const navMap={
-    'nav-catalogue':t('nav_catalogue'),'nav-cocktails':t('nav_cocktails'),
-    'nav-events':t('nav_events'),'nav-suivi':t('nav_suivi'),
-    'nav-historique':t('nav_historique'),'nav-planning':t('nav_planning'),
-    'nav-staff':t('nav_staff'),'nav-clients':t('nav_clients'),
-  };
-  Object.entries(navMap).forEach(([id,label])=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    // Find text node (last child or walk nodes)
-    const nodes=[...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim());
-    if(nodes.length) nodes[0].textContent='\n      '+label+'\n    ';
-  });
-
-  // Update nav items without IDs (Suivi, Historique, Planning, Staff, Clients are already handled above)
-  // Just ensure span badges aren't changed
-  document.querySelectorAll('.nav-item').forEach(item=>{
-    const id=item.id;
-    if(!id||!id.startsWith('nav-')) return;
-    // Already handled above
-  });
-
   const planPrev=document.getElementById('plan-prev-btn');if(planPrev)planPrev.textContent=t('plan_prev');
   const planNext=document.getElementById('plan-next-btn');if(planNext)planNext.textContent=t('plan_next');
 
