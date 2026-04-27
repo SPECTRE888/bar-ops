@@ -17,13 +17,8 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     if(!window.supabase)return;
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     const{data:{session}}=await sb.auth.getSession();
-    if(!session){window.location.href='index.html?mode=pricing';return;}
-    
-    // Check multi-device limit (max 3 sessions)
-    const sessionId=Math.random().toString(36).slice(2);
-    const deviceId=localStorage.getItem('bcp_device_id')||sessionId;
-    if(!localStorage.getItem('bcp_device_id')) localStorage.setItem('bcp_device_id',deviceId);
-    
+    if(!session){window.location.href='paying.html';return;}
+
     let subs=null;
     let retries=0;
     while(!subs&&retries<5){
@@ -36,31 +31,24 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
         retries++;
       }
     }
+
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
     const isDemo=subs?.status==='demo'||subs?.plan==='demo';
-    
-    if(!isActive&&!isDemo){window.location.href='index.html';return;}
-    
+
+    if(!isActive&&!isDemo){window.location.href='paying.html';return;}
+
     window.cloudUser={
       access_token:session.access_token,
       refresh_token:session.refresh_token,
       user:session.user
     };
     window._userEmail=session.user.email;
-    window._userPlan=subs?.plan||subs?.tier||'trial';
+    window._userPlan=subs?.plan||subs?.tier||'demo';
     window._isDemo=isDemo;
-    // Isolate localStorage per user - clear if different user
-    const storedUid=localStorage.getItem('bcp_uid');
-    if(storedUid&&storedUid!==session.user.id){
-      // Different user - wipe all app data
-      ['barcraft_v3','barcraft_pro_v2','bcp_session','bcp_demo_injected'].forEach(k=>localStorage.removeItem(k));
-    }
-    localStorage.setItem('bcp_uid',session.user.id);
-    // Set user-scoped storage key
-    SK='barcraft_v3_'+session.user.id;
+    window._userId=session.user.id;
   }catch(e){
     console.error('Paywall error:',e);
-    window.location.href='index.html';
+    window.location.href='paying.html';
   }
 })();
 </script>
@@ -937,6 +925,9 @@ function toast(msg,color='var(--green)'){
 
 // SK is set per-user after auth to isolate data
 let SK='barcraft_v3';
+
+// Set user-scoped SK immediately if userId available
+if(window._userId) SK='barcraft_v3_'+window._userId;
 
 // Product type presets per category
 const TYPE_PRESETS = {
