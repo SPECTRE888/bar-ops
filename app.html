@@ -6803,6 +6803,14 @@ function applyLang(){
     if(nodes.length) nodes[0].textContent='\n      '+label+'\n    ';
   });
 
+  // Update nav items without IDs (Suivi, Historique, Planning, Staff, Clients are already handled above)
+  // Just ensure span badges aren't changed
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    const id=item.id;
+    if(!id||!id.startsWith('nav-')) return;
+    // Already handled above
+  });
+
   const planPrev=document.getElementById('plan-prev-btn');if(planPrev)planPrev.textContent=t('plan_prev');
   const planNext=document.getElementById('plan-next-btn');if(planNext)planNext.textContent=t('plan_next');
 
