@@ -92,7 +92,7 @@ async function redirect(userId){
       return;
     }
   }catch(e){}
-  window.location.href='app.html';
+  window.location.href='index.html?mode=pricing';
 }
 
 async function googleAuth(){
@@ -120,7 +120,7 @@ async function emailSignup(){
     msg('Cette adresse est déjà utilisée. Connecte-toi.','err');
     btn.disabled=false;btn.textContent="S'inscrire";return;
   }
-  window.location.href='app.html';
+  window.location.href='index.html?mode=pricing';
 }
 
 async function emailLogin(){
