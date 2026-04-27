@@ -480,6 +480,7 @@ select option{background:#151515}
   <div class="topbar">
     <h2 id="ev-page-title">Événements</h2>
     <div class="topbar-actions no-print">
+      <input type="text" id="ev-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterEvList()"/>
       <button class="btn btn-ghost" onclick="showEvList()" id="btn-evback" style="display:none">← Retour</button>
       <button class="btn btn-gold" onclick="newEv()" id="btn-evnew">+ Nouvel événement</button>
     </div>
@@ -520,7 +521,12 @@ select option{background:#151515}
 
 <!-- ═══ SUIVI ═══ -->
 <div id="page-suivi" class="page">
-  <div class="topbar"><h2> Suivi des prestations</h2></div>
+  <div class="topbar">
+    <h2> Suivi des prestations</h2>
+    <div class="topbar-actions no-print">
+      <input type="text" id="suivi-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterSuivi()"/>
+    </div>
+  </div>
   <div class="content" id="suivi-content"></div>
 </div>
 
@@ -2866,6 +2872,39 @@ function showEvList(){
   }).join('')+'</div>';
 }
 
+function filterEvList(){
+  const q=document.getElementById('ev-search')?.value||'';
+  const filtered=state.events.filter(ev=>
+    (ev.name||'').toLowerCase().includes(q.toLowerCase())||
+    ((ev.clientName||state.clients.find(x=>x.id===ev.clientId)?.name)||'').toLowerCase().includes(q.toLowerCase())||
+    (ev.contact||'').toLowerCase().includes(q.toLowerCase())
+  );
+  const sorted=[...filtered].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+  const el=document.getElementById('ev-content');
+  if(!sorted.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Aucun résultat.</p></div>';
+    return;
+  }
+  el.innerHTML='<div class="c-grid">'+sorted.map(ev=>{
+    const tot=evTot(ev);
+    const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):t('no_date');
+    const confirmed=(ev.staffConfirmed||[]).length;
+    const assigned=(ev.assignedStaff||[]).length;
+    return`<div class="c-card">
+      <div class="cat">${fmtDate}</div>
+      <h3>${ev.name||t('no_name')}</h3>
+      <div class="stat">${ev.pax||'?'} pax · ${tot} cocktails</div>
+      ${assigned?`<div class="stat" style="color:var(--green);margin-top:2px">‍ ${confirmed}/${assigned} confirmés</div>`:''}
+      <div class="flex-g mt1 no-print" style="flex-wrap:wrap;gap:5px">
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})"> Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
+        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})"></button>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
 function goEvTab(evId, tab){
   if(tab==='prestation'){
     goPage('prestation');
@@ -3090,17 +3129,6 @@ function showEvForm(ev){
           <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" step="1" min="0" style="width:90px" oninput="updEvCalc()"/>
           <span class="txs tm">€ facturé</span>
         </div>
-      </div>
-    </div>
-
-    <!-- SECTION 3B: CLIENT EXCHANGES -->
-    <div class="card">
-      <div class="ctitle">Échanges client</div>
-      <div class="field"><label>Conversation & notes</label>
-        <textarea id="ef-exchanges" placeholder="Collez les messages, notes de conversation... Libre d'organiser comme vous le souhaitez." style="height:120px;resize:vertical;font-family:monospace;font-size:11px">${(ev.exchanges||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-      </div>
-      <div class="field"><label>Résumé (optionnel)</label>
-        <input id="ef-exchanges-summary" value="${(ev.exchangesSummary||'').replace(/"/g,'&quot;')}" placeholder="Résumé de la discussion avec le client..."/>
       </div>
     </div>
 
@@ -4374,10 +4402,6 @@ function renderPrestation(){
 
     </div>
 
-    <!-- RIGHT: Fiche preview -->
-    <div>
-      <div id="prest-preview">${buildPrestHTML(ev)}</div>
-    </div>
   </div>`;
 }
 
@@ -6248,6 +6272,68 @@ function renderSuivi(){
       <!-- Quick actions -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" class="no-print">
         <button class="btn btn-sm btn-ghost" onclick="editEv(${ev.id});goPage('events')"> Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterSuivi(){
+  const q=document.getElementById('suivi-search')?.value||'';
+  const filtered=state.events.filter(ev=>
+    (ev.name||'').toLowerCase().includes(q.toLowerCase())||
+    ((ev.clientName||state.clients.find(x=>x.id===ev.clientId)?.name)||'').toLowerCase().includes(q.toLowerCase())
+  );
+  const sorted=[...filtered].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+  const el=document.getElementById('suivi-content');if(!el)return;
+  if(!sorted.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
+    return;
+  }
+  el.innerHTML=sorted.map(ev=>{
+    const total=evTot(ev);
+    const evDate=ev.date?new Date(ev.date):null;
+    const isPast=evDate&&evDate<new Date();
+    const isToday=evDate&&evDate.toDateString()===new Date().toDateString();
+    const fmtDate=evDate?evDate.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'-';
+    const hasCocktails=(ev.cocktails||[]).length>0;
+    const assigned=(ev.assignedStaff||[]).length;
+    const needed=(ev.nBartenders||0)+(ev.nWaiters||0)+(ev.nManagers||0);
+    const hasStaff=assigned>0&&(needed===0||assigned>=needed);
+    const confirmed=(ev.staffConfirmed||[]).length;
+    const allConfirmed=assigned>0&&confirmed>=assigned;
+    const briefSent=confirmed>0;
+    const coursesDone=ev.coursesDone||false;
+    const ficheReady=hasCocktails&&hasStaff;
+    const checks=[hasCocktails,hasStaff,allConfirmed,briefSent,coursesDone,ficheReady];
+    const score=checks.filter(Boolean).length;
+    const pct=Math.round(score/checks.length*100);
+    const check=(ok,label,action)=>ok?`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:12px;margin-bottom:6px"><span></span> ${label}${action?' '+action:''}</div>`:`<div style="display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px;margin-bottom:6px"><span></span> ${label}${action?' '+action:''}</div>`;
+    return`<div class="card">
+      <div class="flex-b mb1">
+        <div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">${fmtDate}</div>
+          <div style="font-size:16px;font-family:'DM Serif Display',serif;margin-top:2px">${ev.name}</div>
+        </div>
+        <div style="text-align:right"><div style="font-size:18px;font-weight:500;color:var(--${pct===100?'green':'text2'})">${pct}%</div><div style="font-size:9px;color:var(--text3)">complétée</div></div>
+      </div>
+      <div style="height:3px;background:var(--surface3);border-radius:2px;margin-bottom:12px"><div style="width:${pct}%;height:100%;background:var(--${pct===100?'green':'gold'});border-radius:2px;transition:.4s"></div></div>
+      ${check(hasCocktails,`Cocktails sélectionnés${hasCocktails?' ('+ev.cocktails.length+')':''}`,`<button class="btn btn-sm btn-ghost" onclick="editEv(${ev.id});goPage('events')">Configurer</button>`)}
+      ${check(hasStaff,`Staff assigné (${assigned}${needed>0?' / '+needed:''})`,`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`)}
+      ${check(allConfirmed,`Staff confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer dispo ?</button>`:'')}
+      ${check(briefSent,'Brief envoyé',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer brief</button>`:'')}
+      ${check(coursesDone,'Courses faites',`<button class="btn btn-sm btn-ghost" onclick="toggleCoursesDone(${ev.id})">${coursesDone?'Annuler':'Marquer fait'}</button>`)}
+      ${check(ficheReady,'Fiche prête',ficheReady?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Voir →</button>`:'')}
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Paiement</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="field" style="margin:0"><label style="font-size:9px">Acompte (€)</label><input type="number" value="${ev.acompte||''}" min="0" step="1" placeholder="0" style="width:100px;padding:4px 8px;font-size:12px" onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);filterSuivi()"/></div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px"><input type="checkbox" ${ev.paid?'checked':''} style="width:auto;accent-color:var(--green)" onchange="updEvField(${ev.id},'paid',this.checked);filterSuivi()"/><span>Payée</span></label>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id});goPage('events')"> Modifier</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
       </div>
