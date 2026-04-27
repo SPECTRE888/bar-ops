@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Plans — BAR OPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{--bg:#080808;--surface:#0f0f0f;--text:#ede8e0;--text2:#a09890;--gold:#c4a46b;--gold2:#d4b47a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);padding:40px 20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-family:'Cormorant Garamond',serif;font-size:48px;text-align:center;margin-bottom:8px}
+.subtitle{text-align:center;color:var(--text2);margin-bottom:60px;font-size:16px}
+.pricing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:32px;margin-bottom:40px}
+@media(max-width:768px){.pricing-grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid #2a2a2a;border-radius:8px;padding:40px;text-align:center}
+.card h2{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:8px;font-weight:400}
+.price{font-size:36px;font-weight:600;color:var(--gold);margin:20px 0}
+.period{font-size:12px;color:var(--text2);margin-bottom:24px}
+.features{text-align:left;margin:28px 0}
+.features li{list-style:none;padding:10px 0;border-bottom:1px solid #1a1a1a;color:var(--text2);font-size:13px}
+.features li:before{content:"✓ ";color:var(--gold);font-weight:600;margin-right:8px}
+.btn{width:100%;padding:12px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-weight:600;cursor:pointer;font-size:13px;letter-spacing:.1em;margin-top:20px;transition:.2s}
+.btn:hover{background:var(--gold2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.secondary{background:none;border:1px solid #2a2a2a;color:var(--text2)}
+.btn.secondary:hover{border-color:var(--gold);color:var(--gold)}
+.back{margin-bottom:40px}
+.back a{color:var(--text2);text-decoration:none;font-size:12px}
+.back a:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="back"><a href="index.html">← Retour</a></div>
+  
+  <h1>Plans</h1>
+  <p class="subtitle">Choisissez le plan adapté à vos besoins</p>
+  
+  <div class="pricing-grid">
+    <div class="card">
+      <h2>EARLY</h2>
+      <div class="price" id="price-early">89€</div>
+      <div class="period">/mois ou 801€/an</div>
+      <ul class="features">
+        <li>Jusqu'à 3 événements/mois</li>
+        <li>Catalogue de cocktails</li>
+        <li>Gestion basique du staff</li>
+        <li>Support email</li>
+      </ul>
+      <button class="btn" onclick="goPay('early')">S'inscrire</button>
+    </div>
+    
+    <div class="card">
+      <h2>PRO</h2>
+      <div class="price" id="price-pro">149€</div>
+      <div class="period">/mois ou 1 341€/an</div>
+      <ul class="features">
+        <li>Événements illimités</li>
+        <li>Catalogue complet</li>
+        <li>Gestion avancée du staff</li>
+        <li>Logistique détaillée</li>
+        <li>Analytique complète</li>
+        <li>Support prioritaire</li>
+      </ul>
+      <button class="btn" onclick="goPay('pro')">S'inscrire</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
+const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
+let currentPeriod='monthly';
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+
+async function goPay(plan){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='auth.html';return;}
+  const price=PRICES[plan][currentPeriod];
+  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    const res=await fetch('/.netlify/functions/subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100)})});
+    if(!res.ok){const e=await res.text();alert('Erreur: '+e);return;}
+    const{sessionId,error}=await res.json();
+    if(error){alert('Erreur: '+error);return;}
+    if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
+  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='S\'inscrire';}}
+}
+</script>
+</body>
+</html>

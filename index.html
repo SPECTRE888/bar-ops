@@ -92,6 +92,12 @@ footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
 <script>
 (async()=>{
   const mode=new URLSearchParams(window.location.search).get('mode');
+  if(mode==='pricing'){
+    document.querySelector('.hero').style.display='none';
+    // Show pricing section
+    showPricing();
+    return;
+  }
   if(mode==='check'){
     const{data:{session}}=await sb.auth.getSession();
     if(!session)return;

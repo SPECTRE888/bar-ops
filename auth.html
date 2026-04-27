@@ -92,7 +92,7 @@ async function redirect(userId){
       return;
     }
   }catch(e){}
-  window.location.href='index.html?mode=pricing';
+  window.location.href='paying.html';
 }
 
 async function googleAuthSignup(){
@@ -140,7 +140,7 @@ async function emailSignup(){
       expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
     }]);
   }catch(e){}
-  window.location.href='index.html?mode=pricing';
+  window.location.href='paying.html';
 }
 
 async function emailLogin(){
@@ -176,7 +176,7 @@ async function emailLogin(){
             }]);
           }
         }catch(e){}
-        window.location.href='index.html?mode=pricing';
+        window.location.href='paying.html';
       }else{
         await redirect(s.user.id);
       }
