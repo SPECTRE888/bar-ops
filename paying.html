@@ -232,7 +232,7 @@ async function goPay(plan){
         status:'demo',
         plan:'demo',
         created_at:new Date().toISOString(),
-        expires_at:new Date(Date.now()+60*60*1000).toISOString()
+        expires_at:new Date(Date.now()+30*60*1000).toISOString()
       }]);
       window.location.href='app.html';
     }catch(e){alert('Erreur: '+e.message);}
