@@ -3283,8 +3283,9 @@ function renderEvPicker(){
     // Cost WITHOUT glass (totalCost includes original glass cost)
     const ingCostUnit=(c.totalCost||0)-(c.glassCost||0)+glassCostHT;
     const totalCostUnit=ingCostUnit;
+    const adjustedPriceHT=(c.priceHT||0)-(c.glassCost||0)+glassCostHT;
     const totalCost=qty?(qty*totalCostUnit).toFixed(2):null;
-    const totalPrice=qty?(qty*(c.priceHT||0)).toFixed(2):null;
+    const totalPrice=qty?(qty*adjustedPriceHT).toFixed(2):null;
     const margin=qty&&totalPrice&&parseFloat(totalPrice)>0?((parseFloat(totalPrice)-parseFloat(totalCost))/parseFloat(totalPrice)*100).toFixed(0):null;
 
     // Extract pure glass type (before any appellation separator)
@@ -3459,7 +3460,8 @@ function updEvCalc(){
     const qty=cfg.qty||0;
     ingCost+=qty*c.totalCost;
     const gc=cfg.glassCostHT||0;
-    revenue+=qty*(c.priceHT+gc);
+    const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
+    revenue+=qty*adjustedPrice;
     glassCost+=qty*gc;
   });
   ingCost+=glassCost;
