@@ -2612,7 +2612,7 @@ function renderDashboard(){
   const allEvWithRev=state.events.filter(ev=>{
     const isPast=ev.date&&new Date(ev.date)<now;
     if(isPast) return false;
-    const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
+    const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0)+(ev.barPrice||0);
     return rev>0||ev.acompte>0||ev.paid;
   });
   const totalFacture=allEvWithRev.reduce((s,ev)=>{
@@ -3148,7 +3148,32 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 5: NOTES -->
+    <!-- SECTION 5: BAR -->
+    <div class="card">
+      <div class="ctitle">Configuration bar</div>
+      <div class="g3">
+        <div class="field"><label>Type de bar</label>
+          <select id="ef-bar-type" style="width:100%">
+            <option value="">— Sélectionner —</option>
+            <option value="comptoir" ${ev.barType==='comptoir'?'selected':''}>Comptoir</option>
+            <option value="mobile" ${ev.barType==='mobile'?'selected':''}>Bar mobile</option>
+            <option value="table" ${ev.barType==='table'?'selected':''}>Table</option>
+            <option value="custom" ${ev.barType==='custom'?'selected':''}>Custom</option>
+          </select>
+        </div>
+        <div class="field"><label>Longueur (m)</label>
+          <input type="number" id="ef-bar-length" value="${ev.barLength||''}" min="0" step="0.5" placeholder="ex: 2.5"/>
+        </div>
+        <div class="field"><label>Prix TTC (€)</label>
+          <input type="number" id="ef-bar-price" value="${ev.barPrice||''}" min="0" step="0.01" placeholder="0.00"/>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:var(--radius);font-size:11px;color:var(--text2)">
+        📌 La prestation bar s'ajoute au devis (cocktails + livraison + bar)
+      </div>
+    </div>
+
+    <!-- SECTION 6: NOTES -->
     <div class="card">
       <div class="ctitle">Notes & Remarques</div>
       <div class="field"><label>${t('ev_notes')}</label>
@@ -3156,7 +3181,7 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 6: COCKTAILS -->
+    <!-- SECTION 7: COCKTAILS -->
     <div class="card">
       <div class="ctitle">${t('ev_cocktails_qty')}</div>
       <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
@@ -3642,6 +3667,9 @@ function saveEv(){
     contactEmail:document.querySelector('input[placeholder="contact@example.com"]')?.value||'',
     contactPhone:document.querySelector('input[placeholder="+33 6..."]')?.value||'',
     notes:document.getElementById('ef-notes')?.value||'',
+    barType:document.getElementById('ef-bar-type')?.value||'',
+    barLength:parseFloat(document.getElementById('ef-bar-length')?.value)||0,
+    barPrice:parseFloat(document.getElementById('ef-bar-price')?.value)||0,
     dressCodes:[...document.querySelectorAll('.ev-dc-chk:checked')].map(el=>parseInt(el.dataset.dcid)),
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,
     cppax:parseFloat(document.getElementById('ef-cpp')?.value)||3,
@@ -5559,7 +5587,7 @@ function buildEventSummaryHTML(ev){
     body{font-family:Arial,sans-serif;background:#f5f3ef;margin:0;padding:20px}
     .container{background:white;max-width:800px;margin:0 auto;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
     h1{color:#2a2a2a;font-size:28px;margin:0 0 30px}
-    .header{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:30px;border-bottom:2px solid #e0e0e0;padding-bottom:20px}
+    .header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;margin-bottom:30px;border-bottom:2px solid #e0e0e0;padding-bottom:20px}
     .header-item{font-size:14px}
     .header-label{color:#999;font-size:12px;text-transform:uppercase;margin-bottom:4px}
     .header-value{font-size:16px;font-weight:500;color:#1a1a1a}
@@ -5591,12 +5619,28 @@ function buildEventSummaryHTML(ev){
         <div class="header-value">${cl?cl.name:'—'}</div>
       </div>
       <div class="header-item">
+        <div class="header-label">Lieu</div>
+        <div class="header-value">${ev.address||'—'}</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">Contact</div>
+        <div class="header-value">${ev.contact||ev.contactEmail||ev.contactPhone||'—'}</div>
+      </div>
+      <div class="header-item">
         <div class="header-label">Pax</div>
         <div class="header-value">${ev.pax||'—'}</div>
       </div>
       <div class="header-item">
         <div class="header-label">Cocktails</div>
         <div class="header-value">${(ev.cocktails||[]).reduce((s,c)=>s+(c.qty||0),0)}</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">Staff assigné</div>
+        <div class="header-value">${(ev.assignedStaff||[]).length} pers</div>
+      </div>
+      <div class="header-item">
+        <div class="header-label">Email</div>
+        <div class="header-value" style="font-size:12px">${ev.email||'—'}</div>
       </div>
     </div>
 
@@ -5619,7 +5663,12 @@ function buildEventSummaryHTML(ev){
       </div>
     </div>
 
-    <h3 style="margin-top:30px">Cocktails servis</h3>
+    <h3 style="margin-top:30px">Configuration bar</h3>
+    ${ev.barType?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px">
+      <div><strong>Type:</strong> ${ev.barType}</div>
+      <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
+      <div><strong>Prix:</strong> ${(ev.barPrice||0).toFixed(2)}€</div>
+    </div>`:''}
     <table>
       <thead>
         <tr><th>Cocktail</th><th style="text-align:right">Qty</th><th style="text-align:right">PU HT</th><th style="text-align:right">Total</th></tr>
@@ -5630,6 +5679,14 @@ function buildEventSummaryHTML(ev){
           <td colspan="3" style="text-align:right">Ventes cocktails:</td>
           <td style="text-align:right">${((ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))):0);},0)).toFixed(0)}€</td>
         </tr>
+        ${ev.barPrice?`<tr class="total-row">
+          <td colspan="3" style="text-align:right">Prestation bar:</td>
+          <td style="text-align:right">${(ev.barPrice||0).toFixed(0)}€</td>
+        </tr>`:''}
+        ${(ev.deliveryBillHT||ev.extraBillHT)?`<tr class="total-row">
+          <td colspan="3" style="text-align:right">Frais additionnels:</td>
+          <td style="text-align:right">${((ev.deliveryBillHT||0)+(ev.extraBillHT||0)).toFixed(0)}€</td>
+        </tr>`:''}
       </tbody>
     </table>
 
