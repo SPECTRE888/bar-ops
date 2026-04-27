@@ -1513,7 +1513,7 @@ function renderCatPage(cat){
         <th>${t('cat_cpu')}</th>
         <th>${t('cat_supplier')}</th>
         <th>${t('cat_code')}</th>
-        <th style="color:var(--gold)">${lowStock.length?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}${t('cat_stock')}</th>
+        <th style="color:var(--gold)">${t('cat_stock')}</th>
         <th style="color:var(--text3);font-size:8px">${t('cat_alert')}</th>
         <th></th>
       </tr></thead>
@@ -1535,11 +1535,9 @@ function renderCatPage(cat){
       <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}">${cpu>0?cpu.toFixed(4)+' €/'+uLabel:'Prix manquant'}</span></td>
       <td><input value="${(p.supplier||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplier',this.value)" placeholder="Metro, Promocash..." style="min-width:100px"/></td>
       <td><input value="${(p.supplierCode||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
-      <td>
-        <input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
+      <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
-        style="width:65px;border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"
-        title="${stockLow?'Stock bas ⚠':''}"/>
+        style="width:65px;border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"/>
       </td>
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
@@ -2607,7 +2605,7 @@ function renderDashboard(){
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1">${totalFacture.toFixed(0)}€</div>
       <div style="font-size:11px;color:var(--text2)">À recevoir: <span style="color:var(--gold);font-weight:500">${totalPending.toFixed(0)}€</span></div>
     </div>
-    <div class="card" style="padding:16px;cursor:pointer;text-align:center" onclick="goPage('catalogue')">
+    <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
       <div style="height:1px;background:var(--gold-border);margin:16px 0"></div>
