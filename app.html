@@ -6711,7 +6711,11 @@ updateCloudStatus();
 // Async init: refresh session → pull → demo → render
 (async()=>{
   if(cloudUser){
-    if(!window._isDemo){
+    if(window._isDemo){
+      // Demo: skip all cloud ops, just show fresh state
+      state=freshState();
+      injectDemoData();
+    } else {
       const refreshed=await cloudRefreshSession();
       if(!refreshed&&!cloudUser){
         updateCloudStatus();
@@ -6719,17 +6723,16 @@ updateCloudStatus();
         updateBadges();renderDashboard();applyTheme();
         return;
       }
-    }
-    const pulled=await cloudPull();
-    if(!pulled){
-      state=freshState();
-      injectDemoData();
-      if(!window._isDemo) await cloudPush();
-    }
-    const evContent=document.getElementById('ev-content');
-    if(evContent&&evContent._clientId){
-      const client=state.clients.find(x=>x.id===evContent._clientId);
-      if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
+      const pulled=await cloudPull();
+      if(!pulled){
+        state=freshState();
+        await cloudPush();
+      }
+      const evContent=document.getElementById('ev-content');
+      if(evContent&&evContent._clientId){
+        const client=state.clients.find(x=>x.id===evContent._clientId);
+        if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
+      }
     }
     updateCloudStatus();
   } else {
