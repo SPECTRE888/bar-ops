@@ -2922,8 +2922,15 @@ function showEvList(){
     </div>`;
     return;
   }
-  // Sort by date desc
-  const sorted=[...state.events].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+  // Sort by date desc, exclude completed past events
+  const now=new Date();
+  const sorted=[...state.events]
+    .filter(ev=>{
+      const isPast=ev.date&&new Date(ev.date)<now;
+      if(isPast&&ev.paid&&ev.stockRetourDone) return false;
+      return true;
+    })
+    .sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
   el.innerHTML='<div class="c-grid">'+sorted.map(ev=>{
     const tot=evTot(ev);
     const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):t('no_date');
@@ -6145,6 +6152,8 @@ function renderSuivi(){
     return;
   }
 
+  const now=new Date();
+
   const sorted=[...state.events]
     .filter(ev=>{
       const isPast=ev.date&&new Date(ev.date)<now;
@@ -6152,7 +6161,6 @@ function renderSuivi(){
       return true;
     })
     .sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
-  const now=new Date();
 
   el.innerHTML=sorted.map(ev=>{
     const total=evTot(ev);
