@@ -760,6 +760,7 @@ async function cloudPull(){
     if(!r.ok){console.warn('cloudPull HTTP error:',r.status);return false;}
     const rows=await r.json();
     if(Array.isArray(rows)&&rows.length&&rows[0]?.data){
+      // Existing user → load cloud data
       const parsed=typeof rows[0].data==='string'?JSON.parse(rows[0].data):rows[0].data;
       const fresh=freshState();
       Object.keys(fresh).forEach(k=>{if(parsed[k]!==undefined)fresh[k]=parsed[k];});
@@ -767,13 +768,15 @@ async function cloudPull(){
       localStorage.setItem(SK,JSON.stringify(state));
       return true;
     }
-    // No workspace yet — do not push, let user save explicitly
     if(Array.isArray(rows)&&rows.length===0){
-      console.log('cloudPull: no workspace found yet');
+      // New user → inject examples → push to cloud
+      state=freshState();
       injectDemoData();
-      return false;
+      await cloudPush();
+      return true;
     }
   }catch(e){console.warn('cloudPull error:',e);return false;}
+  return false;
 }
 
 function schedulePush(){
@@ -6786,7 +6789,7 @@ updateCloudStatus();
       return;
     }
     const pulled=await cloudPull();
-    if(!pulled){state=freshState();injectDemoData();}
+    if(!pulled){state=freshState();}
     const evContent=document.getElementById('ev-content');
     if(evContent&&evContent._clientId){
       const client=state.clients.find(x=>x.id===evContent._clientId);
