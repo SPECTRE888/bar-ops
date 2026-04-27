@@ -2571,6 +2571,27 @@ function renderDashboard(){
     if(assigned>0&&confirmed<assigned&&days<=3){
       alerts.push({type:'staff',severity:'critical',event:ev,text:`${ev.name}: ${confirmed}/${assigned} confirmés (${days}j)`});
     }
+    // Stock insuffisant pour cet event
+    const neededMap={};
+    (ev.cocktails||[]).forEach(cfg=>{
+      const cocktail=state.cocktails.find(x=>x.id===cfg.id);
+      if(!cocktail) return;
+      const qty=cfg.qty||0;
+      (cocktail.ingredients||[]).forEach(ing=>{
+        const key=(ing.brand||'')+'||'+ing.productType;
+        if(!neededMap[key]) neededMap[key]={ing,total:0};
+        neededMap[key].total+=ing.qty*qty;
+      });
+    });
+    Object.values(neededMap).forEach(({ing,total})=>{
+      const product=state.products.find(p=>p.productType===ing.productType&&p.brand===ing.brand)||state.products.find(p=>p.productType===ing.productType);
+      if(!product||product.stock==null) return;
+      const bottlesNeeded=total/(product.qty||1);
+      if(product.stock<bottlesNeeded){
+        const label=`${ing.brand?ing.brand+' ':''}${ing.productType}`;
+        alerts.push({type:'stock_event',severity:'critical',event:ev,text:`${ev.name} — Stock insuffisant: ${label} (${product.stock} dispo, ${bottlesNeeded.toFixed(1)} requis)`});
+      }
+    });
   });
   
   // ═══ KPIs TOP ROW ═══
@@ -2649,18 +2670,27 @@ function renderDashboard(){
       
       // Stock issues for this event
       const eventStockIssues=[];
+      // Agréger besoins totaux par produit
+      const neededMap={};
       (ev.cocktails||[]).forEach(cfg=>{
         const cocktail=state.cocktails.find(x=>x.id===cfg.id);
         if(!cocktail) return;
+        const qty=cfg.qty||0;
         (cocktail.ingredients||[]).forEach(ing=>{
-          const product=state.products.find(p=>p.productType===ing.productType&&p.brand===ing.brand)||state.products.find(p=>p.productType===ing.productType);
-          if(!product) return;
-          const diff=product.qty-(product.stock||0);
-          if(diff<0){
-            const existing=eventStockIssues.find(s=>s.productType===ing.productType&&s.brand===ing.brand);
-            if(!existing) eventStockIssues.push({productType:ing.productType,brand:ing.brand});
-          }
+          const key=(ing.brand||'')+'||'+ing.productType;
+          neededMap[key]=(neededMap[key]||{ing,total:0});
+          neededMap[key].total+=ing.qty*qty;
         });
+      });
+      Object.values(neededMap).forEach(({ing,total})=>{
+        const product=state.products.find(p=>p.productType===ing.productType&&p.brand===ing.brand)||state.products.find(p=>p.productType===ing.productType);
+        if(!product||product.stock==null) return;
+        // stock en unités bouteilles, total en cl → convertir: total cl / contenance bouteille
+        const bottlesNeeded=total/(product.qty||1);
+        if(product.stock<bottlesNeeded){
+          const missing=(bottlesNeeded-product.stock).toFixed(1);
+          eventStockIssues.push({productType:ing.productType,brand:ing.brand,missing,stock:product.stock,needed:bottlesNeeded.toFixed(1)});
+        }
       });
       
       let staffIcon='✔',staffColor='var(--green)';
