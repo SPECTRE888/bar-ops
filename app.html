@@ -6361,8 +6361,16 @@ function renderSuivi(){
   const sorted=[...state.events]
     .filter(ev=>{
       const isPast=ev.date&&new Date(ev.date)<now;
-      if(isPast&&ev.paid&&ev.stockRetourDone) return false;
-      return true;
+      if(!isPast) return true;
+      // Si passé: inclure seulement si au moins une des conditions n'est pas remplie
+      const hasCocktails=(ev.cocktails||[]).length>0;
+      const assigned=(ev.assignedStaff||[]).length;
+      const confirmed=(ev.staffConfirmed||[]).length;
+      const allConfirmed=assigned>0&&confirmed>=assigned;
+      const hasAcompte=ev.acompte>0||ev.paid;
+      const hasStockRetour=ev.stockRetourDone;
+      const allDone=hasCocktails&&allConfirmed&&hasAcompte&&ev.paid&&hasStockRetour;
+      return !allDone;
     })
     .sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
 
@@ -6498,7 +6506,33 @@ function renderSuivi(){
         })()}
       </div>
 
-      <!-- Stock retour -->
+      <!-- Événement terminé -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">✓ Événement terminé</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" ${hasCocktails?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
+            <span>Cocktails sélectionnés</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" ${allConfirmed?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
+            <span>Staff confirmé</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" ${ev.acompte>0||ev.paid?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
+            <span>Acompte reçu</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" ${ev.paid?'checked':''} disabled style="width:auto;accent-color:var(--gold)"/>
+            <span>Entièrement payée</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" ${ev.stockRetourDone?'checked':''} style="width:auto;accent-color:var(--gold)" onchange="updEvField(${ev.id},'stockRetourDone',this.checked);renderSuivi()"/>
+            <span>Retour effectué</span>
+          </label>
+        </div>
+        ${(hasCocktails&&allConfirmed&&(ev.acompte>0||ev.paid)&&ev.paid&&ev.stockRetourDone)?`<div style="margin-top:10px;padding:8px;background:var(--green-bg);border-radius:var(--radius);color:var(--green);font-size:11px;text-align:center;font-weight:500">✓ Prestation terminée - Passage en historique automatique</div>`:''}
+      </div>
       ${isPast?(()=>{
         const ingredients={};
         (ev.cocktails||[]).forEach(cfg=>{
