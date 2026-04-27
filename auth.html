@@ -130,6 +130,16 @@ async function emailSignup(){
     msg('Cette adresse est déjà utilisée. Connecte-toi.','err');
     btn.disabled=false;btn.textContent="S'inscrire";return;
   }
+  // Create trial subscription
+  try{
+    await sb.from('subscriptions').insert([{
+      user_id:data.user.id,
+      status:'trial',
+      plan:'trial',
+      created_at:new Date().toISOString(),
+      expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
+    }]);
+  }catch(e){}
   window.location.href='index.html?mode=pricing';
 }
 
@@ -153,6 +163,19 @@ async function emailLogin(){
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s){
       if(action==='signup'){
+        // Create trial subscription
+        try{
+          const{data:existing}=await sb.from('subscriptions').select('id').eq('user_id',s.user.id).single();
+          if(!existing){
+            await sb.from('subscriptions').insert([{
+              user_id:s.user.id,
+              status:'trial',
+              plan:'trial',
+              created_at:new Date().toISOString(),
+              expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
+            }]);
+          }
+        }catch(e){}
         window.location.href='index.html?mode=pricing';
       }else{
         await redirect(s.user.id);
