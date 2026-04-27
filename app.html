@@ -1509,11 +1509,11 @@ function renderCatPage(cat){
         <th>${arr('price',t('cat_price'))}</th>
         <th>${t('cat_qty')}</th>
         <th>${t('cat_unit')}</th>
-        <th>${arr('cpu',t('cat_cpu'))}</th>
+        <th>${t('cat_cpu')}</th>
         <th>${t('cat_supplier')}</th>
         <th>${t('cat_code')}</th>
-        <th style="color:var(--gold)">Stock</th>
-        <th style="color:var(--text3);font-size:8px">Alerte ≤</th>
+        <th style="color:var(--gold)">${t('cat_stock')}</th>
+        <th style="color:var(--text3);font-size:8px">${t('cat_alert')}</th>
         <th></th>
       </tr></thead>
       <tbody>`;
@@ -6529,6 +6529,7 @@ const I18N={
     c_foodcost:'Food cost',c_empty:'Aucun cocktail. Crée ta première recette.',
     // Catalogue
     cat_type:'Type',cat_brand:'Marque *',cat_price:'Prix HT',cat_qty:'Contenance',
+    cat_unit:'Unité',cat_cpu:'Coût/U',cat_supplier:'Fournisseur',cat_code:'Code Produit',cat_stock:'Stock',cat_alert:'Alerte ≤',
     cat_unit:'Unité',cat_cpu:'Coût/unité',cat_supplier:'Fournisseur',cat_code:'Code produit',
     cat_add_spirit:'+ Spiritueux',cat_empty:'Aucun produit. Clique sur "+ Ajouter".',
     // Staff
@@ -6635,6 +6636,7 @@ const I18N={
     c_consumables:'Garnish & Consumables',c_price:'Sale price HT',
     c_foodcost:'Food cost',c_empty:'No cocktails yet. Create your first recipe.',
     cat_type:'Type',cat_brand:'Brand *',cat_price:'Price HT',cat_qty:'Volume',
+    cat_unit:'Unit',cat_cpu:'Cost/U',cat_supplier:'Supplier',cat_code:'Product Code',cat_stock:'Stock',cat_alert:'Alert ≤',
     cat_unit:'Unit',cat_cpu:'Cost/unit',cat_supplier:'Supplier',cat_code:'Product code',
     cat_add_spirit:'+ Spirit',cat_empty:'No products. Click "+ Add" to start.',
     staff_name:'Name',staff_role:'Role',staff_type:'Type',staff_phone:'Phone',
@@ -6685,6 +6687,7 @@ const I18N={
     c_consumables:'Guarnición & Consumibles',c_price:'Precio venta HT',
     c_foodcost:'Food cost',c_empty:'Sin cócteles. Crea tu primera receta.',
     cat_type:'Tipo',cat_brand:'Marca *',cat_price:'Precio HT',cat_qty:'Volumen',
+    cat_unit:'Unidad',cat_cpu:'Coste/U',cat_supplier:'Proveedor',cat_code:'Código Producto',cat_stock:'Stock',cat_alert:'Alerta ≤',
     cat_unit:'Unidad',cat_cpu:'Coste/unidad',cat_supplier:'Proveedor',cat_code:'Código producto',
     cat_add_spirit:'+ Espirituoso',cat_empty:'Sin productos. Haz clic en "+ Añadir".',
     staff_name:'Nombre',staff_role:'Rol',staff_type:'Tipo',staff_phone:'Teléfono',
@@ -6801,6 +6804,15 @@ function applyLang(){
   const secLabels={fr:['Bar','Prestation','Équipe'],en:['Bar','Events','Team'],es:['Bar','Eventos','Equipo']};
   const labels=secLabels[lang]||secLabels.fr;
   secs.forEach((s,i)=>{if(labels[i])s.textContent=labels[i];});
+
+  // Re-render current page to update all dynamic content
+  const active=document.querySelector('.page.active');
+  if(active){
+    const p=active.id.replace('page-','');
+    if(p==='catalogue') renderCatalogue();
+    else if(p==='cocktails') showCList();
+    else if(p==='events') showEvList();
+  }
 }
 
 load();
