@@ -1361,7 +1361,13 @@ function goPage(p){
 
 function updateBadges(){
   document.getElementById('nb-c').textContent=state.cocktails.length;
-  document.getElementById('nb-e').textContent=state.events.length;
+  const now=new Date();
+  const ongoingEvents=state.events.filter(ev=>{
+    const isPast=ev.date&&new Date(ev.date)<now;
+    if(isPast&&ev.paid&&ev.stockRetourDone) return false;
+    return true;
+  });
+  document.getElementById('nb-e').textContent=ongoingEvents.length;
 }
 
 // ════════════════════════════════════════════════════════
@@ -2604,6 +2610,8 @@ function renderDashboard(){
   const stockOk=state.products.filter(p=>p.stock!=null&&(p.stockAlert==null||p.stock>p.stockAlert)).length;
   
   const allEvWithRev=state.events.filter(ev=>{
+    const isPast=ev.date&&new Date(ev.date)<now;
+    if(isPast&&ev.paid&&ev.stockRetourDone) return false;
     const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
     return rev>0||ev.acompte>0||ev.paid;
   });
@@ -2945,7 +2953,7 @@ function showEvList(){
         <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})"> Modifier</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
-        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})"></button>
+        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})">×</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -2978,7 +2986,7 @@ function filterEvList(){
         <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})"> Modifier</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
-        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})"></button>
+        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})">×</button>
       </div>
     </div>`;
   }).join('')+'</div>';
