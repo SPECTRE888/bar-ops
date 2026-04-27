@@ -208,9 +208,15 @@ function setPeriod(p){
   currentPeriod=p;
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('price-early').textContent=(PRICES.early[p]/12).toFixed(0)+'€';
-  document.getElementById('price-pro').textContent=(PRICES.pro[p]/12).toFixed(0)+'€';
-  document.getElementById('price-ai').textContent=(PRICES.ai[p]/12).toFixed(0)+'€';
+  if(p==='monthly'){
+    document.getElementById('price-early').textContent='89€';
+    document.getElementById('price-pro').textContent='149€';
+    document.getElementById('price-ai').textContent='299€';
+  }else{
+    document.getElementById('price-early').textContent='67€';
+    document.getElementById('price-pro').textContent='112€';
+    document.getElementById('price-ai').textContent='224€';
+  }
   document.querySelectorAll('.period').forEach(el=>{
     el.textContent=p==='yearly'?'/mois (annuel)':'/mois';
   });
