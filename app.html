@@ -4322,11 +4322,10 @@ function markStaffDispo(evId,sid,dispo){
     if(!ev.staffConfirmed.includes(sid))ev.staffConfirmed.push(sid);
     ev.staffUnavail=(ev.staffUnavail||[]).filter(x=>x!==sid);
     
-    // Auto-validate staff if all confirmed + brief sent
+    // Auto-validate staff if ALL assigned confirmed + brief sent
     const assigned=(ev.assignedStaff||[]).length;
     const confirmed=ev.staffConfirmed.length;
-    const briefSent=confirmed>0;
-    if(assigned>0&&confirmed>=assigned&&briefSent){
+    if(assigned>0&&confirmed===assigned){
       ev.staffValidated=true;
     }
     
