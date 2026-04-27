@@ -3144,6 +3144,7 @@ function showEvForm(ev){
         <div class="field"><label>${t('ev_setup')}</label>${mkTimeSel('ef-setup',ev.setup||'')}</div>
         <div class="field"><label>${t('ev_bar_open')}</label>${mkTimeSel('ef-start',ev.start||'')}</div>
         <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
+        <div class="field"><label>Fin de prestation</label>${mkTimeSel('ef-breakdown',ev.breakdown||'')}</div>
       </div>
     </div>
 
@@ -3269,14 +3270,13 @@ function showEvForm(ev){
 
   </div>`;
 
-  // Hidden compat fields (keep for saveEv compatibility)
+  // Hidden compat fields
   el.insertAdjacentHTML('beforeend',`
     <input type="hidden" id="ef-buf" value="${ev.buffer??0}"/>
     <input type="hidden" id="ef-cpp" value="${ev.cppax||3}"/>
     <input type="hidden" id="ef-barm" value="${ev.barMeters||1}"/>
     <input type="hidden" id="ef-extra" value="${ev.extraCostHT||0}"/>
     <input type="hidden" id="ef-extra-bill" value="${ev.extraBillHT||0}"/>
-    <input type="hidden" id="ef-brkd" value="${ev.breakdown||''}"/>
   `);
 
   // Restore client name in input after DOM is ready
@@ -3637,7 +3637,7 @@ function saveEv(){
     setup:document.getElementById('ef-setup')?.value||'',
     start:document.getElementById('ef-start')?.value||'',
     end:document.getElementById('ef-end')?.value||'',
-    breakdown:document.getElementById('ef-brkd')?.value||'',
+    breakdown:document.getElementById('ef-breakdown')?.value||'',
     contact:document.getElementById('ef-contact')?.value||'',
     contactEmail:document.querySelector('input[placeholder="contact@example.com"]')?.value||'',
     contactPhone:document.querySelector('input[placeholder="+33 6..."]')?.value||'',
@@ -4633,7 +4633,7 @@ function buildPrestHTML(ev){
     <!-- PLANNING -->
     ${sec(' Planning de la journée',`
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-        ${[['Montage',ev.setup],['Ouverture bar',ev.start],['Fermeture bar',ev.end],['Démontage',ev.breakdown]].map(([l,v])=>`
+        ${[['Montage',ev.setup],['Ouverture bar',ev.start],['Fermeture bar',ev.end],['Fin de prestation',ev.breakdown]].map(([l,v])=>`
         <div style="background:#f8f6f2;border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:10px;color:#aaa;margin-bottom:4px">${l}</div>
           <div style="font-size:17px;font-family:'DM Serif Display',serif;color:#111">${v||'—'}</div>
