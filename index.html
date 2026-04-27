@@ -52,6 +52,11 @@ footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
 .feature h3{font-size:12px;font-weight:400;letter-spacing:.05em;margin-bottom:5px;color:var(--text)}
 .feature p{color:var(--text2);font-size:10px;line-height:1.5;font-weight:300}
 .legal{text-align:center;font-size:10px;color:var(--text2);padding:12px 24px;border-top:1px solid rgba(255,255,255,.05);opacity:.6;line-height:1.6}
+.legal{text-align:center;font-size:12px;color:var(--text2);padding:14px 24px;border-top:1px solid rgba(255,255,255,.07);line-height:1.8}
+.legal-link{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.legal-link:hover{color:var(--gold)}
+#legal-modal{display:none}
+#legal-modal.open{display:flex!important}
 </style>
 </head>
 <body>
@@ -101,6 +106,19 @@ footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
     if(data?.status==='active'&&new Date(data.expires_at)>new Date())window.location.href='app.html';
   }catch(e){}
 })();
+</script>
+<script>
+const LEGAL={
+  rgpd:'Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d\'un droit d\'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n\'est cédée à des tiers. Données hébergées par Netlify Inc. (USA) dans le cadre du Privacy Shield. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com',
+  mentions:'Mentions légales obligatoires — Éditeur : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil, France. Email : contact@intelligencespotlighted.com. Directeur de publication : Jérôme. Hébergement : Netlify Inc., 44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA. Activité : Édition de logiciels SaaS. N° SIRET à compléter. En application de la loi n°2004-575 du 21 juin 2004 pour la confiance en l\'économie numérique.'
+};
+function showLegal(type){
+  document.getElementById('legal-content').textContent=LEGAL[type];
+  const m=document.getElementById('legal-modal');
+  m.style.display='flex';
+  m.style.alignItems='center';
+  m.style.justifyContent='center';
+}
 </script>
 </body>
 </html>
