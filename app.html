@@ -4233,38 +4233,78 @@ function renderPrestation(){
   const assignedIds=ev.assignedStaff||[];
 
   el.innerHTML=`
-  <!-- STAFF TOP -->
+  <!-- STAFF SELECTOR TOP -->
   <div class="card" style="margin-bottom:14px;padding:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Staff</div>
-      <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="font-size:11px;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
-        <option value="">+ Ajouter</option>
-        ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type}</option>`).join('')}
-      </select>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Staff assigné</div>
+      <input id="staff-search" placeholder="Chercher par nom/rôle..." style="font-size:11px;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);width:180px" oninput="filterStaffList(${evId})"/>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+      <div>Nom</div><div>Rôle</div><div>Téléphone</div><div></div>
     </div>
     ${assignedIds.length?assignedIds.map(sid=>{
       const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
       const role=(ev.staffRoles||{})[sid]||s.type||'';
       const confirmed=(ev.staffConfirmed||[]).includes(sid);
       const unavail=(ev.staffUnavail||[]).includes(sid);
-      return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <span style="color:${unavail?'var(--red)':confirmed?'var(--green)':'var(--text3)'}">${unavail?'✗':confirmed?'✓':'○'}</span>
-        <span style="flex:1">${s.name||s.type}</span>
-        <span style="color:var(--text3);font-size:11px">${role}</span>
-        <button class="btn btn-sm" style="padding:2px 6px;font-size:10px" onclick="toggleAssignStaff(${evId},${sid},false)">×</button>
+      const phone=s.phone||'—';
+      return`<div class="staff-row" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span>${s.name||s.type}</span>
+        <span style="color:var(--text3)">${role}</span>
+        <span style="color:var(--text3);font-size:11px">${phone}</span>
+        <div style="display:flex;gap:4px">
+          ${!confirmed?`<button class="btn btn-sm" style="padding:2px 6px;font-size:10px;background:none;border:1px solid var(--border2);border-radius:3px" onclick="sendDispoMsg(${evId},${sid})">Dispo?</button>`:''}
+          ${confirmed?`<button class="btn btn-sm" style="padding:2px 6px;font-size:10px;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:3px" onclick="sendBriefMsg(${evId},${sid})">Brief</button>`:''}
+          <button class="btn btn-sm" style="padding:2px 6px;font-size:10px" onclick="toggleAssignStaff(${evId},${sid},false)">×</button>
+        </div>
       </div>`;
     }).join(''):'<span style="font-size:12px;color:var(--text3)">Aucun staff assigné</span>'}
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <select id="staff-add-sel" onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value='';filterStaffList(${evId})}" style="width:100%;font-size:11px;padding:6px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
+        <option value="">+ Ajouter staff...</option>
+        ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type} (${s.type})</option>`).join('')}
+      </select>
+    </div>
   </div>
 
-  <!-- FICHE FULL WIDTH -->
-  <div style="position:sticky;top:0">${buildPrestHTML(ev)}</div>
+  <!-- FICHE PRESTATION FULL WIDTH -->
+  <div style="width:100%;overflow-x:auto">${buildPrestHTML(ev)}</div>
   
-  <!-- BUTTONS -->
+  <!-- ACTION BUTTONS -->
   <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;padding:16px;border-top:1px solid var(--border)">
     <button class="btn btn-gold" onclick="generateDevis()">Devis PDF</button>
-    <button class="btn btn-ghost" onclick="sharePrestation()">WhatsApp</button>
+    <button class="btn btn-ghost" onclick="sharePrestation()">Partager</button>
   </div>
   `;
+}
+
+function filterStaffList(evId){
+  const q=document.getElementById('staff-search')?.value||'';
+  document.querySelectorAll('.staff-row').forEach(row=>{
+    const match=(row.textContent||'').toLowerCase().includes(q.toLowerCase());
+    row.style.display=match?'grid':'none';
+  });
+}
+
+function sendDispoMsg(evId,staffId){
+  const ev=state.events.find(x=>x.id===evId);
+  const s=state.staffItems.find(x=>x.id===staffId);
+  if(!ev||!s||!s.phone)return;
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
+  const role=(ev.staffRoles||{})[staffId]||s.type||'';
+  const msg=`Bonjour ${s.name},\n\nEs-tu disponible pour ${ev.name} ?\n${fmtDate}\n${ev.address||''}\nRôle: ${role}\n${ev.start||'?'} - ${ev.end||'?'}\n\nRéponds OUI ou NON stp.`;
+  window.open(`https://wa.me/${waPhone(s.phone)}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function sendBriefMsg(evId,staffId){
+  const ev=state.events.find(x=>x.id===evId);
+  const s=state.staffItems.find(x=>x.id===staffId);
+  if(!ev||!s||!s.phone)return;
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
+  const role=(ev.staffRoles||{})[staffId]||s.type||'';
+  const msg=`Brief - ${ev.name}\n${fmtDate}\n\nLieu: ${ev.address||'?'}\nHoraires: ${ev.start||'?'} - ${ev.end||'?'}\nRôle: ${role}\nPax: ${ev.pax||'?'}\n\nCocktails: ${(ev.cocktails||[]).map(c=>state.cocktails.find(x=>x.id===c.id)?.name).join(', ')||'—'}`;
+  window.open(`https://wa.me/${waPhone(s.phone)}?text=${encodeURIComponent(msg)}`,'_blank');
+  setTimeout(()=>{const ev=state.events.find(x=>x.id===evId);if(!ev.staffConfirmed)ev.staffConfirmed=[];ev.staffConfirmed.push(staffId);save();renderPrestation();},500);
 }
 
 function buildDispoMsg(ev, s){
