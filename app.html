@@ -4230,69 +4230,71 @@ function renderPrestation(){
   const el=document.getElementById('prest-content');
   if(!evId){el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';return;}
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-
-  // Staff assigned to this event
   const assignedIds=ev.assignedStaff||[];
+  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
+
+  const cocktailRows=(ev.cocktails||[]).map(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
+    return`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span>${c.name} <span style="color:var(--text3)">×${cfg.qty}</span></span>
+      <span style="color:var(--gold)">${(cfg.qty*(c.priceHT||0)).toFixed(2)}€</span>
+    </div>`;
+  }).join('');
+
+  const staffRows=assignedIds.map(sid=>{
+    const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
+    const role=(ev.staffRoles||{})[sid]||s.type||'';
+    const confirmed=(ev.staffConfirmed||[]).includes(sid);
+    const unavail=(ev.staffUnavail||[]).includes(sid);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="color:${unavail?'var(--red)':confirmed?'var(--green)':'var(--text3)'}">${unavail?'✗':confirmed?'✓':'?'}</span>
+      <span style="flex:1;${unavail?'text-decoration:line-through':''}">${s.name||s.type}</span>
+      <span style="color:var(--text3);font-size:11px">${role}</span>
+    </div>`;
+  }).join('');
 
   el.innerHTML=`
-  <!-- STAFF SECTION TOP FULL-WIDTH -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="ctitle">‍ Staff assigné</div>
-    ${state.staffItems.length===0
-      ?`<p class="ts tm">Aucun staff — <span class="tg" style="cursor:pointer" onclick="goPage('staff')">ajouter ↗</span></p>`
-      :state.staffItems.map(s=>{
-        const isOn=assignedIds.includes(s.id);
-        const contact=state.contacts.find(c=>c.staffId===s.id||c.name===s.name);
-        const phone=contact?.phone||s.phone||'';
-        const manualUnavail=(ev.staffUnavail||[]).includes(s.id);
-        const eventRole=(ev.staffRoles||{})[s.id]||s.type||'';
-        const statusTag=manualUnavail?`<span class="txs tm" style="color:var(--red)">indispo</span>`:(isOn?`<span class="txs tm" style="color:var(--green)"></span>`:'');
-        return isOn?`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px">
-          <span style="color:${manualUnavail?'var(--red)':'var(--green)'}">${manualUnavail?'':'✓'}</span>
-          <span style="flex:1;${manualUnavail?'text-decoration:line-through':''}">${s.name||s.type}</span>
-          <input value="${eventRole.replace(/"/g,'&quot;')}" placeholder="Rôle" onchange="setStaffRole(${evId},${s.id},this.value)" style="width:150px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:4px"/>
-          <button class="btn btn-sm btn-ghost" onclick="toggleAssignStaff(${evId},${s.id},false)">×</button>
-        </div>`:'';
-      }).join('')}
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-      <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="width:100%;font-size:11px;padding:6px">
-        <option value="">+ Ajouter staff...</option>
-        ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type}</option>`).join('')}
-      </select>
-    </div>
-  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
 
-  <!-- FICHE SECTION MIDDLE FULL-WIDTH -->
-  <div style="margin-bottom:14px">${buildPrestHTML(ev)}</div>
+    <!-- COL LEFT: infos + staff + cocktails -->
+    <div style="display:flex;flex-direction:column;gap:12px">
 
-  <!-- LEFT/RIGHT: INFOS | COCKTAILS -->
-  <div class="g2" style="gap:14px">
-    <!-- LEFT: EVENT INFOS -->
-    <div class="card">
-      <div class="ctitle">📋 Informations</div>
-      ${ev.name?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Nom</span><div style="font-size:13px;font-weight:500">${ev.name}</div></div>`:''}
-      ${ev.date?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Date</span><div style="font-size:13px">${new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div></div>`:''}
-      ${ev.pax?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Pax</span><div style="font-size:13px">${ev.pax} personnes</div></div>`:''}
-      ${ev.address?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Lieu</span><div style="font-size:13px">${ev.address}</div></div>`:''}
-      ${ev.start||ev.end?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Horaires</span><div style="font-size:13px">${ev.start||'?'} — ${ev.end||'?'}</div></div>`:''}
-      ${ev.contact?`<div style="margin-bottom:10px"><span style="font-size:9px;color:var(--text3);text-transform:uppercase">Contact</span><div style="font-size:13px">${ev.contact}${ev.contactPhone?' · '+ev.contactPhone:''}</div></div>`:''}
+      <!-- INFOS BLOC -->
+      <div class="card" style="padding:14px">
+        <div class="ctitle" style="margin-bottom:10px">${ev.name||'—'}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+          <div><span style="color:var(--text3)">Date</span><div>${fmtDate}</div></div>
+          <div><span style="color:var(--text3)">Pax</span><div>${ev.pax||'—'}</div></div>
+          <div><span style="color:var(--text3)">Lieu</span><div>${ev.address||'—'}</div></div>
+          <div><span style="color:var(--text3)">Horaires</span><div>${ev.start||'?'} — ${ev.end||'?'}</div></div>
+          ${ev.contact?`<div><span style="color:var(--text3)">Contact</span><div>${ev.contact}</div></div>`:''}
+          ${ev.setup?`<div><span style="color:var(--text3)">Setup</span><div>${ev.setup}</div></div>`:''}
+        </div>
+      </div>
+
+      <!-- STAFF BLOC -->
+      <div class="card" style="padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="ctitle" style="margin:0">Staff</div>
+          <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="font-size:11px;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
+            <option value="">+ Ajouter</option>
+            ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type}</option>`).join('')}
+          </select>
+        </div>
+        ${assignedIds.length?staffRows:'<span style="font-size:12px;color:var(--text3)">Aucun staff assigné</span>'}
+      </div>
+
+      <!-- COCKTAILS BLOC -->
+      <div class="card" style="padding:14px">
+        <div class="ctitle" style="margin-bottom:10px">Cocktails</div>
+        ${(ev.cocktails||[]).length?cocktailRows:'<span style="font-size:12px;color:var(--text3)">Aucun cocktail</span>'}
+      </div>
+
     </div>
 
-    <!-- RIGHT: COCKTAILS -->
-    <div class="card">
-      <div class="ctitle">🍹 Cocktails</div>
-      ${(ev.cocktails||[]).length===0?`<p class="ts tm">Aucun cocktail sélectionné</p>`:(ev.cocktails||[]).map(cfg=>{
-        const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return'';
-        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
-          <div><strong>${c.name}</strong> <span style="color:var(--text3)">×${cfg.qty}</span></div>
-          <span style="color:var(--gold)">${(cfg.qty*c.priceHT).toFixed(2)}€</span>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>
-    <!-- RIGHT: Fiche preview -->
-    <div>
-      <div style="position:sticky;top:0">${buildPrestHTML(ev)}</div>
+    <!-- COL RIGHT: fiche prestation PDF preview -->
+    <div style="position:sticky;top:0">
+      ${buildPrestHTML(ev)}
     </div>
 
   </div>`;
