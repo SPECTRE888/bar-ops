@@ -6699,6 +6699,31 @@ updateCloudStatus();
   if(window._isDemo){
     state=freshState();
     injectDemoData();
+    // Demo protection: block all interactions
+    const style=document.createElement('style');
+    style.textContent=`
+      *{-webkit-user-select:none!important;user-select:none!important;}
+      @media print{body{display:none!important;}}
+    `;
+    document.head.appendChild(style);
+    // Block context menu and print
+    document.addEventListener('contextmenu',e=>e.preventDefault());
+    document.addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&['p','s','c','a'].includes(e.key.toLowerCase()))e.preventDefault();
+    });
+    // Disable all buttons/inputs/forms except nav
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.querySelectorAll('button:not(.nav-item),input,textarea,select,form').forEach(el=>{
+        el.disabled=true;
+        el.style.pointerEvents='none';
+        el.style.opacity='0.5';
+      });
+    });
+    // Demo banner
+    const banner=document.createElement('div');
+    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(196,164,107,0.15);border-bottom:1px solid var(--gold);padding:8px;text-align:center;font-size:11px;color:var(--gold);letter-spacing:.1em;font-family:Jost,sans-serif';
+    banner.innerHTML='MODE VISUALISATION — <a href="paying.html" style="color:var(--gold);text-decoration:underline;font-weight:600">Souscrire pour accéder</a>';
+    document.body.appendChild(banner);
     updateBadges();renderDashboard();applyTheme();
     return;
   }

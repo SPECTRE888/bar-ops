@@ -64,9 +64,8 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
     <!-- EARLY ACCESS -->
     <div class="card early-access">
       <h2>ACCÈS ANTICIPÉ</h2>
-      <div class="promo-label">20 premiers clients pendant 6 mois</div>
+      <div class="promo-label">20 premiers clients pendant 6 mois puis 149€</div>
       <div class="price" id="price-early">89€</div>
-      <div class="period">/mois (puis 149€)</div>
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Événements</div>
@@ -182,9 +181,9 @@ function setPeriod(p){
     document.getElementById('price-pro').textContent='149€';
     document.getElementById('price-ai').textContent='299€';
   }else{
-    document.getElementById('price-early').textContent=Math.round(89*12*0.9/12)+'€';
-    document.getElementById('price-pro').textContent=Math.round(149*12*0.9/12)+'€';
-    document.getElementById('price-ai').textContent=Math.round(299*12*0.9/12)+'€';
+    document.getElementById('price-early').textContent='80€';
+    document.getElementById('price-pro').textContent='134€';
+    document.getElementById('price-ai').textContent='269€';
   }
 }
 
