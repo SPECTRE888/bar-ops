@@ -2624,7 +2624,20 @@ function renderDashboard(){
   
   // CA = prestations entièrement payées
   const evRev=ev=>{
-    const r=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0)+(ev.barPrice||0);
+    const cocktails=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0);
+    const staffBill=(()=>{
+      const roles=[{n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',key:'brt'},{n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',key:'wtr'},{n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',key:'mgr'}];
+      return roles.reduce((s,r)=>{
+        if(!r.arr||!r.dep||!r.n) return s;
+        const [ah,am]=r.arr.split(':').map(Number);
+        const [dh,dm]=r.dep.split(':').map(Number);
+        let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=1440;
+        const hrs=mins/60;
+        const item=state.staffItems?.find(si=>si.type===(r.key==='brt'?'Bartender':r.key==='wtr'?'Serveur':'Bar Manager'));
+        return s+(item?r.n*hrs*(item.billHT||0):0);
+      },0);
+    })();
+    const r=cocktails+staffBill+(ev.deliveryBillHT||0)+(ev.extraBillHT||0)+(ev.barPrice||0);
     const rem=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?r*ev.remisePct/100:0);
     return r-rem;
   };
