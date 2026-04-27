@@ -6709,19 +6709,22 @@ updateCloudStatus();
 // Async init: refresh session → pull → demo → render
 (async()=>{
   if(cloudUser){
-    const refreshed=await cloudRefreshSession();
-    if(!refreshed&&!cloudUser){
-      localStorage.removeItem('bcp_session');
-      updateCloudStatus();
-      injectDemoData();
-    } else {
-      const pulled=await cloudPull();
-      if(!pulled){
-        // Connected but no workspace yet — start fresh with demo
-        state=freshState();
+    // Skip refresh for demo users
+    if(!window._isDemo){
+      const refreshed=await cloudRefreshSession();
+      if(!refreshed&&!cloudUser){
+        updateCloudStatus();
         injectDemoData();
-        await cloudPush();
+        updateBadges();renderDashboard();applyTheme();
+        return;
       }
+    }
+    const pulled=await cloudPull();
+    if(!pulled){
+      state=freshState();
+      injectDemoData();
+      if(!window._isDemo) await cloudPush();
+    }
       // Re-restore client name if event form is open
       const evContent=document.getElementById('ev-content');
       if(evContent&&evContent._clientId){
