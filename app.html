@@ -4231,65 +4231,40 @@ function renderPrestation(){
   if(!evId){el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';return;}
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   const assignedIds=ev.assignedStaff||[];
-  const client=state.clients.find(x=>x.id===ev.clientId);
-  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
 
-  el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
-
-  <!-- LEFT -->
-  <div style="display:flex;flex-direction:column;gap:12px">
-
-    <div class="card" style="padding:14px">
-      <div style="font-size:15px;font-weight:600;margin-bottom:10px">${ev.name||'—'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-        <div><div style="color:var(--text3);font-size:10px">Date</div>${fmtDate}</div>
-        <div><div style="color:var(--text3);font-size:10px">Pax</div>${ev.pax||'—'}</div>
-        <div><div style="color:var(--text3);font-size:10px">Lieu</div>${ev.address||'—'}</div>
-        <div><div style="color:var(--text3);font-size:10px">Horaires</div>${ev.start||'?'} — ${ev.end||'?'}</div>
-        ${ev.setup?`<div><div style="color:var(--text3);font-size:10px">Setup</div>${ev.setup}</div>`:''}
-        ${client?`<div><div style="color:var(--text3);font-size:10px">Client</div>${client.name}${client.phone?' · '+client.phone:''}</div>`:''}
-      </div>
+  el.innerHTML=`
+  <!-- STAFF TOP -->
+  <div class="card" style="margin-bottom:14px;padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Staff</div>
+      <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="font-size:11px;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
+        <option value="">+ Ajouter</option>
+        ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type}</option>`).join('')}
+      </select>
     </div>
-
-    <div class="card" style="padding:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Staff</div>
-        <select onchange="if(this.value){toggleAssignStaff(${evId},parseInt(this.value),true);this.value=''}" style="font-size:11px;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2)">
-          <option value="">+ Ajouter</option>
-          ${state.staffItems.filter(s=>!assignedIds.includes(s.id)).map(s=>`<option value="${s.id}">${s.name||s.type}</option>`).join('')}
-        </select>
-      </div>
-      ${assignedIds.length?assignedIds.map(sid=>{
-        const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
-        const role=(ev.staffRoles||{})[sid]||s.type||'';
-        const confirmed=(ev.staffConfirmed||[]).includes(sid);
-        const unavail=(ev.staffUnavail||[]).includes(sid);
-        return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-          <span style="color:${unavail?'var(--red)':confirmed?'var(--green)':'var(--text3)'}">${unavail?'✗':confirmed?'✓':'○'}</span>
-          <span style="flex:1">${s.name||s.type}</span>
-          <span style="color:var(--text3);font-size:11px">${role}</span>
-          <button class="btn btn-sm" style="padding:2px 6px;font-size:10px" onclick="toggleAssignStaff(${evId},${sid},false)">×</button>
-        </div>`;
-      }).join(''):'<span style="font-size:12px;color:var(--text3)">Aucun staff assigné</span>'}
-    </div>
-
-    <div class="card" style="padding:14px">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Cocktails</div>
-      ${(ev.cocktails||[]).filter(c=>c.qty>0).length?(ev.cocktails||[]).filter(c=>c.qty>0).map(cfg=>{
-        const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return'';
-        return`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-          <span>${c.name} <span style="color:var(--text3)">×${cfg.qty}</span></span>
-          <span style="color:var(--gold)">${(cfg.qty*(c.priceHT||0)).toFixed(2)}€</span>
-        </div>`;
-      }).join(''):'<span style="font-size:12px;color:var(--text3)">Aucun cocktail</span>'}
-    </div>
-
+    ${assignedIds.length?assignedIds.map(sid=>{
+      const s=state.staffItems.find(x=>x.id===sid);if(!s)return'';
+      const role=(ev.staffRoles||{})[sid]||s.type||'';
+      const confirmed=(ev.staffConfirmed||[]).includes(sid);
+      const unavail=(ev.staffUnavail||[]).includes(sid);
+      return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:${unavail?'var(--red)':confirmed?'var(--green)':'var(--text3)'}">${unavail?'✗':confirmed?'✓':'○'}</span>
+        <span style="flex:1">${s.name||s.type}</span>
+        <span style="color:var(--text3);font-size:11px">${role}</span>
+        <button class="btn btn-sm" style="padding:2px 6px;font-size:10px" onclick="toggleAssignStaff(${evId},${sid},false)">×</button>
+      </div>`;
+    }).join(''):'<span style="font-size:12px;color:var(--text3)">Aucun staff assigné</span>'}
   </div>
 
-  <!-- RIGHT: fiche PDF -->
-  <div style="position:sticky;top:0;overflow-y:auto;max-height:calc(100vh - 140px)">${buildPrestHTML(ev)}</div>
-
-  </div>`;
+  <!-- FICHE FULL WIDTH -->
+  <div style="position:sticky;top:0">${buildPrestHTML(ev)}</div>
+  
+  <!-- BUTTONS -->
+  <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;padding:16px;border-top:1px solid var(--border)">
+    <button class="btn btn-gold" onclick="generateDevis()">Devis PDF</button>
+    <button class="btn btn-ghost" onclick="sharePrestation()">WhatsApp</button>
+  </div>
+  `;
 }
 
 function buildDispoMsg(ev, s){
