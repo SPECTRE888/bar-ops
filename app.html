@@ -4253,9 +4253,9 @@ function renderPrestation(){
         const phone=s.phone||'—';
         const dispo=isConfirmed?'<span style="color:var(--green);font-size:11px;font-weight:500">✓ Dispo</span>':
           isUnavail?'<span style="color:var(--red);font-size:11px;font-weight:500">✗ Indispo</span>':
-          '<div style="display:flex;gap:8px">'+
-            '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-'+sid+'" onchange="markStaffDispo('+evId+','+sid+',true)" style="accent-color:var(--green)"/> Oui</label>'+
-            '<label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px"><input type="radio" name="dispo-'+sid+'" onchange="markStaffDispo('+evId+','+sid+',false)" style="accent-color:var(--red)"/> Non</label>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button onclick="markStaffDispo('+evId+','+sid+',true)" style="padding:3px 10px;font-size:11px;border:1px solid var(--green);color:var(--green);background:none;border-radius:4px;cursor:pointer">Oui</button>'+
+            '<button onclick="markStaffDispo('+evId+','+sid+',false)" style="padding:3px 10px;font-size:11px;border:1px solid var(--red);color:var(--red);background:none;border-radius:4px;cursor:pointer">Non</button>'+
           '</div>';
         return'<div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.4fr 1.2fr 100px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
           '<span style="'+(isUnavail?'text-decoration:line-through;color:var(--text3)':'')+'">'+(s.name||s.type)+'</span>'+
@@ -4710,12 +4710,13 @@ async function sendQuoteToClient(evId,devisNum){
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);
-  const emailBody=devisHTML.replace('</body>','<div style="font-family:\'DM Sans\',sans-serif;max-width:700px;margin:40px auto;padding:32px 40px;border-top:2px solid #111;color:#333">'+
+  const intro='<div style="font-family:\'DM Sans\',sans-serif;max-width:700px;margin:0 auto;padding:32px 40px 0;color:#333">'+
     '<p style="margin-bottom:12px">Bonjour '+(contactName||'')+(contactName?',':'')+'</p>'+
     '<p style="margin-bottom:12px">Veuillez trouver ci-dessous le devis <strong>'+devisNum+'</strong> pour la prestation <strong>'+ev.name+'</strong>'+(fmtDate?' du <strong>'+fmtDate+'</strong>':'')+'.</p>'+
     '<p style="margin-bottom:20px">N\'hésitez pas à nous contacter pour toute question ou ajustement.</p>'+
-    '<p>Cordialement,<br/><strong>'+sigName+'</strong></p>'+
-  '</div></body>');
+    '<p style="margin-bottom:32px">Cordialement,<br/><strong>'+sigName+'</strong></p>'+
+  '</div>';
+  const emailBody=devisHTML.replace(/(<body[^>]*>)/i,'$1'+intro);
   try{
     const r=await fetch('/.netlify/functions/send-quote',{
       method:'POST',
