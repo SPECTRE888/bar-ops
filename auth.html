@@ -92,7 +92,7 @@ async function redirect(userId){
       return;
     }
   }catch(e){}
-  window.location.href='index.html?mode=pricing';
+  window.location.href='app.html';
 }
 
 async function googleAuth(){
@@ -112,12 +112,15 @@ async function emailSignup(){
   const{data,error}=await sb.auth.signUp({email,password:pass});
   if(error){
     const already=error.status===422||error.message?.toLowerCase().includes('already')||error.message?.toLowerCase().includes('registered');
-    msg(already?'Cette adresse email est déjà utilisée. Connecte-toi.':error.message,'err');
-    btn.disabled=false;btn.textContent="S'inscrire";
-    return;
+    msg(already?'Cette adresse est déjà utilisée. Connecte-toi.':error.message,'err');
+    btn.disabled=false;btn.textContent="S'inscrire";return;
   }
-  // New user → go to pricing
-  window.location.href='index.html?mode=pricing';
+  // Supabase returns user even if already exists — check identities
+  if(data?.user?.identities?.length===0){
+    msg('Cette adresse est déjà utilisée. Connecte-toi.','err');
+    btn.disabled=false;btn.textContent="S'inscrire";return;
+  }
+  window.location.href='app.html';
 }
 
 async function emailLogin(){
