@@ -130,7 +130,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
     <div class="card popular">
       <h2>PRO</h2>
       <div class="price" id="price-pro">149€</div>
-      <div class="period">/mois</div>
+
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Événements</div>
@@ -163,7 +163,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
     <div class="card disabled">
       <h2>INTELLIGENT</h2>
       <div class="price" id="price-ai">299€</div>
-      <div class="period">/mois</div>
+
       <div class="coming-soon">À VENIR</div>
       <div class="features">
         <div class="feature-group">
@@ -200,7 +200,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
 const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
-const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341},ai:{monthly:299,yearly:2690}};
+const PRICES={early:{monthly:89,yearly:Math.round(89*12*0.9)},pro:{monthly:149,yearly:Math.round(149*12*0.9)},ai:{monthly:299,yearly:Math.round(299*12*0.9)}};
 let currentPeriod='monthly';
 const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
@@ -213,14 +213,10 @@ function setPeriod(p){
     document.getElementById('price-pro').textContent='149€';
     document.getElementById('price-ai').textContent='299€';
   }else{
-    document.getElementById('price-early').textContent='67€';
-    document.getElementById('price-pro').textContent='112€';
-    document.getElementById('price-ai').textContent='224€';
+    document.getElementById('price-early').textContent=Math.round(89*12*0.9/12)+'€';
+    document.getElementById('price-pro').textContent=Math.round(149*12*0.9/12)+'€';
+    document.getElementById('price-ai').textContent=Math.round(299*12*0.9/12)+'€';
   }
-  document.querySelectorAll('.period').forEach((el,i)=>{
-    if(i===0||i===4)return;
-    el.textContent=p==='yearly'?'/mois (annuel)':'/mois';
-  });
 }
 
 async function goPay(plan){
@@ -229,13 +225,15 @@ async function goPay(plan){
   
   if(plan==='demo'){
     try{
-      await sb.from('subscriptions').upsert([{
+      // Delete existing demo subscription first, then insert fresh
+      await sb.from('subscriptions').delete().eq('user_id',session.user.id).eq('plan','demo');
+      await sb.from('subscriptions').insert([{
         user_id:session.user.id,
         status:'demo',
         plan:'demo',
         created_at:new Date().toISOString(),
-        expires_at:new Date(Date.now()+30*24*60*60*1000).toISOString()
-      }],{onConflict:'user_id'});
+        expires_at:new Date(Date.now()+60*60*1000).toISOString()
+      }]);
       window.location.href='app.html';
     }catch(e){alert('Erreur: '+e.message);}
     return;

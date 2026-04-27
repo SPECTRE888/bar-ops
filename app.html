@@ -23,7 +23,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     const subs=subsArr?.[0];
 
     const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
-    const isDemo=subs?.status==='demo'||subs?.plan==='demo';
+    const isDemo=(subs?.status==='demo'||subs?.plan==='demo')&&new Date(subs.expires_at)>new Date();
 
     if(!isActive&&!isDemo){window.location.href='paying.html';return;}
 
