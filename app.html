@@ -2561,6 +2561,11 @@ function renderDashboard(){
   lowStock.forEach(p=>{
     alerts.push({type:'stock',severity:'high',product:p,text:`${p.brand?p.brand+' ':''}${p.productType} (${p.stock}/${p.stockAlert})`});
   });
+  // Tâche: stock retour à faire pour events passés
+  const pastNoRetour=state.events.filter(ev=>ev.date&&new Date(ev.date)<now&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0);
+  pastNoRetour.forEach(ev=>{
+    alerts.push({type:'stock_retour',severity:'high',event:ev,text:`Stock retour à saisir — ${ev.name}`});
+  });
   const upcomingNoPay=upcoming.filter(ev=>!ev.paid&&!ev.acompte);
   // Payment alerts removed - use dashboard cards instead
   upcoming.forEach(ev=>{
@@ -2643,7 +2648,7 @@ function renderDashboard(){
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
-      const onclick=a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
+      const onclick=a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
       html+=`<div style="padding:10px;margin-bottom:6px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
         <span style="color:${textColor};font-weight:500">${icon} ${a.text}</span>
       </div>`;
@@ -5503,7 +5508,7 @@ function renderHistorique(){
   const el=document.getElementById('historique-content');if(!el)return;
   const now=new Date();
   const past=[...state.events]
-    .filter(ev=>ev.date&&new Date(ev.date)<now)
+    .filter(ev=>ev.date&&new Date(ev.date)<now&&ev.stockRetourDone)
     .sort((a,b)=>new Date(b.date)-new Date(a.date));
 
   if(!past.length){
@@ -6411,6 +6416,7 @@ function injectStockRetour(evId){
   save();
   toast(`${count} produit(s) réinjecté(s) en stock`);
   renderSuivi();
+  renderDashboard();
 }
 
 function updEvField(evId, key, value){
