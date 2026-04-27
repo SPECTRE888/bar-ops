@@ -5652,6 +5652,7 @@ function buildEventSummaryHTML(ev){
 </html>`;
 }
 
+function renderHistorique(){
   const el=document.getElementById('historique-content');if(!el)return;
   const now=new Date();
   const past=[...state.events]
