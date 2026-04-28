@@ -5733,7 +5733,6 @@ function editSupplier(id){
     </div>
     <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${s.contact||''}" placeholder="Jean Martin" /></div>
     </div>
-    <div class="field"><label>Adresse</label><input id="sp-address" value="${s.address||''}"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
         ${cats.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" value="${c}" class="sp-cat-chk" style="width:auto" ${(s.categories||[]).includes(c)?'checked':''}/> ${c}</label>`).join('')}
