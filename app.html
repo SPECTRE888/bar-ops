@@ -5606,19 +5606,22 @@ function addToOrderList(pid){
 
 function openSupplierOrder(supplierName){
   if(!state.orders)state.orders={};
-  const sKey=supplierName||'__sans_fournisseur__';
-  const items=state.orders[sKey]||[];
+  const sKey=supplierName||"__sans_fournisseur__";
+  let items=state.orders[sKey]||[];
+  const deduped={};
+  items.forEach(i=>{const k=i.pid+"|"+i.unit;if(!deduped[k])deduped[k]={...i};else deduped[k].qty+=i.qty;});
+  items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
-  const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
-  const html=items.map(i=>`<tr><td>${i.brand||i.name}</td><td>${i.name}</td><td style="font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="font-weight:600">${i.qty} ${i.unit}</td></tr>`).join('');
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?" ["+i.code+"]":""} : ${i.qty} ${i.unit}`).join("\n");
+  const html=items.map(i=>`<tr><td>${i.brand||i.name}</td><td>${i.name}</td><td style="font-family:monospace;font-size:11px">${i.code||"—"}</td><td style="font-weight:600">${i.qty} ${i.unit}</td></tr>`).join("");
+  const modal=document.createElement("div");
+  modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px";
   modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:16px;font-weight:600">Commande — ${supplierName}</div>
       <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button>
     </div>
-    ${!items.length?'<p style="color:var(--text3);font-size:13px">Aucun article en liste de course pour ce fournisseur.</p>':`
+    ${!items.length?"<p style="color:var(--text3);font-size:13px">Aucun article en liste de course pour ce fournisseur.</p>":`
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.1em">
         <th style="text-align:left;padding:4px 6px">Marque</th><th style="text-align:left;padding:4px 6px">Produit</th><th style="text-align:left;padding:4px 6px">Réf</th><th style="text-align:left;padding:4px 6px">Qté</th>
@@ -5626,16 +5629,26 @@ function openSupplierOrder(supplierName){
       <tbody>${html}</tbody>
     </table>
     <div style="display:flex;gap:8px;margin-top:4px">
-      ${sup.email?`<a href="mailto:${sup.email}?subject=${encodeURIComponent('Commande — '+supplierName)}&body=${encodeURIComponent('Bonjour,\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement')}" class="btn btn-gold" style="flex:1;text-align:center;text-decoration:none"> Envoyer par mail</a>`:''}
-      ${sup.phone?`<a href="https://wa.me/${sup.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Bonjour,\n\nCommande :\n\n'+lines+'\n\nMerci !')}" target="_blank" class="btn" style="flex:1;text-align:center;text-decoration:none;background:#25D366;color:#fff;border-color:#25D366"> WhatsApp</a>`:''}
-      <button class="btn btn-danger" onclick="clearSupplierOrder('${supplierName}');this.closest('[style*=fixed]').remove()" style="flex:1"> Vider la liste</button>
+      ${sup.email?`<button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder('${supplierName}','email')"> Mail</button>`:""}
+      ${sup.phone?`<button class="btn" style="flex:1;background:#25D366;color:#fff;border-color:#25D366;cursor:pointer" onclick="sendSupplierOrder('${supplierName}','whatsapp')"> WhatsApp</button>`:""}
+      <button class="btn btn-danger" style="flex:1" onclick="clearSupplierOrder('${supplierName}');this.closest('[style*=fixed]').remove()"> Vider</button>
     </div>`}
   </div>`;
   document.body.appendChild(modal);
 }
 
-function clearSupplierOrder(supplierName){
-  if(!state.orders)return;
+function sendSupplierOrder(supplierName,method){
+  const sKey=supplierName||"__sans_fournisseur__";
+  let items=state.orders[sKey]||[];
+  const deduped={};
+  items.forEach(i=>{const k=i.pid+"|"+i.unit;if(!deduped[k])deduped[k]={...i};else deduped[k].qty+=i.qty;});
+  items=Object.values(deduped);
+  const sup=state.suppliers.find(s=>s.name===supplierName)||{};
+  const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?" ["+i.code+"]":""} : ${i.qty} ${i.unit}`).join("\n");
+  if(method.includes("email")&&sup.email)window.location.href=`mailto:${sup.email}?subject=${encodeURIComponent("Commande — "+supplierName)}&body=${encodeURIComponent("Bonjour,\n\nVoici notre commande :\n\n"+lines+"\n\nMerci de confirmer.\nCordialement")}`;
+  else if(method.includes("whatsapp")&&sup.phone)window.open(`https://wa.me/${sup.phone.replace(/\D/g,"")}?text=${encodeURIComponent("Bonjour,\n\nCommande :\n\n"+lines+"\n\nMerci !")}`, "_blank");
+}
+
   delete state.orders[supplierName||'__sans_fournisseur__'];
   save();renderSuppliers();
 }
