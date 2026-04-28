@@ -5636,11 +5636,6 @@ function sendSupplierOrder(supplierName,method){
   if(method==='email'&&sup.email)window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName)+'&body='+encodeURIComponent('Bonjour,\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
   else if(method==='whatsapp'&&sup.phone)window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent('Bonjour,\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
 }
-  else if(method.includes("whatsapp")&&sup.phone)window.open(`https://wa.me/${sup.phone.replace(/\D/g,"")}?text=${encodeURIComponent("Bonjour,\n\nCommande :\n\n"+lines+"\n\nMerci !")}`, "_blank");
-}
-
-  delete state.orders[supplierName||'__sans_fournisseur__'];
-  save();renderSuppliers();
 }
 
 function showToast(msg){
