@@ -6754,10 +6754,6 @@ function confirmResetData(){
 function renderSuivi(){
   const el=document.getElementById('suivi-content');if(!el)return;
   
-  // Auto-delete events payés ET stock retour fait
-  state.events=state.events.filter(ev=>!(ev.paid&&ev.stockRetourDone));
-  save();
-  
   if(!state.events.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
     return;
@@ -6765,7 +6761,15 @@ function renderSuivi(){
 
   const now=new Date();
 
-  const sorted=[...state.events]
+  // Filtrer: exclure les events payés + stock retour fait
+  const filtered=state.events.filter(ev=>!(ev.paid&&ev.stockRetourDone));
+  
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
+    return;
+  }
+
+  const sorted=[...filtered]
     .filter(ev=>{
       const isPast=ev.date&&new Date(ev.date)<now;
       if(!isPast) return true;
