@@ -2570,12 +2570,6 @@ function updCARange(){
       const evDate=new Date(ev.date);
       return evDate>=fromDate&&evDate<=toDate;
     }
-    // Si pas de dates: filtre sur le mois en cours
-    if(!from&&!to){
-      const now=new Date();
-      const evDate=new Date(ev.date);
-      return evDate.getMonth()===now.getMonth()&&evDate.getFullYear()===now.getFullYear();
-    }
     return true;
   }).reduce((s,ev)=>s+(ev.totalRevHT||0),0);
   document.getElementById('ca-value').textContent=filtered.toFixed(0)+'€';
@@ -2845,7 +2839,6 @@ function renderDashboard(){
   }
 
   el.innerHTML=html;
-  updCARange();
 }
 
 function recalcAllCocktailsIce(){
@@ -6760,23 +6753,6 @@ function confirmResetData(){
 // ════════════════════════════════════════════════════════
 function renderSuivi(){
   const el=document.getElementById('suivi-content');if(!el)return;
-  
-  // Auto-delete events passés et 100% faits
-  const now=new Date();
-  state.events=state.events.filter(ev=>{
-    const isPast=ev.date&&new Date(ev.date)<now;
-    if(!isPast) return true;
-    const hasCocktails=(ev.cocktails||[]).length>0;
-    const assigned=(ev.assignedStaff||[]).length;
-    const confirmed=(ev.staffConfirmed||[]).length;
-    const allConfirmed=assigned>0&&confirmed>=assigned;
-    const hasAcompte=ev.acompte>0||ev.paid;
-    const hasStockRetour=ev.stockRetourDone;
-    const allDone=hasCocktails&&allConfirmed&&hasAcompte&&ev.paid&&hasStockRetour;
-    return !allDone;
-  });
-  save();
-  
   if(!state.events.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
     return;
