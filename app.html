@@ -1620,9 +1620,9 @@ function renderGlassware(){
       <td><div id="gs-${g.id}" style="min-width:120px"></div></td>
       <td><input value="${(g.appellation||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
       <td><input type="number" value="${g.priceTTC||g.priceHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
-      <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:65px" placeholder="cl"/> <span class="txs tm">cl</span></td>
+      <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:65px" placeholder="cl"/></td>
       <td><span class="cpu cpu-ok">${ht}€ HT</span></td>
-      <td><input value="${(g.supplier||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'supplier',this.value)" placeholder="Metro, Fournisseur..." style="min-width:100px"/></td>
+      <td><select onchange="updGlass(${g.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${g.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
       <td><input value="${(g.notes||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
       <td style="white-space:nowrap;display:flex;align-items:center;gap:3px">
         <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:42px;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
@@ -1652,8 +1652,7 @@ function renderGlassware(){
         <span class="cpu cpu-ok">${totalTTC}€ TTC → ${totalHT}€ HT</span>
         <div class="txs tm">${cpclHT}€ HT/cl</div>
       </td>
-      <td><input value="${(i.supplier||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'supplier',this.value)" placeholder="Nom du fournisseur" style="min-width:120px"/></td>
-      <td><div style="display:flex;align-items:center;gap:4px">
+      <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
         <input value="${(i.supplierPhone||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'supplierPhone',this.value)" placeholder="+33 6..." style="min-width:110px"/>
         ${i.supplierPhone?`<a href="https://wa.me/${waPhone(i.supplierPhone)}" target="_blank" style="color:#25D366;text-decoration:none;font-size:14px;flex-shrink:0"></a>`:''}
       </div></td>
