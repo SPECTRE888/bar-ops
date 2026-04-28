@@ -2628,15 +2628,15 @@ function renderDashboard(){
   const aRecevoir=state.events.filter(ev=>!ev.paid&&evRev(ev)>0).reduce((s,ev)=>s+evRev(ev),0);
   
   // Calcul CA par période (pour sélecteur)
-  const now=new Date();
+  const nowCA=new Date();
   const thisMonth=state.events.filter(ev=>{
     if(!ev.paid||!ev.date)return false;
     const d=new Date(ev.date);
-    return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+    return d.getMonth()===nowCA.getMonth()&&d.getFullYear()===nowCA.getFullYear();
   }).reduce((s,ev)=>s+evRev(ev),0);
   const thisYear=state.events.filter(ev=>{
     if(!ev.paid||!ev.date)return false;
-    return new Date(ev.date).getFullYear()===now.getFullYear();
+    return new Date(ev.date).getFullYear()===nowCA.getFullYear();
   }).reduce((s,ev)=>s+evRev(ev),0);
   
   let html=`
