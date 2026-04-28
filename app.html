@@ -6764,6 +6764,8 @@ function renderSuivi(){
   }
 
   const now=new Date();
+
+  const sorted=[...state.events]
     .filter(ev=>{
       const isPast=ev.date&&new Date(ev.date)<now;
       if(!isPast) return true;
