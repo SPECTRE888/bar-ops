@@ -1756,7 +1756,7 @@ function showStaffTab(tab){
 
 function filterStaff(){
   const query=document.getElementById('staff-search')?.value?.toLowerCase()||'';
-  document.querySelectorAll('#staff-tb tr').forEach(row=>{
+  document.querySelectorAll('#staff-tb tbody tr').forEach(row=>{
     const text=row.textContent.toLowerCase();
     row.style.display=text.includes(query)?'':'none';
   });
@@ -1787,6 +1787,7 @@ function renderStaff(){
       <td><button class="btn btn-sm btn-danger" onclick="delStaff(${s.id})"></button></td>
     </tr>`;
   }).join('');
+  filterStaff();
 }
 
 // ════════════════════════════════════════════════════════
@@ -5655,6 +5656,7 @@ function renderClients(){
       </div>`:''}
     </div>`;
   }).join('');
+  filterClients();
 }
 
 function addIceOrGlassToOrder(id,type,name,supplier){
