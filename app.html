@@ -5652,9 +5652,10 @@ function sendSupplierOrder(supplierName,method){
   items.forEach(i=>{const k=i.pid+'|'+i.unit;if(!deduped[k])deduped[k]={...i};else deduped[k].qty+=i.qty;});
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
-  const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
-  if(method==='email'&&sup.email)window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName)+'&body='+encodeURIComponent('Bonjour,\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
-  else if(method==='whatsapp'&&sup.phone)window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent('Bonjour,\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+  const lines=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${u}`}).join('\n');
+  const contact=sup.contact?'Bonjour '+sup.contact+',':'Bonjour,';
+  if(method==='email'&&sup.email)window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName)+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+  else if(method==='whatsapp'&&sup.phone)window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
 }
 
 function showToast(msg){
@@ -5700,6 +5701,7 @@ function addSupplier(){
     <div class="g2">
       <div class="field"><label>Téléphone</label><input id="sp-phone" placeholder="+33 6 00 00 00 00" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" placeholder="commande@..." type="email"/></div>
+    <div class="field"><label>Contact (nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
     </div>
     <div class="field"><label>Adresse</label><input id="sp-address" placeholder="12 rue du Marché, Paris"/></div>
     <div class="field"><label>Catégories livrées</label>
@@ -5729,6 +5731,8 @@ function editSupplier(id){
       <div class="field"><label>Téléphone</label><input id="sp-phone" value="${s.phone||''}" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" value="${s.email||''}" type="email"/></div>
     </div>
+    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${s.contact||''}" placeholder="Jean Martin" /></div>
+    </div>
     <div class="field"><label>Adresse</label><input id="sp-address" value="${s.address||''}"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
@@ -5753,6 +5757,8 @@ function saveSupplier(id){
     name,
     phone:document.getElementById('sp-phone')?.value.trim()||'',
     email:document.getElementById('sp-email')?.value.trim()||'',
+    address:document.getElementById('sp-address')?.value.trim()||'',
+    contact:document.getElementById('sp-contact')?.value.trim()||'',
     address:document.getElementById('sp-address')?.value.trim()||'',
     notes:document.getElementById('sp-notes')?.value.trim()||'',
     categories
