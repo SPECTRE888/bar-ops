@@ -760,17 +760,30 @@ async function cloudPush(){
   const token=extractToken(cloudUser);
   if(!uid||!token){console.warn('cloudPush: missing uid or token',{uid,token:!!token});return false;}
   try{
-    const r=await fetch(`${url}/rest/v1/workspaces`,{
-      method:'POST',
+    const r=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}`,{
+      method:'PATCH',
       headers:{
         'Content-Type':'application/json',
         'apikey':key,
-        'Authorization':'Bearer '+token,
-        'Prefer':'resolution=merge-duplicates'
+        'Authorization':'Bearer '+token
       },
-      body:JSON.stringify({user_id:uid,data:JSON.stringify(state),updated_at:new Date().toISOString()})
+      body:JSON.stringify({data:JSON.stringify(state),updated_at:new Date().toISOString()})
     });
-    return r.ok||r.status===201||r.status===200;
+    if(r.status===204||r.ok) return true;
+    // Si 404 = pas d'entrée, crée avec POST
+    if(r.status===404){
+      const r2=await fetch(`${url}/rest/v1/workspaces`,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':key,
+          'Authorization':'Bearer '+token
+        },
+        body:JSON.stringify({user_id:uid,data:JSON.stringify(state),updated_at:new Date().toISOString()})
+      });
+      return r2.ok||r2.status===201;
+    }
+    return false;
   }catch(e){console.warn('cloudPush error:',e);return false;}
 }
 
