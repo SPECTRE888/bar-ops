@@ -687,7 +687,10 @@ function deleteAccountModal(){
 }
 
 function cloudRestoreSession(){
-  // Session already set by paywall - no localStorage restore needed
+  // Session already set by paywall - sync to local cloudUser
+  if(window.cloudUser && window.cloudUser.access_token){
+    cloudUser = window.cloudUser;
+  }
 }
 
 async function cloudRestoreSessionAsync(){
