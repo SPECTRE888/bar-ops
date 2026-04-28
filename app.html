@@ -1576,9 +1576,9 @@ function renderCatPage(cat){
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="width:55px;color:var(--text3)"/></td>
-      <td style="white-space:nowrap;display:flex;align-items:center;gap:4px">
-        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="width:52px;padding:2px 5px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
-        <button class="btn" style="font-size:9px;padding:3px 7px;white-space:nowrap" onclick="addToOrderList(${p.id})">+ Courses</button>
+      <td style="white-space:nowrap;display:flex;align-items:center;gap:3px">
+        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="width:42px;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
+        <button class="btn" style="font-size:8px;padding:2px 6px;white-space:nowrap;letter-spacing:.05em" onclick="addToOrderList(${p.id})">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button>
       </td>
     </tr>`;
@@ -5614,7 +5614,7 @@ function openSupplierOrder(supplierName){
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
-  const html=items.map(i=>`<tr><td>${i.brand||i.name}</td><td>${i.name}</td><td style="font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="font-weight:600">${i.qty} ${i.unit}</td></tr>`).join('');
+  const html=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `<tr><td>${i.brand||i.name}</td><td>${i.name}</td><td style="font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="font-weight:600">${i.qty} ${u}</td></tr>`}).join('');
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
   const btns=[];
@@ -5667,9 +5667,6 @@ function renderSuppliers(){
       </div>
       <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px;flex-wrap:wrap">
         <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})">Modifier</button>
-        ${s.phone?`<a href="tel:${s.phone}" class="btn btn-sm btn-ghost" style="text-decoration:none">Appeler</a>`:''}
-        ${s.email?`<a href="mailto:${s.email}" class="btn btn-sm btn-ghost" style="text-decoration:none">Mail</a>`:''}
-        ${s.phone?`<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none">WA</a>`:''}
         <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">
           Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px">${orderCount}</span>`:''}
         </button>
