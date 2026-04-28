@@ -5670,11 +5670,11 @@ function sendSupplierOrder(supplierName,method){
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${u}`}).join('\n');
   const contact=sup.contact?'Bonjour '+sup.contact+',':'Bonjour,';
+  delete state.orders[sKey];save();
+  document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
   if(method==='email'&&sup.email){
-    delete state.orders[sKey];save();renderSupplierOrders();
     window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName)+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
   }else if(method==='whatsapp'&&sup.phone){
-    delete state.orders[sKey];save();renderSupplierOrders();
     window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
   }
 }
