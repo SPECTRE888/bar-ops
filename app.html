@@ -1564,7 +1564,10 @@ function renderCatPage(cat){
         ${UNITS.map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
       </select></td>
       <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}">${cpu>0?cpu.toFixed(4)+' €/'+uLabel:'Prix manquant'}</span></td>
-      <td><input value="${(p.supplier||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplier',this.value)" placeholder="Metro, Promocash..." style="min-width:100px"/></td>
+      <td><select onchange="updProd(${p.id},'supplier',this.value)" style="min-width:110px">
+        <option value="">— Fournisseur —</option>
+        ${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${p.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}
+      </select></td>
       <td><input value="${(p.supplierCode||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
       <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
@@ -5650,26 +5653,32 @@ function renderSuppliers(){
     return;
   }
   const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
-  el.innerHTML=`<div class="c-grid">${state.suppliers.map(s=>`
-    <div class="c-card" style="display:flex;flex-direction:column;gap:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div style="font-size:16px;font-weight:600">${s.name}</div>
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${s.categories.join(' · ')}</div>`:''}
+  el.innerHTML=`<div class="c-grid">${state.suppliers.map(s=>{
+    const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
+    return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px;position:relative">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:600;letter-spacing:.02em">${s.name}</div>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.join(' · ')}</div>`:''}
         </div>
-        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center">×</button>
+        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px">×</button>
       </div>
-      ${s.phone?`<div style="font-size:12px;color:var(--text2)">${s.phone}</div>`:''}
-      ${s.email?`<div style="font-size:12px;color:var(--text2)">${s.email}</div>`:''}
-      ${s.address?`<div style="font-size:11px;color:var(--text3)">${s.address}</div>`:''}
-      <div style="display:flex;gap:6px;margin-top:4px">
-        <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})" style="flex:1">Modifier</button>
-        ${s.phone?`<a href="tel:${s.phone}" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none">Appeler</a>`:''}
-        ${s.email?`<a href="mailto:${s.email}" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none"> Mail</a>`:''}
-        ${s.phone&&!s.email?`<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none"> WA</a>`:''}
-        <button class="btn btn-sm btn-gold" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">📋 Commander${(state.orders&&state.orders[s.name]?.length)?` (${state.orders[s.name].length})`:''}</button>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)">
+        ${s.phone?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span>${s.phone}</div>`:''}
+        ${s.email?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span>${s.email}</div>`:''}
+        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px">${s.address}</span></div>`:''}
       </div>
-    </div>`).join('')}</div>`;
+      <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})">Modifier</button>
+        ${s.phone?`<a href="tel:${s.phone}" class="btn btn-sm btn-ghost" style="text-decoration:none">Appeler</a>`:''}
+        ${s.email?`<a href="mailto:${s.email}" class="btn btn-sm btn-ghost" style="text-decoration:none">Mail</a>`:''}
+        ${s.phone?`<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none">WA</a>`:''}
+        <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">
+          Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px">${orderCount}</span>`:''}
+        </button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function addSupplier(){
