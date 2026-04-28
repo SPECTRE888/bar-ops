@@ -5704,8 +5704,8 @@ function addSupplier(){
     <div class="g2">
       <div class="field"><label>Téléphone</label><input id="sp-phone" placeholder="+33 6 00 00 00 00" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" placeholder="commande@..." type="email"/></div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
     </div>
+    <div class="field"><label>Contact (nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
     <div class="field"><label>Adresse</label><input id="sp-address" placeholder="12 rue du Marché, Paris"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
@@ -5735,8 +5735,7 @@ function editSupplier(id){
       <div class="field"><label>Email</label><input id="sp-email" value="${s.email||''}" type="email"/></div>
     </div>
     <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${s.contact||''}" placeholder="Jean Martin" /></div>
-    </div>
-    <div class="field"><label>Catégories livrées</label>
+    <div class="field"><label>Adresse</label><input id="sp-address" value="${s.address||''}"/></div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
         ${cats.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" value="${c}" class="sp-cat-chk" style="width:auto" ${(s.categories||[]).includes(c)?'checked':''}/> ${c}</label>`).join('')}
       </div>
@@ -5760,7 +5759,6 @@ function saveSupplier(id){
     phone:document.getElementById('sp-phone')?.value.trim()||'',
     email:document.getElementById('sp-email')?.value.trim()||'',
     address:document.getElementById('sp-address')?.value.trim()||'',
-    contact:document.getElementById('sp-contact')?.value.trim()||'',
     address:document.getElementById('sp-address')?.value.trim()||'',
     notes:document.getElementById('sp-notes')?.value.trim()||'',
     categories
