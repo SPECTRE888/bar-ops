@@ -398,11 +398,11 @@ select{color-scheme:dark}
 <div id="page-staff" class="page">
   <div class="topbar"><h2>Mon équipe</h2>
     <div class="topbar-actions no-print">
-      <select id="staff-menu" onchange="handleStaffMenu(this.value)" style="width:155px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font-body)">
-        <option value="staff">Équipe</option>
-        <option value="dresscode">Tenues</option>
-      </select>
-      <button class="btn btn-gold" onclick="addStaff()">+ Ajouter staff</button>
+      <div style="display:flex;gap:8px;margin-right:16px">
+        <button class="btn btn-ghost" id="tab-staff" onclick="showStaffTab('staff')" style="background:var(--gold);color:#000">Équipe</button>
+        <button class="btn btn-ghost" id="tab-dresscode" onclick="showStaffTab('dresscode')">Tenues</button>
+      </div>
+      <button class="btn btn-gold" onclick="addStaff()" id="btn-add-staff">+ Ajouter staff</button>
     </div>
   </div>
   <div class="content">
@@ -1722,6 +1722,28 @@ function updStaff(id,k,v){
       if(linked){linked.phone=v;}
     }
     save();
+  }
+}
+
+function showStaffTab(tab){
+  if(tab==='staff'){
+    document.getElementById('staff-section').style.display='block';
+    document.getElementById('dresscode-section').style.display='none';
+    document.getElementById('tab-staff').style.background='var(--gold)';
+    document.getElementById('tab-staff').style.color='#000';
+    document.getElementById('tab-dresscode').style.background='';
+    document.getElementById('tab-dresscode').style.color='';
+    document.getElementById('btn-add-staff').style.display='block';
+    renderStaff();
+  }else{
+    document.getElementById('staff-section').style.display='none';
+    document.getElementById('dresscode-section').style.display='block';
+    document.getElementById('tab-dresscode').style.background='var(--gold)';
+    document.getElementById('tab-dresscode').style.color='#000';
+    document.getElementById('tab-staff').style.background='';
+    document.getElementById('tab-staff').style.color='';
+    document.getElementById('btn-add-staff').style.display='none';
+    renderDresscode();
   }
 }
 
@@ -5278,6 +5300,10 @@ function addDressCodeCustom(){
 }
 function delDressCode(id){state.dressCodes=state.dressCodes.filter(x=>x.id!==id);save();renderDressCodes();}
 function updDC(id,k,v){const d=state.dressCodes.find(x=>x.id===id);if(d){d[k]=v;save();renderDressCodes();}}
+
+function renderDresscode(){
+  renderDressCodes();
+}
 
 function renderDressCodes(){
   const el=document.getElementById('dc-list');if(!el)return;
