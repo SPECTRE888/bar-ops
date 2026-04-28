@@ -2515,6 +2515,22 @@ function goToEventSuivi(eventId){
   goPage('suivi');
 }
 
+function updCARange(){
+  const from=document.getElementById('ca-from')?.value;
+  const to=document.getElementById('ca-to')?.value;
+  const fromDate=from?new Date(from):null;
+  const toDate=to?new Date(to):null;
+  const filtered=state.events.filter(ev=>{
+    if(!ev.paid||!ev.totalRevHT)return false;
+    if(fromDate&&toDate){
+      const evDate=new Date(ev.date);
+      return evDate>=fromDate&&evDate<=toDate;
+    }
+    return true;
+  }).reduce((s,ev)=>s+(ev.totalRevHT||0),0);
+  document.getElementById('ca-value').textContent=filtered.toFixed(0)+'€';
+}
+
 function renderDashboard(){
   const el=document.getElementById('dashboard-content');if(!el)return;
 
@@ -2641,17 +2657,22 @@ function renderDashboard(){
   
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    <div class="card" style="padding:10px;text-align:center">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3)">CA</div>
-        <select id="ca-period" style="font-size:10px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text)" onchange="(function(){const v=this.value;const els={all:${caPayees.toFixed(0)},month:${thisMonth.toFixed(0)},year:${thisYear.toFixed(0)}};document.getElementById('ca-value').textContent=(els[v]||0)+'€';document.getElementById('ca-label').textContent=v==='month'?'Ce mois':v==='year'?'Cette année':'Tous les temps';})()">
-          <option value="all">Tous les temps</option>
-          <option value="month">Ce mois</option>
-          <option value="year">Cette année</option>
-        </select>
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:20px;font-weight:500">CA</div>
+      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:20px;line-height:1" id="ca-value">${caPayees.toFixed(0)}€</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:8px;align-items:center;justify-content:center">
+          <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
+          <span style="color:var(--text3)">→</span>
+          <input type="date" id="ca-to" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+          <button onclick="(function(){const today=new Date();document.getElementById('ca-from').value=today.toISOString().split('T')[0];document.getElementById('ca-to').value=today.toISOString().split('T')[0];updCARange();})();" style="font-size:10px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text3)">Aujourd'hui</button>
+          <button onclick="(function(){const today=new Date();const first=new Date(today.getFullYear(),today.getMonth(),1);document.getElementById('ca-from').value=first.toISOString().split('T')[0];document.getElementById('ca-to').value=today.toISOString().split('T')[0];updCARange();})();" style="font-size:10px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text3)">Ce mois</button>
+          <button onclick="(function(){const today=new Date();const first=new Date(today.getFullYear(),0,1);document.getElementById('ca-from').value=first.toISOString().split('T')[0];document.getElementById('ca-to').value=today.toISOString().split('T')[0];updCARange();})();" style="font-size:10px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text3)">Cette année</button>
+          <button onclick="(function(){document.getElementById('ca-from').value='';document.getElementById('ca-to').value='';updCARange();})();" style="font-size:10px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text3)">Tous</button>
+        </div>
       </div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:8px;line-height:1" id="ca-value">${caPayees.toFixed(0)}€</div>
-      <div style="font-size:10px;color:var(--text3)" id="ca-label">Tous les temps</div>
     </div>
     <div class="card" style="padding:10px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
