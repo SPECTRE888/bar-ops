@@ -5649,27 +5649,21 @@ function renderSuppliers(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
     return;
   }
-  const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
   el.innerHTML=`<div class="c-grid">${state.suppliers.map(s=>{
     const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
-    return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px;position:relative">
+    return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:600;letter-spacing:.02em">${s.name}</div>
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.join(' · ')}</div>`:''}
-        </div>
-        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px">×</button>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.join(' · ')}</div>`:''}\n        </div>
+        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)">
-        ${s.phone?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span>${s.phone}</div>`:''}
-        ${s.email?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span>${s.email}</div>`:''}
-        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px">${s.address}</span></div>`:''}
-      </div>
-      <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${s.phone||'—'}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${s.email||'—'}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${s.address}</span></div>`:''}\n      </div>
+      <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
         <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})">Modifier</button>
         <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">
-          Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px">${orderCount}</span>`:''}
-        </button>
+          Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px\">${orderCount}</span>`:''}\n        </button>
       </div>
     </div>`;
   }).join('')}</div>`;
