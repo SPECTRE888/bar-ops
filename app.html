@@ -297,6 +297,10 @@ select{color-scheme:dark}
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5"/><circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/></svg>
       Clients
     </div>
+    <div class="nav-item" onclick="goPage('suppliers')" id="nav-suppliers">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="6" width="14" height="9" rx="1"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
+      Fournisseurs
+    </div>
 
     <div class="nav-sec">Compte</div>
     <div class="nav-item" onclick="goPage('profile')" id="nav-profile">
@@ -463,6 +467,14 @@ select{color-scheme:dark}
     <div class="topbar-actions no-print"><button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button></div>
   </div>
   <div class="content" id="clients-content"></div>
+</div>
+
+<!-- ═══ FOURNISSEURS ═══ -->
+<div id="page-suppliers" class="page">
+  <div class="topbar"><h2>Fournisseurs</h2>
+    <div class="topbar-actions no-print"><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>
+  </div>
+  <div class="content" id="suppliers-content"></div>
 </div>
 
 <!-- ═══ SHOPPING (accessible via events) ═══ -->
@@ -987,7 +999,7 @@ let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], profile:{}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], profile:{}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -1009,7 +1021,7 @@ function load(){
   state = freshState();
   // Data now loads from Supabase per user session, not localStorage
   // Ensure all arrays exist
-  ['products','glasses','iceTypes','staffItems','cocktails','events','contacts','dressCodes','clients'].forEach(k=>{
+  ['products','glasses','iceTypes','staffItems','cocktails','events','contacts','dressCodes','clients','suppliers'].forEach(k=>{
     if(!Array.isArray(state[k])) state[k]=[];
   });
   // Migrate glass labels — strip appellation/volume suffixes from c.glass
@@ -1362,7 +1374,7 @@ function goPage(p){
   else if(p==='glassware') renderGlassware();
   else if(p==='staff'){renderStaff();renderDressCodes();}
   else if(p==='clients') renderClients();
-  else if(p==='prestation') {renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
+  else if(p==='suppliers') renderSuppliers(); {renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
   else if(p==='shopping') {renderShopping(); renderShopEvSel();}
   else if(p==='cocktails') showCList();
   else if(p==='events') showEvList();
@@ -5543,6 +5555,115 @@ function renderClients(){
       </div>`:''}
     </div>`;
   }).join('');
+}
+
+function renderSuppliers(){
+  const el=document.getElementById('suppliers-content');if(!el)return;
+  if(!state.suppliers.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
+    return;
+  }
+  const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
+  el.innerHTML=`<div class="c-grid">${state.suppliers.map(s=>`
+    <div class="c-card" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:16px;font-weight:600">${s.name}</div>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${s.categories.join(' · ')}</div>`:''}
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center">×</button>
+      </div>
+      ${s.phone?`<div style="font-size:12px;color:var(--text2)">${s.phone}</div>`:''}
+      ${s.email?`<div style="font-size:12px;color:var(--text2)">${s.email}</div>`:''}
+      ${s.address?`<div style="font-size:11px;color:var(--text3)">${s.address}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})" style="flex:1">Modifier</button>
+        ${s.phone?`<a href="tel:${s.phone}" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none">Appeler</a>`:''}
+        ${s.email?`<a href="mailto:${s.email}" class="btn btn-sm btn-gold" style="flex:1;text-align:center;text-decoration:none">Commander</a>`:''}
+        ${s.phone&&!s.email?`<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-gold" style="flex:1;text-align:center;text-decoration:none">WhatsApp</a>`:''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function addSupplier(){
+  const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
+  const modal=document.createElement('div');
+  modal.id='supplier-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:16px;font-weight:600">Nouveau fournisseur</div>
+    <div class="field"><label>Nom *</label><input id="sp-name" placeholder="Rungis Direct..." /></div>
+    <div class="g2">
+      <div class="field"><label>Téléphone</label><input id="sp-phone" placeholder="+33 6 00 00 00 00" type="tel"/></div>
+      <div class="field"><label>Email</label><input id="sp-email" placeholder="commande@..." type="email"/></div>
+    </div>
+    <div class="field"><label>Adresse</label><input id="sp-address" placeholder="12 rue du Marché, Paris"/></div>
+    <div class="field"><label>Catégories livrées</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+        ${cats.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" value="${c}" class="sp-cat-chk" style="width:auto"/> ${c}</label>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="sp-notes" rows="2" placeholder="Délai livraison, conditions..."></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="document.getElementById('supplier-modal').remove()">Annuler</button>
+      <button class="btn btn-gold" onclick="saveSupplier(null)">Enregistrer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function editSupplier(id){
+  const s=state.suppliers.find(x=>x.id===id);if(!s)return;
+  const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
+  const modal=document.createElement('div');
+  modal.id='supplier-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:16px;font-weight:600">Modifier fournisseur</div>
+    <div class="field"><label>Nom *</label><input id="sp-name" value="${s.name||''}" /></div>
+    <div class="g2">
+      <div class="field"><label>Téléphone</label><input id="sp-phone" value="${s.phone||''}" type="tel"/></div>
+      <div class="field"><label>Email</label><input id="sp-email" value="${s.email||''}" type="email"/></div>
+    </div>
+    <div class="field"><label>Adresse</label><input id="sp-address" value="${s.address||''}"/></div>
+    <div class="field"><label>Catégories livrées</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+        ${cats.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" value="${c}" class="sp-cat-chk" style="width:auto" ${(s.categories||[]).includes(c)?'checked':''}/> ${c}</label>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="sp-notes" rows="2">${s.notes||''}</textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="document.getElementById('supplier-modal').remove()">Annuler</button>
+      <button class="btn btn-gold" onclick="saveSupplier(${id})">Enregistrer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveSupplier(id){
+  const name=document.getElementById('sp-name')?.value.trim();
+  if(!name)return alert('Nom requis');
+  const categories=[...document.querySelectorAll('.sp-cat-chk:checked')].map(el=>el.value);
+  const sup={
+    id:id||Date.now(),
+    name,
+    phone:document.getElementById('sp-phone')?.value.trim()||'',
+    email:document.getElementById('sp-email')?.value.trim()||'',
+    address:document.getElementById('sp-address')?.value.trim()||'',
+    notes:document.getElementById('sp-notes')?.value.trim()||'',
+    categories
+  };
+  if(id){const i=state.suppliers.findIndex(x=>x.id===id);if(i>=0)state.suppliers[i]=sup;}
+  else{if(!state.suppliers)state.suppliers=[];state.suppliers.push(sup);}
+  save();cloudPush();
+  document.getElementById('supplier-modal')?.remove();
+  renderSuppliers();
+}
+
+function delSupplier(id){
+  if(!confirm('Supprimer ce fournisseur ?'))return;
+  state.suppliers=state.suppliers.filter(x=>x.id!==id);
+  save();cloudPush();renderSuppliers();
 }
 
 function toggleClient(id){
