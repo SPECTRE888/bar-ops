@@ -2594,7 +2594,7 @@ function renderDashboard(){
           {n:2,done:false,title:'Crée tes recettes',desc:'Assemble tes cocktails avec les ingrédients du catalogue. Le food cost et le prix de vente se calculent automatiquement.',action:"goPage('cocktails')",btn:'Créer un cocktail',icon:'<path d="M3 2h10L8 9v5M5 14h6"/>'},
           {n:3,done:false,title:'Configure ta première prestation',desc:'Crée un événement, assigne tes cocktails et ton staff. La fiche prestation et la liste de courses se génèrent en un clic.',action:"newEv();goPage('events')",btn:'Créer un événement',icon:'<rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/>'},
         ].map(step=>`
-          <div style="display:flex;gap:16px;padding:20px;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;background:var(--surface);transition:.2s" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="display:flex;gap:16px;padding:20px;border-radius:var(--radius-lg);margin-bottom:10px;background:var(--surface);transition:.2s" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center">
               <svg viewBox="0 0 16 16" fill="none" stroke="var(--gold)" stroke-width="1.2" style="width:14px;height:14px">${step.icon}</svg>
             </div>
