@@ -2976,16 +2976,23 @@ function showEvList(){
     const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):t('no_date');
     const confirmed=(ev.staffConfirmed||[]).length;
     const assigned=(ev.assignedStaff||[]).length;
-    return`<div class="c-card">
-      <div class="cat">${fmtDate}</div>
-      <h3>${ev.name||t('no_name')}</h3>
-      <div class="stat">${ev.pax||'?'} pax · ${tot} cocktails</div>
-      ${assigned?`<div class="stat" style="color:var(--green);margin-top:2px">‍ ${confirmed}/${assigned} confirmés</div>`:''}
-      <div class="flex-g mt1 no-print" style="flex-wrap:wrap;gap:5px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})"> Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
-        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})">×</button>
+    return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div class="cat" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}</div>
+          <h3 style="font-size:18px;font-weight:600;margin:0">${ev.name||t('no_name')}</h3>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text3)">
+        <div>📍 ${ev.pax||'?'} pax</div>
+        <div>🍸 ${tot} cocktails</div>
+      </div>
+      ${assigned?`<div style="font-size:12px;color:var(--green);font-weight:500">✓ ${confirmed}/${assigned} staff confirmés</div>`:'<div style="font-size:12px;color:var(--text3)">— Staff non assigné</div>'}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1">Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1">Courses</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -3009,16 +3016,23 @@ function filterEvList(){
     const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):t('no_date');
     const confirmed=(ev.staffConfirmed||[]).length;
     const assigned=(ev.assignedStaff||[]).length;
-    return`<div class="c-card">
-      <div class="cat">${fmtDate}</div>
-      <h3>${ev.name||t('no_name')}</h3>
-      <div class="stat">${ev.pax||'?'} pax · ${tot} cocktails</div>
-      ${assigned?`<div class="stat" style="color:var(--green);margin-top:2px">‍ ${confirmed}/${assigned} confirmés</div>`:''}
-      <div class="flex-g mt1 no-print" style="flex-wrap:wrap;gap:5px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})"> Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
-        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})">×</button>
+    return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div class="cat" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}</div>
+          <h3 style="font-size:18px;font-weight:600;margin:0">${ev.name||t('no_name')}</h3>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text3)">
+        <div>📍 ${ev.pax||'?'} pax</div>
+        <div>🍸 ${tot} cocktails</div>
+      </div>
+      ${assigned?`<div style="font-size:12px;color:var(--green);font-weight:500">✓ ${confirmed}/${assigned} staff confirmés</div>`:'<div style="font-size:12px;color:var(--text3)">— Staff non assigné</div>'}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1">Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1">Courses</button>
       </div>
     </div>`;
   }).join('')+'</div>';
