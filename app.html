@@ -1543,6 +1543,7 @@ function renderCatPage(cat){
         <th>${t('cat_unit')}</th>
         <th>${t('cat_cpu')}</th>
         <th>${t('cat_supplier')}</th>
+        <th>Email</th>
         <th>${t('cat_code')}</th>
         <th style="color:var(--gold)">${t('cat_stock')}</th>
         <th style="color:var(--text3);font-size:8px">${t('cat_alert')}</th>
@@ -1565,6 +1566,7 @@ function renderCatPage(cat){
       </select></td>
       <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}">${cpu>0?cpu.toFixed(4)+' €/'+uLabel:'Prix manquant'}</span></td>
       <td><input value="${(p.supplier||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplier',this.value)" placeholder="Metro, Promocash..." style="min-width:100px"/></td>
+      <td><input value="${(p.supplierEmail||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierEmail',this.value)" placeholder="email@fournisseur.com" style="min-width:130px;font-size:11px"/></td>
       <td><input value="${(p.supplierCode||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
       <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
@@ -3930,6 +3932,15 @@ function renderShopEvSel(){
 }
 
 // Ice bag conversion: name-based detection
+function shopSendOrder(ikey,label,email,supplier,code){
+  const qty=document.getElementById(ikey)?.value||'1';
+  const ev=state.events.find(x=>x.id===parseInt(document.getElementById('shop-ev-sel').value));
+  const evName=ev?ev.name:'';
+  const subject=`Commande — ${label}${code?' ['+code+']':''}`;
+  const body=`Bonjour${supplier?' '+supplier:''},\n\nNous souhaitons passer commande pour l'événement : ${evName}\n\nProduit : ${label}\nRéférence fournisseur : ${code||'—'}\nQuantité : ${qty}\n\nMerci de confirmer la disponibilité et les délais.\n\nCordialement`;
+  window.location.href=`mailto:${email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 function openIceOrderModal(msgKey){
   const cache=(window._iceOrderMsgs||{})[msgKey];
   if(!cache){alert('Recharge la shopping list d\'abord.');return;}
@@ -4353,11 +4364,25 @@ function renderShopping(){
         const hint=toRealUnits(item.productType,item.brand,totalG);
         if(hint) convertHint=`<span style="color:var(--text3);font-size:10px;font-style:italic;margin-left:6px">${hint}</span>`;
       }
-      html+=`<div class="shop-item"><span>${label}</span>
+      const prod=state.products.find(p=>p.productType===item.productType&&(!item.brand||p.brand===item.brand||!p.brand));
+      const supplierEmail=prod?.supplierEmail||'';
+      const supplierName=prod?.supplier||'';
+      const supplierCode=prod?.supplierCode||'';
+      const defaultQty=item.pQty||Math.ceil(item.total);
+      const ikey='order_'+cat+'_'+label.replace(/[^a-z0-9]/gi,'_');
+      let cmdBtn='';
+      if(cat!=='Ice'){
+        cmdBtn=`<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px">
+          <input type="number" id="${ikey}" value="${defaultQty}" min="1" style="width:52px;padding:2px 5px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center" onclick="event.stopPropagation()"/>
+          <button onclick="shopSendOrder('${ikey}','${label.replace(/'/g,"\\'")}','${supplierEmail}','${supplierName.replace(/'/g,"\\'")}','${supplierCode}')" style="padding:2px 9px;font-size:10px;background:var(--gold);color:#080808;border:none;border-radius:3px;cursor:pointer;font-weight:500;white-space:nowrap">Commander</button>
+        </span>`;
+      }
+      html+=`<div class="shop-item"><span>${label}${supplierCode?`<span style="font-size:9px;color:var(--text3);margin-left:6px;font-family:monospace">#${supplierCode}</span>`:''}</span>
         <span class="flex-g">
           <span class="ts tm">${qtyDisplay}${convertHint}</span>
           ${bagDisplay?`<span class="shop-qty">${bagDisplay}</span>`:''}
           <span class="txs tm">${item.costTotal.toFixed(2)}€ HT</span>
+          ${cmdBtn}
         </span></div>`;
     });
     html+=`</div>`;
