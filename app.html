@@ -403,6 +403,7 @@ select{color-scheme:dark}
         <button class="btn btn-ghost" id="tab-dresscode" onclick="showStaffTab('dresscode')">Tenues</button>
       </div>
       <button class="btn btn-gold" onclick="addStaff()" id="btn-add-staff">+ Ajouter staff</button>
+      <button class="btn btn-gold" onclick="addDressCodeModal()" id="btn-add-tenue" style="display:none">+ Ajouter tenue</button>
     </div>
   </div>
   <div class="content">
@@ -1734,6 +1735,7 @@ function showStaffTab(tab){
     document.getElementById('tab-dresscode').style.background='';
     document.getElementById('tab-dresscode').style.color='';
     document.getElementById('btn-add-staff').style.display='block';
+    document.getElementById('btn-add-tenue').style.display='none';
     renderStaff();
   }else{
     document.getElementById('staff-section').style.display='none';
@@ -1743,6 +1745,7 @@ function showStaffTab(tab){
     document.getElementById('tab-staff').style.background='';
     document.getElementById('tab-staff').style.color='';
     document.getElementById('btn-add-staff').style.display='none';
+    document.getElementById('btn-add-tenue').style.display='block';
     renderDresscode();
   }
 }
@@ -5289,6 +5292,15 @@ function addDressCode(name,desc){
   state.dressCodes.push({id:Date.now(),name,desc,active:true});
   save();renderDressCodes();
 }
+function addDressCodeModal(){
+  const name=document.getElementById('dc-custom-name')?.value?.trim();
+  const desc=document.getElementById('dc-custom-desc')?.value?.trim();
+  if(!name){toast('Nom de tenue requis');return;}
+  addDressCode(name,desc);
+  document.getElementById('dc-custom-name').value='';
+  document.getElementById('dc-custom-desc').value='';
+}
+
 function addDressCodeCustom(){
   const name=document.getElementById('dc-custom-name')?.value.trim();
   const desc=document.getElementById('dc-custom-desc')?.value.trim();
