@@ -999,7 +999,7 @@ let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], profile:{}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], orders:{}, profile:{}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -1543,7 +1543,6 @@ function renderCatPage(cat){
         <th>${t('cat_unit')}</th>
         <th>${t('cat_cpu')}</th>
         <th>${t('cat_supplier')}</th>
-        <th>Email</th>
         <th>${t('cat_code')}</th>
         <th style="color:var(--gold)">${t('cat_stock')}</th>
         <th style="color:var(--text3);font-size:8px">${t('cat_alert')}</th>
@@ -1566,7 +1565,6 @@ function renderCatPage(cat){
       </select></td>
       <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}">${cpu>0?cpu.toFixed(4)+' €/'+uLabel:'Prix manquant'}</span></td>
       <td><input value="${(p.supplier||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplier',this.value)" placeholder="Metro, Promocash..." style="min-width:100px"/></td>
-      <td><input value="${(p.supplierEmail||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierEmail',this.value)" placeholder="email@fournisseur.com" style="min-width:130px;font-size:11px"/></td>
       <td><input value="${(p.supplierCode||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
       <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
@@ -1575,7 +1573,11 @@ function renderCatPage(cat){
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="width:55px;color:var(--text3)"/></td>
-      <td><button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button></td>
+      <td style="white-space:nowrap;display:flex;align-items:center;gap:4px">
+        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="width:52px;padding:2px 5px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
+        <button class="btn" style="font-size:9px;padding:3px 7px;white-space:nowrap" onclick="addToOrderList(${p.id})">+ Courses</button>
+        <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button>
+      </td>
     </tr>`;
   });
   html+=`</tbody></table></div>`;
@@ -5582,6 +5584,65 @@ function renderClients(){
   }).join('');
 }
 
+function addToOrderList(pid){
+  const p=state.products.find(x=>x.id===pid);if(!p)return;
+  const inp=document.getElementById('order_qty_'+pid);
+  const qty=parseFloat(inp?.value)||0;
+  if(!qty||qty<=0){inp&&(inp.style.borderColor='var(--red)');return;}
+  if(!state.orders)state.orders={};
+  const sKey=p.supplier||'__sans_fournisseur__';
+  if(!state.orders[sKey])state.orders[sKey]=[];
+  const existing=state.orders[sKey].find(x=>x.pid===pid);
+  if(existing)existing.qty+=qty;
+  else state.orders[sKey].push({pid,name:p.productType,brand:p.brand||'',code:p.supplierCode||'',unit:p.unit||'',qty});
+  inp.value='';inp.style.borderColor='';
+  save();
+  // badge
+  showToast(`✓ ${qty} × ${p.brand||p.productType} → ${sKey}`);
+}
+
+function openSupplierOrder(supplierName){
+  if(!state.orders)state.orders={};
+  const sKey=supplierName||'__sans_fournisseur__';
+  const items=state.orders[sKey]||[];
+  const sup=state.suppliers.find(s=>s.name===supplierName)||{};
+  const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
+  const html=items.map(i=>`<tr><td>${i.brand||i.name}</td><td>${i.name}</td><td style="font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="font-weight:600">${i.qty} ${i.unit}</td></tr>`).join('');
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:16px;font-weight:600">Commande — ${supplierName}</div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button>
+    </div>
+    ${!items.length?'<p style="color:var(--text3);font-size:13px">Aucun article en liste de course pour ce fournisseur.</p>':`
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.1em">
+        <th style="text-align:left;padding:4px 6px">Marque</th><th style="text-align:left;padding:4px 6px">Produit</th><th style="text-align:left;padding:4px 6px">Réf</th><th style="text-align:left;padding:4px 6px">Qté</th>
+      </tr></thead>
+      <tbody>${html}</tbody>
+    </table>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      ${sup.email?`<a href="mailto:${sup.email}?subject=${encodeURIComponent('Commande — '+supplierName)}&body=${encodeURIComponent('Bonjour,\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement')}" class="btn btn-gold" style="flex:1;text-align:center;text-decoration:none"> Envoyer par mail</a>`:''}
+      ${sup.phone?`<a href="https://wa.me/${sup.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Bonjour,\n\nCommande :\n\n'+lines+'\n\nMerci !')}" target="_blank" class="btn" style="flex:1;text-align:center;text-decoration:none;background:#25D366;color:#fff;border-color:#25D366"> WhatsApp</a>`:''}
+      <button class="btn btn-danger" onclick="clearSupplierOrder('${supplierName}');this.closest('[style*=fixed]').remove()" style="flex:1"> Vider la liste</button>
+    </div>`}
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function clearSupplierOrder(supplierName){
+  if(!state.orders)return;
+  delete state.orders[supplierName||'__sans_fournisseur__'];
+  save();renderSuppliers();
+}
+
+function showToast(msg){
+  let t=document.getElementById('_toast');
+  if(!t){t=document.createElement('div');t.id='_toast';t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--gold);color:#080808;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';clearTimeout(t._to);t._to=setTimeout(()=>t.style.opacity='0',2500);
+}
+
 function renderSuppliers(){
   const el=document.getElementById('suppliers-content');if(!el)return;
   if(!state.suppliers.length){
@@ -5604,8 +5665,9 @@ function renderSuppliers(){
       <div style="display:flex;gap:6px;margin-top:4px">
         <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})" style="flex:1">Modifier</button>
         ${s.phone?`<a href="tel:${s.phone}" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none">Appeler</a>`:''}
-        ${s.email?`<a href="mailto:${s.email}" class="btn btn-sm btn-gold" style="flex:1;text-align:center;text-decoration:none">Commander</a>`:''}
-        ${s.phone&&!s.email?`<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-gold" style="flex:1;text-align:center;text-decoration:none">WhatsApp</a>`:''}
+        ${s.email?`<a href="mailto:${s.email}" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none"> Mail</a>`:''}
+        ${s.phone&&!s.email?`<a href="https://wa.me/${s.phone.replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-ghost" style="flex:1;text-align:center;text-decoration:none"> WA</a>`:''}
+        <button class="btn btn-sm btn-gold" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">📋 Commander${(state.orders&&state.orders[s.name]?.length)?` (${state.orders[s.name].length})`:''}</button>
       </div>
     </div>`).join('')}</div>`;
 }
