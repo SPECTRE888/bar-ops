@@ -398,6 +398,7 @@ select{color-scheme:dark}
 <div id="page-staff" class="page">
   <div class="topbar"><h2>Mon équipe</h2>
     <div class="topbar-actions no-print">
+      <input type="text" id="staff-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterStaff()"/>
       <div style="display:flex;gap:8px;margin-right:16px">
         <button class="btn btn-ghost" id="tab-staff" onclick="showStaffTab('staff')" style="background:var(--gold);color:#000">Équipe</button>
         <button class="btn btn-ghost" id="tab-dresscode" onclick="showStaffTab('dresscode')">Tenues</button>
@@ -466,7 +467,10 @@ select{color-scheme:dark}
 <!-- ═══ CLIENTS ═══ -->
 <div id="page-clients" class="page">
   <div class="topbar"><h2>Clients</h2>
-    <div class="topbar-actions no-print"><button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button></div>
+    <div class="topbar-actions no-print">
+      <input type="text" id="clients-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterClients()"/>
+      <button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button>
+    </div>
   </div>
   <div class="content" id="clients-content"></div>
 </div>
@@ -1748,6 +1752,14 @@ function showStaffTab(tab){
     document.getElementById('btn-add-tenue').style.display='block';
     renderDresscode();
   }
+}
+
+function filterStaff(){
+  const query=document.getElementById('staff-search')?.value?.toLowerCase()||'';
+  document.querySelectorAll('#staff-tb tr').forEach(row=>{
+    const text=row.textContent.toLowerCase();
+    row.style.display=text.includes(query)?'':'none';
+  });
 }
 
 function renderStaff(){
@@ -5582,6 +5594,14 @@ function checkCodeDuplicate(val, currentId){
   }
 }
 
+function filterClients(){
+  const query=document.getElementById('clients-search')?.value?.toLowerCase()||'';
+  document.querySelectorAll('#clients-content .client-card').forEach(card=>{
+    const text=card.textContent.toLowerCase();
+    card.style.display=text.includes(query)?'':'none';
+  });
+}
+
 function renderClients(){
   const el=document.getElementById('clients-content');if(!el)return;
   if(!state.clients.length){
@@ -5592,7 +5612,7 @@ function renderClients(){
     const evCount=state.events.filter(ev=>ev.clientId===c.id).length;
     const isOpen=c._open===true;
     const subtitle=[c.company,c.phone,c.email].filter(Boolean).join(' · ');
-    return`<div class="card" style="margin-bottom:8px;padding:0;overflow:hidden">
+    return`<div class="card client-card" style="margin-bottom:8px;padding:0;overflow:hidden">
       <!-- Header — always visible -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:${isOpen?'var(--surface2)':'var(--surface)'}" onclick="toggleClient(${c.id})">
         <div style="min-width:0">
