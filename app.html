@@ -6768,8 +6768,26 @@ function showSuiviTab(tab){
     document.getElementById('tab-planning').style.color='#000';
     document.getElementById('tab-suivi').style.background='';
     document.getElementById('tab-suivi').style.color='';
-    document.getElementById('planning-content-embed').innerHTML=document.getElementById('planning-content').innerHTML;
+    renderPlanningEmbed();
   }
+}
+
+function renderPlanningEmbed(){
+  const el=document.getElementById('planning-content-embed');
+  const now=new Date();
+  const sorted=[...state.events].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+  const html=sorted.map(ev=>{
+    const d=new Date(ev.date||0);
+    const isPast=d<now;
+    return `
+      <div style="padding:12px;border-left:4px solid ${isPast?'#666':'var(--gold)'};background:var(--surface);margin-bottom:8px;border-radius:4px;cursor:pointer" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${ev.id}';renderPrestation()},100)">
+        <div style="font-weight:600">${ev.name}</div>
+        <div style="font-size:12px;color:var(--text3)">${d.toLocaleDateString('fr-FR')} — ${ev.nGuests||0} pers.</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${ev.location||'—'}</div>
+      </div>
+    `;
+  }).join('');
+  el.innerHTML=html||'<div class="empty"><p>Aucun événement planifié</p></div>';
 }
 
 function renderSuivi(){
