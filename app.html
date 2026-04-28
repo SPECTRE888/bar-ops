@@ -1650,9 +1650,9 @@ function renderGlassware(){
     const cpclHT=(pricePerKgTTC/100/1.20).toFixed(4);
     return`<tr>
       <td><input value="${(i.name||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'name',this.value)" placeholder="Glaçons, Glace pilée..."/></td>
-      <td><input type="number" value="${pricePerKgTTC}" step="0.01" min="0" onchange="updIce(${i.id},'pricePerKgTTC',parseFloat(this.value)||0)" style="width:80px"/> <span class="txs tm">€/kg TTC</span></td>
-      <td><input type="number" value="${kgQty}" step="0.5" min="0" onchange="updIce(${i.id},'kgQty',parseFloat(this.value)||0)" style="width:65px"/> <span class="txs tm">kg</span></td>
-      <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:65px"/> <span class="txs tm">kg</span></td>
+      <td><input type="number" value="${pricePerKgTTC}" step="0.01" min="0" onchange="updIce(${i.id},'pricePerKgTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
+      <td><input type="number" value="${kgQty}" step="0.5" min="0" onchange="updIce(${i.id},'kgQty',parseFloat(this.value)||0)" style="width:65px"/></td>
+      <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:65px"/></td>
       <td><span class="cpu cpu-ok">${totalTTC}€ TTC → ${totalHT}€ HT</span></td>
       <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}</select></td>
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
