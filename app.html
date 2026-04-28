@@ -1374,7 +1374,7 @@ function goPage(p){
   else if(p==='glassware') renderGlassware();
   else if(p==='staff'){renderStaff();renderDressCodes();}
   else if(p==='clients') renderClients();
-  else if(p==='suppliers') renderSuppliers(); {renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
+  else if(p==='suppliers') {renderSuppliers(); renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
   else if(p==='shopping') {renderShopping(); renderShopEvSel();}
   else if(p==='cocktails') showCList();
   else if(p==='events') showEvList();
