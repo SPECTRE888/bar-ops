@@ -1644,27 +1644,21 @@ function renderGlassware(){
     // cost per cl = pricePerKgTTC / 1000g * density ~1 → price per cl ≈ pricePerKgTTC/100
     const cpclHT=(pricePerKgTTC/100/1.20).toFixed(4);
     return`<tr>
-      <td><input value="${(i.name||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'name',this.value)" placeholder="e.g. Glaçons, Glace pilée..."/></td>
+      <td><input value="${(i.name||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'name',this.value)" placeholder="Glaçons, Glace pilée..."/></td>
       <td><input type="number" value="${pricePerKgTTC}" step="0.01" min="0" onchange="updIce(${i.id},'pricePerKgTTC',parseFloat(this.value)||0)" style="width:80px"/> <span class="txs tm">€/kg TTC</span></td>
       <td><input type="number" value="${kgQty}" step="0.5" min="0" onchange="updIce(${i.id},'kgQty',parseFloat(this.value)||0)" style="width:65px"/> <span class="txs tm">kg</span></td>
-      <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:65px" title="Quantité minimum de commande (kg)"/> <span class="txs tm">kg</span></td>
-      <td>
-        <span class="cpu cpu-ok">${totalTTC}€ TTC → ${totalHT}€ HT</span>
-        <div class="txs tm">${cpclHT}€ HT/cl</div>
-      </td>
-      <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
-        <input value="${(i.supplierPhone||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'supplierPhone',this.value)" placeholder="+33 6..." style="min-width:110px"/>
-        ${i.supplierPhone?`<a href="https://wa.me/${waPhone(i.supplierPhone)}" target="_blank" style="color:#25D366;text-decoration:none;font-size:14px;flex-shrink:0"></a>`:''}
-      </div></td>
-      <td style="white-space:nowrap;display:flex;align-items:center;gap:3px">
+      <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:65px"/> <span class="txs tm">kg</span></td>
+      <td><span class="cpu cpu-ok">${totalTTC}€ TTC → ${totalHT}€ HT</span></td>
+      <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}</select></td>
+      <td style="white-space:nowrap;display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="width:42px;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
-        <button class="btn" style="font-size:8px;padding:2px 6px;white-space:nowrap;letter-spacing:.05em" onclick="addIceOrGlassToOrder(${i.id},'ice','${i.name||''.replace(/'/g,"\\'")}','${(i.supplier||'').replace(/'/g,"\\'")}')">+ COURSES</button>
+        <button class="btn" style="font-size:8px;padding:2px 6px;white-space:nowrap" onclick="addIceOrGlassToOrder(${i.id},'ice','${i.name||''}','${i.supplier||''}')">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delIce(${i.id})">×</button>
       </td>
     </tr>`;
+
   }).join('');}
 }
-
 // ════════════════════════════════════════════════════════
 // STAFF
 // ════════════════════════════════════════════════════════
