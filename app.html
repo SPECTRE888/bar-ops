@@ -156,6 +156,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(
 input::placeholder{color:var(--text3)}
 select option{background:#151515;color:#ede8e0}
 select{color-scheme:dark}
+/* Inputs/Selects avec largeur fixe */
+.input-sm{width:100px !important}
+.input-md{width:160px !important}
+.input-lg{width:210px !important}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
@@ -351,7 +355,7 @@ select{color-scheme:dark}
 <div id="page-catalogue" class="page">
   <div class="topbar"><h2>Catalogue</h2>
     <div class="topbar-actions no-print">
-      <select id="cat-filter" onchange="renderCatalogue()" style="width:155px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text)">
+      <select id="cat-filter" onchange="renderCatalogue()" class="input-md">
         <option value="Spirit"> Spiritueux</option>
         <option value="Juice"> Jus & Purées</option>
         <option value="Mixer"> Mixers & Sodas</option>
@@ -364,7 +368,7 @@ select{color-scheme:dark}
         <option value="Bar"> Bar & Matériel</option>
       </select>
       <div style="position:relative;display:flex;align-items:center">
-        <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" style="padding:6px 10px;font-size:12px;width:155px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font-body)"/>
+        <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" class="input-md"/>
       </div>
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
       <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">Import CSV</button>
@@ -481,7 +485,7 @@ select{color-scheme:dark}
 <div id="page-shopping" class="page">
   <div class="topbar"><h2> Liste de courses</h2>
     <div class="topbar-actions no-print">
-      <select id="shop-ev-sel" style="width:210px" onchange="renderShopping()"><option value="">— Sélectionner un événement —</option></select>
+      <select id="shop-ev-sel" class="input-lg" onchange="renderShopping()"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="printShoppingPDF()"> PDF</button>
       <button class="btn" onclick="shareShoppingWA()"> Envoyer</button>
     </div>
@@ -493,7 +497,7 @@ select{color-scheme:dark}
 <div id="page-prestation" class="page">
   <div class="topbar"><h2> Fiche Prestation</h2>
     <div class="topbar-actions no-print">
-      <select id="prest-ev-sel" style="width:210px" onchange="renderPrestation()"><option value="">— Sélectionner un événement —</option></select>
+      <select id="prest-ev-sel" class="input-lg" onchange="renderPrestation()"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="generateDevis()">Devis</button>
     </div>
   </div>
@@ -1778,11 +1782,11 @@ function showCList(){
   const topbarActions=document.querySelector('#page-cocktails .topbar-actions');
   const filterHTML=`
     <input id="c-srch" placeholder="Rechercher un cocktail..." oninput="renderCGrid()" style="padding:6px 10px;font-size:12px;width:150px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font-body)"/>
-    <select id="c-filter-spirit" onchange="renderCGrid()" style="width:155px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text)">
+    <select id="c-filter-spirit" onchange="renderCGrid()" class="input-md">
       <option value="">Tous les spiritueux</option>
       ${spiritTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
     </select>
-    <select id="c-filter-cat" onchange="renderCGrid()" style="width:155px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text)">
+    <select id="c-filter-cat" onchange="renderCGrid()" class="input-md">
       <option value="">Toutes catégories</option>
       ${cats.map(c=>`<option value="${c}">${c}</option>`).join('')}
     </select>`;
@@ -5673,7 +5677,7 @@ function sendSupplierOrder(supplierName,method){
   delete state.orders[sKey];save();
   document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
   if(method==='email'&&sup.email){
-    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName)+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
   }else if(method==='whatsapp'&&sup.phone){
     window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
   }
