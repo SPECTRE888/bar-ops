@@ -3265,6 +3265,7 @@ function showEvForm(ev){
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
       <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
+      <input type="hidden" id="ef-bar-name" value="${ev.barType||''}"/>
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
@@ -3615,11 +3616,13 @@ function updBarSelection(){
   
   if(match){
     document.getElementById('ef-bar-type').value=match.id;
+    document.getElementById('ef-bar-name').value=match.name||'';
     document.getElementById('ef-bar-length').value=match.lengthM||0;
     document.getElementById('ef-bar-price').value=match.priceHT||0;
     document.getElementById('ef-bar-prix').textContent=match.priceHT+'€';
   }else{
     document.getElementById('ef-bar-type').value='';
+    document.getElementById('ef-bar-name').value='';
     document.getElementById('ef-bar-length').value='';
     document.getElementById('ef-bar-price').value='';
     document.getElementById('ef-bar-prix').textContent='—';
@@ -3776,25 +3779,7 @@ function saveEv(){
   const deliveryBill=parseFloat(document.getElementById('ef-delivery-bill')?.value)||0;
   
   let staffRevenue=0;
-  const calcStaffBill=(n,arrId,depId)=>{
-    if(n<=0)return 0;
-    const arr=document.getElementById(arrId)?.value||'';
-    const dep=document.getElementById(depId)?.value||'';
-    if(!arr||!dep)return 0;
-    const [ah,am]=arr.split(':').map(Number);
-    const [dh,dm]=dep.split(':').map(Number);
-    let h=(dh*60+dm)-(ah*60+am);if(h<0)h+=24*60;
-    const hrs=h/60;
-    const roleMap={brt:'Bartender',wtr:'Waiter/Server',mgr:'Bar Manager'};
-    const typeMap={'brt':'Bartender','wtr':'Waiter/Server','mgr':'Bar Manager'};
-    const item=state.staffItems?.find(s=>s.type===typeMap[Object.keys(roleMap).find(k=>roleMap[k]===typeMap[Object.keys(typeMap).find(tk=>typeMap[tk]===roleMap[Object.keys(roleMap).find(rk=>roleMap[rk]===typeMap[Object.keys(typeMap).find(ttk=>Object.values(roleMap).includes(s.type))])])])])||{billHT:0};
-    const defaultRate={Bartender:40,Waiter:32,'Bar Manager':55}[s?.type]||0;
-    return n*hrs*(s?.billHT||defaultRate||0);
-  };
-  
-  staffRevenue=(nB>0?nB*calcStaffBill(1,'ef-arrbrt','ef-depbrt').split('*')[0]||0:0)+(nW>0?nW*calcStaffBill(1,'ef-arrwtr','ef-depwtr').split('*')[0]||0:0)+(nM>0?nM*calcStaffBill(1,'ef-arrmgr','ef-depmgr').split('*')[0]||0:0);
-  
-  // Simpler: get bill rates per role from staffItems matching type
+  // Get bill rates per role from staffItems matching type
   const staffBillPerRole={
     brt: state.staffItems?.find(s=>s.type==='Bartender')?.billHT||40,
     wtr: state.staffItems?.find(s=>s.type==='Waiter/Server')?.billHT||32,
@@ -3841,7 +3826,7 @@ function saveEv(){
     notes:document.getElementById('ef-notes')?.value||'',
     barItemId:parseInt(document.getElementById('ef-bar-type')?.value)||null,
     eventCreator:parseInt(document.getElementById('ef-event-creator')?.value)||null,
-    barType:document.getElementById('ef-bar-type')?.options[document.getElementById('ef-bar-type')?.selectedIndex]?.text||'',
+    barType:document.getElementById('ef-bar-name')?.value||'',
     barLength:parseFloat(document.getElementById('ef-bar-length')?.value)||0,
     barPrice:parseFloat(document.getElementById('ef-bar-price')?.value)||0,
     dressCodes:(function(){const v=document.getElementById('ef-tenue-select')?.value;return v?[parseInt(v)]:[];})(),
