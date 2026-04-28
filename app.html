@@ -6753,6 +6753,11 @@ function confirmResetData(){
 // ════════════════════════════════════════════════════════
 function renderSuivi(){
   const el=document.getElementById('suivi-content');if(!el)return;
+  
+  // Auto-delete events payés ET stock retour fait
+  state.events=state.events.filter(ev=>!(ev.paid&&ev.stockRetourDone));
+  save();
+  
   if(!state.events.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
     return;
