@@ -2658,20 +2658,20 @@ function renderDashboard(){
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:16px;text-align:center">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:20px;font-weight:500">CA</div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:20px;line-height:1" id="ca-value">${caPayees.toFixed(0)}€</div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA</div>
+      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${caPayees.toFixed(0)}€</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
-      <div style="display:flex;gap:8px;align-items:center;justify-content:center">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
         <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
         <span style="color:var(--text3)">→</span>
         <input type="date" id="ca-to" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
       </div>
     </div>
-    <div class="card" style="padding:10px;text-align:center">
+    <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
-      <div style="height:1px;background:var(--gold-border);margin:16px 0"></div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.6">
+      <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:20px">
         <div>OK | ALERTE</div>
       </div>
     </div>
