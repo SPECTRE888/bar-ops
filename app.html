@@ -2985,10 +2985,9 @@ function showEvList(){
         <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text3)">
-        <div>📍 ${ev.pax||'?'} pax</div>
-        <div>🍸 ${tot} cocktails</div>
+        <div>${ev.pax||'?'} pax</div>
+        <div>${tot} cocktails</div>
       </div>
-      ${assigned?`<div style="font-size:12px;color:var(--green);font-weight:500">✓ ${confirmed}/${assigned} staff confirmés</div>`:'<div style="font-size:12px;color:var(--text3)">— Staff non assigné</div>'}
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1">Fiche</button>
@@ -3025,10 +3024,9 @@ function filterEvList(){
         <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text3)">
-        <div>📍 ${ev.pax||'?'} pax</div>
-        <div>🍸 ${tot} cocktails</div>
+        <div>${ev.pax||'?'} pax</div>
+        <div>${tot} cocktails</div>
       </div>
-      ${assigned?`<div style="font-size:12px;color:var(--green);font-weight:500">✓ ${confirmed}/${assigned} staff confirmés</div>`:'<div style="font-size:12px;color:var(--text3)">— Staff non assigné</div>'}
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
         <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1">Fiche</button>
