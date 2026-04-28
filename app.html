@@ -302,10 +302,6 @@ select{color-scheme:dark}
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><polyline points="1,12 5,7 8,9 11,4 15,6"/><path d="M1 15h14"/></svg>
       Historique
     </div>
-    <div class="nav-item" onclick="goPage('planning')" id="nav-planning">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1 4h14M4 1v3M12 1v3"/><rect x="1" y="3" width="14" height="12" rx="1"/></svg>
-      Planning
-    </div>
 
     <div class="nav-sec">Compte</div>
     <div class="nav-item" onclick="goPage('profile')" id="nav-profile">
@@ -510,10 +506,15 @@ select{color-scheme:dark}
   <div class="topbar">
     <h2> Suivi des prestations</h2>
     <div class="topbar-actions no-print">
+      <div style="display:flex;gap:8px;margin-right:16px">
+        <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000">Suivi</button>
+        <button class="btn btn-ghost" id="tab-planning" onclick="showSuiviTab('planning')">Planning</button>
+      </div>
       <input type="text" id="suivi-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterSuivi()"/>
     </div>
   </div>
   <div class="content" id="suivi-content"></div>
+  <div class="content" id="planning-content-embed" style="display:none"></div>
 </div>
 
 <!-- ═══ HISTORIQUE ═══ -->
@@ -6752,6 +6753,25 @@ function confirmResetData(){
   toast('Données réinitialisées');
 }
 // ════════════════════════════════════════════════════════
+function showSuiviTab(tab){
+  if(tab==='suivi'){
+    document.getElementById('suivi-content').style.display='block';
+    document.getElementById('planning-content-embed').style.display='none';
+    document.getElementById('tab-suivi').style.background='var(--gold)';
+    document.getElementById('tab-suivi').style.color='#000';
+    document.getElementById('tab-planning').style.background='';
+    document.getElementById('tab-planning').style.color='';
+  }else{
+    document.getElementById('suivi-content').style.display='none';
+    document.getElementById('planning-content-embed').style.display='block';
+    document.getElementById('tab-planning').style.background='var(--gold)';
+    document.getElementById('tab-planning').style.color='#000';
+    document.getElementById('tab-suivi').style.background='';
+    document.getElementById('tab-suivi').style.color='';
+    document.getElementById('planning-content-embed').innerHTML=document.getElementById('planning-content').innerHTML;
+  }
+}
+
 function renderSuivi(){
   const el=document.getElementById('suivi-content');if(!el)return;
   
