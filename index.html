@@ -46,9 +46,9 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif}
 /* FOOTER */
 footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
 .sub{text-align:center;font-size:14px;color:var(--text2);padding:18px 24px 0;max-width:600px;margin:0 auto;line-height:1.6}
-.features{display:grid;grid-template-columns:repeat(5,1fr);width:100%;border-top:1px solid rgba(255,255,255,.07);margin-top:18px}
+.features{display:grid;grid-template-columns:repeat(4,1fr);width:100%;border-top:1px solid rgba(255,255,255,.07);margin-top:18px}
 .feature{padding:18px 16px;border-right:1px solid rgba(255,255,255,.07);text-align:center}
-.feature:last-child{border-right:none}
+.feature:nth-child(4n){border-right:none}
 .feature h3{font-size:15px;font-weight:400;letter-spacing:.05em;margin-bottom:6px;color:var(--text)}
 .feature p{color:var(--text2);font-size:13px;line-height:1.5;font-weight:300}
 .legal{text-align:center;font-size:13px;color:var(--text2);padding:16px 24px;border-top:1px solid rgba(255,255,255,.07);line-height:1.8;opacity:1}
@@ -62,17 +62,18 @@ footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
 
 <div class="hero">
   <div class="logo">BAR OPS</div>
-  <div class="tagline">Une nouvelle manière de piloter vos événements. Sans friction.</div>
-  <button class="btn-primary" onclick="window.location.href='auth.html'">Accéder à la plateforme</button>
+  <div class="tagline">Organisez un événement cocktail en 30min<br/>au lieu de 3h.</div>
+  <div style="font-size:13px;color:var(--text2);margin-bottom:32px;max-width:500px">Devis, staff, liste de courses, marges — généré en quelques clics. Pilotez vos événements sans friction.</div>
+  <button class="btn-primary" onclick="window.location.href='auth.html'">Essayer gratuitement</button>
+  <div style="font-size:11px;color:var(--text2);margin-top:14px">Pas de carte bancaire requise. Trial 14 jours.</div>
 </div>
 
 <footer>
   <div class="features">
-    <div class="feature"><h3>Cocktails</h3><p>Catalogue, coûts et marges en temps réel.</p></div>
-    <div class="feature"><h3>Équipe & Tenue</h3><p>Assignez et briefez votre équipe en un clic.</p></div>
-    <div class="feature"><h3>Logistique</h3><p>Listes de courses, matériel, livraisons.</p></div>
-    <div class="feature"><h3>Analytique</h3><p>Historique, marges et suivi des prestations.</p></div>
-    <div class="feature"><h3>Automatisation</h3><p>Devis, staff, cartes générés automatiquement.</p></div>
+    <div class="feature"><h3>⚡ 70% plus rapide</h3><p>Générez devis et listes de courses en 30sec.</p></div>
+    <div class="feature"><h3>📊 +20% de marge</h3><p>Coûts et prix optimisés automatiquement.</p></div>
+    <div class="feature"><h3>👥 Zéro confusion</h3><p>Équipe briefée et assignée en un clic.</p></div>
+    <div class="feature"><h3>📈 Historique</h3><p>Suivez marges et évolution de vos prestations.</p></div>
   </div>
   <div class="legal">
     © 2026 BAR OPS — Tous droits réservés &nbsp;·&nbsp;
