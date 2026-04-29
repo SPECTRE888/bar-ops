@@ -76,7 +76,7 @@ async function googleAuthLogin(){
   await sb.auth.signOut();
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=login'}
+    options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=login'}
   });
   if(error)msg(error.message,'err');
 }
@@ -85,7 +85,7 @@ async function googleAuthSignup(){
   await sb.auth.signOut();
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=signup'}
+    options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=signup'}
   });
   if(error)msg(error.message,'err');
 }
