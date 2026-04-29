@@ -1413,7 +1413,11 @@ function goPage(p){
   else if(p==='staff'){renderStaff();renderDressCodes();}
   else if(p==='clients') renderClients();
   else if(p==='suppliers') {renderSuppliers(); renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
-  else if(p==='shopping') {renderShopping(); renderShopEvSel();}
+  else if(p==='prestation') {
+    const sel=document.getElementById('prest-ev-sel');
+    if(sel) sel.style.display='';
+    renderPrestEvSel();
+  }
   else if(p==='cocktails') showCList();
   else if(p==='events') showEvList();
   else if(p==='historique') renderHistorique();
@@ -3126,7 +3130,11 @@ function goEvTab(evId, tab){
     goPage('prestation');
     setTimeout(()=>{
       const sel=document.getElementById('prest-ev-sel');
-      if(sel){sel.value=evId;renderPrestation();}
+      if(sel){
+        sel.value=evId;
+        sel.style.display='none';
+        renderPrestation();
+      }
     },50);
   } else if(tab==='shopping'){
     goPage('shopping');
