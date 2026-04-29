@@ -2964,7 +2964,6 @@ function updCRecap(){
     }
     
     const lbl=document.getElementById('bar-lbl');
-    const pricePct=(ht/suggested-1)*100;
     if(lbl)lbl.textContent=pricePct>15?'✓ Marge forte':pricePct>-15?'✓ Excellente marge':pricePct>-30?'⚠ Marge faible':'✗ Trop bas';
   } else {
     ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
