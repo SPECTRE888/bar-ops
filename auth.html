@@ -24,11 +24,10 @@ h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-
 .btn.fill:disabled{opacity:.5}
 .toggle{font-size:12px;color:var(--text2);margin-top:20px}
 .toggle button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;font-family:'Jost',sans-serif}
-.back{margin-top:24px}
-.back a{color:var(--text2);text-decoration:none;font-size:12px}
-.footer-links{margin-top:24px;display:flex;flex-direction:column;gap:12px;align-items:center}
-.footer-links a{color:var(--text2);font-size:11px;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px;transition:.2s}
-.footer-links a:hover{color:var(--gold)}
+.back{margin-top:24px;display:flex;justify-content:center;gap:32px;align-items:center}
+.back a{color:var(--text2);text-decoration:none;font-size:12px;transition:.2s}
+.back a:hover{color:var(--gold)}
+.footer-links{display:contents}
 </style>
 </head>
 <body>
@@ -47,9 +46,9 @@ h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-
     <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
   </div>
 
-  <div class="back"><a href="index.html">← Retour</a></div>
-  <div class="footer-links">
-    <a href="app.html?demo=1">Visualiser sans se connecter →</a>
+  <div class="back">
+    <a href="index.html">← Retour</a>
+    <a href="app.html?demo=1" style="font-size:11px;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px">Visualiser sans se connecter →</a>
   </div>
 </div>
 
