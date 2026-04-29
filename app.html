@@ -2954,14 +2954,12 @@ function updCRecap(){
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
     
-    // Barre basée sur écart prix/suggested (0-20€ range)
-    const priceDiff=ht-suggested;
-    const barRatio=Math.max(0,Math.min(100,(priceDiff+10)/20*100)); // -10€=0%, 0€=50%, +10€=100%
+    // Barre basée sur écart prix/suggested : -15% = 0%, 0% = 50%, +15% = 100%
+    const pricePct=(ht/suggested-1)*100;
+    const barRatio=Math.max(0,Math.min(100,(pricePct+15)/30*100));
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=barRatio+'%';
-      // Excellente marge si prix ≈ suggested (-15% à +15%), forte si au-dessus, faible si dessous
-      const pricePct=(ht/suggested-1)*100;
       fill.style.background=pricePct>15?'var(--green)':pricePct>-15?'var(--gold)':pricePct>-30?'#ff9800':'var(--red)';
     }
     
