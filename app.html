@@ -498,9 +498,9 @@ select{color-scheme:dark}
 
 <!-- ═══ FICHE PRESTATION (accessible via events) ═══ -->
 <div id="page-prestation" class="page">
-  <div class="topbar"><h2> Fiche Prestation</h2>
+  <div class="topbar"><h2 id="prest-title"> Fiche Prestation</h2>
     <div class="topbar-actions no-print">
-      <select id="prest-ev-sel" class="input-lg" onchange="renderPrestation()"><option value="">— Sélectionner un événement —</option></select>
+      <select id="prest-ev-sel" class="input-lg" onchange="renderPrestation()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="generateDevis()">Devis</button>
     </div>
   </div>
@@ -1414,9 +1414,12 @@ function goPage(p){
   else if(p==='clients') renderClients();
   else if(p==='suppliers') {renderSuppliers(); renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
   else if(p==='prestation') {
-    const sel=document.getElementById('prest-ev-sel');
-    if(sel) sel.style.display='';
     renderPrestEvSel();
+    const sel=document.getElementById('prest-ev-sel');
+    if(sel && sel.children.length>1){
+      sel.value=sel.children[1].value;
+    }
+    renderPrestation();
   }
   else if(p==='cocktails') showCList();
   else if(p==='events') showEvList();
@@ -4585,8 +4588,15 @@ function renderPrestation(){
   renderPrestEvSel();
   const evId=parseInt(document.getElementById('prest-ev-sel').value);
   const el=document.getElementById('prest-content');
-  if(!evId){el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';return;}
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const titleEl=document.getElementById('prest-title');
+  if(!evId){
+    el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';
+    if(titleEl) titleEl.textContent=' Fiche Prestation';
+    return;
+  }
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev)return;
+  if(titleEl) titleEl.textContent=' '+ev.name;
   const assignedIds=ev.assignedStaff||[];
   const confirmed=ev.staffConfirmed||[];
   const unavail=ev.staffUnavail||[];
