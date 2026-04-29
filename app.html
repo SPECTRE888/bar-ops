@@ -3540,11 +3540,12 @@ function renderEvPicker(){
           ${margin?`<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Marge</div><span class="txs" style="color:${parseFloat(margin)>30?'var(--green)':'var(--text3)'}; font-weight:500">${margin}%</span></div>`:''}
           `:'<span class="txs tm">Entre une quantité</span>'}
         </div>
-      </div>`;
+      </div>
+    </div>`;
   }).join('');
 
   const addRow=unselected.length?`
-    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+    <div style="margin-top:8px">
       <select onchange="if(this.value){toggleEvC(parseInt(this.value),true);this.value='';}" style="width:100%;font-size:12px;padding:7px 10px;border:1px dashed var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text2);cursor:pointer">
         <option value="">+ Ajouter un cocktail...</option>
         ${filtered.map(c=>`<option value="${c.id}">${c.name} — ${c.category}</option>`).join('')}
