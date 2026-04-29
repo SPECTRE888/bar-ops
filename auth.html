@@ -108,8 +108,17 @@ async function redirect(userId){
   const action=new URLSearchParams(window.location.search).get('action');
   
   if(!fullHash.includes('access_token'))return;
+  
+  // Set timeout fallback for private mode (where session might not persist)
+  const fallbackTimeout=setTimeout(()=>{
+    if(action==='signup'){
+      window.location.href='paying.html';
+    }
+  },2000);
+  
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s){
+      clearTimeout(fallbackTimeout);
       if(action==='signup'){
         try{
           const{data:existing}=await sb.from('subscriptions').select('id').eq('user_id',s.user.id).single();
