@@ -1023,8 +1023,8 @@ const CAT_DEFAULTS = {
 const CAT_COLORS = {Spirit:'gold',Juice:'green',Mixer:'teal',Syrup:'blue',Garnish:'pink',Consumable:'text2',Spice:'orange'};
 const CAT_ICONS  = {Spirit:'',Juice:'',Mixer:'',Syrup:'',Garnish:'',Consumable:'',Spice:''};
 const UNITS = ['cl','ml','L','g','kg','pc'];
-const STAFF_ROLES = ['Bartender','Serveur','Bar Manager'];
-const STAFF_ROLES_DISPLAY = {'Bartender':'Bartender','Serveur':'Serveur','Bar Manager':'Bar Manager'};
+const STAFF_ROLES = ['Bartender','Serveur','Bar Manager','Manutentionnaire'];
+const STAFF_ROLES_DISPLAY = {'Bartender':'Bartender','Serveur':'Serveur','Bar Manager':'Bar Manager','Manutentionnaire':'Manutentionnaire'};
 const STAFF_PER   = ['per hour'];
 
 const GLASS_TYPES=['Rocks','Highball','Verre','Martini','Coupe','Collins','Flûte','Tiki mug','Copper mug','Hurricane','Snifter','Shot glass','Wine glass','Goblet','Jam jar','Stemless wine','Sling glass'];
@@ -3334,6 +3334,7 @@ function showEvForm(ev){
         {key:'brt',label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||''},
         {key:'wtr',label:'Serveur',  n:ev.nWaiters||0,  arr:ev.arrWtr||'',dep:ev.depWtr||''},
         {key:'mgr',label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||''},
+        {key:'man',label:'Manutentionnaire',n:ev.nManutentionnaires||0,arr:ev.arrMan||'',dep:ev.depMan||''},
       ].map(r=>`
       <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
         <span style="font-weight:500">${r.label}</span>
@@ -3365,15 +3366,24 @@ function showEvForm(ev){
 
       <!-- Livraison -->
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <label style="font-size:11px">Livraison</label>
-        <select id="ef-delivery-select" style="width:100%;font-size:10px;padding:3px 4px;height:24px" onchange="(function(){const v=this.value;if(v==='custom'){document.getElementById('ef-delivery-bill').style.display='block';}else{document.getElementById('ef-delivery-bill').value=v;document.getElementById('ef-delivery-bill').style.display='none';}updEvCalc();}).call(this)">
-          <option value="0" ${ev.deliveryBillHT===0?'selected':''}>Aucune (0€)</option>
-          <option value="90" ${ev.deliveryBillHT===90?'selected':''}>Paris (90€)</option>
-          <option value="150" ${ev.deliveryBillHT===150?'selected':''}>IDF (150€)</option>
-          <option value="200" ${ev.deliveryBillHT===200?'selected':''}>Province (200€)</option>
-          <option value="custom" ${![0,90,150,200].includes(ev.deliveryBillHT)?'selected':''}>Custom</option>
-        </select>
-        <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:100%;padding:3px 4px;font-size:10px;height:24px;margin-top:4px;display:${![0,90,150,200].includes(ev.deliveryBillHT)?'block':'none'}" onchange="updEvCalc()" placeholder="€"/>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="font-size:11px">Livraison</label>
+          <select style="font-size:10px;padding:2px 6px;height:22px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2)" onchange="(function(v){if(!v)return;const p=JSON.parse(v);document.getElementById('ef-delivery').value=p.c;document.getElementById('ef-delivery-bill').value=p.b;updEvCalc();}).call(this,this.value);this.value=''">
+            <option value="">Presets…</option>
+            ${(state.profile.deliveryPresets||[]).map((p,i)=>`<option value='${JSON.stringify({c:p.cost,b:p.bill})}'>${p.name} — ${p.bill}€</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Coût HT (interne)</div>
+            <input type="number" id="ef-delivery" value="${ev.deliveryCostHT||0}" min="0" step="1" style="width:100%;padding:3px 6px;font-size:11px;height:24px" oninput="updEvCalc()" placeholder="0"/>
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">Facturé client HT</div>
+            <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||0}" min="0" step="1" style="width:100%;padding:3px 6px;font-size:11px;height:24px" oninput="updEvCalc()" placeholder="0"/>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:10px;margin-top:6px;padding:3px 8px" onclick="saveDeliveryPreset(${ev.deliveryCostHT||0},${ev.deliveryBillHT||0})">+ Sauvegarder ce tarif</button>
       </div>
     </div>
 
@@ -3617,6 +3627,14 @@ function updQtyDisplay(cid, priceHT, costHT){
 function updEvCQ(id,v){const sel=document.getElementById('ev-content')._sel;if(sel&&sel[id])sel[id].qty=v;updEvCalc();}
 function updEvCP(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].pct=v;updEvCalc();}
 
+function saveDeliveryPreset(cost,bill){
+  const name=prompt('Nom du preset (ex: Paris, IDF...):');
+  if(!name) return;
+  if(!state.profile.deliveryPresets) state.profile.deliveryPresets=[];
+  state.profile.deliveryPresets.push({name,cost:parseFloat(cost)||0,bill:parseFloat(bill)||0});
+  save();
+  alert('Preset sauvegardé !');
+}
 function setDelivery(amount){
   const cost=document.getElementById('ef-delivery');
   const bill=document.getElementById('ef-delivery-bill');
@@ -3712,27 +3730,29 @@ function updEvCalc(){
   const hrsBrt = calcHours('ef-arrbrt','ef-depbrt','ef-hrsbrt');
   const hrsWtr = calcHours('ef-arrwtr','ef-depwtr','ef-hrswtr');
   const hrsMgr = calcHours('ef-arrmgr','ef-depmgr','ef-hrsmgr');
+  const hrsMan = calcHours('ef-arrman','ef-depman','ef-hrsman');
 
   const nB=parseInt(document.getElementById('ef-nbrt')?.value)||0;
   const nW=parseInt(document.getElementById('ef-nwtr')?.value)||0;
   const nM=parseInt(document.getElementById('ef-nmgr')?.value)||0;
+  const nMn=parseInt(document.getElementById('ef-nman')?.value)||0;
   const nBar=parseFloat(document.getElementById('ef-barm')?.value)||0;
   const extra=parseFloat(document.getElementById('ef-extra')?.value)||0;
   const extraBill=parseFloat(document.getElementById('ef-extra-bill')?.value)||0;
 
   // Per-role cost & billing breakdown
   const roleMap={
-    'Bartender':   {qty:nB, hrs:hrsBrt, costEl:'ef-costbrt', billEl:'ef-billbrt', mgEl:'ef-mgbrt'},
-    'Serveur':     {qty:nW, hrs:hrsWtr, costEl:'ef-costwtr', billEl:'ef-billwtr', mgEl:'ef-mgwtr'},
-    'Bar Manager': {qty:nM, hrs:hrsMgr, costEl:'ef-costmgr', billEl:'ef-billmgr', mgEl:'ef-mgmgr'},
+    'Bartender':         {qty:nB,  hrs:hrsBrt, costEl:'ef-costbrt', billEl:'ef-billbrt', mgEl:'ef-mgbrt'},
+    'Serveur':           {qty:nW,  hrs:hrsWtr, costEl:'ef-costwtr', billEl:'ef-billwtr', mgEl:'ef-mgwtr'},
+    'Bar Manager':       {qty:nM,  hrs:hrsMgr, costEl:'ef-costmgr', billEl:'ef-billmgr', mgEl:'ef-mgmgr'},
+    'Manutentionnaire':  {qty:nMn, hrs:hrsMan, costEl:'ef-costman', billEl:'ef-billman', mgEl:'ef-mgman'},
   };
-  // Reset
   Object.values(roleMap).forEach(r=>{
     ['costEl','billEl','mgEl'].forEach(k=>{const e=document.getElementById(r[k]);if(e)e.textContent='—';});
   });
 
   let staffCost=0, staffRevenue=0;
-  const roleAcc={'Bartender':{c:0,b:0},'Serveur':{c:0,b:0},'Bar Manager':{c:0,b:0}};
+  const roleAcc={'Bartender':{c:0,b:0},'Serveur':{c:0,b:0},'Bar Manager':{c:0,b:0},'Manutentionnaire':{c:0,b:0}};
 
   state.staffItems.forEach(s=>{
     const rm=roleMap[s.type];
