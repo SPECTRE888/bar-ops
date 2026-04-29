@@ -1852,7 +1852,7 @@ function renderCGrid(){
   );
   if(!items.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><p>Aucun résultat.</p></div>';return;}
   el.innerHTML=items.map(c=>{
-    const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||10)/100)).toFixed(2)+'€ TTC':'—';
+    const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||20)/100)).toFixed(2)+'€ TTC':'—';
     const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'—';
     const fcColor=c.priceHT>0?(c.totalCost/c.priceHT<0.2?'var(--green)':c.totalCost/c.priceHT<0.35?'#ba7517':'var(--red)'):'var(--text3)';
     return`<div class="c-card">
@@ -2126,18 +2126,16 @@ function showCForm(c){
         </div>
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Service glace</label><select id="cf-service-ice" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
-            <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Aucune</option>
-            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks</option>
-            <option value="full"${c.serviceIce==='full'?' selected':''}>Plein</option>
-            <option value="one"${c.serviceIce==='one'?' selected':''}>1 glaçon</option>
+            <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Sans glace (0%)</option>
+            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks (60%)</option>
+            <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (100%)</option>
           </select></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Type glace</label><select id="cf-ice-type" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
             <option value="">— Sélectionner —</option>
             ${state.iceTypes.map(i=>`<option value="${i.id}"${(c.iceTypeId||'')==i.id?' selected':''}>${i.name}</option>`).join('')}
           </select></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût glace €</label><input type="number" id="cf-ice-display" value="${(c.iceVal||0).toFixed(3)}" step="0.001" min="0" readonly style="font-size:13px;padding:6px;height:32px;box-sizing:border-box;background:var(--bg2);color:var(--text2)"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût glace (HT)</label><input type="number" id="cf-ice-display" value="${(c.iceVal||0).toFixed(3)}" step="0.001" min="0" readonly style="font-size:13px;padding:6px;height:32px;box-sizing:border-box;background:var(--bg2);color:var(--text2)"/></div>
         </div>
-        <div id="cf-ice-recap" style="font-size:10px;color:var(--text3);margin-bottom:6px;line-height:1.5"></div>
         <input type="hidden" id="cf-ice" value="${c.iceVal||0}"/>
         <input type="hidden" id="cf-ice-cl" value="${c.iceCl||0}"/>
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
@@ -2552,7 +2550,7 @@ function applyMult(){
   const mult=parseFloat(document.getElementById('cf-mult')?.value)||0;
   const costRaw=document.getElementById('r-cost')?.textContent||'0';
   const cost=parseFloat(costRaw.replace('€','').replace(',','.'))||0;
-  const vat=(parseFloat(document.getElementById('cf-vat')?.value)||10)/100;
+  const vat=(parseFloat(document.getElementById('cf-vat')?.value)||20)/100;
   const suggested=cost*mult;
   // Round to nearest 0.50€ for a clean menu price
   const rounded=Math.ceil(suggested*2)/2;
@@ -3750,7 +3748,7 @@ function updEvCalc(){
   // Sync the other field
   if(remisePct>0&&remiseHT===0){const e=document.getElementById('ef-remise-ht');if(e&&document.activeElement!==e)e.placeholder=remiseMontant.toFixed(0);}
   if(remiseHT>0&&remisePct===0){const e=document.getElementById('ef-remise-pct');if(e&&document.activeElement!==e)e.placeholder=revenueBeforeRemise>0?(remiseHT/revenueBeforeRemise*100).toFixed(1):0;}
-  const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||10),0)/state.cocktails.length:10;
+  const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
   const revTTC=totalRevenue*(1+avgVat/100);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   set('es-ckt',total||'—');
@@ -3923,7 +3921,7 @@ function openMenu(evId){
   cats.forEach(cat=>{
     body+=`<div class="ct">${cat}</div>`;
     items.filter(c=>c.category===cat).forEach(c=>{
-      const pHT=c.priceHT.toFixed(2),pTTC=(c.priceHT*(1+(c.vat||10)/100)).toFixed(2);
+      const pHT=c.priceHT.toFixed(2),pTTC=(c.priceHT*(1+(c.vat||20)/100)).toFixed(2);
       body+=`<div class="item">
         <div><div class="item-name">${c.name}</div>
           ${c.description?`<div class="item-desc">${c.description}</div>`:''}
@@ -5100,7 +5098,7 @@ function buildDevisHTML(ev,devisNum){
   const cocktailLines=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';
     const totalHT=(cfg.qty*c.priceHT).toFixed(2);
-    const totalTTC=(cfg.qty*c.priceHT*(1+(c.vat||10)/100)).toFixed(2);
+    const totalTTC=(cfg.qty*c.priceHT*(1+(c.vat||20)/100)).toFixed(2);
     return`<tr>
       <td style="padding:10px 14px;border-bottom:1px solid #eee">${c.name}</td>
       <td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:center">${cfg.qty}</td>
@@ -5112,7 +5110,7 @@ function buildDevisHTML(ev,devisNum){
   const deliveryBill=ev.deliveryBillHT||0;
   const extraBill=ev.extraBillHT||0;
   const cocktailTotalHT=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT:0);},0);
-  const cocktailTotalTTC=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||10)/100):0);},0);
+  const cocktailTotalTTC=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||20)/100):0);},0);
   const today=new Date().toLocaleDateString('fr-FR');
   const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
   const staffLines=[];let staffTotalHT=0;
