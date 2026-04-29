@@ -27,7 +27,8 @@ input{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px s
 input:focus{outline:none;border-color:var(--gold)}
 .pwd-wrap{position:relative;margin-bottom:16px}
 .pwd-wrap input{margin:0}
-.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;padding:4px 8px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;padding:8px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.eye-btn svg{width:18px;height:18px}
 .eye-btn:hover{color:var(--gold)}
 .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-size:11px}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
@@ -160,6 +161,17 @@ async function resetPassword(){
   setTimeout(()=>show('login'),3000);
 }
 
+async function updatePassword(){
+  const pass=document.getElementById('reset-pass').value;
+  if(!pass||pass.length<6){msg('Mot de passe requis (6+)','err');return;}
+  const btn=event.target;
+  btn.disabled=true;btn.textContent='...';
+  const{error}=await sb.auth.updateUser({password:pass});
+  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Réinitialiser';return;}
+  msg('Mot de passe changé !','ok');
+  setTimeout(()=>{window.location.href='auth.html';},2000);
+}
+
 async function redirect(userId){
   try{
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
@@ -234,11 +246,34 @@ async function emailLogin(){
 (async()=>{
   const hash=window.location.hash;
   const action=new URLSearchParams(window.location.search).get('action');
+  const type=new URLSearchParams(window.location.hash.substring(1)).get('type');
+  
+  // Check if this is a password reset link
+  if(type==='recovery'){
+    document.getElementById('view-login').style.display='none';
+    document.getElementById('view-signup').style.display='none';
+    document.getElementById('view-forgot').style.display='none';
+    document.getElementById('sub').textContent='Réinitialiser votre mot de passe';
+    
+    const resetDiv=document.createElement('div');
+    resetDiv.id='view-reset';
+    resetDiv.innerHTML=`
+      <label>Nouveau mot de passe</label>
+      <div class="pwd-wrap">
+        <input type="password" id="reset-pass" placeholder="••••••••"/>
+        <button type="button" class="eye-btn" onclick="togglePwd('reset-pass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <button class="btn fill" onclick="updatePassword()">Réinitialiser</button>
+      <div class="toggle"><a href="auth.html" style="color:var(--gold);text-decoration:none">← Retour</a></div>
+    `;
+    document.querySelector('.box').appendChild(resetDiv);
+    return;
+  }
+  
   if(!hash.includes('access_token'))return;
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s){
       if(action==='signup'){
-        // Create trial subscription
         try{
           const{data:existing}=await sb.from('subscriptions').select('id').eq('user_id',s.user.id).single();
           if(!existing){
