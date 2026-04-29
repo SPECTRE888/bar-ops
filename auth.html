@@ -155,7 +155,12 @@ async function resetPassword(){
   const{error}=await sb.auth.resetPasswordForEmail(email,{
     redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html'
   });
-  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';return;}
+  if(error){
+    const isRateLimit=error.message?.toLowerCase().includes('rate limit');
+    msg(isRateLimit?'Trop de tentatives. Réessaye dans 1h.':'Erreur : '+error.message,'err');
+    btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';
+    return;
+  }
   msg('Lien envoyé. Vérifie ton email.','ok');
   btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';
   setTimeout(()=>show('login'),3000);
@@ -244,12 +249,13 @@ async function emailLogin(){
 
 // Only redirect if coming from Google OAuth (hash contains token)
 (async()=>{
-  const hash=window.location.hash;
+  const fullHash=window.location.hash.substring(1);
+  const params=new URLSearchParams(fullHash);
+  const type=params.get('type');
   const action=new URLSearchParams(window.location.search).get('action');
-  const type=new URLSearchParams(window.location.hash.substring(1)).get('type');
   
   // Check if this is a password reset link
-  if(type==='recovery'){
+  if(type==='recovery'||fullHash.includes('type=recovery')){
     document.getElementById('view-login').style.display='none';
     document.getElementById('view-signup').style.display='none';
     document.getElementById('view-forgot').style.display='none';
@@ -270,7 +276,7 @@ async function emailLogin(){
     return;
   }
   
-  if(!hash.includes('access_token'))return;
+  if(!fullHash.includes('access_token'))return;
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s){
       if(action==='signup'){
