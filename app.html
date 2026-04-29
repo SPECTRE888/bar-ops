@@ -7218,7 +7218,8 @@ function updEvField(evId, key, value){
   if(!ev) return;
   ev[key]=value;
   save();
-  renderDashboard();
+  const currentEvId=document.getElementById('ev-frm-title')?.dataset?.evId;
+  if(currentEvId==evId) showEvForm(ev);
 }
 
 function toggleCoursesDone(evId){
