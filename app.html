@@ -2932,14 +2932,25 @@ function updCRecap(){
   total+=parseFloat(document.getElementById('cf-ice')?.value)||0;
   total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
 
+function updCRecap(){
+  let total=0,ingCost=0;
+  ingRows().forEach(r=>{const v=calcIC(r.id);ingCost+=v;total+=v;});
+  consoRows().forEach(r=>{total+=calcIC(r.id);});
+  total+=parseFloat(document.getElementById('cf-ice')?.value)||0;
+  total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
+
   const hasUnp=[...ingRows(),...consoRows()].some(r=>{const p=rowProduct(r.id);const ptype=r.dataset.ptype||r.querySelector('.ss-input')?.value||'';return ptype&&(!p||!p.priceHT);});
   const w=document.getElementById('ing-warn');if(w)w.className='warn'+(hasUnp?'':' hide');
 
   const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
   
-  // Prix conseillé: X4 classique, X5 signature
+  // Prix conseillé adapté par catégorie
   const cat=document.getElementById('cf-cat')?.value||'Cocktail Signature';
-  const mult=(cat.includes('Classique'))?4:5;
+  let mult=4;
+  if(cat.includes('Classique'))mult=3.5;
+  else if(cat.includes('Signature'))mult=4.5;
+  if(cat.includes('Mocktail'))mult=mult*0.9; // Mocktail -10% vs cocktail
+  
   const suggested=total*mult;
   const sugEl=document.getElementById('r-suggested');if(sugEl)sugEl.textContent=total>0?suggested.toFixed(2)+'€':'—';
 
@@ -2950,15 +2961,14 @@ function updCRecap(){
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
     
-    // Barre: 0 à gauche = 0% marge, 50 au milieu, 100 à droite = 100% marge
     const barRatio=Math.max(0,Math.min(100,mgPct));
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=barRatio+'%';
-      fill.style.background=mgPct>=70?'var(--green)':mgPct>=50?'#a8d700':mgPct>=0?'var(--gold)':'var(--red)';
+      fill.style.background=mgPct>=60?'var(--green)':mgPct>=35?'var(--gold)':mgPct>0?'#ff9800':'var(--red)';
     }
     
-    const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=70?'✓ Marge forte':mgPct>=50?'✓ Excellente marge':mgPct>0?'⚠ Marge faible':'✗ Pas de marge';
+    const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=60?'✓ Marge forte':mgPct>=35?'✓ Bonne marge':mgPct>0?'⚠ Marge faible':'✗ Pas de marge';
   } else {
     ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
     const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
