@@ -4,9 +4,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405 };
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseKey = process.env.supabase_key;
   
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!supabaseUrl || !supabaseKey) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Supabase credentials not configured' }) };
   }
 
@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     }
 
     // Create admin client with service role key
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Delete user
     const { error } = await supabase.auth.admin.deleteUser(userId);
