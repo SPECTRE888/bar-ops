@@ -2764,19 +2764,18 @@ function renderDashboard(){
   // ═══ CRITICAL ALERTS ═══
   if(alerts.length>0){
     html+=`<div style="margin-bottom:16px">`;
-    alerts.slice(0,3).forEach(a=>{
+    // Show all alerts in a grid, 5 per row
+    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">`;
+    alerts.forEach(a=>{
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
       const onclick=a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
-      html+=`<div style="padding:10px;margin-bottom:6px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
+      html+=`<div style="padding:10px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
         <span style="color:${textColor};font-weight:500">${icon} ${a.text}</span>
       </div>`;
     });
-    if(alerts.length>3){
-      html+=`<div style="padding:8px;text-align:center;font-size:10px;color:var(--text3)">+${alerts.length-3} alertes</div>`;
-    }
-    html+=`</div>`;
+    html+=`</div></div>`;
   }
   
   // ═══ UPCOMING EVENTS GRID (MINI TILES) ═══
