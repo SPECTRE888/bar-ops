@@ -22,26 +22,10 @@ h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-
 .btn.fill{background:var(--gold);color:#080808;border-color:var(--gold);margin-top:16px}
 .btn.fill:hover{background:var(--gold2)}
 .btn.fill:disabled{opacity:.5}
-label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:var(--text2);text-align:left}
-input{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid #2a2a2a;border-radius:5px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;margin-bottom:16px}
-input:focus{outline:none;border-color:var(--gold)}
-.pwd-wrap{position:relative;margin-bottom:16px}
-.pwd-wrap input{margin:0}
-.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;padding:8px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:.2s}
-.eye-btn svg{width:18px;height:18px}
-.eye-btn:hover{color:var(--gold)}
-.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-size:11px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
 .toggle{font-size:12px;color:var(--text2);margin-top:20px}
 .toggle button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;font-family:'Jost',sans-serif}
 .back{margin-top:24px}
 .back a{color:var(--text2);text-decoration:none;font-size:12px}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center}
-.modal.show{display:flex}
-.modal-content{background:var(--surface);border:1px solid #2a2a2a;border-radius:12px;padding:40px;max-width:400px;text-align:center}
-.modal-content h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;margin-bottom:16px}
-.modal-content p{color:var(--text2);font-size:12px;line-height:1.6;margin-bottom:24px}
-.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px}
 </style>
 </head>
 <body>
@@ -51,56 +35,18 @@ input:focus{outline:none;border-color:var(--gold)}
   <div class="msg" id="msg"></div>
 
   <div id="view-login">
-    <button class="btn gold" onclick="googleAuthLogin()">Se connecter avec Google</button>
-    <div class="divider">ou</div>
-    <label>Email</label>
-    <input type="email" id="l-email" placeholder="vous@example.com"/>
-    <label>Mot de passe</label>
-    <div class="pwd-wrap">
-      <input type="password" id="l-pass" placeholder="••••••••"/>
-      <button type="button" class="eye-btn" onclick="togglePwd('l-pass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-    </div>
-    <div style="text-align:right;margin-bottom:16px;margin-top:-12px">
-      <button class="btn" style="padding:0;border:none;font-size:11px;background:none;width:auto" onclick="show('forgot')">Mot de passe oublié ?</button>
-    </div>
-    <button class="btn fill" id="l-btn" onclick="emailLogin()">Se connecter</button>
+    <button class="btn fill" onclick="googleAuthLogin()">Se connecter avec Google</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
 
   <div id="view-signup" style="display:none">
-    <button class="btn gold" onclick="googleAuthSignup()">S'inscrire avec Google</button>
-    <div class="divider">ou</div>
-    <label>Email</label>
-    <input type="email" id="s-email" placeholder="vous@example.com"/>
-    <label>Mot de passe</label>
-    <div class="pwd-wrap">
-      <input type="password" id="s-pass" placeholder="6+ caractères"/>
-      <button type="button" class="eye-btn" onclick="togglePwd('s-pass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-    </div>
-    <button class="btn fill" id="s-btn" onclick="emailSignup()">S'inscrire</button>
+    <button class="btn fill" onclick="googleAuthSignup()">S'inscrire avec Google</button>
     <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
-  </div>
-
-  <div id="view-forgot" style="display:none">
-    <label>Email de récupération</label>
-    <input type="email" id="f-email" placeholder="vous@example.com"/>
-    <button class="btn fill" id="f-btn" onclick="resetPassword()">Envoyer lien de réinitialisation</button>
-    <div class="toggle"><button onclick="show('login')">← Retour à la connexion</button></div>
   </div>
 
   <div class="back"><a href="index.html">← Retour</a></div>
   <div style="margin-top:16px;text-align:center">
     <a href="app.html?demo=1" style="color:var(--text2);font-size:11px;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px">Visualiser sans se connecter →</a>
-  </div>
-</div>
-
-<div class="modal" id="verify-modal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <h2>Vérifiez votre email</h2>
-    <p>Un lien de confirmation a été envoyé à <strong id="modal-email"></strong>.</p>
-    <p style="font-size:11px;color:var(--text2)">Cliquez sur le lien pour activer votre compte. Vous serez redirigé automatiquement.</p>
-    <button class="btn" onclick="goBack()" style="margin-top:20px">Retour à la connexion</button>
   </div>
 </div>
 
@@ -114,31 +60,8 @@ const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{
 function show(v){
   document.getElementById('view-signup').style.display=v==='signup'?'block':'none';
   document.getElementById('view-login').style.display=v==='login'?'block':'none';
-  document.getElementById('view-forgot').style.display=v==='forgot'?'block':'none';
-  document.getElementById('sub').textContent=v==='signup'?'Créez votre compte':v==='forgot'?'Récupérer votre compte':'Connectez-vous';
+  document.getElementById('sub').textContent=v==='signup'?'Créez votre compte':'Connectez-vous';
   document.getElementById('msg').className='msg';
-}
-
-function togglePwd(id){
-  const input=document.getElementById(id);
-  const btn=event.currentTarget;
-  const isPassword=input.type==='password';
-  input.type=isPassword?'text':'password';
-  btn.innerHTML=isPassword?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
-}
-
-function showModal(email){
-  document.getElementById('modal-email').textContent=email;
-  document.getElementById('verify-modal').classList.add('show');
-}
-
-function closeModal(){
-  document.getElementById('verify-modal').classList.remove('show');
-}
-
-function goBack(){
-  closeModal();
-  show('login');
 }
 
 function msg(t,type){
@@ -147,35 +70,24 @@ function msg(t,type){
   el.className='msg '+(type==='ok'?'ok':'err');
 }
 
-async function resetPassword(){
-  const email=document.getElementById('f-email').value.trim();
-  if(!email){msg('Entrez votre email','err');return;}
-  const btn=document.getElementById('f-btn');
-  btn.disabled=true;btn.textContent='Envoi...';
-  const{error}=await sb.auth.resetPasswordForEmail(email,{
-    redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html'
+async function googleAuthLogin(){
+  await sb.auth.signOut();
+  const{error}=await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=login'}
   });
-  if(error){
-    const isRateLimit=error.message?.toLowerCase().includes('rate limit');
-    msg(isRateLimit?'Trop de tentatives. Réessaye dans 1h.':'Erreur : '+error.message,'err');
-    btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';
-    return;
-  }
-  msg('Lien envoyé. Vérifie ton email.','ok');
-  btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';
-  setTimeout(()=>show('login'),3000);
+  if(error)msg(error.message,'err');
 }
 
-async function updatePassword(){
-  const pass=document.getElementById('reset-pass').value;
-  if(!pass||pass.length<6){msg('Mot de passe requis (6+)','err');return;}
-  const btn=event.target;
-  btn.disabled=true;btn.textContent='...';
-  const{error}=await sb.auth.updateUser({password:pass});
-  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Réinitialiser';return;}
-  msg('Mot de passe changé !','ok');
-  setTimeout(()=>{window.location.href='auth.html';},2000);
+async function googleAuthSignup(){
+  await sb.auth.signOut();
+  const{error}=await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=signup'}
+  });
+  if(error)msg(error.message,'err');
 }
+
 
 async function redirect(userId){
   try{
@@ -188,93 +100,10 @@ async function redirect(userId){
   window.location.href='paying.html';
 }
 
-async function googleAuthSignup(){
-  await sb.auth.signOut();
-  const{error}=await sb.auth.signInWithOAuth({
-    provider:'google',
-    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=signup'}
-  });
-  if(error)msg(error.message,'err');
-}
-
-async function googleAuthLogin(){
-  await sb.auth.signOut();
-  const{error}=await sb.auth.signInWithOAuth({
-    provider:'google',
-    options:{redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=login'}
-  });
-  if(error)msg(error.message,'err');
-}
-
-async function emailSignup(){
-  const email=document.getElementById('s-email').value.trim();
-  const pass=document.getElementById('s-pass').value;
-  if(!email||pass.length<6){msg('Email et mot de passe requis (6+)','err');return;}
-  const btn=document.getElementById('s-btn');
-  btn.disabled=true;btn.textContent='...';
-  const{data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html'}});
-  if(error){
-    const already=error.status===422||error.message?.toLowerCase().includes('already')||error.message?.toLowerCase().includes('registered');
-    msg(already?'Cette adresse est déjà utilisée. Connecte-toi.':error.message,'err');
-    btn.disabled=false;btn.textContent="S'inscrire";return;
-  }
-  if(data?.user?.identities?.length===0){
-    msg('Cette adresse est déjà utilisée. Connecte-toi.','err');
-    btn.disabled=false;btn.textContent="S'inscrire";return;
-  }
-  try{
-    await sb.from('subscriptions').insert([{
-      user_id:data.user.id,
-      status:'trial',
-      plan:'trial',
-      created_at:new Date().toISOString(),
-      expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
-    }]);
-  }catch(e){}
-  btn.disabled=false;btn.textContent="S'inscrire";
-  showModal(email);
-}
-
-async function emailLogin(){
-  const email=document.getElementById('l-email').value.trim();
-  const pass=document.getElementById('l-pass').value;
-  if(!email||!pass){msg('Remplis tous les champs','err');return;}
-  const btn=document.getElementById('l-btn');
-  btn.disabled=true;btn.textContent='...';
-  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error){msg('Email ou mot de passe incorrect','err');btn.disabled=false;btn.textContent='Se connecter';return;}
-  await redirect(data.user.id);
-}
-
-
 // Only redirect if coming from Google OAuth (hash contains token)
 (async()=>{
   const fullHash=window.location.hash.substring(1);
-  const params=new URLSearchParams(fullHash);
-  const type=params.get('type');
   const action=new URLSearchParams(window.location.search).get('action');
-  
-  // Check if this is a password reset link
-  if(type==='recovery'||fullHash.includes('type=recovery')){
-    document.getElementById('view-login').style.display='none';
-    document.getElementById('view-signup').style.display='none';
-    document.getElementById('view-forgot').style.display='none';
-    document.getElementById('sub').textContent='Réinitialiser votre mot de passe';
-    
-    const resetDiv=document.createElement('div');
-    resetDiv.id='view-reset';
-    resetDiv.innerHTML=`
-      <label>Nouveau mot de passe</label>
-      <div class="pwd-wrap">
-        <input type="password" id="reset-pass" placeholder="••••••••"/>
-        <button type="button" class="eye-btn" onclick="togglePwd('reset-pass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-      </div>
-      <button class="btn fill" onclick="updatePassword()">Réinitialiser</button>
-      <div class="toggle"><a href="auth.html" style="color:var(--gold);text-decoration:none">← Retour</a></div>
-    `;
-    document.querySelector('.box').appendChild(resetDiv);
-    return;
-  }
   
   if(!fullHash.includes('access_token'))return;
   sb.auth.onAuthStateChange(async(e,s)=>{
