@@ -525,7 +525,12 @@ select{color-scheme:dark}
 
 <!-- ═══ HISTORIQUE ═══ -->
 <div id="page-historique" class="page">
-  <div class="topbar"><h2>Historique</h2></div>
+  <div class="topbar">
+    <h2>Historique</h2>
+    <div class="topbar-actions no-print">
+      <input type="text" id="hist-search" placeholder="Chercher..." oninput="renderHistorique()" style="width:200px;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px"/>
+    </div>
+  </div>
   <div class="content" id="historique-content"></div>
 </div>
 
@@ -2576,7 +2581,11 @@ function applySuggestedPrice(){
 // DASHBOARD
 // ════════════════════════════════════════════════════════
 function goToEventSuivi(eventId){
-  goPage('suivi');
+  goPage('events');
+  setTimeout(()=>{
+    document.getElementById('prest-ev-sel').value=eventId;
+    renderPrestation();
+  },50);
 }
 
 function updCARange(){
@@ -6214,9 +6223,6 @@ function renderHistorique(){
   });
 
   let html=`
-    <div style="margin-bottom:16px">
-      <input type="text" id="hist-search" placeholder="Chercher une prestation..." oninput="renderHistorique()" style="width:100%;max-width:300px;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text)"/>
-    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
       <div class="card" style="text-align:center;padding:18px">
         <div style="font-size:24px;font-family:'DM Serif Display',serif;color:var(--gold)">${fmt(totalRev)}€</div>
