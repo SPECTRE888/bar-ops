@@ -2114,9 +2114,32 @@ function showCForm(c){
           </select></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Code</label><input id="cf-code" value="${(c.code||'').replace(/"/g,'&quot;')}" placeholder="ex: MM01" style="font-family:monospace;font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="checkCodeDuplicate(this.value,${c.id||0})"/><div id="cf-code-status" style="font-size:10px;margin-top:2px;min-height:14px"></div></div>
         </div>
-        <div class="g2" style="gap:6px;margin-bottom:6px">
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre & Coût</label><div id="cf-glass-sel"></div></div>
+        <div class="g3" style="gap:6px;margin-bottom:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre</label><div id="cf-glass-sel"></div></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût verre €</label><input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Préparation</label><select id="cf-technique" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
+            <option value="none"${(c.technique||'none')==='none'?' selected':''}>Direct</option>
+            <option value="stirred"${c.technique==='stirred'?' selected':''}>Mélangé</option>
+            <option value="shaken"${c.technique==='shaken'?' selected':''}>Shaké</option>
+            <option value="blended"${c.technique==='blended'?' selected':''}>Blendé</option>
+          </select></div>
         </div>
+        <div class="g3" style="gap:6px;margin-bottom:6px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Service glace</label><select id="cf-service-ice" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
+            <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Aucune</option>
+            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks</option>
+            <option value="full"${c.serviceIce==='full'?' selected':''}>Plein</option>
+            <option value="one"${c.serviceIce==='one'?' selected':''}>1 glaçon</option>
+          </select></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Type glace</label><select id="cf-ice-type" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
+            <option value="">— Sélectionner —</option>
+            ${state.iceTypes.map(i=>`<option value="${i.id}"${(c.iceTypeId||'')==i.id?' selected':''}>${i.name}</option>`).join('')}
+          </select></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût glace €</label><input type="number" id="cf-ice-display" value="${(c.iceVal||0).toFixed(3)}" step="0.001" min="0" readonly style="font-size:13px;padding:6px;height:32px;box-sizing:border-box;background:var(--bg2);color:var(--text2)"/></div>
+        </div>
+        <div id="cf-ice-recap" style="font-size:10px;color:var(--text3);margin-bottom:6px;line-height:1.5"></div>
+        <input type="hidden" id="cf-ice" value="${c.iceVal||0}"/>
+        <input type="hidden" id="cf-ice-cl" value="${c.iceCl||0}"/>
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
           <textarea id="cf-desc" rows="2" placeholder="Passion fruit, ginger beer, lime..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
@@ -2138,27 +2161,36 @@ function showCForm(c){
       </div>
 
       <div class="card" style="padding:12px">
-        <div class="ctitle" style="margin-bottom:8px"> Coût de production</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;font-size:11px">
-          <div style="background:var(--bg2);padding:10px;border-radius:4px;text-align:center"><div style="font-weight:bold;font-size:15px" id="r-cost">0.00€</div><div style="color:var(--text3);margin-top:3px">Coût HT</div></div>
-          <div style="background:var(--bg2);padding:10px;border-radius:4px;text-align:center"><div style="font-weight:bold;font-size:15px" id="r-ing">0.00€</div><div style="color:var(--text3);margin-top:3px">Ingrédients</div></div>
-        </div>
-      </div>
-
-      <div class="card" style="padding:12px">
-        <div class="ctitle" style="margin-bottom:8px"> Prix de vente</div>
-        <div class="g2" style="gap:6px;margin-bottom:8px">
-          <div class="field" style="margin-bottom:0;flex:1"><label style="font-size:12px">Prix HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
-          <div class="field" style="margin-bottom:0;width:90px"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
+        <div class="ctitle" style="margin-bottom:10px"> Pricing (HT)</div>
+        <div class="g2" style="gap:6px;margin-bottom:10px">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix de vente HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
             <option value="20"${(c.vat||20)===20?' selected':''}>20%</option>
             <option value="10"${(c.vat||20)===10?' selected':''}>10%</option>
           </select></div>
-          <div style="display:flex;flex-direction:column;justify-content:flex-end;flex:1"><div style="font-weight:bold;font-size:15px;color:var(--gold);text-align:center;padding:6px;background:var(--bg2);border-radius:4px;height:32px;display:flex;align-items:center;justify-content:center" id="r-ttc">—</div><div style="font-size:10px;color:var(--text3);text-align:center;margin-top:2px">TTC €</div></div>
         </div>
-        <div style="margin-top:8px">
-          <div style="height:24px;background:var(--bg2);border-radius:4px;overflow:hidden"><div class="bar-fill" id="bar-fill" style="height:100%;width:0%;border-radius:4px;transition:width .4s,background .4s"></div></div>
-          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">Marge: <strong id="bar-lbl">—</strong></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Coût prod.</div>
+            <div style="font-weight:bold;font-size:15px" id="r-cost">—</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Prix conseillé</div>
+            <div style="font-weight:bold;font-size:15px;color:var(--gold)" id="r-suggested">—</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Marge €</div>
+            <div style="font-weight:bold;font-size:15px" id="r-mg">—</div>
+          </div>
+          <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Marge %</div>
+            <div style="font-weight:bold;font-size:15px" id="r-mgp">—</div>
+          </div>
         </div>
+        <div style="height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:4px">
+          <div class="bar-fill" id="bar-fill" style="height:100%;width:0%;border-radius:4px;transition:width .4s,background .4s"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);text-align:center" id="bar-lbl"></div>
       </div>
       <div class="flex-g no-print">
         <button class="btn btn-gold" onclick="saveCocktail()">Save cocktail</button>
@@ -2896,31 +2928,35 @@ function recalcAllCocktailsIce(){
 
 function updCRecap(){
   let total=0,ingCost=0;
-  ingRows().forEach(r=>{ingCost+=calcIC(r.id);total+=ingCost;});
+  ingRows().forEach(r=>{const v=calcIC(r.id);ingCost+=v;total+=v;});
   consoRows().forEach(r=>{total+=calcIC(r.id);});
   total+=parseFloat(document.getElementById('cf-ice')?.value)||0;
   total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
 
   const hasUnp=[...ingRows(),...consoRows()].some(r=>{const p=rowProduct(r.id);const ptype=r.dataset.ptype||r.querySelector('.ss-input')?.value||'';return ptype&&(!p||!p.priceHT);});
   const w=document.getElementById('ing-warn');if(w)w.className='warn'+(hasUnp?'':' hide');
-  document.getElementById('r-cost').textContent=(total).toFixed(2)+'€';
-  document.getElementById('r-ing').textContent=(ingCost).toFixed(2)+'€';
-  
+
+  const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
+  const suggested=total*4;
+  const sugEl=document.getElementById('r-suggested');if(sugEl)sugEl.textContent=total>0?suggested.toFixed(2)+'€':'—';
+
   const ht=parseFloat(document.getElementById('cf-pht')?.value)||0;
   const vat=(parseFloat(document.getElementById('cf-vat')?.value)||20)/100;
   if(ht>0&&total>0){
-    const ttc=ht*(1+vat),mg=ht-total,mgPct=mg/ht*100;
-    document.getElementById('r-ttc').textContent=ttc.toFixed(2)+'€';
-    document.getElementById('bar-lbl').textContent=mg.toFixed(2)+'€ ('+mgPct.toFixed(0)+'%)';
+    const mg=ht-total,mgPct=mg/ht*100;
+    const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
+    const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
     const fill=document.getElementById('bar-fill');
-    const ratio=Math.min(100,(total/ht)*100);
-    fill.style.width=ratio+'%';
-    fill.style.background=mgPct>=30?'var(--green)':mgPct>=15?'var(--gold)':'var(--red)';
+    if(fill){fill.style.width=Math.min(100,(total/ht*100))+'%';fill.style.background=mgPct>=30?'var(--green)':mgPct>=15?'var(--gold)':'var(--red)';}
+    const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=30?'✓ Bonne marge':mgPct>=15?'⚠ Marge correcte':'✗ Marge faible';
   } else {
-    document.getElementById('r-ttc').textContent='—';
-    document.getElementById('bar-lbl').textContent='—';
+    ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
     const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
+    const l=document.getElementById('bar-lbl');if(l)l.textContent='';
   }
+  const iceDisp=document.getElementById('cf-ice-display');
+  const iceVal=parseFloat(document.getElementById('cf-ice')?.value)||0;
+  if(iceDisp)iceDisp.value=iceVal.toFixed(3);
 }
 
 function saveCocktail(){
