@@ -6819,79 +6819,93 @@ function showSuiviTab(tab){
 
 function renderPlanningEmbed(){
   const el=document.getElementById('planning-content-embed');
-  const now=new Date();
-  const currentMonth=now.getMonth();
-  const currentYear=now.getFullYear();
+  if(!el) return;
+  
+  // Récupérer mois actuel stocké ou initialiser
+  let displayMonth=parseInt(sessionStorage.getItem('planningMonth')||new Date().getMonth());
+  let displayYear=parseInt(sessionStorage.getItem('planningYear')||new Date().getFullYear());
   
   const monthNames=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const dayNames=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   
-  // Afficher 3 mois: précédent, courant, suivant
-  const months=[
-    {m:currentMonth===0?11:currentMonth-1,y:currentMonth===0?currentYear-1:currentYear},
-    {m:currentMonth,y:currentYear},
-    {m:currentMonth===11?0:currentMonth+1,y:currentMonth===11?currentYear+1:currentYear}
-  ];
+  const firstDay=new Date(displayYear,displayMonth,1);
+  const lastDay=new Date(displayYear,displayMonth+1,0);
+  const startDate=new Date(firstDay);
+  startDate.setDate(startDate.getDate()-firstDay.getDay()+(firstDay.getDay()===0?-6:1));
   
-  const renderMonth=(m,y)=>{
-    const firstDay=new Date(y,m,1);
-    const lastDay=new Date(y,m+1,0);
-    const startDate=new Date(firstDay);
-    startDate.setDate(startDate.getDate()-firstDay.getDay()+(firstDay.getDay()===0?-6:1));
-    
-    const cells=[];
-    let current=new Date(startDate);
-    while(current<=lastDay||current.getDay()!==1){
-      cells.push(new Date(current));
-      current.setDate(current.getDate()+1);
-    }
-    
-    const weeks=[];
-    for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
-    
-    return `
-      <div style="margin-bottom:24px">
-        <h3 style="font-size:16px;margin-bottom:12px;color:var(--text);font-weight:600">${monthNames[m]} ${y}</h3>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;border:1px solid var(--border)">
-            <thead>
-              <tr style="background:var(--surface2)">
-                ${dayNames.map(d=>`<th style="padding:8px;text-align:center;font-size:11px;color:var(--text3);font-weight:600;border:1px solid var(--border)">${d}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${weeks.map(week=>`
-                <tr>
-                  ${week.map(day=>{
-                    const isCurrentMonth=day.getMonth()===m;
-                    const eventsOnDay=state.events.filter(e=>{
-                      const ed=new Date(e.date||0);
-                      return ed.getDate()===day.getDate()&&ed.getMonth()===day.getMonth()&&ed.getFullYear()===day.getFullYear();
-                    });
-                    return `
-                      <td style="border:1px solid var(--border);padding:8px;vertical-align:top;background:${isCurrentMonth?'var(--surface)':'var(--surface3)'};min-height:100px">
-                        <div style="font-weight:600;margin-bottom:6px;color:${isCurrentMonth?'var(--text)':'var(--text3)'};font-size:13px">${day.getDate()}</div>
-                        <div style="font-size:10px;display:flex;flex-direction:column;gap:4px">
-                          ${eventsOnDay.map(e=>`
-                            <div style="background:var(--gold-bg);border-left:2px solid var(--gold);padding:4px 6px;border-radius:2px;cursor:pointer;color:var(--text2)" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${e.id}';renderPrestation()},100)">
-                              <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</div>
-                              <div style="font-size:9px;color:var(--text3)">${e.nGuests||'?'} pers</div>
-                            </div>
-                          `).join('')}
-                        </div>
-                      </td>
-                    `;
-                  }).join('')}
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+  const cells=[];
+  let current=new Date(startDate);
+  while(current<=lastDay||current.getDay()!==1){
+    cells.push(new Date(current));
+    current.setDate(current.getDate()+1);
+  }
+  
+  const weeks=[];
+  for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
+  
+  const prevMonth=()=>{
+    displayMonth--;
+    if(displayMonth<0){displayMonth=11;displayYear--;}
+    sessionStorage.setItem('planningMonth',displayMonth);
+    sessionStorage.setItem('planningYear',displayYear);
+    renderPlanningEmbed();
   };
   
-  el.innerHTML=`<div style="padding:12px">${months.map(({m,y})=>renderMonth(m,y)).join('')}</div>`;
+  const nextMonth=()=>{
+    displayMonth++;
+    if(displayMonth>11){displayMonth=0;displayYear++;}
+    sessionStorage.setItem('planningMonth',displayMonth);
+    sessionStorage.setItem('planningYear',displayYear);
+    renderPlanningEmbed();
+  };
+  
+  let html=`
+    <div style="padding:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <button onclick="window.prevMonth()" style="background:var(--surface2);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer;color:var(--text)">← Précédent</button>
+        <h3 style="font-size:16px;font-weight:600;color:var(--text)">${monthNames[displayMonth]} ${displayYear}</h3>
+        <button onclick="window.nextMonth()" style="background:var(--surface2);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer;color:var(--text)">Suivant →</button>
+      </div>
+      
+      <table style="width:100%;border-collapse:collapse;border:1px solid var(--border)">
+        <thead>
+          <tr style="background:var(--surface2)">
+            ${dayNames.map(d=>`<th style="padding:8px;text-align:center;font-size:11px;color:var(--text3);font-weight:600;border:1px solid var(--border)">${d}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${weeks.map(week=>`
+            <tr>
+              ${week.map(day=>{
+                const isCurrentMonth=day.getMonth()===displayMonth;
+                const eventsOnDay=state.events.filter(e=>{
+                  const ed=new Date(e.date||0);
+                  return ed.getDate()===day.getDate()&&ed.getMonth()===day.getMonth()&&ed.getFullYear()===day.getFullYear();
+                });
+                return `
+                  <td style="border:1px solid var(--border);padding:8px;vertical-align:top;background:${isCurrentMonth?'var(--surface)':'var(--surface3)'};min-height:100px">
+                    <div style="font-weight:600;margin-bottom:6px;color:${isCurrentMonth?'var(--text)':'var(--text3)'};font-size:13px">${day.getDate()}</div>
+                    <div style="font-size:10px;display:flex;flex-direction:column;gap:4px">
+                      ${eventsOnDay.map(e=>`
+                        <div style="background:var(--gold-bg);border-left:2px solid var(--gold);padding:4px 6px;border-radius:2px;cursor:pointer;color:var(--text2)" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${e.id}';renderPrestation()},100)">
+                          <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</div>
+                          <div style="font-size:9px;color:var(--text3)">${e.nGuests||'?'} pers</div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </td>
+                `;
+              }).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  el.innerHTML=html;
+  window.prevMonth=prevMonth;
+  window.nextMonth=nextMonth;
 }
 
 function renderSuivi(){
