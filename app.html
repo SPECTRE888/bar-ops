@@ -486,9 +486,9 @@ select{color-scheme:dark}
 
 <!-- ═══ SHOPPING (accessible via events) ═══ -->
 <div id="page-shopping" class="page">
-  <div class="topbar"><h2> Liste de courses</h2>
+  <div class="topbar"><h2 id="shop-title"> Liste de courses</h2>
     <div class="topbar-actions no-print">
-      <select id="shop-ev-sel" class="input-lg" onchange="renderShopping()"><option value="">— Sélectionner un événement —</option></select>
+      <select id="shop-ev-sel" class="input-lg" onchange="renderShopping()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="printShoppingPDF()"> PDF</button>
       <button class="btn" onclick="shareShoppingWA()"> Envoyer</button>
     </div>
@@ -4325,10 +4325,23 @@ function toRealUnits(productType, brand, totalG){
 }
 
 function renderShopping(){
-  const evId=parseInt(document.getElementById('shop-ev-sel').value);
+  const savedVal=document.getElementById('shop-ev-sel')?.value;
+  renderShopEvSel();
+  const sel=document.getElementById('shop-ev-sel');
+  if(savedVal) sel.value=savedVal;
+  else if(sel.children.length>1) sel.value=sel.children[1].value;
+  
+  const evId=parseInt(sel.value);
   const el=document.getElementById('shop-content');
-  if(!evId){el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Select an event above.</p></div>';return;}
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const titleEl=document.getElementById('shop-title');
+  if(!evId){
+    el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Select an event above.</p></div>';
+    if(titleEl) titleEl.textContent=' Liste de courses';
+    return;
+  }
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev)return;
+  if(titleEl) titleEl.textContent=' '+ev.name;
   const total=evTot(ev);
   const needed={};
   (ev.cocktails||[]).forEach(cfg=>{
