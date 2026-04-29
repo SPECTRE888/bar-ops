@@ -6783,9 +6783,10 @@ function confirmDeleteAccount(){
 
 async function deleteAccountConfirmed(){
   try{
-    const{error}=await sb.auth.updateUser({email:`deleted_${Date.now()}@deleted.local`});
+    const sbClient=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
+    if(!sbClient)throw new Error('Supabase client unavailable');
+    const{error}=await sbClient.auth.signOut();
     if(error)throw error;
-    await sb.auth.signOut();
     localStorage.removeItem(SK);
     goPage('dashboard');
     toast('Compte supprimé');
