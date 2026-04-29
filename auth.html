@@ -22,11 +22,6 @@ h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-
 .btn.fill{background:var(--gold);color:#080808;border-color:var(--gold);margin-top:16px}
 .btn.fill:hover{background:var(--gold2)}
 .btn.fill:disabled{opacity:.5}
-label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:var(--text2);text-align:left}
-input{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid #2a2a2a;border-radius:5px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;margin-bottom:16px}
-input:focus{outline:none;border-color:var(--gold)}
-.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-size:11px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
 .toggle{font-size:12px;color:var(--text2);margin-top:20px}
 .toggle button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;font-family:'Jost',sans-serif}
 .back{margin-top:24px;display:flex;justify-content:center;gap:32px;align-items:center}
@@ -43,19 +38,11 @@ input:focus{outline:none;border-color:var(--gold)}
 
   <div id="view-login">
     <button class="btn fill" onclick="googleAuthLogin()">Se connecter avec Google</button>
-    <div class="divider">ou</div>
-    <label>Email</label>
-    <input type="email" id="l-email" placeholder="vous@example.com"/>
-    <button class="btn fill" id="l-btn" onclick="sendMagicLink()">Lien de connexion par email</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
 
   <div id="view-signup" style="display:none">
     <button class="btn fill" onclick="googleAuthSignup()">S'inscrire avec Google</button>
-    <div class="divider">ou</div>
-    <label>Email</label>
-    <input type="email" id="s-email" placeholder="vous@example.com"/>
-    <button class="btn fill" id="s-btn" onclick="sendSignupLink()">Créer compte par email</button>
     <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
   </div>
 
@@ -83,30 +70,6 @@ function msg(t,type){
   const el=document.getElementById('msg');
   el.textContent=t;
   el.className='msg '+(type==='ok'?'ok':'err');
-}
-
-async function sendMagicLink(){
-  const email=document.getElementById('l-email').value.trim();
-  if(!email){msg('Entrez votre email','err');return;}
-  const btn=document.getElementById('l-btn');
-  btn.disabled=true;btn.textContent='Envoi...';
-  const sbClient=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
-  const{error}=await sbClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=login'}});
-  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Lien de connexion par email';return;}
-  msg('Lien envoyé. Vérifie ton email.','ok');
-  btn.disabled=false;btn.textContent='Lien de connexion par email';
-}
-
-async function sendSignupLink(){
-  const email=document.getElementById('s-email').value.trim();
-  if(!email){msg('Entrez votre email','err');return;}
-  const btn=document.getElementById('s-btn');
-  btn.disabled=true;btn.textContent='Envoi...';
-  const sbClient=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
-  const{error}=await sbClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=signup'}});
-  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Créer compte par email';return;}
-  msg('Lien d\'activation envoyé. Vérifie ton email.','ok');
-  btn.disabled=false;btn.textContent='Créer compte par email';
 }
 
 async function googleAuthLogin(){
