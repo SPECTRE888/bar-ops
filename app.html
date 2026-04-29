@@ -1590,7 +1590,7 @@ function renderCatPage(cat){
       <td><select onchange="updProd(${p.id},'unit',this.value)" style="width:60px">
         ${UNITS.map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
       </select></td>
-      <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}">${cpu>0?cpu.toFixed(4)+' €/'+uLabel:'Prix manquant'}</span></td>
+      <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}">${cpu>0?cpu.toFixed(2)+' €/'+uLabel:'Prix manquant'}</span></td>
       <td><select onchange="updProd(${p.id},'supplier',this.value)" style="min-width:110px">
         <option value="">— Fournisseur —</option>
         ${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${p.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}
@@ -1604,7 +1604,7 @@ function renderCatPage(cat){
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="width:55px;color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="width:42px;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
+        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
         <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;letter-spacing:.05em;height:28px;display:flex;align-items:center" onclick="addToOrderList(${p.id})">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button>
       </td>
@@ -1654,7 +1654,7 @@ function renderGlassware(){
       <td><input type="number" value="${g.stock||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${g.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:42px;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
+        <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
         <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;letter-spacing:.05em;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${g.id},'glass','${g.name||''.replace(/'/g,"\\'")}','${(g.supplier||'').replace(/'/g,"\\'")}')">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delGlass(${g.id})">×</button>
       </div></td>
@@ -1682,7 +1682,7 @@ function renderGlassware(){
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${i.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="width:42px;padding:2px 4px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/>
+        <input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
         <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${i.id},'ice','${i.name||''}','${i.supplier||''}')">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delIce(${i.id})">×</button>
       </div></td>
