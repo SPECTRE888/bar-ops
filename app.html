@@ -3583,15 +3583,20 @@ function updQtyDisplay(cid, priceHT, costHT){
   const inp=document.getElementById('qty-'+cid);
   const res=document.getElementById('qty-result-'+cid);
   const badge=document.getElementById('qty-badge-'+cid);
-  if(!inp) return;
+  if(!inp||!res) return;
   const qty=parseInt(inp.value)||0;
-  if(res) res.innerHTML=qty
-    ?`→ ${(qty*costHT).toFixed(2)}€ coût · <strong style="color:var(--gold)">${(qty*priceHT).toFixed(2)}€</strong> HT`
-    :'Entre une quantité';
+  if(!qty){res.innerHTML='<span class="txs tm">Entre une quantité</span>';return;}
+  const totalCost=(qty*costHT).toFixed(2);
+  const totalPrice=(qty*priceHT).toFixed(2);
+  const margin=priceHT>0?((1-costHT/priceHT)*100).toFixed(0):null;
+  res.innerHTML=`
+    <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Coût prod. HT</div><span class="txs" style="color:var(--red);font-weight:500">${totalCost}€</span></div>
+    <div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Prix vente HT</div><span class="txs" style="color:var(--gold);font-weight:500">${totalPrice}€</span></div>
+    ${margin?`<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Marge</div><span class="txs" style="color:${parseFloat(margin)>30?'var(--green)':'var(--text3)'};font-weight:500">${margin}%</span></div>`:''}`;
   if(badge) badge.innerHTML=qty?`<span style="color:var(--gold);font-weight:500">${qty} cocktails</span>`:'';
 }
 
-function updEvCQ(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].qty=v;renderEvPicker();updEvCalc();}
+function updEvCQ(id,v){const sel=document.getElementById('ev-content')._sel;if(sel&&sel[id])sel[id].qty=v;updEvCalc();}
 function updEvCP(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].pct=v;updEvCalc();}
 
 function setDelivery(amount){
