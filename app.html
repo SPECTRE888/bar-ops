@@ -6822,18 +6822,46 @@ function renderPlanningEmbed(){
   const el=document.getElementById('planning-content-embed');
   const now=new Date();
   const sorted=[...state.events].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
-  const html=sorted.map(ev=>{
-    const d=new Date(ev.date||0);
-    const isPast=d<now;
-    return `
-      <div style="padding:12px;border-left:4px solid ${isPast?'#666':'var(--gold)'};background:var(--surface);margin-bottom:8px;border-radius:4px;cursor:pointer" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${ev.id}';renderPrestation()},100)">
-        <div style="font-weight:600">${ev.name}</div>
-        <div style="font-size:12px;color:var(--text3)">${d.toLocaleDateString('fr-FR')} — ${ev.nGuests||0} pers.</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">${ev.location||'—'}</div>
-      </div>
-    `;
-  }).join('');
-  el.innerHTML=html||'<div class="empty"><p>Aucun événement planifié</p></div>';
+  
+  if(!sorted.length){
+    el.innerHTML='<div class="empty"><p>Aucun événement planifié</p></div>';
+    return;
+  }
+  
+  const html=`
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border)">
+          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Date</th>
+          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Événement</th>
+          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Cocktails</th>
+          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Staff</th>
+          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Paiement</th>
+          <th style="padding:8px;text-align:center;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${sorted.map(ev=>{
+          const d=new Date(ev.date||0);
+          const isPast=d<now;
+          const hasCocktails=(ev.cocktails||[]).length>0;
+          const hasStaff=(ev.assignedStaff||[]).length>0;
+          const paid=ev.paid||false;
+          return `
+            <tr style="border-bottom:1px solid var(--border);background:${isPast?'rgba(255,0,0,0.05)':'transparent'}">
+              <td style="padding:10px 8px;white-space:nowrap">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</td>
+              <td style="padding:10px 8px"><strong>${ev.name}</strong><br><span style="font-size:11px;color:var(--text3)">${ev.location||'—'} · ${ev.nGuests||0} pers.</span></td>
+              <td style="padding:10px 8px"><span style="color:${hasCocktails?'var(--green)':'var(--red)'}">●</span> ${ev.cocktails?.length||0}</td>
+              <td style="padding:10px 8px"><span style="color:${hasStaff?'var(--green)':'var(--red)'}">●</span> ${ev.assignedStaff?.length||0}</td>
+              <td style="padding:10px 8px"><span style="color:${paid?'var(--green)':'var(--text3)'}">●</span> ${paid?'Payée':'En attente'}</td>
+              <td style="padding:10px 8px;text-align:center"><button class="btn btn-sm btn-ghost" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${ev.id}';renderPrestation()},100)" style="font-size:10px">→</button></td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+  el.innerHTML=html;
 }
 
 function renderSuivi(){
