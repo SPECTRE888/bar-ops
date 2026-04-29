@@ -25,6 +25,10 @@ h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;margin-
 label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;color:var(--text2);text-align:left}
 input{width:100%;padding:12px 16px;background:rgba(255,255,255,.05);border:1px solid #2a2a2a;border-radius:5px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;margin-bottom:16px}
 input:focus{outline:none;border-color:var(--gold)}
+.pwd-wrap{position:relative;margin-bottom:16px}
+.pwd-wrap input{margin:0}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;padding:4px 8px;font-size:16px;transition:.2s}
+.eye-btn:hover{color:var(--gold)}
 .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text2);font-size:11px}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:#2a2a2a}
 .toggle{font-size:12px;color:var(--text2);margin-top:20px}
@@ -45,7 +49,13 @@ input:focus{outline:none;border-color:var(--gold)}
     <label>Email</label>
     <input type="email" id="l-email" placeholder="vous@example.com"/>
     <label>Mot de passe</label>
-    <input type="password" id="l-pass" placeholder="••••••••"/>
+    <div class="pwd-wrap">
+      <input type="password" id="l-pass" placeholder="••••••••"/>
+      <button type="button" class="eye-btn" onclick="togglePwd('l-pass')">👁</button>
+    </div>
+    <div style="text-align:right;margin-bottom:16px;margin-top:-12px">
+      <button class="btn" style="padding:0;border:none;font-size:11px;background:none;width:auto" onclick="show('forgot')">Mot de passe oublié ?</button>
+    </div>
     <button class="btn fill" id="l-btn" onclick="emailLogin()">Se connecter</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
@@ -56,9 +66,19 @@ input:focus{outline:none;border-color:var(--gold)}
     <label>Email</label>
     <input type="email" id="s-email" placeholder="vous@example.com"/>
     <label>Mot de passe</label>
-    <input type="password" id="s-pass" placeholder="6+ caractères"/>
+    <div class="pwd-wrap">
+      <input type="password" id="s-pass" placeholder="6+ caractères"/>
+      <button type="button" class="eye-btn" onclick="togglePwd('s-pass')">👁</button>
+    </div>
     <button class="btn fill" id="s-btn" onclick="emailSignup()">S'inscrire</button>
     <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
+  </div>
+
+  <div id="view-forgot" style="display:none">
+    <label>Email de récupération</label>
+    <input type="email" id="f-email" placeholder="vous@example.com"/>
+    <button class="btn fill" id="f-btn" onclick="resetPassword()">Envoyer lien de réinitialisation</button>
+    <div class="toggle"><button onclick="show('login')">← Retour à la connexion</button></div>
   </div>
 
   <div class="back"><a href="index.html">← Retour</a></div>
@@ -77,14 +97,35 @@ const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{
 function show(v){
   document.getElementById('view-signup').style.display=v==='signup'?'block':'none';
   document.getElementById('view-login').style.display=v==='login'?'block':'none';
-  document.getElementById('sub').textContent=v==='signup'?'Créez votre compte':'Connectez-vous';
+  document.getElementById('view-forgot').style.display=v==='forgot'?'block':'none';
+  document.getElementById('sub').textContent=v==='signup'?'Créez votre compte':v==='forgot'?'Récupérer votre compte':'Connectez-vous';
   document.getElementById('msg').className='msg';
+}
+
+function togglePwd(id){
+  const input=document.getElementById(id);
+  const isPassword=input.type==='password';
+  input.type=isPassword?'text':'password';
 }
 
 function msg(t,type){
   const el=document.getElementById('msg');
   el.textContent=t;
   el.className='msg '+(type==='ok'?'ok':'err');
+}
+
+async function resetPassword(){
+  const email=document.getElementById('f-email').value.trim();
+  if(!email){msg('Entrez votre email','err');return;}
+  const btn=document.getElementById('f-btn');
+  btn.disabled=true;btn.textContent='Envoi...';
+  const{error}=await sb.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html'
+  });
+  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';return;}
+  msg('Lien envoyé. Vérifie ton email.','ok');
+  btn.disabled=false;btn.textContent='Envoyer lien de réinitialisation';
+  setTimeout(()=>show('login'),3000);
 }
 
 async function redirect(userId){
