@@ -46,9 +46,7 @@ input:focus{outline:none;border-color:var(--gold)}
     <div class="divider">ou</div>
     <label>Email</label>
     <input type="email" id="l-email" placeholder="vous@example.com"/>
-    <label>Mot de passe</label>
-    <input type="password" id="l-pass" placeholder="••••••••"/>
-    <button class="btn fill" id="l-btn" onclick="emailLogin()">Se connecter</button>
+    <button class="btn fill" id="l-btn" onclick="sendMagicLink()">Lien de connexion par email</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
 
@@ -57,9 +55,7 @@ input:focus{outline:none;border-color:var(--gold)}
     <div class="divider">ou</div>
     <label>Email</label>
     <input type="email" id="s-email" placeholder="vous@example.com"/>
-    <label>Mot de passe</label>
-    <input type="password" id="s-pass" placeholder="6+ caractères"/>
-    <button class="btn fill" id="s-btn" onclick="emailSignup()">S'inscrire</button>
+    <button class="btn fill" id="s-btn" onclick="sendSignupLink()">Créer compte par email</button>
     <div class="toggle">Déjà inscrit ? <button onclick="show('login')">Se connecter</button></div>
   </div>
 
@@ -89,47 +85,28 @@ function msg(t,type){
   el.className='msg '+(type==='ok'?'ok':'err');
 }
 
-async function emailLogin(){
+async function sendMagicLink(){
   const email=document.getElementById('l-email').value.trim();
-  const pass=document.getElementById('l-pass').value;
-  if(!email||!pass){msg('Remplis tous les champs','err');return;}
+  if(!email){msg('Entrez votre email','err');return;}
   const btn=document.getElementById('l-btn');
-  btn.disabled=true;btn.textContent='...';
+  btn.disabled=true;btn.textContent='Envoi...';
   const sbClient=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
-  const{data,error}=await sbClient.auth.signInWithPassword({email,password:pass});
-  if(error){msg('Email ou mot de passe incorrect','err');btn.disabled=false;btn.textContent='Se connecter';return;}
-  await redirect(data.user.id);
+  const{error}=await sbClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=login'}});
+  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Lien de connexion par email';return;}
+  msg('Lien envoyé. Vérifie ton email.','ok');
+  btn.disabled=false;btn.textContent='Lien de connexion par email';
 }
 
-async function emailSignup(){
+async function sendSignupLink(){
   const email=document.getElementById('s-email').value.trim();
-  const pass=document.getElementById('s-pass').value;
-  if(!email||pass.length<6){msg('Email et mot de passe requis (6+)','err');return;}
+  if(!email){msg('Entrez votre email','err');return;}
   const btn=document.getElementById('s-btn');
-  btn.disabled=true;btn.textContent='...';
+  btn.disabled=true;btn.textContent='Envoi...';
   const sbClient=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
-  const{data,error}=await sbClient.auth.signUp({email,password:pass,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html'}});
-  if(error){
-    const already=error.status===422||error.message?.toLowerCase().includes('already')||error.message?.toLowerCase().includes('registered');
-    msg(already?'Cette adresse est déjà utilisée. Connecte-toi.':error.message,'err');
-    btn.disabled=false;btn.textContent="S'inscrire";return;
-  }
-  if(data?.user?.identities?.length===0){
-    msg('Cette adresse est déjà utilisée. Connecte-toi.','err');
-    btn.disabled=false;btn.textContent="S'inscrire";return;
-  }
-  try{
-    await sbClient.from('subscriptions').insert([{
-      user_id:data.user.id,
-      status:'trial',
-      plan:'trial',
-      created_at:new Date().toISOString(),
-      expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
-    }]);
-  }catch(e){}
-  btn.disabled=false;btn.textContent="S'inscrire";
-  msg('Compte créé ! Redirection...','ok');
-  setTimeout(()=>window.location.href='paying.html',1500);
+  const{error}=await sbClient.auth.signInWithOtp({email,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html?action=signup'}});
+  if(error){msg('Erreur : '+error.message,'err');btn.disabled=false;btn.textContent='Créer compte par email';return;}
+  msg('Lien d\'activation envoyé. Vérifie ton email.','ok');
+  btn.disabled=false;btn.textContent='Créer compte par email';
 }
 
 async function googleAuthLogin(){
@@ -169,7 +146,7 @@ async function redirect(userId){
   
   if(!fullHash.includes('access_token'))return;
   
-  // Set timeout fallback for private mode (where session might not persist)
+  // Set timeout fallback for private mode
   const fallbackTimeout=setTimeout(()=>{
     if(action==='signup'){
       window.location.href='paying.html';
