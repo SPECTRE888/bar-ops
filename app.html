@@ -2185,16 +2185,10 @@ function showCForm(c){
             <div style="font-weight:bold;font-size:15px" id="r-mgp">—</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-          <div style="font-size:9px;color:var(--text3);flex:1">0€ (0%)</div>
-          <div style="font-size:9px;color:var(--text3)">50% (Milieu)</div>
-          <div style="font-size:9px;color:var(--text3);text-align:right;flex:1">100€+</div>
-        </div>
         <div style="height:12px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:4px;position:relative">
           <div class="bar-fill" id="bar-fill" style="height:100%;width:0%;border-radius:4px;transition:width .4s,background .4s"></div>
           <div style="position:absolute;left:50%;top:0;height:100%;width:1px;background:var(--text3);opacity:0.3"></div>
         </div>
-        <div id="bar-alert" style="font-size:11px;color:var(--red);text-align:center;min-height:16px;display:none;font-weight:bold">⚠ Prix incohérent</div>
         <div style="font-size:10px;color:var(--text3);text-align:center" id="bar-lbl"></div>
       </div>
       <div class="flex-g no-print">
@@ -2964,19 +2958,11 @@ function updCRecap(){
       fill.style.background=mgPct>=70?'var(--green)':mgPct>=50?'#a8d700':mgPct>=0?'var(--gold)':'var(--red)';
     }
     
-    // Alerte si prix incohérent (cost > 50% of price)
-    const costRatio=total/ht*100;
-    const alertEl=document.getElementById('bar-alert');
-    if(alertEl){
-      if(costRatio>50){alertEl.style.display='block';}else{alertEl.style.display='none';}
-    }
-    
     const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=70?'✓ Marge forte':mgPct>=50?'✓ Excellente marge':mgPct>0?'⚠ Marge faible':'✗ Pas de marge';
   } else {
     ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
     const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
     const l=document.getElementById('bar-lbl');if(l)l.textContent='';
-    const a=document.getElementById('bar-alert');if(a)a.style.display='none';
   }
   const iceDisp=document.getElementById('cf-ice-display');
   const iceVal=parseFloat(document.getElementById('cf-ice')?.value)||0;
