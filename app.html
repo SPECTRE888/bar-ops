@@ -1023,9 +1023,9 @@ const CAT_DEFAULTS = {
 const CAT_COLORS = {Spirit:'gold',Juice:'green',Mixer:'teal',Syrup:'blue',Garnish:'pink',Consumable:'text2',Spice:'orange'};
 const CAT_ICONS  = {Spirit:'',Juice:'',Mixer:'',Syrup:'',Garnish:'',Consumable:'',Spice:''};
 const UNITS = ['cl','ml','L','g','kg','pc'];
-const STAFF_ROLES = ['Bartender','Head Bartender','Bar Supervisor','Waiter/Server','Bar Manager','Other'];
-const STAFF_ROLES_DISPLAY = {'Bartender':'Bartender','Head Bartender':'Head Bartender','Bar Supervisor':'Bar Supervisor','Waiter/Server':'Server','Bar Manager':'Bar Manager','Other':'Other'};
-const STAFF_PER   = ['per event','per hour'];
+const STAFF_ROLES = ['Bartender','Serveur','Bar Manager'];
+const STAFF_ROLES_DISPLAY = {'Bartender':'Bartender','Serveur':'Serveur','Bar Manager':'Bar Manager'};
+const STAFF_PER   = ['per hour'];
 
 const GLASS_TYPES=['Rocks','Highball','Verre','Martini','Coupe','Collins','Flûte','Tiki mug','Copper mug','Hurricane','Snifter','Shot glass','Wine glass','Goblet','Jam jar','Stemless wine','Sling glass'];
 
@@ -1138,9 +1138,9 @@ function injectDemoData(){
 
   // ── STAFF ──────────────────────────────────────────────
   state.staffItems=[
-    {id:now+40,name:'Alex Martin',type:'Head Bartender',rateHT:30,billHT:55,per:'per hour',phone:'',notes:''},
+    {id:now+40,name:'Alex Martin',type:'Bartender',rateHT:30,billHT:55,per:'per hour',phone:'',notes:''},
     {id:now+41,name:'Sara Dubois',type:'Bartender',rateHT:22,billHT:40,per:'per hour',phone:'',notes:''},
-    {id:now+42,name:'Thomas Rey',type:'Waiter/Server',rateHT:18,billHT:32,per:'per hour',phone:'',notes:''},
+    {id:now+42,name:'Thomas Rey',type:'Serveur',rateHT:18,billHT:32,per:'per hour',phone:'',notes:''},
   ];
 
   // ── DRESS CODES ────────────────────────────────────────
@@ -1713,7 +1713,7 @@ function renderGlassware(){
 // ════════════════════════════════════════════════════════
 const STAFF_DEFAULTS={
   'Bartender':     {rateHT:25, billHT:45, per:'per hour'},
-  'Waiter/Server': {rateHT:20, billHT:35, per:'per hour'},
+  'Serveur': {rateHT:20, billHT:35, per:'per hour'},
   'Bar Manager':   {rateHT:30, billHT:55, per:'per hour'},
   'Other':         {rateHT:0,  billHT:0,  per:'per event'},
 };
@@ -3722,9 +3722,9 @@ function updEvCalc(){
 
   // Per-role cost & billing breakdown
   const roleMap={
-    'Bartender':     {qty:nB, hrs:hrsBrt, costEl:'ef-costbrt', billEl:'ef-billbrt', mgEl:'ef-mgbrt'},
-    'Waiter/Server': {qty:nW, hrs:hrsWtr, costEl:'ef-costwtr', billEl:'ef-billwtr', mgEl:'ef-mgwtr'},
-    'Bar Manager':   {qty:nM, hrs:hrsMgr, costEl:'ef-costmgr', billEl:'ef-billmgr', mgEl:'ef-mgmgr'},
+    'Bartender':   {qty:nB, hrs:hrsBrt, costEl:'ef-costbrt', billEl:'ef-billbrt', mgEl:'ef-mgbrt'},
+    'Serveur':     {qty:nW, hrs:hrsWtr, costEl:'ef-costwtr', billEl:'ef-billwtr', mgEl:'ef-mgwtr'},
+    'Bar Manager': {qty:nM, hrs:hrsMgr, costEl:'ef-costmgr', billEl:'ef-billmgr', mgEl:'ef-mgmgr'},
   };
   // Reset
   Object.values(roleMap).forEach(r=>{
@@ -3732,12 +3732,13 @@ function updEvCalc(){
   });
 
   let staffCost=0, staffRevenue=0;
-  const roleAcc={'Bartender':{c:0,b:0},'Waiter/Server':{c:0,b:0},'Bar Manager':{c:0,b:0}};
+  const roleAcc={'Bartender':{c:0,b:0},'Serveur':{c:0,b:0},'Bar Manager':{c:0,b:0}};
 
   state.staffItems.forEach(s=>{
     const rm=roleMap[s.type];
     if(!rm)return;
-    const mult = s.per==='per event'?rm.qty : s.per==='per hour'?rm.qty*rm.hrs : s.per==='per meter'?nBar : rm.qty;
+    const hrs=rm.hrs||1;
+    const mult=rm.qty*hrs;
     roleAcc[s.type].c += (s.rateHT||0)*mult;
     roleAcc[s.type].b += (s.billHT||s.rateHT||0)*mult;
   });
@@ -3830,7 +3831,7 @@ function saveEv(){
   // Get bill rates per role from staffItems matching type
   const staffBillPerRole={
     brt: state.staffItems?.find(s=>s.type==='Bartender')?.billHT||40,
-    wtr: state.staffItems?.find(s=>s.type==='Waiter/Server')?.billHT||32,
+    wtr: state.staffItems?.find(s=>s.type==='Serveur')?.billHT||32,
     mgr: state.staffItems?.find(s=>s.type==='Bar Manager')?.billHT||55
   };
   
@@ -5168,8 +5169,8 @@ function buildDevisHTML(ev,devisNum){
   const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
   const staffLines=[];let staffTotalHT=0;
   const staffRoles=[
-    {label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender','Head Bartender','Bar Supervisor']},
-    {label:'Serveur',n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',types:['Waiter/Server']},
+    {label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender','Bartender']},
+    {label:'Serveur',n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',types:['Serveur']},
     {label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',types:['Bar Manager']},
   ];
   staffRoles.forEach(r=>{
