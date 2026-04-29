@@ -2954,9 +2954,9 @@ function updCRecap(){
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
     
-    // Barre linéaire : 0€ = 0%, 30€ = 100%
+    // Barre linéaire : 0€ = 0%, 25€ = 100%
     const pricePct=(ht/suggested-1)*100;
-    const barRatio=Math.max(0,Math.min(100,ht/30*100));
+    const barRatio=Math.max(0,Math.min(100,ht/25*100));
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=barRatio+'%';
