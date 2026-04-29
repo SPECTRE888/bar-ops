@@ -2954,14 +2954,20 @@ function updCRecap(){
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
     
-    const barRatio=Math.max(0,Math.min(100,mgPct));
+    // Barre basée sur écart prix/suggested (0-20€ range)
+    const priceDiff=ht-suggested;
+    const barRatio=Math.max(0,Math.min(100,(priceDiff+10)/20*100)); // -10€=0%, 0€=50%, +10€=100%
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=barRatio+'%';
-      fill.style.background=mgPct>=60?'var(--green)':mgPct>=35?'var(--gold)':mgPct>0?'#ff9800':'var(--red)';
+      // Excellente marge si prix ≈ suggested (-5% à +15%), forte si au-dessus, faible si dessous
+      const pricePct=(ht/suggested-1)*100;
+      fill.style.background=pricePct>15?'var(--green)':pricePct>-5?'var(--gold)':pricePct>-30?'#ff9800':'var(--red)';
     }
     
-    const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=60?'✓ Marge forte':mgPct>=35?'✓ Bonne marge':mgPct>0?'⚠ Marge faible':'✗ Pas de marge';
+    const lbl=document.getElementById('bar-lbl');
+    const pricePct=(ht/suggested-1)*100;
+    if(lbl)lbl.textContent=pricePct>15?'✓ Marge forte':pricePct>-5?'✓ Excellente marge':pricePct>-30?'⚠ Marge faible':'✗ Trop bas';
   } else {
     ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
     const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
