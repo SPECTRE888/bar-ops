@@ -3544,7 +3544,7 @@ function renderEvPicker(){
   }).join('');
 
   const addRow=unselected.length?`
-    <div style="margin-top:${selected.length?'10px':'0'}">
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
       <select onchange="if(this.value){toggleEvC(parseInt(this.value),true);this.value='';}" style="width:100%;font-size:12px;padding:7px 10px;border:1px dashed var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text2);cursor:pointer">
         <option value="">+ Ajouter un cocktail...</option>
         ${filtered.map(c=>`<option value="${c.id}">${c.name} — ${c.category}</option>`).join('')}
