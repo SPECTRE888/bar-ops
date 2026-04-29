@@ -2104,7 +2104,7 @@ function showCForm(c){
     <div style="flex:1;min-width:0">
       <div class="card" style="padding:12px">
         <div class="ctitle" style="margin-bottom:8px"> General info</div>
-        <div class="g2" style="gap:6px;margin-bottom:6px">
+        <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Catégorie</label><select id="cf-cat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box">
             <option${(c.category||'Cocktail Signature')==='Cocktail Signature'?' selected':''}>Cocktail Signature</option>
