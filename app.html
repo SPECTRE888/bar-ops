@@ -6821,47 +6821,78 @@ function showSuiviTab(tab){
 function renderPlanningEmbed(){
   const el=document.getElementById('planning-content-embed');
   const now=new Date();
-  const sorted=[...state.events].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+  const currentMonth=now.getMonth();
+  const currentYear=now.getFullYear();
   
-  if(!sorted.length){
-    el.innerHTML='<div class="empty"><p>Aucun événement planifié</p></div>';
-    return;
-  }
+  const monthNames=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const dayNames=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   
-  const html=`
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead>
-        <tr style="border-bottom:2px solid var(--border)">
-          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Date</th>
-          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Événement</th>
-          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Cocktails</th>
-          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Staff</th>
-          <th style="padding:8px;text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Paiement</th>
-          <th style="padding:8px;text-align:center;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:9px">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sorted.map(ev=>{
-          const d=new Date(ev.date||0);
-          const isPast=d<now;
-          const hasCocktails=(ev.cocktails||[]).length>0;
-          const hasStaff=(ev.assignedStaff||[]).length>0;
-          const paid=ev.paid||false;
-          return `
-            <tr style="border-bottom:1px solid var(--border);background:${isPast?'rgba(255,0,0,0.05)':'transparent'}">
-              <td style="padding:10px 8px;white-space:nowrap">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'})}</td>
-              <td style="padding:10px 8px"><strong>${ev.name}</strong><br><span style="font-size:11px;color:var(--text3)">${ev.location||'—'} · ${ev.nGuests||0} pers.</span></td>
-              <td style="padding:10px 8px"><span style="color:${hasCocktails?'var(--green)':'var(--red)'}">●</span> ${ev.cocktails?.length||0}</td>
-              <td style="padding:10px 8px"><span style="color:${hasStaff?'var(--green)':'var(--red)'}">●</span> ${ev.assignedStaff?.length||0}</td>
-              <td style="padding:10px 8px"><span style="color:${paid?'var(--green)':'var(--text3)'}">●</span> ${paid?'Payée':'En attente'}</td>
-              <td style="padding:10px 8px;text-align:center"><button class="btn btn-sm btn-ghost" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${ev.id}';renderPrestation()},100)" style="font-size:10px">→</button></td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    </table>
-  `;
-  el.innerHTML=html;
+  // Afficher 3 mois: précédent, courant, suivant
+  const months=[
+    {m:currentMonth===0?11:currentMonth-1,y:currentMonth===0?currentYear-1:currentYear},
+    {m:currentMonth,y:currentYear},
+    {m:currentMonth===11?0:currentMonth+1,y:currentMonth===11?currentYear+1:currentYear}
+  ];
+  
+  const renderMonth=(m,y)=>{
+    const firstDay=new Date(y,m,1);
+    const lastDay=new Date(y,m+1,0);
+    const startDate=new Date(firstDay);
+    startDate.setDate(startDate.getDate()-firstDay.getDay()+(firstDay.getDay()===0?-6:1));
+    
+    const cells=[];
+    let current=new Date(startDate);
+    while(current<=lastDay||current.getDay()!==1){
+      cells.push(new Date(current));
+      current.setDate(current.getDate()+1);
+    }
+    
+    const weeks=[];
+    for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
+    
+    return `
+      <div style="margin-bottom:24px">
+        <h3 style="font-size:16px;margin-bottom:12px;color:var(--text);font-weight:600">${monthNames[m]} ${y}</h3>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;border:1px solid var(--border)">
+            <thead>
+              <tr style="background:var(--surface2)">
+                ${dayNames.map(d=>`<th style="padding:8px;text-align:center;font-size:11px;color:var(--text3);font-weight:600;border:1px solid var(--border)">${d}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${weeks.map(week=>`
+                <tr>
+                  ${week.map(day=>{
+                    const isCurrentMonth=day.getMonth()===m;
+                    const eventsOnDay=state.events.filter(e=>{
+                      const ed=new Date(e.date||0);
+                      return ed.getDate()===day.getDate()&&ed.getMonth()===day.getMonth()&&ed.getFullYear()===day.getFullYear();
+                    });
+                    return `
+                      <td style="border:1px solid var(--border);padding:8px;vertical-align:top;background:${isCurrentMonth?'var(--surface)':'var(--surface3)'};min-height:100px">
+                        <div style="font-weight:600;margin-bottom:6px;color:${isCurrentMonth?'var(--text)':'var(--text3)'};font-size:13px">${day.getDate()}</div>
+                        <div style="font-size:10px;display:flex;flex-direction:column;gap:4px">
+                          ${eventsOnDay.map(e=>`
+                            <div style="background:var(--gold-bg);border-left:2px solid var(--gold);padding:4px 6px;border-radius:2px;cursor:pointer;color:var(--text2)" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${e.id}';renderPrestation()},100)">
+                              <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</div>
+                              <div style="font-size:9px;color:var(--text3)">${e.nGuests||'?'} pers</div>
+                            </div>
+                          `).join('')}
+                        </div>
+                      </td>
+                    `;
+                  }).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  };
+  
+  el.innerHTML=`<div style="padding:12px">${months.map(({m,y})=>renderMonth(m,y)).join('')}</div>`;
 }
 
 function renderSuivi(){
