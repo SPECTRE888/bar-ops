@@ -6176,6 +6176,9 @@ function renderHistorique(){
     el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><p>Aucune prestation passée pour l'instant.</p></div>`;
     return;
   }
+  
+  const searchFilter=document.getElementById('hist-search')?.value.toLowerCase()||'';
+  const filtered=searchFilter?past.filter(ev=>ev.name.toLowerCase().includes(searchFilter)||ev.location?.toLowerCase().includes(searchFilter)):past;
 
   const evRevenue=ev=>{
     const c=(ev.cocktails||[]).reduce((s,cfg)=>{
@@ -6209,6 +6212,9 @@ function renderHistorique(){
   });
 
   let html=`
+    <div style="margin-bottom:16px">
+      <input type="text" id="hist-search" placeholder="Chercher une prestation..." oninput="renderHistorique()" style="width:100%;max-width:300px;padding:8px 12px;font-size:13px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text)"/>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
       <div class="card" style="text-align:center;padding:18px">
         <div style="font-size:24px;font-family:'DM Serif Display',serif;color:var(--gold)">${fmt(totalRev)}€</div>
@@ -6231,11 +6237,13 @@ function renderHistorique(){
 
   // By month
   Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([key,data])=>{
+    const filteredEvents=data.events.filter(ev=>!searchFilter||ev.name.toLowerCase().includes(searchFilter)||ev.location?.toLowerCase().includes(searchFilter));
+    if(!filteredEvents.length) return;
     const [y,m]=key.split('-');
     const monthLabel=new Date(y,m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
     const mg=data.rev-data.cost;
     html+=`<div class="ctitle" style="margin:16px 0 8px">${monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)} — <span style="color:var(--gold)">${data.rev.toFixed(0)}€</span> <span class="txs tm">marge ${mg.toFixed(0)}€</span></div>`;
-    data.events.forEach(ev=>{
+    filteredEvents.forEach(ev=>{
       const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
       const fmtDate=new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       const cktCount=evTot(ev);
