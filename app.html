@@ -1855,8 +1855,8 @@ function renderCGrid(){
     const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||20)/100)).toFixed(2)+'€ TTC':'—';
     const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'—';
     const fcColor=c.priceHT>0?(c.totalCost/c.priceHT<0.2?'var(--green)':c.totalCost/c.priceHT<0.35?'#ba7517':'var(--red)'):'var(--text3)';
-    return`<div class="c-card">
-      <div>
+    return`<div class="c-card" style="gap:12px">
+      <div style="flex-grow:1">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
           <div class="cat">${c.category}</div>
           ${c.code?`<span style="font-size:9px;font-family:monospace;padding:1px 6px;border-radius:4px;background:var(--surface3);color:var(--text3);border:1px solid var(--border2)">${c.code}</span>`:''}
