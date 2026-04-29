@@ -3334,9 +3334,9 @@ function showEvForm(ev){
       ].map(r=>`
       <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
         <span style="font-weight:500">${r.label}</span>
-        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:4px 6px;font-size:12px;height:28px" oninput="updEvCalc()"/>
-        <select id="ef-arr${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvCalc()">${mkTimeOpts(r.arr)}</select>
-        <select id="ef-dep${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvCalc()">${mkTimeOpts(r.dep)}</select>
+        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:4px 6px;font-size:12px;height:28px" oninput="updEvField(${ev.id},'n${r.key.charAt(0).toUpperCase()+r.key.slice(1)}s',parseInt(this.value)||0);updEvCalc()"/>
+        <select id="ef-arr${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvField(${ev.id},'arr${r.key.charAt(0).toUpperCase()+r.key.slice(1)}',this.value);updEvCalc()">${mkTimeOpts(r.arr)}</select>
+        <select id="ef-dep${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvField(${ev.id},'dep${r.key.charAt(0).toUpperCase()+r.key.slice(1)}',this.value);updEvCalc()">${mkTimeOpts(r.dep)}</select>
         <span id="ef-hrs${r.key}" style="color:var(--gold);font-size:11px;font-weight:500">—</span>
         <span id="ef-cost${r.key}" style="color:var(--red);font-size:11px">—</span>
         <span id="ef-bill${r.key}" style="color:var(--green);font-size:11px">—</span>
