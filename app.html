@@ -3416,6 +3416,7 @@ function showEvForm(ev){
 
   // Hidden compat fields
   el.insertAdjacentHTML('beforeend',`
+    <input type="hidden" id="ef-buf" value="${ev.buffer??0}"/>
     <input type="hidden" id="ef-cpp" value="${ev.cppax||3}"/>
     <input type="hidden" id="ef-barm" value="${ev.barMeters||1}"/>
     <input type="hidden" id="ef-extra" value="${ev.extraCostHT||0}"/>
@@ -3672,7 +3673,7 @@ function updBarSelection(){
 function updEvCalc(){
   const pax=parseInt(document.getElementById('ef-pax')?.value)||0;
   const cpp=parseFloat(document.getElementById('ef-cpp')?.value)||3;
-  const buf=0;
+  const buf=parseFloat(document.getElementById('ef-buf')?.value||'0');
   const total=Math.ceil(pax*cpp*(1+buf/100));
   const sel=document.getElementById('ev-content')?._sel||{};
   let ingCost=0,revenue=0,glassCost=0;
@@ -3871,7 +3872,7 @@ function saveEv(){
     dressCodes:(function(){const v=document.getElementById('ef-tenue-select')?.value;return v?[parseInt(v)]:[];})(),
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,
     cppax:parseFloat(document.getElementById('ef-cpp')?.value)||3,
-    buffer:0,
+    buffer:parseFloat(document.getElementById('ef-buf')?.value||'0'),
     hours:parseFloat(document.getElementById('ef-hours')?.value)||4,
     barMeters:parseFloat(document.getElementById('ef-barm')?.value)||0,
     nBartenders:parseInt(document.getElementById('ef-nbrt')?.value)||0,
@@ -3972,7 +3973,7 @@ function buildTmpEv(){
     start:document.getElementById('ef-start')?.value||'',end:document.getElementById('ef-end')?.value||'',
     contact:document.getElementById('ef-contact')?.value||'',notes:document.getElementById('ef-notes')?.value||'',
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,cppax:parseFloat(document.getElementById('ef-cpp')?.value)||3,
-    buffer:0,
+    buffer:parseFloat(document.getElementById('ef-buf')?.value||'0'),
     cocktails:Object.entries(sel).map(([id,cfg])=>({id:parseInt(id),qty:cfg.qty,pct:cfg.pct}))};
 }
 
