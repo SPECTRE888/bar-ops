@@ -4466,7 +4466,13 @@ function renderShopping(){
 function renderPrestEvSel(){
   const sel=document.getElementById('prest-ev-sel');
   const now=new Date();
-  const active=state.events.filter(ev=>!ev.stockRetourDone||!ev.date||new Date(ev.date)>=now);
+  const active=state.events.filter(ev=>{
+    if(!ev.date) return true;
+    const evDate=new Date(ev.date);
+    const isPast=evDate<now;
+    const inHistory=isPast&&ev.stockRetourDone;
+    return !inHistory;
+  });
   sel.innerHTML='<option value="">— Sélectionner un événement —</option>'+
     active.map(ev=>`<option value="${ev.id}">${ev.name}${ev.date?' — '+ev.date:''}</option>`).join('');
 }
