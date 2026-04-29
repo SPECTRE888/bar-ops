@@ -3506,7 +3506,7 @@ function renderEvPicker(){
       </div>
 
       <!-- Gamme selector -->
-      <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--gold-border)">
+      <div style="display:grid;grid-template-columns:1fr;gap:12px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--gold-border)">
         <div>
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px">
             Gamme — <span style="color:var(--text2)">${glassTypeLabel}</span>
@@ -3517,37 +3517,29 @@ function renderEvPicker(){
             ${gammeOptions}
           </select>`}
         </div>
-        <div style="text-align:right;min-width:80px">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px">Coût / verre</div>
-          <span style="font-size:12px;font-weight:500;color:${glassCostHT>0?'var(--text)':'var(--text3)'}">
-            ${glassCostHT>0?glassCostHT.toFixed(3)+'€ HT':'—'}
-          </span>
-        </div>
       </div>
 
       <!-- Quantity + financials -->
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
         <div>
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px">Quantité</div>
           <input type="number" value="${qty||''}" min="0" placeholder="0"
             id="qty-${c.id}" style="width:80px;padding:4px 8px;font-size:13px;font-weight:500"
             oninput="updEvCQ(${c.id},parseInt(this.value)||0);updEvCalc();updQtyDisplay(${c.id},${c.priceHT||0},${totalCostUnit})"/>
         </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px">Coût unitaire</div>
-          <span class="txs" style="color:var(--text2)">
-            <strong id="unit-cost-${c.id}">${ingCostUnit.toFixed(3)}€</strong>
-          </span>
-        </div>
-        <div id="qty-result-${c.id}" style="text-align:right">
-          ${qty&&totalCost?`
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:2px">Total</div>
-          <div class="txs" style="color:var(--red)">${totalCost}€ coût</div>
-          <div class="txs" style="color:var(--gold);font-weight:500">${totalPrice}€ facturé</div>
-          ${margin?`<div class="txs" style="color:${parseFloat(margin)>30?'var(--green)':'var(--text3)'}">marge ${margin}%</div>`:''}
+        <div id="qty-result-${c.id}" style="display:flex;align-items:center;gap:12px;flex:1">
+          ${qty?`
+          <div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Coût prod. HT</div>
+            <span class="txs" style="color:var(--red);font-weight:500">${totalCost}€</span>
+          </div>
+          <div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Prix vente HT</div>
+            <span class="txs" style="color:var(--gold);font-weight:500">${totalPrice}€</span>
+          </div>
+          ${margin?`<div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Marge</div><span class="txs" style="color:${parseFloat(margin)>30?'var(--green)':'var(--text3)'}; font-weight:500">${margin}%</span></div>`:''}
           `:'<span class="txs tm">Entre une quantité</span>'}
         </div>
-      </div>
     </div>`;
   }).join('');
 
