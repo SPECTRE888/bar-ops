@@ -4585,8 +4585,11 @@ function prestCreateClient(evId){
 }
 
 function renderPrestation(){
+  const savedVal=document.getElementById('prest-ev-sel')?.value;
   renderPrestEvSel();
-  const evId=parseInt(document.getElementById('prest-ev-sel').value);
+  const sel=document.getElementById('prest-ev-sel');
+  if(savedVal) sel.value=savedVal;
+  const evId=parseInt(sel.value);
   const el=document.getElementById('prest-content');
   const titleEl=document.getElementById('prest-title');
   if(!evId){
