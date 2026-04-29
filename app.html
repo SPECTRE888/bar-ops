@@ -3590,7 +3590,7 @@ function updQtyDisplay(cid, priceHT, costHT){
   if(badge) badge.innerHTML=qty?`<span style="color:var(--gold);font-weight:500">${qty} cocktails</span>`:'';
 }
 
-function updEvCQ(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].qty=v;updEvCalc();}
+function updEvCQ(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].qty=v;renderEvPicker();updEvCalc();}
 function updEvCP(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].pct=v;updEvCalc();}
 
 function setDelivery(amount){
