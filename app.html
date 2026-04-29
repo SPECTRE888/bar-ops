@@ -6764,6 +6764,13 @@ function confirmResetData(){
   goPage('dashboard');
   toast('Données réinitialisées');
 }
+
+function confirmDeleteAccount(){
+  if(!confirm('Confirmez : SUPPRIMER MON COMPTE (dernière chance)')) return;
+  cloudSignOut();
+  goPage('dashboard');
+}
+
 // ════════════════════════════════════════════════════════
 function showSuiviTab(tab){
   if(tab==='suivi'){
