@@ -35,6 +35,12 @@ input:focus{outline:none;border-color:var(--gold)}
 .toggle button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;font-family:'Jost',sans-serif}
 .back{margin-top:24px}
 .back a{color:var(--text2);text-decoration:none;font-size:12px}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:var(--surface);border:1px solid #2a2a2a;border-radius:12px;padding:40px;max-width:400px;text-align:center}
+.modal-content h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;margin-bottom:16px}
+.modal-content p{color:var(--text2);font-size:12px;line-height:1.6;margin-bottom:24px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px}
 </style>
 </head>
 <body>
@@ -87,6 +93,16 @@ input:focus{outline:none;border-color:var(--gold)}
   </div>
 </div>
 
+<div class="modal" id="verify-modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>Vérifiez votre email</h2>
+    <p>Un lien de confirmation a été envoyé à <strong id="modal-email"></strong>.</p>
+    <p style="font-size:11px;color:var(--text2)">Cliquez sur le lien pour activer votre compte. Vous serez redirigé automatiquement.</p>
+    <button class="btn" onclick="goBack()" style="margin-top:20px">Retour à la connexion</button>
+  </div>
+</div>
+
 <script>
 const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
@@ -108,6 +124,20 @@ function togglePwd(id){
   const isPassword=input.type==='password';
   input.type=isPassword?'text':'password';
   btn.innerHTML=isPassword?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+}
+
+function showModal(email){
+  document.getElementById('modal-email').textContent=email;
+  document.getElementById('verify-modal').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('verify-modal').classList.remove('show');
+}
+
+function goBack(){
+  closeModal();
+  show('login');
 }
 
 function msg(t,type){
@@ -165,18 +195,16 @@ async function emailSignup(){
   if(!email||pass.length<6){msg('Email et mot de passe requis (6+)','err');return;}
   const btn=document.getElementById('s-btn');
   btn.disabled=true;btn.textContent='...';
-  const{data,error}=await sb.auth.signUp({email,password:pass});
+  const{data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:'https://resplendent-truffle-db8c68.netlify.app/auth.html'}});
   if(error){
     const already=error.status===422||error.message?.toLowerCase().includes('already')||error.message?.toLowerCase().includes('registered');
     msg(already?'Cette adresse est déjà utilisée. Connecte-toi.':error.message,'err');
     btn.disabled=false;btn.textContent="S'inscrire";return;
   }
-  // Supabase returns user even if already exists — check identities
   if(data?.user?.identities?.length===0){
     msg('Cette adresse est déjà utilisée. Connecte-toi.','err');
     btn.disabled=false;btn.textContent="S'inscrire";return;
   }
-  // Create trial subscription
   try{
     await sb.from('subscriptions').insert([{
       user_id:data.user.id,
@@ -186,7 +214,8 @@ async function emailSignup(){
       expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
     }]);
   }catch(e){}
-  window.location.href='paying.html';
+  btn.disabled=false;btn.textContent="S'inscrire";
+  showModal(email);
 }
 
 async function emailLogin(){
