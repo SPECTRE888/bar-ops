@@ -2162,21 +2162,21 @@ function showCForm(c){
 
       <div class="card" style="padding:12px">
         <div class="ctitle" style="margin-bottom:10px"> Pricing (HT)</div>
-        <div class="g2" style="gap:6px;margin-bottom:10px">
+        <div class="g3" style="gap:6px;margin-bottom:10px">
+          <div style="background:var(--bg2);padding:8px 10px;border-radius:4px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Prix conseillé</div>
+            <div style="font-weight:bold;font-size:16px;color:var(--gold)" id="r-suggested">—</div>
+          </div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix de vente HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
-            <option value="20"${(c.vat||20)===20?' selected':''}>20%</option>
-            <option value="10"${(c.vat||20)===10?' selected':''}>10%</option>
+            <option value="20"${(c.vat===undefined||c.vat===20||c.vat===null)?'selected':''}>20%</option>
+            <option value="10"${(c.vat===10)?'selected':''}>10%</option>
           </select></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
           <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
             <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Coût prod.</div>
             <div style="font-weight:bold;font-size:15px" id="r-cost">—</div>
-          </div>
-          <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Prix conseillé</div>
-            <div style="font-weight:bold;font-size:15px;color:var(--gold)" id="r-suggested">—</div>
           </div>
           <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
             <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Marge €</div>
