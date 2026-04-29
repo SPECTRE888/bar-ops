@@ -2743,7 +2743,8 @@ function renderDashboard(){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA</div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${caPayees.toFixed(0)}€</div>
+      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:2px;line-height:1" id="ca-value">${caPayees.toFixed(0)}€</div>
+      <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px">Hors taxes</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
         <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
