@@ -3129,12 +3129,10 @@ function goEvTab(evId, tab){
   if(tab==='prestation'){
     goPage('prestation');
     setTimeout(()=>{
+      renderPrestEvSel();
       const sel=document.getElementById('prest-ev-sel');
-      if(sel){
-        sel.value=evId;
-        sel.style.display='none';
-        renderPrestation();
-      }
+      if(sel){sel.value=evId;}
+      renderPrestation();
     },50);
   } else if(tab==='shopping'){
     goPage('shopping');
