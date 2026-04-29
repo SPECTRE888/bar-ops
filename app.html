@@ -2942,7 +2942,11 @@ function updCRecap(){
   const w=document.getElementById('ing-warn');if(w)w.className='warn'+(hasUnp?'':' hide');
 
   const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
-  const suggested=total*4;
+  
+  // Prix conseillé: X4 classique, X5 signature
+  const cat=document.getElementById('cf-cat')?.value||'Cocktail Signature';
+  const mult=(cat.includes('Classique'))?4:5;
+  const suggested=total*mult;
   const sugEl=document.getElementById('r-suggested');if(sugEl)sugEl.textContent=total>0?suggested.toFixed(2)+'€':'—';
 
   const ht=parseFloat(document.getElementById('cf-pht')?.value)||0;
@@ -2952,12 +2956,12 @@ function updCRecap(){
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
     
-    // Barre: 0 à gauche = 0% marge (cost=price), 50 au milieu = 50% marge, 100 à droite = 100% marge (cost=0)
+    // Barre: 0 à gauche = 0% marge, 50 au milieu, 100 à droite = 100% marge
     const barRatio=Math.max(0,Math.min(100,mgPct));
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=barRatio+'%';
-      fill.style.background=mgPct>=50?'var(--green)':mgPct>=25?'var(--gold)':mgPct>0?'#ff6b6b':'var(--red)';
+      fill.style.background=mgPct>=70?'var(--green)':mgPct>=50?'#a8d700':mgPct>=0?'var(--gold)':'var(--red)';
     }
     
     // Alerte si prix incohérent (cost > 50% of price)
@@ -2967,7 +2971,7 @@ function updCRecap(){
       if(costRatio>50){alertEl.style.display='block';}else{alertEl.style.display='none';}
     }
     
-    const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=50?'✓ Excellente marge':mgPct>=25?'✓ Bonne marge':mgPct>0?'⚠ Marge faible':'✗ Pas de marge';
+    const lbl=document.getElementById('bar-lbl');if(lbl)lbl.textContent=mgPct>=70?'✓ Marge forte':mgPct>=50?'✓ Excellente marge':mgPct>0?'⚠ Marge faible':'✗ Pas de marge';
   } else {
     ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
     const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
