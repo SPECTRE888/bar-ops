@@ -6513,22 +6513,14 @@ function renderProfile(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
 
       <!-- Compte -->
-      <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="display:flex;flex-direction:column;gap:8px;padding:10px">
         <div class="ctitle">Compte</div>
         ${isConnected?`
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:34px;height:34px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold);flex-shrink:0">${email.charAt(0).toUpperCase()}</div>
             <div style="min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${email}</div><div style="font-size:10px;color:var(--text3)">Connecte</div></div>
           </div>
-          <div style="border-top:1px solid var(--border);padding-top:12px;flex:1;display:flex;flex-direction:column;gap:8px">
-            <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Email</div>
-              <input id="prof-email" type="email" value="${email}" style="width:100%;font-size:11px"/>
-              <div id="prof-email-msg" style="font-size:10px;margin-top:3px;min-height:10px;color:var(--text3)"></div>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="changeEmail()" style="width:100%">Modifier email</button>
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:10px">
+          <div style="border-top:1px solid var(--border);padding-top:8px;flex:1;display:flex;align-items:flex-end">
             <button class="btn btn-ghost btn-sm" onclick="cloudSignOut();goPage('dashboard')" style="width:100%">Se deconnecter</button>
           </div>
         `:`
@@ -6540,9 +6532,9 @@ function renderProfile(){
       </div>
 
       <!-- Informations & Donnees -->
-      <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="display:flex;flex-direction:column;gap:8px;padding:10px">
         <div class="ctitle">Informations & Donnees</div>
-        <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;gap:6px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1">
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Nom</div>
@@ -6561,7 +6553,7 @@ function renderProfile(){
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.siret||'—'}</div>
             </div>
           </div>
-          <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:12px">
+          <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px">
             <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
             <button class="btn btn-ghost btn-sm" onclick="exportData()" style="flex:1">Exporter</button>
             <button class="btn btn-ghost btn-sm" onclick="confirmResetData()" style="flex:1">Reinit</button>
