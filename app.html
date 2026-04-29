@@ -4559,6 +4559,7 @@ function prestCreateClient(evId){
 }
 
 function renderPrestation(){
+  renderPrestEvSel();
   const evId=parseInt(document.getElementById('prest-ev-sel').value);
   const el=document.getElementById('prest-content');
   if(!evId){el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';return;}
