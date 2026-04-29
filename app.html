@@ -2138,46 +2138,26 @@ function showCForm(c){
       </div>
 
       <div class="card" style="padding:12px">
-        <div class="ctitle" style="margin-bottom:12px">Pricing (HT)</div>
-        
-        <div class="g3" style="gap:6px;margin-bottom:12px;align-items:end">
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Multiplicateur</label><input type="number" id="cf-mult" value="${c.mult||4}" step="0.1" min="1" max="20" style="width:60px;font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix vente HT</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" style="width:100px;font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="width:80px;font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
-            <option value="10"${(c.vat||20)===10?' selected':''}>10%</option>
+        <div class="ctitle" style="margin-bottom:8px"> Coût de production</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;font-size:11px">
+          <div style="background:var(--bg2);padding:10px;border-radius:4px;text-align:center"><div style="font-weight:bold;font-size:15px" id="r-cost">0.00€</div><div style="color:var(--text3);margin-top:3px">Coût HT</div></div>
+          <div style="background:var(--bg2);padding:10px;border-radius:4px;text-align:center"><div style="font-weight:bold;font-size:15px" id="r-ing">0.00€</div><div style="color:var(--text3);margin-top:3px">Ingrédients</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px">
+        <div class="ctitle" style="margin-bottom:8px"> Prix de vente</div>
+        <div class="g2" style="gap:6px;margin-bottom:8px">
+          <div class="field" style="margin-bottom:0;flex:1"><label style="font-size:12px">Prix HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
+          <div class="field" style="margin-bottom:0;width:90px"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
             <option value="20"${(c.vat||20)===20?' selected':''}>20%</option>
+            <option value="10"${(c.vat||20)===10?' selected':''}>10%</option>
           </select></div>
+          <div style="display:flex;flex-direction:column;justify-content:flex-end;flex:1"><div style="font-weight:bold;font-size:15px;color:var(--gold);text-align:center;padding:6px;background:var(--bg2);border-radius:4px;height:32px;display:flex;align-items:center;justify-content:center" id="r-ttc">—</div><div style="font-size:10px;color:var(--text3);text-align:center;margin-top:2px">TTC €</div></div>
         </div>
-
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;font-size:11px">
-          <div style="background:var(--bg2);padding:8px;border-radius:4px;text-align:center">
-            <div style="font-weight:bold;font-size:13px" id="r-cost">0€</div>
-            <div style="color:var(--text3);margin-top:2px;font-size:9px">Coût prod</div>
-          </div>
-          <div style="background:var(--bg2);padding:8px;border-radius:4px;text-align:center">
-            <div style="font-weight:bold;font-size:13px" id="r-price">0€</div>
-            <div style="color:var(--text3);margin-top:2px;font-size:9px">Prix vente</div>
-          </div>
-          <div style="background:var(--bg2);padding:8px;border-radius:4px;text-align:center">
-            <div style="font-weight:bold;font-size:13px" id="r-mg">0€</div>
-            <div style="color:var(--text3);margin-top:2px;font-size:9px">Marge</div>
-          </div>
-          <div style="background:var(--bg2);padding:8px;border-radius:4px;text-align:center">
-            <div style="font-weight:bold;font-size:13px;color:var(--green)" id="r-mgp">—</div>
-            <div style="color:var(--text3);margin-top:2px;font-size:9px">Marge %</div>
-          </div>
-        </div>
-
-        <div style="font-size:10px;color:var(--text3);text-align:center">Prix TTC: <strong id="r-ttc-val">0€</strong></div>
-        <div style="margin-bottom:8px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:11px;color:var(--text3)">Food cost ratio</span>
-            <span style="font-size:12px;font-weight:bold" id="bar-lbl"></span>
-          </div>
-          <div class="bar-wrap" style="height:20px;background:var(--bg2);border-radius:4px"><div class="bar-fill" id="bar-fill" style="width:0%;border-radius:4px;transition:width .5s,background .5s;display:flex;align-items:center;justify-content:center">
-            <span style="font-size:11px;color:white;font-weight:bold" id="bar-text"></span>
-          </div></div>
-          <div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center">Cible: &lt; 20% (vert)</div>
+        <div style="margin-top:8px">
+          <div style="height:24px;background:var(--bg2);border-radius:4px;overflow:hidden"><div class="bar-fill" id="bar-fill" style="height:100%;width:0%;border-radius:4px;transition:width .4s,background .4s"></div></div>
+          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:4px">Marge: <strong id="bar-lbl">—</strong></div>
         </div>
       </div>
       <div class="flex-g no-print">
@@ -2915,34 +2895,32 @@ function recalcAllCocktailsIce(){
 }
 
 function updCRecap(){
-  let total=0;
-  ingRows().forEach(r=>{total+=calcIC(r.id);});
+  let total=0,ingCost=0;
+  ingRows().forEach(r=>{ingCost+=calcIC(r.id);total+=ingCost;});
   consoRows().forEach(r=>{total+=calcIC(r.id);});
   total+=parseFloat(document.getElementById('cf-ice')?.value)||0;
   total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
 
-  const hasUnp=[...ingRows(),...consoRows()].some(r=>{
-    const p=rowProduct(r.id);
-    const ptype=r.dataset.ptype||r.querySelector('.ss-input')?.value||'';
-    return ptype&&(!p||!p.priceHT);
-  });
+  const hasUnp=[...ingRows(),...consoRows()].some(r=>{const p=rowProduct(r.id);const ptype=r.dataset.ptype||r.querySelector('.ss-input')?.value||'';return ptype&&(!p||!p.priceHT);});
   const w=document.getElementById('ing-warn');if(w)w.className='warn'+(hasUnp?'':' hide');
-  document.getElementById('r-cost').textContent=fmt(total)+'€';
+  document.getElementById('r-cost').textContent=(total).toFixed(2)+'€';
+  document.getElementById('r-ing').textContent=(ingCost).toFixed(2)+'€';
+  
   const ht=parseFloat(document.getElementById('cf-pht')?.value)||0;
   const vat=(parseFloat(document.getElementById('cf-vat')?.value)||20)/100;
-  if(ht>0){
-    const mg=ht-total,mgp=mg/ht*100,ttc=ht*(1+vat);
-    document.getElementById('r-price').textContent=fmt(ht)+'€';
-    document.getElementById('r-mg').textContent=fmt(mg)+'€';
-    document.getElementById('r-mgp').textContent=mgp.toFixed(1)+'%';
-    document.getElementById('r-ttc-val').textContent=fmt(ttc)+'€';
+  if(ht>0&&total>0){
+    const ttc=ht*(1+vat),mg=ht-total,mgPct=mg/ht*100;
+    document.getElementById('r-ttc').textContent=ttc.toFixed(2)+'€';
+    document.getElementById('bar-lbl').textContent=mg.toFixed(2)+'€ ('+mgPct.toFixed(0)+'%)';
+    const fill=document.getElementById('bar-fill');
+    const ratio=Math.min(100,(total/ht)*100);
+    fill.style.width=ratio+'%';
+    fill.style.background=mgPct>=30?'var(--green)':mgPct>=15?'var(--gold)':'var(--red)';
   } else {
-    document.getElementById('r-price').textContent='0€';
-    document.getElementById('r-mg').textContent='—';
-    document.getElementById('r-mgp').textContent='—';
-    document.getElementById('r-ttc-val').textContent='0€';
+    document.getElementById('r-ttc').textContent='—';
+    document.getElementById('bar-lbl').textContent='—';
+    const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
   }
-  applyMult();
 }
 
 function saveCocktail(){
@@ -2982,8 +2960,7 @@ function saveCocktail(){
     ingredients:rowData(ingRows()),
     consumables:rowData(consoRows()),
     priceHT:parseFloat(document.getElementById('cf-pht')?.value)||0,
-    mult:parseFloat(document.getElementById('cf-mult')?.value)||4,
-    vat:parseFloat(document.getElementById('cf-vat')?.value)||10,
+    vat:parseFloat(document.getElementById('cf-vat')?.value)||20,
     totalCost:total
   };
   if(editCId) state.cocktails=state.cocktails.map(c=>c.id===editCId?cocktail:c);
