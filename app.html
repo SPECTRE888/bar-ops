@@ -6538,23 +6538,6 @@ function renderProfile(){
         `}
       </div>
 
-      <!-- Securite -->
-      <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <div class="ctitle">Securite</div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Nouveau mot de passe</div>
-            <input id="prof-pass1" type="password" placeholder="••••••••" style="width:100%;font-size:11px"/>
-          </div>
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Confirmer</div>
-            <input id="prof-pass2" type="password" placeholder="••••••••" style="width:100%;font-size:11px"/>
-            <div id="prof-pass-msg" style="font-size:10px;margin-top:3px;min-height:10px;color:var(--text3)"></div>
-          </div>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="changePassword()" style="width:100%">Modifier mot de passe</button>
-      </div>
-
       <!-- Informations & Donnees -->
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="ctitle">Informations & Donnees</div>
@@ -6769,29 +6752,6 @@ async function changeEmail(){
   }catch(e){if(msg){msg.style.color='var(--red)';msg.textContent='Erreur réseau';}}
 }
 
-async function changePassword(){
-  const p1=document.getElementById('prof-pass1')?.value;
-  const p2=document.getElementById('prof-pass2')?.value;
-  const msg=document.getElementById('prof-pass-msg');
-  if(!p1||!p2){if(msg){msg.style.color='var(--red)';msg.textContent='Remplis les deux champs.';}return;}
-  if(p1!==p2){if(msg){msg.style.color='var(--red)';msg.textContent='Les mots de passe ne correspondent pas.';}return;}
-  if(p1.length<6){if(msg){msg.style.color='var(--red)';msg.textContent='Minimum 6 caractères.';}return;}
-  const{url}=getSupabase();
-  try{
-    const r=await fetch(`${url}/auth/v1/user`,{
-      method:'PUT',
-      headers:{...cloudHeaders(),'Content-Type':'application/json'},
-      body:JSON.stringify({password:p1})
-    });
-    if(r.ok){
-      if(msg){msg.style.color='var(--green)';msg.textContent='Mot de passe modifié.';}
-      document.getElementById('prof-pass1').value='';
-      document.getElementById('prof-pass2').value='';
-    } else {
-      if(msg){msg.style.color='var(--red)';msg.textContent='Erreur lors de la modification.';}
-    }
-  }catch(e){if(msg){msg.style.color='var(--red)';msg.textContent='Erreur réseau';}}
-}
 
 function exportData(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
