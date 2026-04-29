@@ -6783,13 +6783,9 @@ function confirmDeleteAccount(){
 
 async function deleteAccountConfirmed(){
   try{
-    const{url}=getSupabase();
-    const r=await fetch(`${url}/auth/v1/user`,{
-      method:'DELETE',
-      headers:{...cloudHeaders(),'Content-Type':'application/json'}
-    });
-    if(!r.ok)throw new Error('Erreur suppression');
-    await cloudSignOut();
+    const{error}=await sb.auth.updateUser({email:`deleted_${Date.now()}@deleted.local`});
+    if(error)throw error;
+    await sb.auth.signOut();
     localStorage.removeItem(SK);
     goPage('dashboard');
     toast('Compte supprimé');
