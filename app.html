@@ -1591,7 +1591,7 @@ function renderCatPage(cat){
       <td><div id="pt-${p.id}-ss" style="min-width:120px"></div></td>
       <td><input value="${(p.brand||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'brand',this.value)" placeholder="Marque *" style="border-color:${!p.brand?'var(--red)':''}"/></td>
       <td><input type="number" value="${p.priceHT||''}" step="0.01" min="0" placeholder="0.00" onchange="updProd(${p.id},'priceHT',parseFloat(this.value)||0)" style="width:80px;border-color:${missingPrice?'var(--red)':''}"/></td>
-      <td><input type="number" value="${p.qty||''}" step="0.1" min="0" placeholder="70" onchange="updProd(${p.id},'qty',parseFloat(this.value)||0)" style="width:65px"/></td>
+      <td><input type="number" value="${p.qty||''}" step="0.1" min="0" placeholder="70" onchange="updProd(${p.id},'qty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
       <td><select onchange="updProd(${p.id},'unit',this.value)" style="width:60px">
         ${UNITS.map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
       </select></td>
@@ -1652,12 +1652,12 @@ function renderGlassware(){
       <td><div id="gs-${g.id}" style="min-width:120px"></div></td>
       <td><input value="${(g.appellation||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
       <td><input type="number" value="${g.priceTTC||g.priceHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
-      <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:65px" placeholder="cl"/></td>
+      <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box" placeholder="cl"/></td>
       <td><span class="cpu cpu-ok">${ht}€ HT</span></td>
       <td><select onchange="updGlass(${g.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${g.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
       <td><input value="${(g.notes||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
       <td><input type="number" value="${g.stock||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
-      <td><input type="number" value="${g.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;color:var(--text3)"/></td>
+      <td><input type="number" value="${g.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
         <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;letter-spacing:.05em;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${g.id},'glass','${g.name||''.replace(/'/g,"\\'")}','${(g.supplier||'').replace(/'/g,"\\'")}')">+ COURSES</button>
@@ -1680,12 +1680,12 @@ function renderGlassware(){
     return`<tr>
       <td><input value="${(i.name||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'name',this.value)" placeholder="Glaçons, Glace pilée..."/></td>
       <td><input type="number" value="${pricePerKgTTC}" step="0.01" min="0" onchange="updIce(${i.id},'pricePerKgTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
-      <td><input type="number" value="${kgQty}" step="0.5" min="0" onchange="updIce(${i.id},'kgQty',parseFloat(this.value)||0)" style="width:65px"/></td>
-      <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:65px"/></td>
+      <td><input type="number" value="${kgQty}" step="0.5" min="0" onchange="updIce(${i.id},'kgQty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
+      <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
       <td><span class="cpu cpu-ok">${totalTTC}€ TTC → ${totalHT}€ HT</span></td>
       <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}</select></td>
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
-      <td><input type="number" value="${i.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;color:var(--text3)"/></td>
+      <td><input type="number" value="${i.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
         <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${i.id},'ice','${i.name||''}','${i.supplier||''}')">+ COURSES</button>
