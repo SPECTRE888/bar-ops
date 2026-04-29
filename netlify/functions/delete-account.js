@@ -3,11 +3,11 @@ const { createClient } = require('@supabase/supabase-js');
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405 };
 
-  const supabaseUrl = process.env.supabase_url || process.env.SUPABASE_URL;
-  const supabaseKey = process.env.supabase_key;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
-    return { statusCode: 500, body: JSON.stringify({ error: `Missing config: url=${!!supabaseUrl} key=${!!supabaseKey}` }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Supabase credentials not configured' }) };
   }
 
   try {
