@@ -4450,8 +4450,10 @@ function renderShopping(){
 // ════════════════════════════════════════════════════════
 function renderPrestEvSel(){
   const sel=document.getElementById('prest-ev-sel');
+  const now=new Date();
+  const active=state.events.filter(ev=>!ev.stockRetourDone||!ev.date||new Date(ev.date)>=now);
   sel.innerHTML='<option value="">— Sélectionner un événement —</option>'+
-    state.events.map(ev=>`<option value="${ev.id}">${ev.name}${ev.date?' — '+ev.date:''}</option>`).join('');
+    active.map(ev=>`<option value="${ev.id}">${ev.name}${ev.date?' — '+ev.date:''}</option>`).join('');
 }
 
 function prestClientSearchFilter(evId){
