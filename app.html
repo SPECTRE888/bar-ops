@@ -1748,7 +1748,7 @@ function addStaff(){
   state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,notes:''});
   save();renderStaff();
 }
-function delStaff(id){if(!confirm('Supprimer?'))return;state.staffItems=state.staffItems.filter(x=>x.id!==id);save();renderStaff();}
+function delStaff(id){state.staffItems=state.staffItems.filter(x=>x.id!==id);save();renderStaff();}
 function updStaff(id,k,v){
   const s=state.staffItems.find(x=>x.id===id);
   if(s){
@@ -7495,7 +7495,7 @@ const I18N={
     btn_save:'Enregistrer',btn_cancel:'Annuler',btn_delete:'Supprimer',
     btn_edit:'Modifier',btn_duplicate:'Dupliquer',btn_close:'Fermer',
     btn_copy:'Copier',btn_save_draft:'Sauvegarder',
-    btn_add_staff:'+ Ajouter staff',btn_add_client:'+ Ajouter un client',btn_add_event:'+ Ajouter un événement',
+    btn_add_staff:'+ Ajouter equipe',btn_add_client:'+ Ajouter un client',btn_add_event:'+ Ajouter un événement',
     empty_staff:'Aucun staff',empty_client:'Aucun client',empty_cocktail:'Aucun cocktail',empty_event:'Aucun événement',
     empty_supplier:'Aucun prestataire',empty_dresscode:'Aucune tenue',empty_contact:'Aucun contact',
     yes:'Oui',no:'Non',
@@ -7825,7 +7825,7 @@ function applyLang(){
   const textMap={
     'Aucun staff':'empty_staff','Aucun client':'empty_client','Aucun cocktail':'empty_cocktail','Aucun événement':'empty_event',
     'Aucun prestataire':'empty_supplier','Aucune tenue':'empty_dresscode','Aucun contact':'empty_contact',
-    'Ajouter':'btn_add','Ajouter staff':'btn_add_staff','Ajouter un client':'btn_add_client','Ajouter un événement':'btn_add_event',
+    'Ajouter':'btn_add','Ajouter equipe':'btn_add_staff','Ajouter un client':'btn_add_client','Ajouter un événement':'btn_add_event',
     'Modifier':'btn_edit','Supprimer':'btn_delete','Annuler':'btn_cancel','Enregistrer':'btn_save',
     'Nouveau cocktail':'btn_new_cocktail','Nouvel événement':'btn_new_event',
     'Oui':'yes','Non':'no','Sauvegarder':'btn_save_draft','Copier':'btn_copy','Fermer':'btn_close'
