@@ -5401,7 +5401,7 @@ function renderDressCodes(){
       <input type="checkbox" ${d.active?'checked':''} onchange="updDC(${d.id},'active',this.checked)" style="width:auto;accent-color:var(--gold)"/>
       <input value="${(d.name||'').replace(/"/g,'&quot;')}" onchange="updDC(${d.id},'name',this.value)" style="font-weight:500;font-size:12px"/>
       <input value="${(d.desc||'').replace(/"/g,'&quot;')}" onchange="updDC(${d.id},'desc',this.value)" placeholder="Description..." style="font-size:12px"/>
-      <button class="btn btn-sm btn-danger" onclick="delDressCode(${d.id})"></button>
+      <button class="btn btn-sm btn-danger" onclick="delDressCode(${d.id})">×</button>
     </div>`).join('');
 }
 
