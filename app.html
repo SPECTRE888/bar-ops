@@ -4727,7 +4727,7 @@ function sendBriefWA(evId,sid){
     let detail=c.name+' (x'+cfg.qty+')';
     detail+='\n🥃 Verre: '+(c.glass||'—');
     const iceType=c.iceTypeId?state.iceTypes.find(x=>x.id===c.iceTypeId)?.name:'glaçons';
-    detail+='\n❄️ Glaçons: '+iceType+(c.serviceIce?(' ('+{rocks:'on rocks',full:'plein',none:'sans'}[c.serviceIce]||'')':'');
+    detail+='\n❄️ Glaçons: '+iceType+(c.serviceIce?(' ('+{rocks:'on rocks',full:'plein',none:'sans'}[c.serviceIce]+')'):'');
     detail+='\n🔧 Technique: '+{stirred:'Mélangé',shaken:'Shaké',blended:'Blendé',none:'Direct'}[c.technique||'none'];
     const ings=(c.ingredients||[]).map(i=>i.qty?i.qty+(i.unit||'ml')+' '+i.name:i.name).filter(Boolean);
     if(ings.length) detail+='\n📋 Ingrédients:\n'+ings.map(i=>'  • '+i).join('\n');
