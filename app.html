@@ -6757,17 +6757,20 @@ function toggleBarEdit(show){
 }
 
 function confirmBarEdit(){
-  if(!confirm('✓ Confirmer les modifications de vos informations ?\n\nCette action enregistrera définitivement les changements.')){
-    return;
-  }
-  if(!state.profile) state.profile={};
-  state.profile.barName=document.getElementById('prof-barname')?.value||'';
-  state.profile.city=document.getElementById('prof-city')?.value||'';
-  state.profile.phone=document.getElementById('prof-phone')?.value||'';
-  state.profile.siret=document.getElementById('prof-siret')?.value||'';
-  save();
-  toast('✅ Profil enregistré');
-  renderProfile();
+  showConfirmModal(
+    'Confirmer les modifications',
+    'Enregistrer les changements apportés à vos informations ?',
+    function(){
+      if(!state.profile) state.profile={};
+      state.profile.barName=document.getElementById('prof-barname')?.value||'';
+      state.profile.city=document.getElementById('prof-city')?.value||'';
+      state.profile.phone=document.getElementById('prof-phone')?.value||'';
+      state.profile.siret=document.getElementById('prof-siret')?.value||'';
+      save();
+      showToastModal('Profil enregistré');
+      renderProfile();
+    }
+  );
 }
 
 function toggleLogoEdit(show){
@@ -6838,14 +6841,19 @@ function exportData(){
 }
 
 function confirmResetData(){
-  if(!confirm('Réinitialiser toutes les données ? Cette action est irréversible.')) return;
-  localStorage.removeItem(SK);
-  localStorage.removeItem('bcp_demo_injected');
-  state=freshState();
-  injectDemoData();
-  save();
-  goPage('dashboard');
-  toast('Données réinitialisées');
+  showConfirmModal(
+    'Réinitialiser les données ?',
+    'Cette action est irréversible. Toutes vos données seront réinitialisées.',
+    function(){
+      localStorage.removeItem(SK);
+      localStorage.removeItem('bcp_demo_injected');
+      state=freshState();
+      injectDemoData();
+      save();
+      goPage('dashboard');
+      showToastModal('Données réinitialisées');
+    }
+  );
 }
 
 function confirmDeleteAccount(){
