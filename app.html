@@ -430,6 +430,7 @@ select{color-scheme:dark}
         <button class="btn btn-sm btn-ghost" onclick="addDressCode('Black & Gold','Chemise noire, nœud papillon doré, pantalon noir')">Black & Gold</button>
       </div>
       <div id="dc-list"></div>
+      <button class="btn btn-sm btn-gold" onclick="state.dressCodes.push({id:Date.now(),name:'',desc:'',active:true});save();renderDressCodes()" style="margin-top:10px">+ Ajouter une tenue</button>
     </div>
   </div>
 </div>
