@@ -430,6 +430,11 @@ select{color-scheme:dark}
         <button class="btn btn-sm btn-ghost" onclick="addDressCode('Black & Gold','Chemise noire, nœud papillon doré, pantalon noir')">Black & Gold</button>
       </div>
       <div id="dc-list"></div>
+      <div style="display:flex;gap:8px;margin-top:10px" class="no-print">
+        <input id="dc-custom-name" placeholder="Nom de la tenue..." style="width:160px"/>
+        <input id="dc-custom-desc" placeholder="Description détaillée..."/>
+        <button class="btn btn-sm btn-gold" onclick="addDressCodeCustom()">+ Ajouter</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1788,7 +1793,7 @@ function renderStaff(){
       <td><select onchange="updStaff(${s.id},'per',this.value)" style="width:100px">${STAFF_PER.map(p=>`<option${p===s.per?' selected':''}>${p}</option>`).join('')}</select></td>
       <td><span style="font-size:11px;color:${marginColor};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€<br/><span style="font-weight:400;font-size:10px">${marginPct}</span></span></td>
       <td><input value="${(s.notes||'').replace(/"/g,'&quot;')}" onchange="updStaff(${s.id},'notes',this.value)" placeholder="Notes..."/></td>
-      <td><button class="btn btn-sm btn-danger" onclick="delStaff(${s.id})"></button></td>
+      <td><button class="btn btn-sm btn-danger" onclick="delStaff(${s.id})">×</button></td>
     </tr>`;
   }).join('');
   filterStaff();
@@ -5378,9 +5383,8 @@ function addDressCodeModal(){
 }
 
 function addDressCodeCustom(){
-  const name=document.getElementById('dc-custom-name')?.value.trim();
+  const name=document.getElementById('dc-custom-name')?.value.trim()||'Nouvelle tenue';
   const desc=document.getElementById('dc-custom-desc')?.value.trim();
-  if(!name){alert('Donne un nom à la tenue.');return;}
   state.dressCodes.push({id:Date.now(),name,desc:desc||'',active:true});
   save();renderDressCodes();
   document.getElementById('dc-custom-name').value='';
