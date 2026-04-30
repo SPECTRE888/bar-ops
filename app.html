@@ -686,21 +686,49 @@ async function ensureWorkspace(){
   }catch(e){return false;}
 }
 
+function showConfirmModal(title, message, onConfirm){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:400px;width:100%">
+    <div style="font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text)">${title}</div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6">${message}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="padding:8px 16px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">Annuler</button>
+      <button onclick="this.closest('[style*=fixed]').remove();(${onConfirm.toString()})()" style="padding:8px 16px;background:#c96e6e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">Confirmer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
 function deleteAccountModal(){
-  if(!confirm('⚠️ Êtes-vous certain ? Cette action est irréversible.\n\nCela supprimera définitivement votre compte et toutes les données.')){
-    return;
-  }
-  if(!confirm('Confirmez : SUPPRIMER MON COMPTE (dernière chance)')){
-    return;
-  }
-  log('🗑️ Compte supprimé');
-  cloudSignOut();
-  state=freshState();
-  save();
-  injectDemoData();
-  updateBadges();
-  renderDashboard();
-  alert('Compte supprimé. Recharge en mode démo.');
+  showConfirmModal(
+    'Êtes-vous certain ?',
+    'Cette action est irréversible.\n\nCela supprimera définitivement votre compte et toutes les données.',
+    function(){
+      showConfirmModal(
+        'Dernière chance',
+        'Confirmez : SUPPRIMER MON COMPTE',
+        function(){
+          log('🗑️ Compte supprimé');
+          cloudSignOut();
+          state=freshState();
+          save();
+          injectDemoData();
+          updateBadges();
+          renderDashboard();
+          showToastModal('Compte supprimé. Recharge en mode démo.');
+        }
+      );
+    }
+  );
+}
+
+function showToastModal(message){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:12px 20px;border-radius:8px;z-index:9999;font-size:13px;font-weight:500;max-width:400px;text-align:center';
+  modal.textContent=message;
+  document.body.appendChild(modal);
+  setTimeout(()=>modal.remove(),3000);
 }
 
 function cloudRestoreSession(){
