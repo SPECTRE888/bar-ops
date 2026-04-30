@@ -411,7 +411,7 @@ select{color-scheme:dark}
   <div class="content">
     <div id="staff-section">
       <div class="card" style="padding:0;overflow:hidden">
-        <table class="ptable"><thead><tr><th>Nom &amp; Prénom</th><th>Rôle</th><th>Téléphone</th><th>Coût HT (€)</th><th>Facturé HT (€)</th><th>Par</th><th>Marge</th><th>${t('cat_glass_notes')}</th><th></th></tr></thead>
+        <table class="ptable"><thead><tr><th>Nom &amp; Prénom</th><th>Rôle</th><th>Téléphone</th><th>Coût HT (€)</th><th>Facturé HT (€)</th><th>Par</th><th>Marge</th><th>Notes</th><th></th></tr></thead>
         <tbody id="staff-tb"></tbody></table>
       </div>
       <div id="staff-empty" class="empty" style="display:none"><div class="empty-icon">‍</div><p>Aucun staff.</p></div>
@@ -1277,7 +1277,7 @@ function renderCatalogue(){
       <div class="card">
         <div class="ctitle"> Verrerie <span class="txs tm">(prix TTC → HT TVA 10%)</span></div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table class="ptable"><thead><tr><th>Par défaut</th><th>${t('cat_type')}</th><th>Gamme</th><th>${t('cat_glass_price')}</th><th>${t('cat_glass_vol')}</th><th>${t('cat_glass_ht')}</th><th>${t('cat_supplier')}</th><th>${t('cat_glass_notes')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead>
+          <table class="ptable"><thead><tr><th>Par défaut</th><th>${t('cat_type')}</th><th>Gamme</th><th>${t('cat_glass_price')}</th><th>${t('cat_glass_vol')}</th><th>${t('cat_glass_ht')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead>
           <tbody id="glass-tb"></tbody></table>
         </div>
         <div id="glass-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucun verre</p></div>
@@ -7402,7 +7402,7 @@ function renderBarItems(){
         <th>${t('cat_bar_transport')}</th>
         <th>${t('cat_bar_setup')}</th>
         <th>${t('cat_bar_custom')}</th>
-        <th>${t('cat_glass_notes')}</th>
+        <th>Notes</th>
         <th>${t('cat_bar_available')}</th>
         <th></th>
       </tr></thead>
