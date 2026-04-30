@@ -4725,6 +4725,8 @@ function sendBriefWA(evId,sid){
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
     let detail=c.name+' (x'+cfg.qty+')';
+    const ings=(c.ingredients||[]).map(i=>{const p=state.products.find(x=>x.id===i.productId);return p?(i.qty?i.qty+(i.unit||'ml')+' '+p.name:p.name):''}).filter(Boolean);
+    if(ings.length) detail+='\n📋 Ingrédients:\n'+ings.map(i=>'  • '+i).join('\n');
     if(c.recipe) detail+='\n📝 Recette: '+c.recipe;
     if(c.methodology) detail+='\n🎯 Méthodologie:\n'+c.methodology;
     return detail;
