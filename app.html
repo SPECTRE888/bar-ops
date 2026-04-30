@@ -2139,12 +2139,6 @@ function showCForm(c){
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
           <textarea id="cf-desc" rows="2" placeholder="Passion fruit, ginger beer, lime..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
-        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Recette (ingrédients + dosages)</label>
-          <textarea id="cf-recipe" rows="3" placeholder="30ml rhum blanc, 15ml jus de citron frais, 20ml sirop simple..." style="font-size:13px;padding:6px">${c.recipe||''}</textarea>
-        </div>
-        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Méthodologie (technique de préparation)</label>
-          <textarea id="cf-methodology" rows="3" placeholder="1. Verser le rhum et le sirop dans un shaker avec glaçons\n2. Ajouter le jus de citron\n3. Shaker 10 secondes\n4. Verser en verre highball rempli de glaçons\n5. Garnir avec lime" style="font-size:13px;padding:6px">${c.methodology||''}</textarea>
-        </div>
         <div class="field"><label style="font-size:12px">Photo</label>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             ${c.photo?`<div style="display:flex;align-items:center;gap:6px;background:var(--bg2);padding:8px 12px;border-radius:4px;flex:1">
@@ -3016,8 +3010,6 @@ function saveCocktail(){
     serviceIce:document.getElementById('cf-service-ice')?.value||'none',
     iceTypeId:parseInt(document.getElementById('cf-ice-type')?.value)||0,
     description:document.getElementById('cf-desc')?.value||'',
-    recipe:document.getElementById('cf-recipe')?.value||'',
-    methodology:document.getElementById('cf-methodology')?.value||'',
     photo:document.getElementById('cf-photo-del')?.value==='1'?'':(window._cfPhotoData||existingC?.photo||''),
     ingredients:rowData(ingRows()),
     consumables:rowData(consoRows()),
