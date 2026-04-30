@@ -832,6 +832,8 @@ async function cloudPull(){
   return false;
 }
 
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 let _initDone=false;
 function schedulePush(){
   if(!_initDone) return;
@@ -3972,7 +3974,7 @@ function openMenu(evId){
   <button class="pbtn" onclick="window.print()"> Print / Save as PDF</button>`;
   const w=window.open('','_blank');
   if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${ev.name||'Menu'}</title>${css}</head><body>${body}</body></html>`);
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${escHtml(ev.name||'Menu')}</title>${css}</head><body>${body}</body></html>`);
   w.document.close();
 }
 
@@ -5248,7 +5250,7 @@ function printPrestation(){
   const ev=state.events.find(x=>x.id===evId);if(!ev){alert('Sélectionne un événement.');return;}
   const w=window.open('','_blank');
   if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Fiche — ${ev.name}</title>
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Fiche — ${escHtml(ev.name)}</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>*{box-sizing:border-box;margin:0;padding:0}body{background:#f5f4f0;padding:2rem;font-family:'DM Sans',sans-serif}
   @media print{body{background:#fff;padding:0}h1,h2,h3{font-family:'DM Serif Display',serif}.no-print{display:none!important}}</style>
@@ -5268,7 +5270,7 @@ function addContact(preset={}){
   state.contacts.push({id:Date.now(),name:preset.name||'',role:preset.role||'Bartender',phone:preset.phone||'',staffId:preset.staffId||null});
   save();renderContacts();
 }
-function delContact(id){state.contacts=state.contacts.filter(x=>x.id!==id);save();renderContacts();}
+function delContact(id){if(!confirm('Supprimer ce contact ?'))return;state.contacts=state.contacts.filter(x=>x.id!==id);save();renderContacts();}
 function updContact(id,k,v){const c=state.contacts.find(x=>x.id===id);if(c){c[k]=v;save();renderContacts();}}
 
 function importStaffContacts(){
@@ -7772,7 +7774,7 @@ updateCloudStatus();
     await new Promise(resolve=>{
       const t=Date.now();
       const check=()=>{
-        if(window._paywallDone||window._isDemo||(Date.now()-t>5000)) resolve();
+        if(window._paywallDone||window._isDemo||(Date.now()-t>10000)) resolve();
         else setTimeout(check,50);
       };
       check();
