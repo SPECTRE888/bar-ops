@@ -345,13 +345,13 @@ select{color-scheme:dark}
 
 <!-- ═══ DASHBOARD ═══ -->
 <div id="page-dashboard" class="page active">
-  <div class="topbar"><h2>Dashboard</h2></div>
+  <div class="topbar"><h2 id="h-dashboard">Dashboard</h2></div>
   <div class="content" id="dashboard-content"></div>
 </div>
 
 <!-- ═══ CATALOGUE UNIFIÉ ═══ -->
 <div id="page-catalogue" class="page">
-  <div class="topbar"><h2>Catalogue</h2>
+  <div class="topbar"><h2 id="h-catalogue">Catalogue</h2>
     <div class="topbar-actions no-print">
       <select id="cat-filter" onchange="renderCatalogue()" class="input-md">
         <option value="Spirit"> Spiritueux</option>
@@ -397,7 +397,7 @@ select{color-scheme:dark}
 
 <!-- ═══ STAFF ═══ -->
 <div id="page-staff" class="page">
-  <div class="topbar"><h2>Mon équipe</h2>
+  <div class="topbar"><h2 id="h-staff">Mon équipe</h2>
     <div class="topbar-actions no-print">
       <input type="text" id="staff-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterStaff()"/>
       <div style="display:flex;gap:8px;margin-right:16px">
@@ -437,7 +437,7 @@ select{color-scheme:dark}
 <!-- ═══ COCKTAILS ═══ -->
 <div id="page-cocktails" class="page">
   <div class="topbar">
-    <h2 id="c-page-title">Cocktails</h2>
+    <h2 id="h-cocktails">Cocktails</h2>
     <div class="topbar-actions no-print">
       <button class="btn btn-ghost" onclick="showCList()" id="btn-cback" style="display:none">← Retour</button>
       <button class="btn btn-ghost" onclick="recalcAllCocktailsIce()" title="Recalcule coûts et prix de vente de tous les cocktails" id="btn-recalc-ice" style="font-size:11px">Recalculer tout</button>
@@ -450,7 +450,7 @@ select{color-scheme:dark}
 <!-- ═══ EVENTS ═══ -->
 <div id="page-events" class="page">
   <div class="topbar">
-    <h2 id="ev-page-title">Événements</h2>
+    <h2 id="h-events">Événements</h2>
     <div class="topbar-actions no-print">
       <input type="text" id="ev-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterEvList()"/>
       <button class="btn btn-ghost" onclick="showEvList()" id="btn-evback" style="display:none">← Retour</button>
@@ -462,7 +462,7 @@ select{color-scheme:dark}
 
 <!-- ═══ CLIENTS ═══ -->
 <div id="page-clients" class="page">
-  <div class="topbar"><h2>Clients</h2>
+  <div class="topbar"><h2 id="h-clients">Clients</h2>
     <div class="topbar-actions no-print">
       <input type="text" id="clients-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterClients()"/>
       <button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button>
@@ -473,7 +473,7 @@ select{color-scheme:dark}
 
 <!-- ═══ FOURNISSEURS ═══ -->
 <div id="page-suppliers" class="page">
-  <div class="topbar"><h2>Fournisseurs</h2>
+  <div class="topbar"><h2 id="h-suppliers">Fournisseurs</h2>
     <div class="topbar-actions no-print"><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>
   </div>
   <div class="content" id="suppliers-content"></div>
@@ -481,7 +481,7 @@ select{color-scheme:dark}
 
 <!-- ═══ SHOPPING (accessible via events) ═══ -->
 <div id="page-shopping" class="page">
-  <div class="topbar"><h2 id="shop-title"> Liste de courses</h2>
+  <div class="topbar"><h2 id="h-shopping"> Liste de courses</h2>
     <div class="topbar-actions no-print">
       <select id="shop-ev-sel" class="input-lg" onchange="renderShopping()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="printShoppingPDF()"> PDF</button>
@@ -493,7 +493,7 @@ select{color-scheme:dark}
 
 <!-- ═══ FICHE PRESTATION (accessible via events) ═══ -->
 <div id="page-prestation" class="page">
-  <div class="topbar"><h2 id="prest-title"> Fiche Prestation</h2>
+  <div class="topbar"><h2 id="h-prestation"> Fiche Prestation</h2>
     <div class="topbar-actions no-print">
       <select id="prest-ev-sel" class="input-lg" onchange="renderPrestation()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="generateDevis()">Devis</button>
@@ -505,7 +505,7 @@ select{color-scheme:dark}
 <!-- ═══ SUIVI ═══ -->
 <div id="page-suivi" class="page">
   <div class="topbar">
-    <h2> Suivi des prestations</h2>
+    <h2 id="h-suivi"> Suivi des prestations</h2>
     <div class="topbar-actions no-print">
       <div style="display:flex;gap:8px;margin-right:16px">
         <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000">Suivi</button>
@@ -521,7 +521,7 @@ select{color-scheme:dark}
 <!-- ═══ HISTORIQUE ═══ -->
 <div id="page-historique" class="page">
   <div class="topbar">
-    <h2>Historique</h2>
+    <h2 id="h-historique">Historique</h2>
     <div class="topbar-actions no-print">
       <input type="text" id="hist-search" placeholder="Chercher..." oninput="renderHistorique()" style="width:200px;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px"/>
     </div>
@@ -531,13 +531,13 @@ select{color-scheme:dark}
 
 <!-- ═══ PROFIL ═══ -->
 <div id="page-profile" class="page">
-  <div class="topbar"><h2>Profil</h2></div>
+  <div class="topbar"><h2 id="h-profile">Profil</h2></div>
   <div class="content" id="profile-content"></div>
 </div>
 
 <!-- ═══ PLANNING ═══ -->
 <div id="page-planning" class="page">
-  <div class="topbar"><h2>Planning</h2>
+  <div class="topbar"><h2 id="h-planning">Planning</h2>
     <div class="topbar-actions no-print">
       <button class="btn btn-ghost" onclick="planningNav(-1)" id="plan-prev-btn">${t('plan_prev')}</button>
       <span id="plan-month-label" style="font-size:13px;color:var(--text2);min-width:130px;text-align:center"></span>
@@ -1799,7 +1799,7 @@ function renderStaff(){
 // ════════════════════════════════════════════════════════
 function showCList(){
   editCId=null;
-  document.getElementById('c-page-title').textContent=t('nav_cocktails');
+  document.getElementById('h-cocktails').textContent=t('nav_cocktails');
   document.getElementById('btn-cback').style.display='none';
   document.getElementById('btn-cnew').style.display='flex';
   document.getElementById('btn-cnew').textContent=t('btn_new_cocktail');
@@ -2080,7 +2080,7 @@ function newCocktail(){
 function editC(id){editCId=id;showCForm(state.cocktails.find(x=>x.id===id)||{});}
 
 function showCForm(c){
-  document.getElementById('c-page-title').textContent=c.id?'Modifier: '+c.name:'Nouveau cocktail';
+  document.getElementById('h-cocktails').textContent=c.id?'Modifier: '+c.name:'Nouveau cocktail';
   document.getElementById('btn-cback').style.display='flex';
   document.getElementById('btn-cnew').style.display='none';
   irc=0;
@@ -3036,7 +3036,7 @@ function saveCocktail(){
 // ════════════════════════════════════════════════════════
 function showEvList(){
   editEvId=null;
-  document.getElementById('ev-page-title').textContent=t('nav_events');
+  document.getElementById('h-events').textContent=t('nav_events');
   document.getElementById('btn-evback').style.display='none';
   document.getElementById('btn-evnew').style.display='flex';
   document.getElementById('btn-evnew').textContent=t('btn_new_event');
@@ -3154,7 +3154,7 @@ function newEv(){editEvId=null;showEvForm({});}
 function editEv(id){editEvId=id;showEvForm(state.events.find(x=>x.id===id)||{});}
 
 function showEvForm(ev){
-  document.getElementById('ev-page-title').textContent=ev.id?ev.name:t('btn_new_event').replace('+ ','');
+  document.getElementById('h-events').textContent=ev.id?ev.name:t('btn_new_event').replace('+ ','');
   document.getElementById('btn-evback').style.display='flex';
   document.getElementById('btn-evnew').style.display='none';
   const el=document.getElementById('ev-content');
@@ -4327,7 +4327,7 @@ function renderShopping(){
   
   const evId=parseInt(sel.value);
   const el=document.getElementById('shop-content');
-  const titleEl=document.getElementById('shop-title');
+  const titleEl=document.getElementById('h-shopping');
   if(!evId){
     el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Select an event above.</p></div>';
     if(titleEl) titleEl.textContent=' Liste de courses';
@@ -4612,7 +4612,7 @@ function renderPrestation(){
   if(savedVal) sel.value=savedVal;
   const evId=parseInt(sel.value);
   const el=document.getElementById('prest-content');
-  const titleEl=document.getElementById('prest-title');
+  const titleEl=document.getElementById('h-prestation');
   if(!evId){
     el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';
     if(titleEl) titleEl.textContent=' Fiche Prestation';
@@ -7739,6 +7739,17 @@ function applyLang(){
   const btnAdd=document.getElementById('cat-add-btn');if(btnAdd)btnAdd.textContent=t('btn_add');
   const planPrev=document.getElementById('plan-prev-btn');if(planPrev)planPrev.textContent=t('plan_prev');
   const planNext=document.getElementById('plan-next-btn');if(planNext)planNext.textContent=t('plan_next');
+
+  // Update all page headers
+  const headerMap={
+    'h-dashboard':'nav_dashboard','h-catalogue':'nav_catalogue','h-cocktails':'nav_cocktails',
+    'h-events':'nav_events','h-clients':'nav_clients','h-staff':'nav_staff','h-profile':'nav_profile',
+    'h-suivi':'nav_suivi','h-historique':'nav_historique','h-planning':'nav_planning'
+  };
+  Object.entries(headerMap).forEach(([id,key])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=t(key);
+  });
 
   // Update nav section headers
   const secs=document.querySelectorAll('.nav-sec');
