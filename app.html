@@ -780,32 +780,27 @@ async function cloudPush(){
   const{url,key}=getSupabase();if(!url||!key) return false;
   const uid=extractUid(cloudUser);
   const token=extractToken(cloudUser);
-  if(!uid||!token){console.warn('cloudPush: missing uid or token',{uid,token:!!token});return false;}
+  if(!uid||!token){console.warn('cloudPush: missing uid or token');return false;}
   try{
-    const r=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}`,{
-      method:'PATCH',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':key,
-        'Authorization':'Bearer '+token
-      },
-      body:JSON.stringify({data:JSON.stringify(state),updated_at:new Date().toISOString()})
+    // Vérifie si row existe
+    const check=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}&select=id`,{
+      headers:{'apikey':key,'Authorization':'Bearer '+token}
     });
-    if(r.status===204||r.ok) return true;
-    // Si 404 = pas d'entrée, crée avec POST
-    if(r.status===404){
-      const r2=await fetch(`${url}/rest/v1/workspaces`,{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'apikey':key,
-          'Authorization':'Bearer '+token
-        },
-        body:JSON.stringify({user_id:uid,data:JSON.stringify(state),updated_at:new Date().toISOString()})
-      });
-      return r2.ok||r2.status===201;
-    }
-    return false;
+    const rows=await check.json();
+    const exists=Array.isArray(rows)&&rows.length>0;
+
+    const method=exists?'PATCH':'POST';
+    const endpoint=exists?`${url}/rest/v1/workspaces?user_id=eq.${uid}`:`${url}/rest/v1/workspaces`;
+    const body=exists
+      ?JSON.stringify({data:JSON.stringify(state),updated_at:new Date().toISOString()})
+      :JSON.stringify({user_id:uid,data:JSON.stringify(state),updated_at:new Date().toISOString()});
+
+    const r=await fetch(endpoint,{
+      method,
+      headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},
+      body
+    });
+    return r.ok||r.status===201||r.status===204;
   }catch(e){console.warn('cloudPush error:',e);return false;}
 }
 
@@ -814,19 +809,14 @@ async function cloudPull(){
   const{url,key}=getSupabase();if(!url) return false;
   const uid=extractUid(cloudUser);
   const token=extractToken(cloudUser);
-  if(!uid||!token){console.warn('cloudPull: missing uid or token',{uid,token:!!token});return false;}
+  if(!uid||!token){console.warn('cloudPull: missing uid or token');return false;}
   try{
     const r=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}&select=data`,{
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':key,
-        'Authorization':'Bearer '+token
-      }
+      headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+token}
     });
     if(!r.ok){console.warn('cloudPull HTTP error:',r.status);return false;}
     const rows=await r.json();
     if(Array.isArray(rows)&&rows.length&&rows[0]?.data){
-      // Existing user → load cloud data
       const parsed=typeof rows[0].data==='string'?JSON.parse(rows[0].data):rows[0].data;
       const fresh=freshState();
       Object.keys(fresh).forEach(k=>{if(parsed[k]!==undefined)fresh[k]=parsed[k];});
@@ -834,13 +824,10 @@ async function cloudPull(){
       localStorage.setItem(SK,JSON.stringify(state));
       return true;
     }
-    if(Array.isArray(rows)&&rows.length===0){
-      // New user → inject examples → push to cloud
-      state=freshState();
-      injectDemoData();
-      await cloudPush();
-      return true;
-    }
+    // Pas de row → créer avec freshState et push
+    state=freshState();
+    await cloudPush();
+    return true;
   }catch(e){console.warn('cloudPull error:',e);return false;}
   return false;
 }
