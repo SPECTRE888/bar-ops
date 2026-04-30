@@ -430,7 +430,6 @@ select{color-scheme:dark}
         <button class="btn btn-sm btn-ghost" onclick="addDressCode('Black & Gold','Chemise noire, nœud papillon doré, pantalon noir')">Black & Gold</button>
       </div>
       <div id="dc-list"></div>
-      <button class="btn btn-sm btn-gold" onclick="state.dressCodes.push({id:Date.now(),name:'',desc:'',active:true});save();renderDressCodes()" style="margin-top:10px">+ Ajouter une tenue</button>
     </div>
   </div>
 </div>
@@ -5370,12 +5369,8 @@ function addDressCode(name,desc){
   save();renderDressCodes();
 }
 function addDressCodeModal(){
-  const name=document.getElementById('dc-custom-name')?.value?.trim();
-  const desc=document.getElementById('dc-custom-desc')?.value?.trim();
-  if(!name){toast('Nom de tenue requis');return;}
-  addDressCode(name,desc);
-  document.getElementById('dc-custom-name').value='';
-  document.getElementById('dc-custom-desc').value='';
+  state.dressCodes.push({id:Date.now(),name:'',desc:'',active:true});
+  save();renderDressCodes();
 }
 
 function addDressCodeCustom(){
