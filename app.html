@@ -6788,25 +6788,33 @@ function toggleSendgridEdit(show){
 }
 
 function confirmSendgridEdit(){
-  if(!confirm('✓ Configurer SendGrid ?\n\nTa clé API sera utilisée pour envoyer les devis.')){return;}
-  if(!state.profile) state.profile={};
-  state.profile.senderEmail=document.getElementById('prof-sender-email')?.value||'';
-  state.profile.sendgridApiKey=document.getElementById('prof-sendgrid-key')?.value||'';
-  save();
-  toast('✅ SendGrid configuré');
-  renderProfile();
+  showConfirmModal(
+    'Configurer SendGrid',
+    'Votre clé API sera utilisée pour envoyer les devis automatiquement.',
+    function(){
+      if(!state.profile) state.profile={};
+      state.profile.senderEmail=document.getElementById('prof-sender-email')?.value||'';
+      state.profile.sendgridApiKey=document.getElementById('prof-sendgrid-key')?.value||'';
+      save();
+      showToastModal('SendGrid configuré');
+      renderProfile();
+    }
+  );
 }
 
 function confirmLogoUpload(){
   const input=document.getElementById('prof-logo-input');
-  if(!input?.files?.[0]){alert('Sélectionnez une image');return;}
+  if(!input?.files?.[0]){
+    showToastModal('Sélectionnez une image');
+    return;
+  }
   const file=input.files[0];
   const reader=new FileReader();
   reader.onload=function(e){
     if(!state.profile) state.profile={};
     state.profile.logo=e.target.result;
     save();
-    toast('✅ Logo enregistré');
+    showToastModal('Logo enregistré');
     renderProfile();
   };
   reader.readAsDataURL(file);
