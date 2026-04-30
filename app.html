@@ -2144,6 +2144,12 @@ function showCForm(c){
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
           <textarea id="cf-desc" rows="2" placeholder="Passion fruit, ginger beer, lime..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
+        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Recette (ingrédients + dosages)</label>
+          <textarea id="cf-recipe" rows="3" placeholder="30ml rhum blanc, 15ml jus de citron frais, 20ml sirop simple..." style="font-size:13px;padding:6px">${c.recipe||''}</textarea>
+        </div>
+        <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Méthodologie (technique de préparation)</label>
+          <textarea id="cf-methodology" rows="3" placeholder="1. Verser le rhum et le sirop dans un shaker avec glaçons\n2. Ajouter le jus de citron\n3. Shaker 10 secondes\n4. Verser en verre highball rempli de glaçons\n5. Garnir avec lime" style="font-size:13px;padding:6px">${c.methodology||''}</textarea>
+        </div>
         <div class="field"><label style="font-size:12px">Photo</label>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             ${c.photo?`<div style="display:flex;align-items:center;gap:6px;background:var(--bg2);padding:8px 12px;border-radius:4px;flex:1">
@@ -3015,6 +3021,8 @@ function saveCocktail(){
     serviceIce:document.getElementById('cf-service-ice')?.value||'none',
     iceTypeId:parseInt(document.getElementById('cf-ice-type')?.value)||0,
     description:document.getElementById('cf-desc')?.value||'',
+    recipe:document.getElementById('cf-recipe')?.value||'',
+    methodology:document.getElementById('cf-methodology')?.value||'',
     photo:document.getElementById('cf-photo-del')?.value==='1'?'':(window._cfPhotoData||existingC?.photo||''),
     ingredients:rowData(ingRows()),
     consumables:rowData(consoRows()),
@@ -4713,11 +4721,15 @@ function sendBriefWA(evId,sid){
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
   const tenue=(ev.dressCodes||[]).map(dcId=>{const dc=state.dressCodes.find(x=>x.id===dcId);return dc?dc.name:dcId;}).join(', ')||'Non précisée';
-  const cktList=(ev.cocktails||[]).map(cfg=>{
+
+  const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
-    const ings=(c.ingredients||[]).map(i=>{const p=state.products.find(x=>x.id===i.productId);return p?'- '+p.name+(i.qty?' '+i.qty+(i.unit||'ml'):''):''}).filter(Boolean).join(', ');
-    return c.name+' x'+cfg.qty+(ings?' ('+ings+')':'');
-  }).filter(Boolean).join('\n')||'—';
+    let detail=c.name+' (x'+cfg.qty+')';
+    if(c.recipe) detail+='\n📝 Recette: '+c.recipe;
+    if(c.methodology) detail+='\n🎯 Méthodologie:\n'+c.methodology;
+    return detail;
+  }).filter(Boolean).join('\n\n')||'—';
+
   const lines=[
     'BRIEF - '+ev.name,
     '',
@@ -4732,9 +4744,10 @@ function sendBriefWA(evId,sid){
     'Poste: '+role,
     'Tenue: '+tenue,
     '',
-    'Cocktails:',
-    cktList,
-    (ev.notes?'\nNotes: '+ev.notes:''),
+    'COCKTAILS A PREPARER:',
+    '',
+    cktDetails,
+    (ev.notes?'\n\nNotes: '+ev.notes:''),
     '',
     'Bonne prestation !'
   ];
