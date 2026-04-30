@@ -832,7 +832,9 @@ async function cloudPull(){
   return false;
 }
 
+let _initDone=false;
 function schedulePush(){
+  if(!_initDone) return;
   clearTimeout(syncDebounceTimer);
   syncDebounceTimer=setTimeout(async()=>{
     if(cloudUser&&!extractToken(cloudUser)){
@@ -7807,6 +7809,7 @@ updateCloudStatus();
     console.log('Demo data injected, events:', state.events);
     updateBadges();
     applyTheme();
+    _initDone=true;
     setTimeout(()=>goPage('events'),100);
     return;
   }
@@ -7820,10 +7823,11 @@ updateCloudStatus();
     }
     const pulled=await cloudPull();
     if(!pulled){
-      // Essai depuis localStorage avant de reset
       const saved=localStorage.getItem(SK);
       if(saved){try{state=JSON.parse(saved);}catch(e){state=freshState();}}
       else{state=freshState();}
+      // Push ce qu'on a en local vers le cloud
+      if(cloudUser) await cloudPush();
     }
     const evContent=document.getElementById('ev-content');
     if(evContent&&evContent._clientId){
@@ -7831,6 +7835,7 @@ updateCloudStatus();
       if(client){const inp=document.getElementById('ef-client-search');if(inp)inp.value=client.name;}
     }
     updateCloudStatus();
+    _initDone=true;
   } else {
     injectDemoData();
   }
