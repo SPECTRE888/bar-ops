@@ -7819,7 +7819,12 @@ updateCloudStatus();
       return;
     }
     const pulled=await cloudPull();
-    if(!pulled){state=freshState();}
+    if(!pulled){
+      // Essai depuis localStorage avant de reset
+      const saved=localStorage.getItem(SK);
+      if(saved){try{state=JSON.parse(saved);}catch(e){state=freshState();}}
+      else{state=freshState();}
+    }
     const evContent=document.getElementById('ev-content');
     if(evContent&&evContent._clientId){
       const client=state.clients.find(x=>x.id===evContent._clientId);
