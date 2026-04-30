@@ -7459,6 +7459,10 @@ const I18N={
     btn_save:'Enregistrer',btn_cancel:'Annuler',btn_delete:'Supprimer',
     btn_edit:'Modifier',btn_duplicate:'Dupliquer',btn_close:'Fermer',
     btn_copy:'Copier',btn_save_draft:'Sauvegarder',
+    btn_add_staff:'+ Ajouter staff',btn_add_client:'+ Ajouter un client',btn_add_event:'+ Ajouter un événement',
+    empty_staff:'Aucun staff',empty_client:'Aucun client',empty_cocktail:'Aucun cocktail',empty_event:'Aucun événement',
+    empty_supplier:'Aucun prestataire',empty_dresscode:'Aucune tenue',empty_contact:'Aucun contact',
+    yes:'Oui',no:'Non',
     // Events
     ev_empty:'Aucune prestation. Crée ton premier événement.',
     ev_name:'Nom de la prestation *',ev_client:'Client',ev_date:'Date',
@@ -7569,6 +7573,10 @@ const I18N={
     btn_save:'Save',btn_cancel:'Cancel',btn_delete:'Delete',
     btn_edit:'Edit',btn_duplicate:'Duplicate',btn_close:'Close',
     btn_copy:'Copy',btn_save_draft:'Save Draft',
+    btn_add_staff:'+ Add Staff',btn_add_client:'+ Add Client',btn_add_event:'+ Add Event',
+    empty_staff:'No staff',empty_client:'No clients',empty_cocktail:'No cocktails',empty_event:'No events',
+    empty_supplier:'No suppliers',empty_dresscode:'No dress codes',empty_contact:'No contacts',
+    yes:'Yes',no:'No',
     ev_empty:'No events yet. Create your first event.',
     ev_name:'Event name *',ev_client:'Client',ev_date:'Date',
     ev_address:'Address',ev_access:'Access / code',ev_setup:'Setup',
@@ -7620,6 +7628,10 @@ const I18N={
     btn_save:'Guardar',btn_cancel:'Cancelar',btn_delete:'Eliminar',
     btn_edit:'Editar',btn_duplicate:'Duplicar',btn_close:'Cerrar',
     btn_copy:'Copiar',btn_save_draft:'Guardar borrador',
+    btn_add_staff:'+ Añadir personal',btn_add_client:'+ Añadir cliente',btn_add_event:'+ Añadir evento',
+    empty_staff:'Sin personal',empty_client:'Sin clientes',empty_cocktail:'Sin cócteles',empty_event:'Sin eventos',
+    empty_supplier:'Sin proveedores',empty_dresscode:'Sin códigos de vestimenta',empty_contact:'Sin contactos',
+    yes:'Sí',no:'No',
     ev_empty:'Sin eventos. Crea tu primer evento.',
     ev_name:'Nombre del evento *',ev_client:'Cliente',ev_date:'Fecha',
     ev_address:'Dirección',ev_access:'Acceso / código',ev_setup:'Montaje',
@@ -7772,6 +7784,29 @@ function applyLang(){
     else if(p==='clients') renderClients();
     else if(p==='profile') renderProfile();
   }
+
+  // Global text translation for all static DOM content
+  const textMap={
+    'Aucun staff':'empty_staff','Aucun client':'empty_client','Aucun cocktail':'empty_cocktail','Aucun événement':'empty_event',
+    'Aucun prestataire':'empty_supplier','Aucune tenue':'empty_dresscode','Aucun contact':'empty_contact',
+    'Ajouter':'btn_add','Ajouter staff':'btn_add_staff','Ajouter un client':'btn_add_client','Ajouter un événement':'btn_add_event',
+    'Modifier':'btn_edit','Supprimer':'btn_delete','Annuler':'btn_cancel','Enregistrer':'btn_save',
+    'Nouveau cocktail':'btn_new_cocktail','Nouvel événement':'btn_new_event',
+    'Oui':'yes','Non':'no','Sauvegarder':'btn_save_draft','Copier':'btn_copy','Fermer':'btn_close'
+  };
+
+  document.querySelectorAll('*').forEach(el=>{
+    if(el.children.length===0&&el.textContent){
+      Object.entries(textMap).forEach(([fr,key])=>{
+        if(el.textContent.trim()===fr){
+          el.textContent=t(key);
+        }
+      });
+    }
+    if(el.placeholder&&Object.keys(textMap).includes(el.placeholder)){
+      el.placeholder=t(textMap[el.placeholder]);
+    }
+  });
 }
 
 load();
