@@ -4724,19 +4724,21 @@ function sendBriefWA(evId,sid){
 
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
-    let detail=c.name+' (x'+cfg.qty+')';
-    detail+='\n🥃 Verre: '+(c.glass||'—');
-    const iceType=c.iceTypeId?state.iceTypes.find(x=>x.id===c.iceTypeId)?.name:'glaçons';
-    detail+='\n❄️ Glaçons: '+iceType+(c.serviceIce?(' ('+{rocks:'on rocks',full:'plein',none:'sans'}[c.serviceIce]+')'):'');
-    detail+='\n🔧 Technique: '+{stirred:'Mélangé',shaken:'Shaké',blended:'Blendé',none:'Direct'}[c.technique||'none'];
+    let detail='═══════════════════════════════════\n';
+    detail+=c.name.toUpperCase()+' (x'+cfg.qty+')\n';
+    detail+='═══════════════════════════════════\n\n';
+    detail+='VERRE: '+(c.glass||'—')+'\n';
+    const iceType=c.iceTypeId?state.iceTypes.find(x=>x.id===c.iceTypeId)?.name:'Glaçons standard';
+    detail+='GLACONS: '+iceType+(c.serviceIce?(' ('+{rocks:'on rocks',full:'plein',none:'sans'}[c.serviceIce]+')'):'')+'  \n';
+    detail+='TECHNIQUE: '+{stirred:'Mélangé',shaken:'Shaké',blended:'Blendé',none:'Direct'}[c.technique||'none']+'\n';
     const ings=(c.ingredients||[]).map(i=>i.qty?i.qty+(i.unit||'ml')+' '+i.name:i.name).filter(Boolean);
-    if(ings.length) detail+='\n📋 Ingrédients:\n'+ings.map(i=>'  • '+i).join('\n');
+    if(ings.length) detail+='\nINGREDIENTS:\n'+ings.map(i=>'  • '+i).join('\n')+'\n';
     const conso=(c.consumables||[]).map(i=>i.qty?i.qty+' '+i.name:i.name).filter(Boolean);
-    if(conso.length) detail+='\n🌿 Garnish & Deco:\n'+conso.map(i=>'  • '+i).join('\n');
-    if(c.recipe) detail+='\n📝 Recette:\n'+c.recipe;
-    if(c.methodology) detail+='\n🎯 Méthodologie:\n'+c.methodology;
+    if(conso.length) detail+='\nGARNISH & DECO:\n'+conso.map(i=>'  • '+i).join('\n')+'\n';
+    if(c.recipe) detail+='\nRECETTE:\n'+c.recipe+'\n';
+    if(c.methodology) detail+='\nMETHODOLOGIE:\n'+c.methodology+'\n';
     return detail;
-  }).filter(Boolean).join('\n\n')||'—';
+  }).filter(Boolean).join('\n')||'—';
 
   const lines=[
     'BRIEF - '+ev.name,
