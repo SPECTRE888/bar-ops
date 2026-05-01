@@ -551,9 +551,8 @@ select{color-scheme:dark}
 </div><!-- /shell -->
 
 <!-- Footer Save Status -->
-<div id="save-status" style="position:fixed;bottom:0;left:0;right:0;background:#4ade80;padding:6px 12px;font-size:11px;color:#1a1a1a;display:none;font-weight:500;text-align:center;border-top:1px solid rgba(26,26,26,0.1);z-index:999">
-  <div style="display:inline-block">✓ Sauvegardé</div>
-  <span id="save-time" style="margin-left:8px;opacity:0.9"></span>
+<div id="save-status" style="position:fixed;bottom:0;left:0;right:0;background:#86efac;padding:2px 8px;font-size:9px;color:#1f2937;display:none;font-weight:400;text-align:center;border-top:1px solid rgba(26,26,26,0.05);z-index:999">
+  ✓ <span id="save-time"></span>
 </div>
 
 <script>
@@ -945,10 +944,10 @@ async function doSyncNow(){
     // ✓ Synchronisation réussie
     pendingSyncChanges=false;
     if(statusEl){
-      statusEl.style.background='#4ade80';
-      statusEl.style.color='#1a1a1a';
+      statusEl.style.background='#86efac';
+      statusEl.style.color='#1f2937';
       const timeEl=document.getElementById('save-time');
-      if(timeEl) timeEl.textContent='À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      if(timeEl) timeEl.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     }
     console.log('✓ Cloud sync successful');
 
@@ -961,9 +960,9 @@ async function doSyncNow(){
   } else {
     // ✗ Erreur de synchronisation - les données restent en pending
     if(statusEl){
-      statusEl.style.background='rgba(239,68,68,0.15)';
-      statusEl.style.color='#dc2626';
-      statusEl.textContent='⚠️ Erreur cloud — Retry en cours...';
+      statusEl.style.background='rgba(252,165,165,0.2)';
+      statusEl.style.color='#991b1b';
+      statusEl.innerHTML='⚠️ <span id="save-time">Erreur — Retry...</span>';
     }
     console.error('doSyncNow: cloudPush failed - will retry');
 
@@ -1182,9 +1181,9 @@ function save(){
     const timeEl=document.getElementById('save-time');
     if(statusEl&&timeEl){
       statusEl.style.display='block';
-      statusEl.style.background='#4ade80';
-      statusEl.style.color='#1a1a1a';
-      timeEl.textContent='À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      statusEl.style.background='#86efac';
+      statusEl.style.color='#1f2937';
+      timeEl.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     }
 
     // Push immédiatement vers le cloud si connecté
