@@ -568,6 +568,7 @@ let cloudUser=null;
 let syncDebounceTimer=null;
 let pendingSyncChanges=false; // Track if there are unsaved changes
 let isSyncing=false; // Track if sync is currently in progress
+let saveStatusTimeout=null; // Track timeout for hiding save status
 
 function showCloudModal(){} // Stub - real impl below
 function deleteAccountModal(){} // Stub
@@ -944,6 +945,10 @@ async function doSyncNow(){
     // ✓ Synchronisation réussie
     pendingSyncChanges=false;
     if(statusEl){
+      // Clear any existing timeout to reset the timer
+      if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
+
+      statusEl.style.display='block';
       statusEl.style.background='#86efac';
       statusEl.style.color='#1f2937';
       const timeEl=document.getElementById('save-time');
@@ -953,6 +958,12 @@ async function doSyncNow(){
         const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
         timeEl.textContent=date+' '+time;
       }
+
+      // Auto-hide after 3 seconds
+      saveStatusTimeout=setTimeout(()=>{
+        statusEl.style.display='none';
+        saveStatusTimeout=null;
+      },3000);
     }
     console.log('✓ Cloud sync successful');
 
@@ -1185,6 +1196,9 @@ function save(){
     const statusEl=document.getElementById('save-status');
     const timeEl=document.getElementById('save-time');
     if(statusEl&&timeEl){
+      // Clear any existing timeout to reset the timer
+      if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
+
       statusEl.style.display='block';
       statusEl.style.background='#86efac';
       statusEl.style.color='#1f2937';
@@ -1192,6 +1206,12 @@ function save(){
       const date=now.toLocaleDateString('fr-FR');
       const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
       timeEl.textContent=date+' '+time;
+
+      // Auto-hide after 3 seconds
+      saveStatusTimeout=setTimeout(()=>{
+        statusEl.style.display='none';
+        saveStatusTimeout=null;
+      },3000);
     }
 
     // Push immédiatement vers le cloud si connecté
