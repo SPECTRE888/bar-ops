@@ -1220,10 +1220,15 @@ function injectMoninSyrups(){
     });
   });
 
-  // ── TEST EVENT ──────────────────────────────────────────
+  // ── TEST SUPPLIER ────────────────────────────────────────
+  state.suppliers=[
+    {id:now+70,name:'Metro',email:'contact@metro.fr',phone:'+33140000000',address:'123 Avenue de France, 75013 Paris',notes:'Fournisseur test — Livraison rapide'}
+  ];
+
+  // ── TEST CLIENT ──────────────────────────────────────────
   const tomorrow=new Date();
   tomorrow.setDate(tomorrow.getDate()+1);
-  
+
   state.clients=[
     {id:now+100,name:'Client Test',email:'test@example.com',phone:'+33601020304',type:'private',notes:'Événement de démonstration'}
   ];
