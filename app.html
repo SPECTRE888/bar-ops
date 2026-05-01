@@ -331,6 +331,12 @@ select{color-scheme:dark}
       </div>
     </div>
 
+    <!-- Save Status -->
+    <div id="save-status" style="background:var(--green-bg);border:1px solid var(--green);border-radius:5px;padding:8px;margin-bottom:8px;font-size:11px;color:var(--green);text-align:center;display:none">
+      <div style="font-weight:500;margin-bottom:2px">✓ Sauvegardé</div>
+      <div id="save-time" style="font-size:10px;opacity:0.8"></div>
+    </div>
+
     <!-- Logout -->
     <button onclick="sidebarLogout()" style="font-size:10px;color:var(--text3);background:none;border:1px solid var(--border2);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body);padding:6px;border-radius:3px;width:100%">Déconnexion</button>
 
@@ -920,15 +926,29 @@ function schedulePush(){
       token=extractToken(cloudUser);
     }
 
-    // Push data
+    // Push data to cloud
     const success=await cloudPush();
     updateCloudStatus();
+
+    const statusEl=document.getElementById('save-status');
+    const timeEl=document.getElementById('save-time');
+
     if(success){
-      document.getElementById('save-dot').style.background='var(--green)';
-      document.getElementById('save-text').textContent='Sauvegardé ☁️ — '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      // ✓ Synchronisation réussie
+      if(statusEl){
+        statusEl.style.background='var(--green-bg)';
+        statusEl.style.borderColor='var(--green)';
+        statusEl.style.color='var(--green)';
+        statusEl.innerHTML='<div style="font-weight:500;margin-bottom:2px">✓ Sauvegardé ☁️</div><div id="save-time" style="font-size:10px;opacity:0.8">À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div>';
+      }
     } else {
-      document.getElementById('save-dot').style.background='var(--red)';
-      document.getElementById('save-text').textContent='Erreur synchronisation ⚠️';
+      // ✗ Erreur de synchronisation
+      if(statusEl){
+        statusEl.style.background='rgba(196,112,112,0.1)';
+        statusEl.style.borderColor='var(--red)';
+        statusEl.style.color='var(--red)';
+        statusEl.innerHTML='<div style="font-weight:500;margin-bottom:2px">⚠️ Erreur cloud</div><div style="font-size:10px;opacity:0.8">Vérifiez votre connexion</div>';
+      }
       console.error('schedulePush: cloudPush failed');
     }
   },2000);
@@ -1123,12 +1143,19 @@ function freshState(){
 function save(){
   try{
     localStorage.setItem(SK, JSON.stringify(state));
-    document.getElementById('save-dot').style.background='var(--green)';
-    document.getElementById('save-text').textContent='Saved — '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+    // Affiche la notification verte de sauvegarde
+    const statusEl=document.getElementById('save-status');
+    const timeEl=document.getElementById('save-time');
+    if(statusEl&&timeEl){
+      statusEl.style.display='block';
+      timeEl.textContent='À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    }
+
     if(cloudUser) schedulePush();
   }catch(e){
-    document.getElementById('save-dot').style.background='var(--red)';
-    document.getElementById('save-text').textContent='Save error!';
+    const statusEl=document.getElementById('save-status');
+    if(statusEl) statusEl.style.display='none';
   }
 }
 
