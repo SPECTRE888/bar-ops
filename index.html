@@ -38,20 +38,14 @@ h1,h2,h3{font-family:'Cormorant Garamond',serif}
 
 /* HERO */
 .hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
-.logo{font-size:54px;font-weight:300;letter-spacing:.1em;margin-bottom:18px}
+.logo{font-size:54px;font-weight:300;letter-spacing:.1em;margin-bottom:18px;color:var(--gold)}
 .tagline{font-size:20px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:44px;max-width:600px}
 .btn-primary{padding:14px 52px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s;margin-bottom:0}
 .btn-primary:hover{background:var(--gold2)}
 
 /* FOOTER */
-footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
-.sub{text-align:center;font-size:14px;color:var(--text2);padding:18px 24px 0;max-width:600px;margin:0 auto;line-height:1.6}
-.features{display:grid;grid-template-columns:repeat(5,1fr);width:100%;border-top:1px solid rgba(255,255,255,.07);margin-top:18px}
-.feature{padding:18px 16px;border-right:1px solid rgba(255,255,255,.07);text-align:center}
-.feature:last-child{border-right:none}
-.feature h3{font-size:15px;font-weight:400;letter-spacing:.05em;margin-bottom:6px;color:var(--text)}
-.feature p{color:var(--text2);font-size:13px;line-height:1.5;font-weight:300}
-.legal{text-align:center;font-size:13px;color:var(--text2);padding:16px 24px;border-top:1px solid rgba(255,255,255,.07);line-height:1.8;opacity:1}
+footer{width:100%;border-top:none;padding:0}
+.legal{text-align:center;font-size:12px;color:var(--text2);padding:12px 24px;border-top:none;line-height:1.6;opacity:1}
 .legal-link{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .legal-link:hover{color:var(--gold)}
 #legal-modal{display:none}
@@ -67,17 +61,8 @@ footer{width:100%;border-top:1px solid rgba(255,255,255,.07)}
 </div>
 
 <footer>
-  <div class="features">
-    <div class="feature"><h3>92% plus rapide</h3><p>Créez un événement et son devis en 15min.</p></div>
-    <div class="feature"><h3>+20% de marge</h3><p>Coûts et prix optimisés automatiquement.</p></div>
-    <div class="feature"><h3>Équipe briefée en 1 clic</h3><p>Assignez et briefez votre staff sans confusion.</p></div>
-    <div class="feature"><h3>ROI en deux événements</h3><p>Souscription rentabilisée en deux événements.</p></div>
-    <div class="feature"><h3>Historique complet</h3><p>Suivez marges et évolution de vos prestations.</p></div>
-  </div>
   <div class="legal">
-    © 2026 BAR OPS — Tous droits réservés &nbsp;·&nbsp;
-    <span class="legal-link" onclick="showLegal('rgpd')">Politique de confidentialité</span> &nbsp;·&nbsp;
-    <span class="legal-link" onclick="showLegal('mentions')">Mentions légales</span>
+    © 2026 BAR OPS — <span class="legal-link" onclick="showLegal('rgpd')">Confidentialité</span> — <span class="legal-link" onclick="showLegal('mentions')">Mentions</span>
   </div>
 </footer>
 
