@@ -551,8 +551,8 @@ select{color-scheme:dark}
 </div><!-- /shell -->
 
 <!-- Footer Save Status -->
-<div id="save-status" style="position:fixed;bottom:0;left:0;right:0;background:#86efac;padding:2px 8px;font-size:9px;color:#1f2937;display:none;font-weight:400;text-align:center;border-top:1px solid rgba(26,26,26,0.05);z-index:999">
-  ✓ <span id="save-time"></span>
+<div id="save-status" style="position:fixed;bottom:0;left:0;right:0;background:#86efac;padding:3px 8px;font-size:9px;color:#1f2937;display:none;font-weight:400;text-align:center;border-top:1px solid rgba(26,26,26,0.05);z-index:999;letter-spacing:0.3px">
+  Sauvegardé <span id="save-time"></span>
 </div>
 
 <script>
@@ -947,7 +947,12 @@ async function doSyncNow(){
       statusEl.style.background='#86efac';
       statusEl.style.color='#1f2937';
       const timeEl=document.getElementById('save-time');
-      if(timeEl) timeEl.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      if(timeEl){
+        const now=new Date();
+        const date=now.toLocaleDateString('fr-FR');
+        const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        timeEl.textContent=date+' '+time;
+      }
     }
     console.log('✓ Cloud sync successful');
 
@@ -1183,7 +1188,10 @@ function save(){
       statusEl.style.display='block';
       statusEl.style.background='#86efac';
       statusEl.style.color='#1f2937';
-      timeEl.textContent=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      const now=new Date();
+      const date=now.toLocaleDateString('fr-FR');
+      const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      timeEl.textContent=date+' '+time;
     }
 
     // Push immédiatement vers le cloud si connecté
