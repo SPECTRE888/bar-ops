@@ -567,6 +567,8 @@ const CLOUD_SK='bcp_cloud';
 // ── Supabase config (system-level, not exposed to users) ──
 let cloudUser=null;
 let syncDebounceTimer=null;
+let pendingSyncChanges=false; // Track if there are unsaved changes
+let isSyncing=false; // Track if sync is currently in progress
 
 function showCloudModal(){} // Stub - real impl below
 function deleteAccountModal(){} // Stub
@@ -908,50 +910,82 @@ async function cloudPull(){
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 let _initDone=false;
+
+// Sync immédiat vers le cloud
+async function doSyncNow(){
+  if(!_initDone||isSyncing) return;
+
+  isSyncing=true;
+
+  if(!cloudUser) {
+    isSyncing=false;
+    return;
+  }
+
+  // Ensure token is valid before pushing
+  let token=extractToken(cloudUser);
+  if(!token){
+    const refreshed=await cloudRefreshSession();
+    if(!refreshed){
+      isSyncing=false;
+      updateCloudStatus();
+      console.warn('doSyncNow: token refresh failed');
+      return;
+    }
+    token=extractToken(cloudUser);
+  }
+
+  // Push data to cloud
+  const success=await cloudPush();
+  updateCloudStatus();
+
+  const statusEl=document.getElementById('save-status');
+
+  if(success){
+    // ✓ Synchronisation réussie
+    pendingSyncChanges=false;
+    if(statusEl){
+      statusEl.style.background='var(--green-bg)';
+      statusEl.style.borderColor='var(--green)';
+      statusEl.style.color='var(--green)';
+      statusEl.innerHTML='<div style="font-weight:500;margin-bottom:2px">✓ Sauvegardé ☁️</div><div id="save-time" style="font-size:10px;opacity:0.8">À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div>';
+    }
+    console.log('✓ Cloud sync successful');
+
+    // Si d'autres changements sont arrivés pendant le sync, refaire un sync
+    if(pendingSyncChanges){
+      isSyncing=false;
+      doSyncNow();
+      return;
+    }
+  } else {
+    // ✗ Erreur de synchronisation - les données restent en pending
+    if(statusEl){
+      statusEl.style.background='rgba(196,112,112,0.1)';
+      statusEl.style.borderColor='var(--red)';
+      statusEl.style.color='var(--red)';
+      statusEl.innerHTML='<div style="font-weight:500;margin-bottom:2px">⚠️ Erreur cloud</div><div style="font-size:10px;opacity:0.8">Retentative en cours...</div>';
+    }
+    console.error('doSyncNow: cloudPush failed - will retry');
+
+    // Retry après 3 secondes
+    await new Promise(r=>setTimeout(r,3000));
+    if(cloudUser) {
+      isSyncing=false;
+      doSyncNow();
+      return;
+    }
+  }
+
+  isSyncing=false;
+}
+
 function schedulePush(){
   if(!_initDone) return;
   clearTimeout(syncDebounceTimer);
   syncDebounceTimer=setTimeout(async()=>{
-    if(!cloudUser) return;
-
-    // Ensure token is valid before pushing
-    let token=extractToken(cloudUser);
-    if(!token){
-      const refreshed=await cloudRefreshSession();
-      if(!refreshed){
-        updateCloudStatus();
-        console.warn('schedulePush: token refresh failed');
-        return;
-      }
-      token=extractToken(cloudUser);
-    }
-
-    // Push data to cloud
-    const success=await cloudPush();
-    updateCloudStatus();
-
-    const statusEl=document.getElementById('save-status');
-    const timeEl=document.getElementById('save-time');
-
-    if(success){
-      // ✓ Synchronisation réussie
-      if(statusEl){
-        statusEl.style.background='var(--green-bg)';
-        statusEl.style.borderColor='var(--green)';
-        statusEl.style.color='var(--green)';
-        statusEl.innerHTML='<div style="font-weight:500;margin-bottom:2px">✓ Sauvegardé ☁️</div><div id="save-time" style="font-size:10px;opacity:0.8">À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div>';
-      }
-    } else {
-      // ✗ Erreur de synchronisation
-      if(statusEl){
-        statusEl.style.background='rgba(196,112,112,0.1)';
-        statusEl.style.borderColor='var(--red)';
-        statusEl.style.color='var(--red)';
-        statusEl.innerHTML='<div style="font-weight:500;margin-bottom:2px">⚠️ Erreur cloud</div><div style="font-size:10px;opacity:0.8">Vérifiez votre connexion</div>';
-      }
-      console.error('schedulePush: cloudPush failed');
-    }
-  },2000);
+    if(cloudUser) doSyncNow();
+  },500);
 }
 
 function updateCloudStatus(){
@@ -1152,7 +1186,14 @@ function save(){
       timeEl.textContent='À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     }
 
-    if(cloudUser) schedulePush();
+    // Push immédiatement vers le cloud si connecté
+    if(cloudUser && !isSyncing){
+      pendingSyncChanges=true;
+      doSyncNow();
+    } else if(cloudUser){
+      // Si un sync est déjà en cours, marquer qu'il y a des changements à refaire
+      pendingSyncChanges=true;
+    }
   }catch(e){
     const statusEl=document.getElementById('save-status');
     if(statusEl) statusEl.style.display='none';
@@ -8036,6 +8077,15 @@ updateCloudStatus();
       sessionStorage.removeItem('pendingSend');
       const {evId,devisNum}=JSON.parse(pending);
       sendQuoteToClient(evId,devisNum);
+    }
+  });
+
+  // ⚠️ Warn user if leaving with unsaved cloud changes
+  window.addEventListener('beforeunload',(e)=>{
+    if(cloudUser&&(isSyncing||pendingSyncChanges)){
+      e.preventDefault();
+      e.returnValue='Des changements ne sont pas encore synchronisés avec le cloud. Êtes-vous sûr de vouloir quitter ?';
+      return e.returnValue;
     }
   });
 })();
