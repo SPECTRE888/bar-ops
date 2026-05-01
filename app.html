@@ -791,6 +791,8 @@ async function cloudRefreshSession(){
         refresh_token:session.refresh_token||data.refresh_token||refreshToken,
         user:session.user||data.user||cloudUser?.user||{}
       };
+      window.cloudUser=cloudUser;
+      localStorage.setItem('bcp_session',JSON.stringify(cloudUser));
       return true;
     }
   }catch(e){console.warn('Refresh network error:',e);}
@@ -798,17 +800,39 @@ async function cloudRefreshSession(){
 }
 
 // ── SYNC ──────────────────────────────────────────────
-async function cloudPush(){
+async function cloudPush(retries=0){
   if(!cloudUser) return false;
   const{url,key}=getSupabase();if(!url||!key) return false;
   const uid=extractUid(cloudUser);
-  const token=extractToken(cloudUser);
+  let token=extractToken(cloudUser);
   if(!uid||!token){console.warn('cloudPush: missing uid or token');return false;}
+
   try{
+    // If token missing or invalid, try refresh first
+    if(!token){
+      const refreshed=await cloudRefreshSession();
+      if(!refreshed){console.warn('cloudPush: token refresh failed');return false;}
+      token=extractToken(cloudUser);
+      if(!token){console.warn('cloudPush: no token after refresh');return false;}
+    }
+
     // Vérifie si row existe
     const check=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}&select=id`,{
       headers:{'apikey':key,'Authorization':'Bearer '+token}
     });
+
+    // Handle 401 Unauthorized - token expired
+    if(check.status===401){
+      if(retries<1){
+        const refreshed=await cloudRefreshSession();
+        if(refreshed) return await cloudPush(retries+1);
+      }
+      console.warn('cloudPush: 401 Unauthorized - token refresh failed');
+      return false;
+    }
+
+    if(!check.ok){console.warn('cloudPush: check failed',check.status);return false;}
+
     const rows=await check.json();
     const exists=Array.isArray(rows)&&rows.length>0;
 
@@ -823,8 +847,28 @@ async function cloudPush(){
       headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+token,'Prefer':'return=minimal'},
       body
     });
-    return r.ok||r.status===201||r.status===204;
-  }catch(e){console.warn('cloudPush error:',e);return false;}
+
+    if(!r.ok){
+      console.warn(`cloudPush failed: ${r.status} ${r.statusText}`);
+      // 401/403: auth error, 429: rate limit, 500+: server error
+      if([401,403,429].includes(r.status)&&retries<1){
+        console.warn('cloudPush: attempting token refresh and retry...');
+        const refreshed=await cloudRefreshSession();
+        if(refreshed) return await cloudPush(retries+1);
+      }
+      return false;
+    }
+
+    return r.status===200||r.status===201||r.status===204;
+  }catch(e){
+    console.error('cloudPush exception:',e.message);
+    // Retry once on network error
+    if(retries<1){
+      console.warn('cloudPush: retrying after network error...');
+      return await new Promise(r=>setTimeout(()=>r(cloudPush(retries+1)),1000));
+    }
+    return false;
+  }
 }
 
 async function cloudPull(){
@@ -862,11 +906,30 @@ function schedulePush(){
   if(!_initDone) return;
   clearTimeout(syncDebounceTimer);
   syncDebounceTimer=setTimeout(async()=>{
-    if(cloudUser&&!extractToken(cloudUser)){
-      await cloudRefreshSession();
+    if(!cloudUser) return;
+
+    // Ensure token is valid before pushing
+    let token=extractToken(cloudUser);
+    if(!token){
+      const refreshed=await cloudRefreshSession();
+      if(!refreshed){
+        updateCloudStatus();
+        console.warn('schedulePush: token refresh failed');
+        return;
+      }
+      token=extractToken(cloudUser);
     }
-    if(cloudUser){
-      cloudPush().then(()=>updateCloudStatus());
+
+    // Push data
+    const success=await cloudPush();
+    updateCloudStatus();
+    if(success){
+      document.getElementById('save-dot').style.background='var(--green)';
+      document.getElementById('save-text').textContent='Sauvegardé ☁️ — '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    } else {
+      document.getElementById('save-dot').style.background='var(--red)';
+      document.getElementById('save-text').textContent='Erreur synchronisation ⚠️';
+      console.error('schedulePush: cloudPush failed');
     }
   },2000);
 }
