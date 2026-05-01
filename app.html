@@ -1199,40 +1199,19 @@ function injectDemoData(){
     },
   ];
 
-  localStorage.setItem('bcp_demo_injected','1');
-  save();
-}
-
-function injectMoninSyrups(){
-  // Only inject if no Monin syrups already exist
-  const hasMonin=state.products.some(p=>p.brand==='Monin');
-  if(hasMonin)return;
-  MONIN_SYRUPS.forEach((s,i)=>{
-    state.products.push({
-      id:900000+i,
-      category:'Syrup',
-      productType:s.type,
-      brand:'Monin',
-      priceHT:parseFloat((s.price/1.055).toFixed(2)),
-      qty:s.qty,
-      unit:'cl',
-      name:'Monin — '+s.type
-    });
-  });
-
-  // ── TEST SUPPLIER ────────────────────────────────────────
+  // ── SUPPLIERS ──────────────────────────────────────────
   state.suppliers=[
     {id:now+70,name:'Metro',email:'contact@metro.fr',phone:'+33140000000',address:'123 Avenue de France, 75013 Paris',notes:'Fournisseur test — Livraison rapide'}
   ];
 
-  // ── TEST CLIENT ──────────────────────────────────────────
-  const tomorrow=new Date();
-  tomorrow.setDate(tomorrow.getDate()+1);
-
+  // ── CLIENTS ────────────────────────────────────────────
   state.clients=[
     {id:now+100,name:'Client Test',email:'test@example.com',phone:'+33601020304',type:'private',notes:'Événement de démonstration'}
   ];
 
+  // ── EVENTS ─────────────────────────────────────────────
+  const tomorrow=new Date();
+  tomorrow.setDate(tomorrow.getDate()+1);
   state.events=[
     {
       id:now+200,
@@ -1268,6 +1247,27 @@ function injectMoninSyrups(){
       }]
     }
   ];
+
+  localStorage.setItem('bcp_demo_injected','1');
+  save();
+}
+
+function injectMoninSyrups(){
+  // Only inject if no Monin syrups already exist
+  const hasMonin=state.products.some(p=>p.brand==='Monin');
+  if(hasMonin)return;
+  MONIN_SYRUPS.forEach((s,i)=>{
+    state.products.push({
+      id:900000+i,
+      category:'Syrup',
+      productType:s.type,
+      brand:'Monin',
+      priceHT:parseFloat((s.price/1.055).toFixed(2)),
+      qty:s.qty,
+      unit:'cl',
+      name:'Monin — '+s.type
+    });
+  });
 
   save();
 }
