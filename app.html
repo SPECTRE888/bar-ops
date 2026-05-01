@@ -332,7 +332,10 @@ select{color-scheme:dark}
     </div>
 
     <!-- Save Status -->
-    <div id="save-status" style="font-size:11px;color:var(--green);padding:4px;display:none;font-weight:500">✓ Sauvegardé</div>
+    <div id="save-status" style="background:#4ade80;border-radius:5px;padding:6px 8px;margin-bottom:8px;font-size:11px;color:#1a1a1a;display:none;font-weight:500;text-align:center">
+      <div>✓ Sauvegardé</div>
+      <div id="save-time" style="font-size:9px;opacity:0.9;margin-top:2px"></div>
+    </div>
 
     <!-- Logout -->
     <button onclick="sidebarLogout()" style="font-size:10px;color:var(--text3);background:none;border:1px solid var(--border2);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body);padding:6px;border-radius:3px;width:100%">Déconnexion</button>
@@ -942,8 +945,9 @@ async function doSyncNow(){
     // ✓ Synchronisation réussie
     pendingSyncChanges=false;
     if(statusEl){
-      statusEl.style.color='var(--green)';
-      statusEl.textContent='✓ Sauvegardé';
+      statusEl.style.background='#4ade80';
+      statusEl.style.color='#1a1a1a';
+      statusEl.innerHTML='<div>✓ Sauvegardé</div><div style="font-size:9px;opacity:0.9;margin-top:2px">À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div>';
     }
     console.log('✓ Cloud sync successful');
 
@@ -956,8 +960,9 @@ async function doSyncNow(){
   } else {
     // ✗ Erreur de synchronisation - les données restent en pending
     if(statusEl){
-      statusEl.style.color='var(--red)';
-      statusEl.textContent='⚠️ Erreur cloud';
+      statusEl.style.background='rgba(239,68,68,0.2)';
+      statusEl.style.color='#dc2626';
+      statusEl.innerHTML='<div>⚠️ Erreur cloud</div><div style="font-size:9px;opacity:0.9;margin-top:2px">Retry...</div>';
     }
     console.error('doSyncNow: cloudPush failed - will retry');
 
@@ -1173,10 +1178,12 @@ function save(){
 
     // Affiche la notification verte de sauvegarde
     const statusEl=document.getElementById('save-status');
-    if(statusEl){
+    const timeEl=document.getElementById('save-time');
+    if(statusEl&&timeEl){
       statusEl.style.display='block';
-      statusEl.style.color='var(--green)';
-      statusEl.textContent='✓ Sauvegardé';
+      statusEl.style.background='#4ade80';
+      statusEl.style.color='#1a1a1a';
+      statusEl.innerHTML='<div>✓ Sauvegardé</div><div id="save-time" style="font-size:9px;opacity:0.9;margin-top:2px">À '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div>';
     }
 
     // Push immédiatement vers le cloud si connecté
