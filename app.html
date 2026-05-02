@@ -6426,18 +6426,23 @@ function buildEventSummaryHTML(ev){
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    const price=((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))).toFixed(2);
     const glass=state.glasses.find(g=>g.id===c.glassId);
     const ings=(c.ingredients||[]).map(i=>{
       const prod=state.products.find(p=>p.id===i.id);
-      return prod?`${prod.name}`:'';
-    }).filter(x=>x).join(', ');
-    return`<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #ddd">
-      <div style="font-weight:600;font-size:14px;color:#333">${c.name} <span style="color:#999;font-size:12px;font-weight:400">x${cfg.qty}</span></div>
-      ${c.recipeBase?`<div style="font-size:11px;color:#666;margin:6px 0"><strong>Préparation:</strong> ${c.recipeBase}</div>`:''}
-      ${ings?`<div style="font-size:11px;color:#666;margin:6px 0"><strong>Ingrédients:</strong> ${ings}</div>`:''}
-      ${glass?`<div style="font-size:11px;color:#666"><strong>Verre:</strong> ${glass.name}</div>`:''}
-      <div style="font-size:12px;font-weight:600;color:#d4a574;margin-top:6px">PU: ${price}€ | Total: ${(cfg.qty*price).toFixed(0)}€</div>
+      return prod?`<li style="margin:4px 0;font-size:11px">${i.qty||'—'} ${i.unit||''} ${prod.name}</li>`:'';
+    }).filter(x=>x).join('');
+    return`<div style="margin-bottom:25px;padding-bottom:20px;border-bottom:1px solid #ddd">
+      <div style="font-weight:600;font-size:14px;color:#333;margin-bottom:8px">${c.name} <span style="color:#999;font-size:12px;font-weight:400">(x${cfg.qty})</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;font-size:11px">
+        <div>
+          ${glass?`<div style="margin-bottom:8px"><strong>Verre:</strong> ${glass.name}</div>`:''}
+          ${c.recipeBase?`<div style="margin-bottom:8px"><strong>Méthode:</strong> ${c.recipeBase}</div>`:''}
+        </div>
+        <div>
+          ${ings?`<div><strong>Ingrédients:</strong><ul style="margin:4px 0;padding-left:16px">${ings}</ul></div>`:''}
+        </div>
+      </div>
+      ${c.recipeInstructions?`<div style="margin-top:8px;font-size:11px;color:#555;line-height:1.4"><strong>Instructions:</strong><br>${c.recipeInstructions}</div>`:''}
     </div>`;
   }).join('');
   return`
