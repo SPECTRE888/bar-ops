@@ -6798,33 +6798,6 @@ function renderProfile(){
 
   el.innerHTML=`<div style="max-width:1200px">
 
-    <!-- MA CARTE DE COCKTAIL -->
-    <div class="card" style="margin-bottom:14px;padding:14px">
-      <div class="ctitle" style="margin-bottom:12px">Ma carte de cocktail</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div>
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Nom du bar</label>
-            <input id="tpl-brand" value="${tpl.brandName}" placeholder="Mon bar" style="width:100%" oninput="updCardTpl('brandName',this.value)"/>
-          </div>
-          <div>
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Logo</label>
-            <input type="file" accept="image/*" onchange="uploadCardLogo(this)" style="width:100%;font-size:11px"/>
-          </div>
-          <div>
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Couleur primaire</label>
-            <input type="color" id="tpl-color" value="${tpl.colorPrimary}" style="width:100%;height:40px;cursor:pointer;border:1px solid var(--border)" oninput="updCardTpl('colorPrimary',this.value)"/>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px"><input type="checkbox" ${tpl.showPrice?'checked':''} onchange="updCardTpl('showPrice',this.checked)"/> Afficher prix</label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px"><input type="checkbox" ${tpl.showIngredients?'checked':''} onchange="updCardTpl('showIngredients',this.checked)"/> Afficher ingrédients</label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px"><input type="checkbox" ${tpl.showContact?'checked':''} onchange="updCardTpl('showContact',this.checked)"/> Afficher contact</label>
-          </div>
-        </div>
-        <div id="card-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;min-height:300px;display:flex;flex-direction:column;gap:8px;font-size:11px"></div>
-      </div>
-    </div>
-
     <!-- ROW 1: 2 colonnes egales -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
 
@@ -6973,6 +6946,33 @@ function renderProfile(){
         </div>
       </div>
 
+    </div>
+
+    <!-- MA CARTE DE COCKTAIL -->
+    <div class="card" style="margin-top:14px;padding:14px">
+      <div class="ctitle" style="margin-bottom:12px">Ma carte de cocktail</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+          <div>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Nom du bar</label>
+            <input id="tpl-brand" value="${tpl.brandName}" placeholder="Mon bar" style="width:100%;font-size:11px" oninput="updCardTpl('brandName',this.value)"/>
+          </div>
+          <div>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Logo</label>
+            <input type="file" accept="image/*" onchange="uploadCardLogo(this)" style="width:100%;font-size:10px"/>
+          </div>
+          <div>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Couleur</label>
+            <input type="color" id="tpl-color" value="${tpl.colorPrimary}" style="width:100%;height:30px;cursor:pointer;border:1px solid var(--border)" oninput="updCardTpl('colorPrimary',this.value)"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;justify-content:flex-end">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px"><input type="checkbox" ${tpl.showPrice?'checked':''} onchange="updCardTpl('showPrice',this.checked)"/> Prix</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px"><input type="checkbox" ${tpl.showIngredients?'checked':''} onchange="updCardTpl('showIngredients',this.checked)"/> Ingredients</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px"><input type="checkbox" ${tpl.showContact?'checked':''} onchange="updCardTpl('showContact',this.checked)"/> Contact</label>
+          </div>
+        </div>
+        <div id="card-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;min-height:200px;display:flex;flex-direction:column;gap:6px;font-size:10px"></div>
+      </div>
     </div>
 
   </div>`;
