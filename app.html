@@ -4813,9 +4813,23 @@ function renderPrestation(){
   <div style="width:100%">
 
     <!-- ACTIONS -->
-    <div class="card" style="margin-bottom:14px;padding:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-gold btn-sm" onclick="exportEventCard(${evId})">Exporter carte de cocktails</button>
-      <button class="btn btn-ghost btn-sm" onclick="openEventHTML(${evId})">Voir fiche HTML</button>
+    <div class="card" style="margin-bottom:14px;padding:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="previewEventCard(${evId})" style="width:100%">👁️ Voir la carte</button>
+        <div style="font-size:9px;color:var(--text3);line-height:1.3">Aperçu de votre carte de cocktails</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-gold btn-sm" onclick="exportEventCard(${evId})" style="width:100%">📥 Exporter carte PDF</button>
+        <div style="font-size:9px;color:var(--text3);line-height:1.3">Télécharger au format PDF</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="openEventHTML(${evId})" style="width:100%">👁️ Voir la fiche</button>
+        <div style="font-size:9px;color:var(--text3);line-height:1.3">Fiche prestation (HTML)</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn btn-gold btn-sm" onclick="exportEventHTML(${evId})" style="width:100%">📥 Exporter fiche PDF</button>
+        <div style="font-size:9px;color:var(--text3);line-height:1.3">Fiche de prestation en PDF</div>
+      </div>
     </div>
 
     <!-- ÉQUIPE -->
@@ -6270,6 +6284,33 @@ function openEventHTML(evId){
   window.open(url);
 }
 
+function previewEventCard(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const tpl=state.cardTemplate;
+  const cktList=(ev.cocktails||[]).map(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);
+    if(!c)return'';
+    return `<div style="padding:10px 0;border-bottom:1px solid #ddd"><div style="font-weight:600;color:${tpl.colorPrimary}">${c.name}</div>
+      ${tpl.showPrice?`<div style="font-size:12px;color:#666">${(c.priceHT||0).toFixed(2)}€</div>`:''}
+      ${tpl.showIngredients?`<div style="font-size:11px;color:#888">${(c.ingredients||[]).map(i=>i.name).join(', ')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  const preview=`<div style="background:${tpl.colorPrimary};color:#fff;border-radius:8px 8px 0 0;padding:20px;text-align:center">
+    ${tpl.logo?`<img src="${tpl.logo}" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px"/>`:''}
+    <h2 style="margin:0;font-size:20px">${tpl.brandName||'Carte de cocktails'}</h2>
+  </div>
+  <div style="padding:15px;background:#fff;border-radius:0 0 8px 8px">
+    <h3 style="color:${tpl.colorPrimary};border-bottom:2px solid ${tpl.colorPrimary};padding-bottom:8px;margin:0 0 10px">Cocktails - ${ev.name}</h3>
+    ${cktList}
+    ${tpl.showContact?`<div style="margin-top:15px;padding-top:15px;border-top:1px solid #ddd;text-align:center;color:#666;font-size:11px">
+      ${window._userEmail||''}<br>${state.profile?.phone||''}<br>${state.profile?.barName||''}
+    </div>`:''}
+  </div>`;
+
+  showModal('Aperçu - Carte de cocktails',preview,'Fermer');
+}
+
 function exportEventCard(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   const tpl=state.cardTemplate;
@@ -6301,6 +6342,15 @@ function exportEventCard(evId){
 
   const element=document.createElement('div');element.innerHTML=html;
   const opt={margin:10,filename:`carte-${ev.name}.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}};
+  if(window.html2pdf) window.html2pdf().set(opt).from(element).save();
+  else{const blob=new Blob([html],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);window.open(url);}
+}
+
+function exportEventHTML(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const html=buildEventSummaryHTML(ev);
+  const element=document.createElement('div');element.innerHTML=html;
+  const opt={margin:10,filename:`fiche-${ev.name}.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}};
   if(window.html2pdf) window.html2pdf().set(opt).from(element).save();
   else{const blob=new Blob([html],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);window.open(url);}
 }
