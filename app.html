@@ -6429,20 +6429,14 @@ function buildEventSummaryHTML(ev){
     const glass=state.glasses.find(g=>g.id===c.glassId);
     const ings=(c.ingredients||[]).map(i=>{
       const prod=state.products.find(p=>p.id===i.id);
-      return prod?`<li style="margin:4px 0;font-size:11px">${i.qty||'—'} ${i.unit||''} ${prod.name}</li>`:'';
+      return prod?`<li style="margin:6px 0;font-size:12px">${i.qty||'—'} ${i.unit||''} ${prod.name}</li>`:'';
     }).filter(x=>x).join('');
-    return`<div style="margin-bottom:25px;padding-bottom:20px;border-bottom:1px solid #ddd">
-      <div style="font-weight:600;font-size:14px;color:#333;margin-bottom:8px">${c.name} <span style="color:#999;font-size:12px;font-weight:400">(x${cfg.qty})</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;font-size:11px">
-        <div>
-          ${glass?`<div style="margin-bottom:8px"><strong>Verre:</strong> ${glass.name}</div>`:''}
-          ${c.recipeBase?`<div style="margin-bottom:8px"><strong>Méthode:</strong> ${c.recipeBase}</div>`:''}
-        </div>
-        <div>
-          ${ings?`<div><strong>Ingrédients:</strong><ul style="margin:4px 0;padding-left:16px">${ings}</ul></div>`:''}
-        </div>
-      </div>
-      ${c.recipeInstructions?`<div style="margin-top:8px;font-size:11px;color:#555;line-height:1.4"><strong>Instructions:</strong><br>${c.recipeInstructions}</div>`:''}
+    return`<div style="margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid #ddd">
+      <div style="font-weight:700;font-size:15px;color:#000;margin-bottom:12px">${c.name} <span style="color:#999;font-size:12px;font-weight:400">(x${cfg.qty})</span></div>
+      ${glass?`<div style="margin-bottom:10px;font-size:12px"><strong>Verre:</strong> ${glass.name}</div>`:''}
+      ${ings?`<div style="margin-bottom:10px"><strong style="display:block;font-size:12px;margin-bottom:6px">Ingrédients:</strong><ul style="margin:0;padding-left:20px;font-size:12px">${ings}</ul></div>`:''}
+      ${c.recipeBase?`<div style="margin-bottom:10px;font-size:12px"><strong>Méthode:</strong> ${c.recipeBase}</div>`:''}
+      ${c.recipeInstructions?`<div style="font-size:12px;line-height:1.5"><strong>Préparation:</strong><br>${c.recipeInstructions}</div>`:''}
     </div>`;
   }).join('');
   return`
@@ -6537,10 +6531,9 @@ function buildEventSummaryHTML(ev){
     </div>
 
     ${ev.barType?`<h3 style="margin-top:25px">Configuration bar</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px">
-      <div><strong>Type:</strong> ${ev.barType}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px;font-size:12px">
+      <div><strong>Type de bar:</strong> ${ev.barType}</div>
       <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
-      <div><strong>Prix:</strong> ${(ev.barPrice||0).toFixed(2)}€</div>
     </div>`:''}
 
     ${(ev.assignedStaff||[]).length?`<h3 style="margin-top:25px">Équipe assignée</h3>
@@ -6555,28 +6548,6 @@ function buildEventSummaryHTML(ev){
         </div>`;
       }).join('')}
     </div>`:''}
-
-    <h3 style="margin-top:25px">Résumé financier</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px;font-size:13px">
-      <div><strong>Ventes cocktails:</strong><br>${((ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))):0);},0)).toFixed(0)}€</div>
-      ${ev.barPrice?`<div><strong>Prestation bar:</strong><br>${(ev.barPrice||0).toFixed(0)}€</div>`:''}
-      ${(ev.deliveryBillHT||ev.extraBillHT)?`<div><strong>Frais additionnels:</strong><br>${((ev.deliveryBillHT||0)+(ev.extraBillHT||0)).toFixed(0)}€</div>`:''}
-    </div>
-
-    <div class="financial">
-      <div class="financial-item">
-        <div class="financial-label">CA HT</div>
-        <div class="financial-value">${rev.toFixed(0)}€</div>
-      </div>
-      <div class="financial-item">
-        <div class="financial-label">Coût</div>
-        <div class="financial-value">${cost.toFixed(0)}€</div>
-      </div>
-      <div class="financial-item">
-        <div class="financial-label">Marge</div>
-        <div class="financial-value" style="color:${mg>=0?'#5a9b6f':'#c47070'}">${mg.toFixed(0)}€</div>
-      </div>
-    </div>
 
     ${ev.notes?`<div style="margin-top:15px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
   </div>
