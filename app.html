@@ -4141,27 +4141,57 @@ window._evExtraProducts=window._evExtraProducts||[];
 
 function _renderExtraProds(){
   const el=document.getElementById('ev-extra-products');if(!el)return;
-  el.innerHTML=(window._evExtraProducts||[]).map((p,i)=>{
+
+  // Header row
+  const headerHtml=`<div style="display:grid;grid-template-columns:1fr 100px 90px 90px 70px 90px 28px;gap:8px;align-items:center;margin-bottom:8px;padding:6px 0;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">
+    <span>PRODUIT</span>
+    <span>MARQUE</span>
+    <span style="text-align:right">PRIX D'ACHAT</span>
+    <span style="text-align:right">PRIX DE VENTE</span>
+    <span style="text-align:center">QTÉ</span>
+    <span style="text-align:right">TOTAL</span>
+    <span></span>
+  </div>`;
+
+  const rows=(window._evExtraProducts||[]).map((p,i)=>{
     const costPerUnit=p.costHT||0;
     const priceVente=p.priceHT||costPerUnit*4;
     const total=(p.qty||0)*priceVente;
-    return`<div style="display:grid;grid-template-columns:2fr 50px 45px 25px 55px 50px 28px;gap:6px;align-items:center;margin-bottom:6px;padding:6px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+    const productName=p.productType||'';
+    const brandName=p.brand||'';
+
+    return`<div style="display:grid;grid-template-columns:1fr 100px 90px 90px 70px 90px 28px;gap:8px;align-items:center;margin-bottom:6px;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+      <!-- Produit Search/Display -->
       <div style="position:relative;min-width:0">
-        <input id="ep-search-${i}" value="${(p.label||'').replace(/"/g,'&quot;')}" placeholder="Chercher un produit..." style="font-size:11px;width:100%;background:none;border:none;padding:0" oninput="epSearch(${i},this.value)"/>
-        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:200px;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:150px;overflow-y:auto;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+        <input id="ep-search-${i}" value="${productName.replace(/"/g,'&quot;')}" placeholder="Produit..." style="font-size:11px;width:100%;background:none;border:none;padding:0;color:var(--text);font-weight:500" oninput="epSearch(${i},this.value)"/>
+        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:150px;overflow-y:auto;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
       </div>
-      <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px;text-align:center;background:none;border:none;padding:0" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0);updEvCalc()"/>
-      <div style="text-align:right;color:var(--text2);font-weight:500">${costPerUnit.toFixed(2)}€</div>
-      <div style="text-align:center;color:var(--text3);font-weight:600">×4</div>
-      <input type="number" id="ep-price-${i}" value="${priceVente.toFixed(2)}" min="0" step="0.01" placeholder="PU" style="font-size:11px;text-align:right;background:none;border:none;padding:0;font-weight:600;color:var(--gold)" oninput="updExtraProd(${i},'priceHT',parseFloat(this.value)||0);updEvCalc()"/>
+
+      <!-- Marque Display -->
+      <div style="color:var(--text2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${brandName||'—'}</div>
+
+      <!-- Prix d'Achat (per unit) -->
+      <input type="number" id="ep-cost-${i}" value="${costPerUnit.toFixed(2)}" min="0" step="0.01" placeholder="0.00" style="font-size:11px;text-align:right;background:none;border:none;padding:0;color:var(--red);font-weight:500" oninput="updExtraProd(${i},'costHT',parseFloat(this.value)||0);updEvCalc()"/>
+
+      <!-- Prix de Vente (per unit) -->
+      <input type="number" id="ep-price-${i}" value="${priceVente.toFixed(2)}" min="0" step="0.01" placeholder="0.00" style="font-size:11px;text-align:right;background:none;border:none;padding:0;color:var(--gold);font-weight:600" oninput="updExtraProd(${i},'priceHT',parseFloat(this.value)||0);updEvCalc()"/>
+
+      <!-- Quantité -->
+      <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="1" placeholder="0" style="font-size:11px;text-align:center;background:none;border:none;padding:0" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0);updEvCalc()"/>
+
+      <!-- Total -->
       <div style="text-align:right;font-weight:600;color:var(--gold)">${total.toFixed(2)}€</div>
-      <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">×</button>
+
+      <!-- Delete Button -->
+      <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0;line-height:1">×</button>
     </div>`;
   }).join('');
+
+  el.innerHTML=headerHtml+rows;
 }
 
 function epSearch(i,val){
-  updExtraProd(i,'label',val);
+  updExtraProd(i,'productType',val);
   const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
   if(!val.trim()){sugg.style.display='none';return;}
   const q=val.toLowerCase();
@@ -4172,16 +4202,16 @@ function epSearch(i,val){
   sugg.style.display='block';
   sugg.innerHTML=matches.map(p=>{
     const label=(p.brand?p.brand+' — ':'')+p.productType;
-    return`<div onmousedown="epSelect(${i},'${label.replace(/'/g,"\\'")}','${(p.productType||'').replace(/'/g,"\\'")}','${(p.brand||'').replace(/'/g,"\\'")}','${p.unit||'pc'}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    const costPerUnit=p.priceHT&&p.qty?(p.priceHT/p.qty):0;
+    return`<div onmousedown="epSelect(${i},'${label.replace(/'/g,"\\'")}','${(p.productType||'').replace(/'/g,"\\'")}','${(p.brand||'').replace(/'/g,"\\'")}','${p.unit||'pc'}',${costPerUnit.toFixed(4)})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       ${p.brand?`<strong>${p.brand}</strong> — `:''}${p.productType} <span style="color:var(--text3);font-size:10px">[${p.unit||'?'}]</span>
     </div>`;
   }).join('');
 }
 
-function epSelect(i,label,productType,brand,unit){
+function epSelect(i,label,productType,brand,unit,costPerUnit){
   if(!window._evExtraProducts[i])return;
-  const prod=state.products.find(p=>p.productType===productType&&p.brand===brand)||state.products.find(p=>p.productType===productType);
-  const costHT=prod&&prod.priceHT&&prod.qty?(prod.priceHT/prod.qty):0;
+  const costHT=costPerUnit||0;
   Object.assign(window._evExtraProducts[i],{label,productType,brand,unit,name:label,costHT:parseFloat(costHT.toFixed(4))});
   _renderExtraProds();
   setTimeout(()=>{const q=document.getElementById('ep-price-'+i);if(q){q.focus();q.select();}},50);
