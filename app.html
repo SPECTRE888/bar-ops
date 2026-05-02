@@ -6423,6 +6423,35 @@ function buildEventSummaryHTML(ev){
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
   const cl=state.clients.find(c=>c.id===ev.clientId);
 
+  // Aggregate totals across all cocktails
+  const glassNeeds={}, ingNeeds={}, consNeeds={};
+  (ev.cocktails||[]).forEach(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);
+    if(!c)return;
+    const qty=cfg.qty||0;
+    // Verres
+    if(c.glass){
+      glassNeeds[c.glass]=(glassNeeds[c.glass]||0)+qty;
+    }
+    // Ingrédients
+    (c.ingredients||[]).forEach(i=>{
+      const key=i.name||i.productType||'';
+      if(!key)return;
+      if(!ingNeeds[key]) ingNeeds[key]={total:0,unit:i.unit||'cl'};
+      ingNeeds[key].total+=i.qty*qty;
+    });
+    // Consommables
+    (c.consumables||[]).forEach(i=>{
+      const key=i.name||i.productType||'';
+      if(!key)return;
+      if(!consNeeds[key]) consNeeds[key]={total:0,unit:i.unit||''};
+      consNeeds[key].total+=i.qty*qty;
+    });
+  });
+  const glassRows=Object.entries(glassNeeds).map(([g,n])=>`<tr><td>${g}</td><td style="text-align:right;font-weight:600">${n}</td></tr>`).join('');
+  const ingRows=Object.entries(ingNeeds).map(([n,v])=>`<tr><td>${n}</td><td style="text-align:right;font-weight:600">${v.total%1===0?v.total:v.total.toFixed(1)} ${v.unit}</td></tr>`).join('');
+  const consRows=Object.entries(consNeeds).map(([n,v])=>`<tr><td>${n}</td><td style="text-align:right;font-weight:600">${v.total%1===0?v.total:v.total.toFixed(1)} ${v.unit}</td></tr>`).join('');
+
   const techLabel={none:'Direct',stirred:'Mélangé',shaken:'Shaké',blended:'Blendé'};
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
@@ -6553,6 +6582,28 @@ function buildEventSummaryHTML(ev){
         </div>`;
       }).join('')}
     </div>`:''}
+
+    <h3 style="margin-top:30px;margin-bottom:15px;padding-top:20px;border-top:2px solid #e0e0e0">Récapitulatif matériel</h3>
+    <div style="display:grid;grid-template-columns:${glassRows?'1fr ':''}1fr${consRows?' 1fr':''};gap:20px;margin-bottom:20px">
+      ${glassRows?`<div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px">Verrerie</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tbody>${glassRows}</tbody>
+        </table>
+      </div>`:''}
+      ${ingRows?`<div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px">Produits</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tbody>${ingRows}</tbody>
+        </table>
+      </div>`:''}
+      ${consRows?`<div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px">Consommables</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tbody>${consRows}</tbody>
+        </table>
+      </div>`:''}
+    </div>
 
     ${ev.notes?`<div style="margin-top:15px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
   </div>
