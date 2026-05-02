@@ -3470,6 +3470,7 @@ function newEv(){editEvId=null;showEvForm({});}
 function editEv(id){editEvId=id;showEvForm(state.events.find(x=>x.id===id)||{});}
 
 function showEvForm(ev){
+  window._evExtraProducts=JSON.parse(JSON.stringify(ev.extraProducts||[]));
   document.getElementById('h-events').textContent=ev.id?ev.name:t('btn_new_event').replace('+ ','');
   document.getElementById('btn-evback').style.display='flex';
   document.getElementById('btn-evnew').style.display='none';
@@ -3629,9 +3630,27 @@ function showEvForm(ev){
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
-    <div class="card">
-      <div class="ctitle">${t('ev_cocktails_qty')}</div>
-      <div id="ev-picker"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card">
+        <div class="ctitle">${t('ev_cocktails_qty')}</div>
+        <div id="ev-picker"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">Produits supplémentaires</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px">Bouteilles, ingrédients ou matériel hors catalogue</div>
+        <div id="ev-extra-products">
+          ${(ev.extraProducts||[]).map((p,i)=>`
+          <div class="ep-row" style="display:grid;grid-template-columns:1fr 60px 50px 28px;gap:6px;align-items:center;margin-bottom:6px">
+            <input value="${p.name||''}" placeholder="Vodka Grey Goose..." style="font-size:11px" oninput="updExtraProd(${i},'name',this.value)"/>
+            <input type="number" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0)"/>
+            <select style="font-size:11px;padding:4px" onchange="updExtraProd(${i},'unit',this.value)">
+              ${['pc','cl','L','g','kg','ml'].map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
+            </select>
+            <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0">×</button>
+          </div>`).join('')}
+        </div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addExtraProd()">+ Ajouter</button>
+      </div>
     </div>
 
     <!-- SECTION 3: STAFF -->
@@ -4125,6 +4144,34 @@ function updEvCalc(){
   if(ttcEl) ttcEl.textContent=revTTC>0?'soit '+revTTC.toFixed(0)+'€ TTC':'';
 }
 
+window._evExtraProducts=window._evExtraProducts||[];
+function _renderExtraProds(){
+  const el=document.getElementById('ev-extra-products');if(!el)return;
+  const UNITS=['pc','cl','L','g','kg','ml'];
+  el.innerHTML=(window._evExtraProducts||[]).map((p,i)=>`
+    <div class="ep-row" style="display:grid;grid-template-columns:1fr 60px 50px 28px;gap:6px;align-items:center;margin-bottom:6px">
+      <input value="${(p.name||'').replace(/"/g,'&quot;')}" placeholder="Vodka Grey Goose..." style="font-size:11px" oninput="updExtraProd(${i},'name',this.value)"/>
+      <input type="number" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0)"/>
+      <select style="font-size:11px;padding:4px" onchange="updExtraProd(${i},'unit',this.value)">
+        ${UNITS.map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
+      </select>
+      <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0">×</button>
+    </div>`).join('');
+}
+function addExtraProd(){
+  window._evExtraProducts=window._evExtraProducts||[];
+  window._evExtraProducts.push({name:'',qty:0,unit:'pc'});
+  _renderExtraProds();
+}
+function updExtraProd(i,k,v){
+  if(window._evExtraProducts&&window._evExtraProducts[i]) window._evExtraProducts[i][k]=v;
+}
+function removeExtraProd(i){
+  window._evExtraProducts=window._evExtraProducts||[];
+  window._evExtraProducts.splice(i,1);
+  _renderExtraProds();
+}
+
 function saveEv(){
   const name=document.getElementById('ef-name')?.value.trim();
   if(!name){alert('Please enter an event name.');return;}
@@ -4226,6 +4273,7 @@ function saveEv(){
     remisePct:parseFloat(document.getElementById('ef-remise-pct')?.value)||0,
     remiseHT:parseFloat(document.getElementById('ef-remise-ht')?.value)||0,
     cocktails:Object.entries(sel).map(([id,cfg])=>({id:parseInt(id),qty:cfg.qty,pct:cfg.pct||0,glass:cfg.glass||'',glassId:cfg.glassId||null,glassCostHT:cfg.glassCostHT||0,iceTypeId:cfg.iceTypeId??null,serviceIce:cfg.serviceIce??null})),
+    extraProducts:(window._evExtraProducts||[]).filter(p=>p.name&&p.qty),
     exchanges:document.getElementById('ef-exchanges')?.value||'',
     exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||'',
     dryIce:document.getElementById('ef-dryice')?.checked||false,
@@ -6465,6 +6513,7 @@ function buildEventSummaryHTML(ev){
   const glassRows=Object.entries(glassNeeds).map(([g,n])=>`<tr><td>${g}</td><td style="text-align:right;font-weight:600">${n} verres</td></tr>`).join('');
   const ingRows=Object.entries(ingNeeds).map(([n,v])=>packRow(n,v)).join('');
   const consRows=Object.entries(consNeeds).map(([n,v])=>packRow(n,v)).join('');
+  const extraRows=(ev.extraProducts||[]).filter(p=>p.name&&p.qty).map(p=>`<tr><td>${p.name}</td><td style="text-align:right;font-weight:600">${p.qty} ${p.unit}</td></tr>`).join('');
   const iceRows=Object.values(iceNeeds).map(v=>{
     const kg=parseFloat(v.kgTotal.toFixed(2));
     if(v.minOrder){
@@ -6622,6 +6671,10 @@ function buildEventSummaryHTML(ev){
       ${consRows?`<div style="grid-column:1/-1">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px">Consommables</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${consRows}</tbody></table>
+      </div>`:''}
+      ${extraRows?`<div style="grid-column:1/-1">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px">Produits supplémentaires</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${extraRows}</tbody></table>
       </div>`:''}
     </div>
 
