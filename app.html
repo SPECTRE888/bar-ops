@@ -1183,7 +1183,7 @@ let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], orders:{}, profile:{}, cardTemplate:{brandName:'',logo:'',colorPrimary:'#c4a46b',showPrice:true,showIngredients:true,showContact:false}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], orders:{}, profile:{}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -6423,26 +6423,19 @@ function openEventHTML(evId){
 
 function previewEventCard(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  const tpl=state.cardTemplate;
+  const cardImg=state.profile?.cardTemplate;
   const cktList=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    return `<div style="padding:10px 0;border-bottom:1px solid #ddd"><div style="font-weight:600;color:${tpl.colorPrimary}">${c.name}</div>
-      ${tpl.showPrice?`<div style="font-size:12px;color:#666">${(c.priceHT||0).toFixed(2)}€</div>`:''}
-      ${tpl.showIngredients?`<div style="font-size:11px;color:#888">${(c.ingredients||[]).map(i=>i.name).join(', ')}</div>`:''}
-    </div>`;
+    return `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.2)"><strong>${c.name}</strong></div>`;
   }).join('');
 
-  const preview=`<div style="background:${tpl.colorPrimary};color:#fff;border-radius:8px 8px 0 0;padding:20px;text-align:center">
-    ${tpl.logo?`<img src="${tpl.logo}" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px"/>`:''}
-    <h2 style="margin:0;font-size:20px">${tpl.brandName||'Carte de cocktails'}</h2>
-  </div>
-  <div style="padding:15px;background:#fff;border-radius:0 0 8px 8px">
-    <h3 style="color:${tpl.colorPrimary};border-bottom:2px solid ${tpl.colorPrimary};padding-bottom:8px;margin:0 0 10px">Cocktails - ${ev.name}</h3>
-    ${cktList}
-    ${tpl.showContact?`<div style="margin-top:15px;padding-top:15px;border-top:1px solid #ddd;text-align:center;color:#666;font-size:11px">
-      ${window._userEmail||''}<br>${state.profile?.phone||''}<br>${state.profile?.barName||''}
-    </div>`:''}
+  const preview=`<div style="position:relative;display:inline-block;width:100%;max-width:400px">
+    ${cardImg?`<img src="${cardImg}" style="width:100%;display:block;border-radius:8px"/>`:`<div style="background:#ddd;padding:40px;text-align:center;border-radius:8px">Aucune carte uploadée</div>`}
+    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:12px;border-radius:0 0 8px 8px">
+      <div style="font-weight:bold;margin-bottom:8px">${ev.name}</div>
+      <div style="font-size:12px">${cktList}</div>
+    </div>
   </div>`;
 
   showModal('Aperçu - Carte de cocktails',preview,'Fermer');
@@ -6450,29 +6443,25 @@ function previewEventCard(evId){
 
 function exportEventCard(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  const tpl=state.cardTemplate;
+  const cardImg=state.profile?.cardTemplate;
   const cktList=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    return `<div style="padding:10px 0;border-bottom:1px solid #ddd"><div style="font-weight:600;color:${tpl.colorPrimary}">${c.name}</div>
-      ${tpl.showPrice?`<div style="font-size:12px;color:#666">${(c.priceHT||0).toFixed(2)}€</div>`:''}
-      ${tpl.showIngredients?`<div style="font-size:11px;color:#888">${(c.ingredients||[]).map(i=>i.name).join(', ')}</div>`:''}
-    </div>`;
+    return `<li>${c.name}</li>`;
   }).join('');
 
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;margin:0;padding:20px;background:#f5f5f5}
-  .card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}</style></head><body>
-  <div class="card" style="max-width:600px;margin:0 auto">
-    <div style="text-align:center;padding:20px;background:${tpl.colorPrimary};color:#fff;border-radius:8px 8px 0 0">
-      ${tpl.logo?`<img src="${tpl.logo}" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px"/>`:''}
-      <h1 style="margin:0;font-size:28px">${tpl.brandName||'Carte de cocktails'}</h1>
-    </div>
-    <div style="padding:20px">
-      <h2 style="color:${tpl.colorPrimary};border-bottom:2px solid ${tpl.colorPrimary};padding-bottom:10px">Cocktails - ${ev.name}</h2>
-      ${cktList}
-      ${tpl.showContact?`<div style="margin-top:20px;padding-top:20px;border-top:1px solid #ddd;text-align:center;color:#666;font-size:12px">
-        ${window._userEmail||''}<br>${state.profile?.phone||''}<br>${state.profile?.barName||''}
-      </div>`:''}
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;margin:0;padding:20px}
+  .container{position:relative;max-width:600px;margin:0 auto}
+  img{width:100%;border-radius:8px}
+  .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);color:#fff;padding:20px;border-radius:0 0 8px 8px}
+  h2{margin:0 0 10px;font-size:20px}
+  ul{margin:0;padding-left:20px}
+  </style></head><body>
+  <div class="container">
+    ${cardImg?`<img src="${cardImg}" alt="Carte"/>`:'<div style="background:#ccc;padding:100px;text-align:center">Aucune carte uploadée</div>'}
+    <div class="overlay">
+      <h2>${ev.name}</h2>
+      <ul>${cktList}</ul>
     </div>
   </div>
   </body></html>`;
@@ -6981,7 +6970,6 @@ function renderProfile(){
   const el=document.getElementById('profile-content');if(!el)return;
   const email=window._userEmail||cloudUser?.email||cloudUser?.user?.email||'';
   const isConnected=!!email;
-  const tpl=state.cardTemplate;
 
   el.innerHTML=`<div style="max-width:1200px">
 
@@ -7139,31 +7127,14 @@ function renderProfile(){
     <div class="card" style="margin-top:40px;margin-bottom:40px;padding:14px">
       <div class="ctitle" style="margin-bottom:12px">Ma carte de cocktail</div>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
-          <div>
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Nom du bar</label>
-            <input id="tpl-brand" value="${tpl.brandName}" placeholder="Mon bar" style="width:100%;font-size:11px" oninput="updCardTpl('brandName',this.value)"/>
-          </div>
-          <div>
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Logo</label>
-            <input type="file" accept="image/*" onchange="uploadCardLogo(this)" style="width:100%;font-size:10px"/>
-          </div>
-          <div>
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Couleur</label>
-            <input type="color" id="tpl-color" value="${tpl.colorPrimary}" style="width:100%;height:30px;cursor:pointer;border:1px solid var(--border)" oninput="updCardTpl('colorPrimary',this.value)"/>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;justify-content:flex-end">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px"><input type="checkbox" ${tpl.showPrice?'checked':''} onchange="updCardTpl('showPrice',this.checked)"/> Prix</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px"><input type="checkbox" ${tpl.showIngredients?'checked':''} onchange="updCardTpl('showIngredients',this.checked)"/> Ingredients</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:10px"><input type="checkbox" ${tpl.showContact?'checked':''} onchange="updCardTpl('showContact',this.checked)"/> Contact</label>
-          </div>
+        <div style="display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:20px;min-height:200px;border:2px dashed var(--border)">
+          ${state.profile?.cardTemplate?`<img src="${state.profile.cardTemplate}" style="max-width:100%;max-height:200px;object-fit:contain"/>`:`<div style="font-size:12px;color:var(--text3);text-align:center">Aucune carte<br><small>Uploadez votre design</small></div>`}
         </div>
-        <div id="card-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;min-height:200px;display:flex;flex-direction:column;gap:6px;font-size:10px"></div>
+        <input id="card-file-input" type="file" accept="image/*" onchange="uploadCardTemplate(this)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;cursor:pointer"/>
       </div>
     </div>
 
   </div>`;
-  setTimeout(updateCardPreview, 100);
 }
 
 function updProfile(k,v){
@@ -7210,43 +7181,17 @@ function toggleSendgridEdit(show){
   if(edit) edit.style.display=show?'block':'none';
 }
 
-function updCardTpl(key,val){
-  if(!state.cardTemplate) state.cardTemplate={brandName:'',logo:'',colorPrimary:'#c4a46b',showPrice:true,showIngredients:true,showContact:false};
-  state.cardTemplate[key]=val;
-  save();
-  updateCardPreview();
-}
-
-function uploadCardLogo(input){
+function uploadCardTemplate(input){
   const file=input.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=e=>{
-    state.cardTemplate.logo=e.target.result;
+    if(!state.profile) state.profile={};
+    state.profile.cardTemplate=e.target.result;
     save();
-    updateCardPreview();
+    renderProfile();
+    showToastModal('Carte de cocktail uploadée');
   };
   r.readAsDataURL(file);
-}
-
-function updateCardPreview(){
-  const p=document.getElementById('card-preview');if(!p)return;
-  const t=state.cardTemplate;
-  p.innerHTML=`
-    <div style="background:${t.colorPrimary};color:#fff;padding:8px;border-radius:4px;text-align:center">
-      ${t.logo?`<img src="${t.logo}" style="width:40px;height:40px;border-radius:50%;margin-bottom:4px"/>`:''}
-      <div style="font-weight:600;font-size:12px">${t.brandName||'Mon bar'}</div>
-    </div>
-    <div style="flex:1;border-top:1px solid var(--border);padding-top:8px;font-size:10px;color:var(--text2)">
-      <div style="font-weight:500;margin-bottom:6px;color:${t.colorPrimary}">Cocktails</div>
-      ${state.cocktails.slice(0,3).map(c=>`
-        <div style="padding:6px 0;border-bottom:1px solid var(--border2)">
-          <div style="font-weight:500">${c.name}</div>
-          ${t.showPrice?`<div style="color:var(--text3);font-size:9px">${(c.priceHT||0).toFixed(2)}€</div>`:''}
-          ${t.showIngredients?`<div style="color:var(--text3);font-size:9px">${(c.ingredients||[]).length} ingrédients</div>`:''}
-        </div>
-      `).join('')}
-    </div>
-  `;
 }
 
 function confirmSendgridEdit(){
