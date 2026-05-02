@@ -6422,11 +6422,23 @@ function buildEventSummaryHTML(ev){
   const mg=rev-cost;
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
   const cl=state.clients.find(c=>c.id===ev.clientId);
+
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
     const price=((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))).toFixed(2);
-    return`<tr><td>${c.name}</td><td style="text-align:right">${cfg.qty}</td><td style="text-align:right">${price}€</td><td style="text-align:right">${(cfg.qty*price).toFixed(0)}€</td></tr>`;
+    const glass=state.glasses.find(g=>g.id===c.glassId);
+    const ings=(c.ingredients||[]).map(i=>{
+      const prod=state.products.find(p=>p.id===i.id);
+      return prod?`${prod.name}`:'';
+    }).filter(x=>x).join(', ');
+    return`<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #ddd">
+      <div style="font-weight:600;font-size:14px;color:#333">${c.name} <span style="color:#999;font-size:12px;font-weight:400">x${cfg.qty}</span></div>
+      ${c.recipeBase?`<div style="font-size:11px;color:#666;margin:6px 0"><strong>Préparation:</strong> ${c.recipeBase}</div>`:''}
+      ${ings?`<div style="font-size:11px;color:#666;margin:6px 0"><strong>Ingrédients:</strong> ${ings}</div>`:''}
+      ${glass?`<div style="font-size:11px;color:#666"><strong>Verre:</strong> ${glass.name}</div>`:''}
+      <div style="font-size:12px;font-weight:600;color:#d4a574;margin-top:6px">PU: ${price}€ | Total: ${(cfg.qty*price).toFixed(0)}€</div>
+    </div>`;
   }).join('');
   return`
 <!DOCTYPE html>
@@ -6514,32 +6526,37 @@ function buildEventSummaryHTML(ev){
       </div>
     </div>
 
-    <h3 style="margin-top:15px">Configuration bar</h3>
-    ${ev.barType?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px">
+    <h3 style="margin-top:25px;margin-bottom:15px">Cocktails & Recettes</h3>
+    <div style="background:#f9f9f9;padding:15px;border-radius:6px;margin-bottom:20px">
+      ${cktDetails}
+    </div>
+
+    ${ev.barType?`<h3 style="margin-top:25px">Configuration bar</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px">
       <div><strong>Type:</strong> ${ev.barType}</div>
       <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
       <div><strong>Prix:</strong> ${(ev.barPrice||0).toFixed(2)}€</div>
     </div>`:''}
-    <table>
-      <thead>
-        <tr><th>Cocktail</th><th style="text-align:right">Qty</th><th style="text-align:right">PU HT</th><th style="text-align:right">Total</th></tr>
-      </thead>
-      <tbody>
-        ${cktDetails}
-        <tr class="total-row">
-          <td colspan="3" style="text-align:right">Ventes cocktails:</td>
-          <td style="text-align:right">${((ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))):0);},0)).toFixed(0)}€</td>
-        </tr>
-        ${ev.barPrice?`<tr class="total-row">
-          <td colspan="3" style="text-align:right">Prestation bar:</td>
-          <td style="text-align:right">${(ev.barPrice||0).toFixed(0)}€</td>
-        </tr>`:''}
-        ${(ev.deliveryBillHT||ev.extraBillHT)?`<tr class="total-row">
-          <td colspan="3" style="text-align:right">Frais additionnels:</td>
-          <td style="text-align:right">${((ev.deliveryBillHT||0)+(ev.extraBillHT||0)).toFixed(0)}€</td>
-        </tr>`:''}
-      </tbody>
-    </table>
+
+    ${(ev.assignedStaff||[]).length?`<h3 style="margin-top:25px">Équipe assignée</h3>
+    <div style="display:grid;gap:12px;margin-bottom:20px">
+      ${(ev.assignedStaff||[]).map(sid=>{
+        const s=state.staffItems.find(x=>x.id===sid);
+        if(!s)return'';
+        return`<div style="padding:12px;background:#f9f9f9;border-radius:6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
+          <div><strong>${s.name}</strong><br><small style="color:#999">${s.type||'—'}</small></div>
+          <div><small style="color:#999">Téléphone</small><br>${s.phone||'—'}</div>
+          <div><small style="color:#999">Dispo</small><br><span style="color:${(ev.staffStatus||{})[sid]?.confirmed?'#5a9b6f':'#999'}">${(ev.staffStatus||{})[sid]?.confirmed?'✓ Oui':'Confirmé'}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+
+    <h3 style="margin-top:25px">Résumé financier</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px;font-size:13px">
+      <div><strong>Ventes cocktails:</strong><br>${((ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+((cfg.glassCostHT||0))):0);},0)).toFixed(0)}€</div>
+      ${ev.barPrice?`<div><strong>Prestation bar:</strong><br>${(ev.barPrice||0).toFixed(0)}€</div>`:''}
+      ${(ev.deliveryBillHT||ev.extraBillHT)?`<div><strong>Frais additionnels:</strong><br>${((ev.deliveryBillHT||0)+(ev.extraBillHT||0)).toFixed(0)}€</div>`:''}
+    </div>
 
     <div class="financial">
       <div class="financial-item">
