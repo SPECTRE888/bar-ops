@@ -1510,6 +1510,10 @@ function renderCatalogue(){
 }
 
 function catAdd(){
+  if(window._isDemo){
+    alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
+    return;
+  }
   const cat=document.getElementById('cat-filter')?.value||'Spirit';
   if(cat==='Glassware') addGlass();
   else if(cat==='Ice') addIce();
@@ -1673,6 +1677,10 @@ function getCurrentCat(){
 }
 
 function addProduct(cat){
+  if(window._isDemo){
+    alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
+    return;
+  }
   const def=CAT_DEFAULTS[cat]||{qty:1,unit:'pc'};
   state.products.push({id:Date.now(),category:cat,productType:'',brand:'',priceHT:0,qty:def.qty,unit:def.unit});
   save();
@@ -1820,7 +1828,7 @@ function renderCatPage(cat){
 // ════════════════════════════════════════════════════════
 // GLASSWARE & ICE
 // ════════════════════════════════════════════════════════
-function addGlass(){state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
+function addGlass(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
 function delGlass(id){if(!confirm('Supprimer?'))return;state.glasses=state.glasses.filter(x=>x.id!==id);save();renderGlassware();}
 function updGlass(id,k,v){const g=state.glasses.find(x=>x.id===id);if(g){g[k]=v;save();}}
 function resetDefaultGlass(glassId){
@@ -1830,7 +1838,7 @@ function resetDefaultGlass(glassId){
   save();renderGlassware();
 }
 
-function addIce(){state.iceTypes.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
+function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
 function delIce(id){if(!confirm('Supprimer?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
 function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();}}
 
@@ -1909,6 +1917,7 @@ function updStaffType(id, type){
   save(); renderStaff();
 }
 function addStaff(){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux membres du staff.');return;}
   const d=STAFF_DEFAULTS['Bartender'];
   state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,notes:''});
   save();renderStaff();
@@ -5549,16 +5558,19 @@ function testSendContact(id){
 // DRESS CODES
 // ════════════════════════════════════════════════════════
 function addDressCode(name,desc){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   if(state.dressCodes.find(d=>d.name===name))return;
   state.dressCodes.push({id:Date.now(),name,desc,active:true});
   save();renderDressCodes();
 }
 function addDressCodeModal(){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   state.dressCodes.push({id:Date.now(),name:'',desc:'',active:true});
   save();renderDressCodes();
 }
 
 function addDressCodeCustom(){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   const name=document.getElementById('dc-custom-name')?.value.trim()||'Nouvelle tenue';
   const desc=document.getElementById('dc-custom-desc')?.value.trim();
   state.dressCodes.push({id:Date.now(),name,desc:desc||'',active:true});
@@ -5814,6 +5826,7 @@ function scrollToPlanEvent(dateStr){
 // CLIENTS
 // ════════════════════════════════════════════════════════
 function addClient(){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux clients.');return;}
   state.clients.push({id:Date.now(),name:'',company:'',email:'',phone:'',address:'',notes:'',events:[]});
   save();renderClients();
 }
@@ -6006,6 +6019,7 @@ function renderSuppliers(){
 }
 
 function addSupplier(){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux fournisseurs.');return;}
   const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
   const modal=document.createElement('div');
   modal.id='supplier-modal';
@@ -7551,6 +7565,7 @@ function toggleCoursesDone(evId){
 // BAR & MATÉRIEL
 // ════════════════════════════════════════════════════════
 function addBarItem(){
+  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux bars.');return;}
   if(!state.barItems) state.barItems=[];
   state.barItems.push({id:Date.now(),name:'',lengthM:0,priceHT:0,color:'',theme:'',style:'',transport:'',setup:'',notes:'',available:true,photo:''});
   save();renderBarItems();
