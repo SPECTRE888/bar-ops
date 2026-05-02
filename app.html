@@ -4139,42 +4139,38 @@ window._evExtraProducts=window._evExtraProducts||[];
 function _renderExtraProds(){
   const el=document.getElementById('ev-extra-products');if(!el)return;
   el.innerHTML=(window._evExtraProducts||[]).map((p,i)=>`
-    <div style="display:grid;grid-template-columns:1fr 70px 32px;gap:6px;align-items:center;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr 70px 28px;gap:6px;align-items:start;margin-bottom:10px">
       <div style="position:relative">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:0">
-          <input id="ep-type-${i}" value="${(p.productType||p.name||'').replace(/"/g,'&quot;')}" placeholder="Type (Vodka, Gin...)" style="font-size:11px" oninput="epSearch(${i},this.value)"/>
-          <input id="ep-brand-${i}" value="${(p.brand||'').replace(/"/g,'&quot;')}" placeholder="Marque" style="font-size:11px" oninput="updExtraProd(${i},'brand',this.value)"/>
-        </div>
-        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:11px"></div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">${p.unit?`Unité: <strong>${p.unit}</strong>`:''}</div>
+        <input id="ep-search-${i}" value="${(p.label||'').replace(/"/g,'&quot;')}" placeholder="Chercher un produit..." style="font-size:11px;width:100%" oninput="epSearch(${i},this.value)"/>
+        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:150px;overflow-y:auto;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+        ${p.unit?`<div style="font-size:10px;color:var(--text3);margin-top:3px">→ <strong>${p.unit}</strong></div>`:''}
       </div>
       <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px;text-align:center" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0)"/>
-      <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">×</button>
+      <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 0">×</button>
     </div>`).join('');
 }
 
 function epSearch(i,val){
-  updExtraProd(i,'productType',val);
-  updExtraProd(i,'name',val);
+  updExtraProd(i,'label',val);
   const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
   if(!val.trim()){sugg.style.display='none';return;}
-  const matches=state.products.filter(p=>(p.productType||'').toLowerCase().includes(val.toLowerCase())||(p.brand||'').toLowerCase().includes(val.toLowerCase())).slice(0,8);
+  const q=val.toLowerCase();
+  const matches=state.products.filter(p=>
+    (p.productType||'').toLowerCase().includes(q)||(p.brand||'').toLowerCase().includes(q)
+  ).slice(0,8);
   if(!matches.length){sugg.style.display='none';return;}
   sugg.style.display='block';
-  sugg.innerHTML=matches.map(p=>`<div onclick="epSelect(${i},${JSON.stringify((p.productType||'').replace(/"/g,'')+(p.brand?' — '+p.brand:''))},${JSON.stringify(p.productType||'')},${JSON.stringify(p.brand||'')},${JSON.stringify(p.unit||'pc')})" style="padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-    <strong>${p.productType}</strong>${p.brand?` — ${p.brand}`:''} <span style="color:var(--text3);font-size:10px">(${p.unit||'?'})</span>
-  </div>`).join('');
+  sugg.innerHTML=matches.map(p=>{
+    const label=(p.brand?p.brand+' — ':'')+p.productType;
+    return`<div onmousedown="epSelect(${i},'${label.replace(/'/g,"\\'")}','${(p.productType||'').replace(/'/g,"\\'")}','${(p.brand||'').replace(/'/g,"\\'")}','${p.unit||'pc'}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      ${p.brand?`<strong>${p.brand}</strong> — `:''}${p.productType} <span style="color:var(--text3);font-size:10px">[${p.unit||'?'}]</span>
+    </div>`;
+  }).join('');
 }
 
 function epSelect(i,label,productType,brand,unit){
   if(!window._evExtraProducts[i])return;
-  window._evExtraProducts[i].name=label;
-  window._evExtraProducts[i].productType=productType;
-  window._evExtraProducts[i].brand=brand;
-  window._evExtraProducts[i].unit=unit;
-  document.getElementById('ep-type-'+i).value=productType;
-  document.getElementById('ep-brand-'+i).value=brand;
-  const sugg=document.getElementById('ep-sugg-'+i);if(sugg)sugg.style.display='none';
+  Object.assign(window._evExtraProducts[i],{label,productType,brand,unit,name:label});
   _renderExtraProds();
   setTimeout(()=>{const q=document.getElementById('ep-qty-'+i);if(q)q.focus();},50);
 }
