@@ -3638,17 +3638,7 @@ function showEvForm(ev){
       <div class="card">
         <div class="ctitle">Produits supplémentaires</div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:10px">Bouteilles, ingrédients ou matériel hors catalogue</div>
-        <div id="ev-extra-products">
-          ${(ev.extraProducts||[]).map((p,i)=>`
-          <div class="ep-row" style="display:grid;grid-template-columns:1fr 60px 50px 28px;gap:6px;align-items:center;margin-bottom:6px">
-            <input value="${p.name||''}" placeholder="Vodka Grey Goose..." style="font-size:11px" oninput="updExtraProd(${i},'name',this.value)"/>
-            <input type="number" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0)"/>
-            <select style="font-size:11px;padding:4px" onchange="updExtraProd(${i},'unit',this.value)">
-              ${['pc','cl','L','g','kg','ml'].map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
-            </select>
-            <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0">×</button>
-          </div>`).join('')}
-        </div>
+        <div id="ev-extra-products"></div>
         <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addExtraProd()">+ Ajouter</button>
       </div>
     </div>
@@ -3785,7 +3775,7 @@ function showEvForm(ev){
   (ev.cocktails||[]).forEach(c=>{
     el._sel[c.id]={qty:c.qty||0,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};
   });
-  renderEvPicker();updEvCalc();
+  renderEvPicker();updEvCalc();_renderExtraProds();
 }
 
 function renderEvPicker(){
@@ -4145,29 +4135,59 @@ function updEvCalc(){
 }
 
 window._evExtraProducts=window._evExtraProducts||[];
+
 function _renderExtraProds(){
   const el=document.getElementById('ev-extra-products');if(!el)return;
-  const UNITS=['pc','cl','L','g','kg','ml'];
   el.innerHTML=(window._evExtraProducts||[]).map((p,i)=>`
-    <div class="ep-row" style="display:grid;grid-template-columns:1fr 60px 50px 28px;gap:6px;align-items:center;margin-bottom:6px">
-      <input value="${(p.name||'').replace(/"/g,'&quot;')}" placeholder="Vodka Grey Goose..." style="font-size:11px" oninput="updExtraProd(${i},'name',this.value)"/>
-      <input type="number" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0)"/>
-      <select style="font-size:11px;padding:4px" onchange="updExtraProd(${i},'unit',this.value)">
-        ${UNITS.map(u=>`<option${u===p.unit?' selected':''}>${u}</option>`).join('')}
-      </select>
-      <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0">×</button>
+    <div style="display:grid;grid-template-columns:1fr 70px 32px;gap:6px;align-items:center;margin-bottom:8px">
+      <div style="position:relative">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:0">
+          <input id="ep-type-${i}" value="${(p.productType||p.name||'').replace(/"/g,'&quot;')}" placeholder="Type (Vodka, Gin...)" style="font-size:11px" oninput="epSearch(${i},this.value)"/>
+          <input id="ep-brand-${i}" value="${(p.brand||'').replace(/"/g,'&quot;')}" placeholder="Marque" style="font-size:11px" oninput="updExtraProd(${i},'brand',this.value)"/>
+        </div>
+        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:11px"></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${p.unit?`Unité: <strong>${p.unit}</strong>`:''}</div>
+      </div>
+      <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px;text-align:center" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0)"/>
+      <button onclick="removeExtraProd(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">×</button>
     </div>`).join('');
 }
+
+function epSearch(i,val){
+  updExtraProd(i,'productType',val);
+  updExtraProd(i,'name',val);
+  const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
+  if(!val.trim()){sugg.style.display='none';return;}
+  const matches=state.products.filter(p=>(p.productType||'').toLowerCase().includes(val.toLowerCase())||(p.brand||'').toLowerCase().includes(val.toLowerCase())).slice(0,8);
+  if(!matches.length){sugg.style.display='none';return;}
+  sugg.style.display='block';
+  sugg.innerHTML=matches.map(p=>`<div onclick="epSelect(${i},${JSON.stringify((p.productType||'').replace(/"/g,'')+(p.brand?' — '+p.brand:''))},${JSON.stringify(p.productType||'')},${JSON.stringify(p.brand||'')},${JSON.stringify(p.unit||'pc')})" style="padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    <strong>${p.productType}</strong>${p.brand?` — ${p.brand}`:''} <span style="color:var(--text3);font-size:10px">(${p.unit||'?'})</span>
+  </div>`).join('');
+}
+
+function epSelect(i,label,productType,brand,unit){
+  if(!window._evExtraProducts[i])return;
+  window._evExtraProducts[i].name=label;
+  window._evExtraProducts[i].productType=productType;
+  window._evExtraProducts[i].brand=brand;
+  window._evExtraProducts[i].unit=unit;
+  document.getElementById('ep-type-'+i).value=productType;
+  document.getElementById('ep-brand-'+i).value=brand;
+  const sugg=document.getElementById('ep-sugg-'+i);if(sugg)sugg.style.display='none';
+  _renderExtraProds();
+  setTimeout(()=>{const q=document.getElementById('ep-qty-'+i);if(q)q.focus();},50);
+}
+
 function addExtraProd(){
   window._evExtraProducts=window._evExtraProducts||[];
-  window._evExtraProducts.push({name:'',qty:0,unit:'pc'});
+  window._evExtraProducts.push({name:'',productType:'',brand:'',qty:0,unit:'pc'});
   _renderExtraProds();
 }
 function updExtraProd(i,k,v){
   if(window._evExtraProducts&&window._evExtraProducts[i]) window._evExtraProducts[i][k]=v;
 }
 function removeExtraProd(i){
-  window._evExtraProducts=window._evExtraProducts||[];
   window._evExtraProducts.splice(i,1);
   _renderExtraProds();
 }
