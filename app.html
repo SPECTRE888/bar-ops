@@ -1182,7 +1182,7 @@ let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], orders:{}, profile:{}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], orders:{}, profile:{}, cardTemplate:{brandName:'',logo:'',colorPrimary:'#c4a46b',showPrice:true,showIngredients:true,showContact:false}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -4812,6 +4812,12 @@ function renderPrestation(){
   el.innerHTML=`
   <div style="width:100%">
 
+    <!-- ACTIONS -->
+    <div class="card" style="margin-bottom:14px;padding:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-gold btn-sm" onclick="exportEventCard(${evId})">Exporter carte de cocktails</button>
+      <button class="btn btn-ghost btn-sm" onclick="openEventHTML(${evId})">Voir fiche HTML</button>
+    </div>
+
     <!-- ÉQUIPE -->
     <div class="card" style="margin-bottom:14px;padding:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -6264,6 +6270,41 @@ function openEventHTML(evId){
   window.open(url);
 }
 
+function exportEventCard(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const tpl=state.cardTemplate;
+  const cktList=(ev.cocktails||[]).map(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);
+    if(!c)return'';
+    return `<div style="padding:10px 0;border-bottom:1px solid #ddd"><div style="font-weight:600;color:${tpl.colorPrimary}">${c.name}</div>
+      ${tpl.showPrice?`<div style="font-size:12px;color:#666">${(c.priceHT||0).toFixed(2)}€</div>`:''}
+      ${tpl.showIngredients?`<div style="font-size:11px;color:#888">${(c.ingredients||[]).map(i=>i.name).join(', ')}</div>`:''}
+    </div>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;margin:0;padding:20px;background:#f5f5f5}
+  .card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}</style></head><body>
+  <div class="card" style="max-width:600px;margin:0 auto">
+    <div style="text-align:center;padding:20px;background:${tpl.colorPrimary};color:#fff;border-radius:8px 8px 0 0">
+      ${tpl.logo?`<img src="${tpl.logo}" style="width:60px;height:60px;border-radius:50%;margin-bottom:10px"/>`:''}
+      <h1 style="margin:0;font-size:28px">${tpl.brandName||'Carte de cocktails'}</h1>
+    </div>
+    <div style="padding:20px">
+      <h2 style="color:${tpl.colorPrimary};border-bottom:2px solid ${tpl.colorPrimary};padding-bottom:10px">Cocktails - ${ev.name}</h2>
+      ${cktList}
+      ${tpl.showContact?`<div style="margin-top:20px;padding-top:20px;border-top:1px solid #ddd;text-align:center;color:#666;font-size:12px">
+        ${window._userEmail||''}<br>${state.profile?.phone||''}<br>${state.profile?.barName||''}
+      </div>`:''}
+    </div>
+  </div>
+  </body></html>`;
+
+  const element=document.createElement('div');element.innerHTML=html;
+  const opt={margin:10,filename:`carte-${ev.name}.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}};
+  if(window.html2pdf) window.html2pdf().set(opt).from(element).save();
+  else{const blob=new Blob([html],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);window.open(url);}
+}
+
 function buildEventSummaryHTML(ev){
   const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0)):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
   const cost=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*c.totalCost:0);},0)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0);
@@ -6753,8 +6794,36 @@ function renderProfile(){
   const el=document.getElementById('profile-content');if(!el)return;
   const email=window._userEmail||cloudUser?.email||cloudUser?.user?.email||'';
   const isConnected=!!email;
+  const tpl=state.cardTemplate;
 
   el.innerHTML=`<div style="max-width:1200px">
+
+    <!-- MA CARTE DE COCKTAIL -->
+    <div class="card" style="margin-bottom:14px;padding:14px">
+      <div class="ctitle" style="margin-bottom:12px">Ma carte de cocktail</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Nom du bar</label>
+            <input id="tpl-brand" value="${tpl.brandName}" placeholder="Mon bar" style="width:100%" oninput="updCardTpl('brandName',this.value)"/>
+          </div>
+          <div>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Logo</label>
+            <input type="file" accept="image/*" onchange="uploadCardLogo(this)" style="width:100%;font-size:11px"/>
+          </div>
+          <div>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);display:block;margin-bottom:5px">Couleur primaire</label>
+            <input type="color" id="tpl-color" value="${tpl.colorPrimary}" style="width:100%;height:40px;cursor:pointer;border:1px solid var(--border)" oninput="updCardTpl('colorPrimary',this.value)"/>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px"><input type="checkbox" ${tpl.showPrice?'checked':''} onchange="updCardTpl('showPrice',this.checked)"/> Afficher prix</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px"><input type="checkbox" ${tpl.showIngredients?'checked':''} onchange="updCardTpl('showIngredients',this.checked)"/> Afficher ingrédients</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11px"><input type="checkbox" ${tpl.showContact?'checked':''} onchange="updCardTpl('showContact',this.checked)"/> Afficher contact</label>
+          </div>
+        </div>
+        <div id="card-preview" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;min-height:300px;display:flex;flex-direction:column;gap:8px;font-size:11px"></div>
+      </div>
+    </div>
 
     <!-- ROW 1: 2 colonnes egales -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -6907,6 +6976,7 @@ function renderProfile(){
     </div>
 
   </div>`;
+  setTimeout(updateCardPreview, 100);
 }
 
 function updProfile(k,v){
@@ -6951,6 +7021,45 @@ function toggleSendgridEdit(show){
   const edit=document.getElementById('prof-sendgrid-edit');
   if(view) view.style.display=show?'none':'block';
   if(edit) edit.style.display=show?'block':'none';
+}
+
+function updCardTpl(key,val){
+  if(!state.cardTemplate) state.cardTemplate={brandName:'',logo:'',colorPrimary:'#c4a46b',showPrice:true,showIngredients:true,showContact:false};
+  state.cardTemplate[key]=val;
+  save();
+  updateCardPreview();
+}
+
+function uploadCardLogo(input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    state.cardTemplate.logo=e.target.result;
+    save();
+    updateCardPreview();
+  };
+  r.readAsDataURL(file);
+}
+
+function updateCardPreview(){
+  const p=document.getElementById('card-preview');if(!p)return;
+  const t=state.cardTemplate;
+  p.innerHTML=`
+    <div style="background:${t.colorPrimary};color:#fff;padding:8px;border-radius:4px;text-align:center">
+      ${t.logo?`<img src="${t.logo}" style="width:40px;height:40px;border-radius:50%;margin-bottom:4px"/>`:''}
+      <div style="font-weight:600;font-size:12px">${t.brandName||'Mon bar'}</div>
+    </div>
+    <div style="flex:1;border-top:1px solid var(--border);padding-top:8px;font-size:10px;color:var(--text2)">
+      <div style="font-weight:500;margin-bottom:6px;color:${t.colorPrimary}">Cocktails</div>
+      ${state.cocktails.slice(0,3).map(c=>`
+        <div style="padding:6px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-weight:500">${c.name}</div>
+          ${t.showPrice?`<div style="color:var(--text3);font-size:9px">${(c.priceHT||0).toFixed(2)}€</div>`:''}
+          ${t.showIngredients?`<div style="color:var(--text3);font-size:9px">${(c.ingredients||[]).length} ingrédients</div>`:''}
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function confirmSendgridEdit(){
