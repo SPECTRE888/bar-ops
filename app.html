@@ -569,7 +569,8 @@ let cloudUser=null;
 let syncDebounceTimer=null;
 let pendingSyncChanges=false; // Track if there are unsaved changes
 let isSyncing=false; // Track if sync is currently in progress
-let saveStatusTimeout=null; // Track timeout for hiding save status
+let saveStatusTimeout=null;
+let cardTemplateImage=null; // Track timeout for hiding save status
 
 function showCloudModal(){} // Stub - real impl below
 function deleteAccountModal(){} // Stub
@@ -6423,18 +6424,21 @@ function openEventHTML(evId){
 
 function previewEventCard(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  const cardImg=state.profile?.cardTemplate;
-  const cktList=(ev.cocktails||[]).map(cfg=>{
+  const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    return `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.2)"><strong>${c.name}</strong></div>`;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px">
+      ${c.image?`<img src="${c.image}" style="width:100px;height:100px;border-radius:4px;object-fit:cover"/>`:`<div style="width:100px;height:100px;background:#ddd;border-radius:4px"></div>`}
+      <div style="font-weight:600;font-size:12px">${c.name}</div>
+      <div style="font-size:10px;color:#666">${c.recipeBase||'—'}</div>
+    </div>`;
   }).join('');
 
-  const preview=`<div style="position:relative;display:inline-block;width:100%;max-width:400px">
-    ${cardImg?`<img src="${cardImg}" style="width:100%;display:block;border-radius:8px"/>`:`<div style="background:#ddd;padding:40px;text-align:center;border-radius:8px">Aucune carte uploadée</div>`}
-    <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:12px;border-radius:0 0 8px 8px">
-      <div style="font-weight:bold;margin-bottom:8px">${ev.name}</div>
-      <div style="font-size:12px">${cktList}</div>
+  const preview=`<div style="display:flex;flex-direction:column;gap:12px;max-width:600px">
+    ${cardTemplateImage?`<img src="${cardTemplateImage}" style="width:100%;border-radius:8px"/>`:`<div style="background:#ddd;padding:40px;text-align:center;border-radius:8px">Aucune carte uploadée</div>`}
+    <div style="background:#f5f5f5;padding:12px;border-radius:8px">
+      <div style="font-weight:bold;margin-bottom:8px;text-align:center">${ev.name}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">${cktDetails}</div>
     </div>
   </div>`;
 
@@ -6443,26 +6447,28 @@ function previewEventCard(evId){
 
 function exportEventCard(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  const cardImg=state.profile?.cardTemplate;
-  const cktList=(ev.cocktails||[]).map(cfg=>{
+  const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    return `<li>${c.name}</li>`;
+    return `<div style="flex:1;min-width:120px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;page-break-inside:avoid">
+      ${c.image?`<img src="${c.image}" style="width:80px;height:80px;border-radius:4px;object-fit:cover"/>`:'<div style="width:80px;height:80px;background:#ddd;border-radius:4px"></div>'}
+      <div style="font-weight:600;font-size:11px">${c.name}</div>
+      <div style="font-size:9px;color:#666">${c.recipeBase||'—'}</div>
+    </div>`;
   }).join('');
 
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial;margin:0;padding:20px}
-  .container{position:relative;max-width:600px;margin:0 auto}
-  img{width:100%;border-radius:8px}
-  .overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);color:#fff;padding:20px;border-radius:0 0 8px 8px}
-  h2{margin:0 0 10px;font-size:20px}
-  ul{margin:0;padding-left:20px}
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+  body{font-family:Arial;margin:0;padding:20px;background:#fff}
+  .main{max-width:800px;margin:0 auto}
+  .template{width:100%;border-radius:8px;margin-bottom:20px}
+  .cocktails{display:flex;flex-wrap:wrap;gap:15px;justify-content:center;background:#f9f9f9;padding:20px;border-radius:8px;margin-bottom:20px}
+  h1{text-align:center;margin:0 0 15px;font-size:20px;color:#333}
+  h2{text-align:center;font-size:14px;color:#666;margin:0;padding:15px 0;border-bottom:1px solid #ddd}
   </style></head><body>
-  <div class="container">
-    ${cardImg?`<img src="${cardImg}" alt="Carte"/>`:'<div style="background:#ccc;padding:100px;text-align:center">Aucune carte uploadée</div>'}
-    <div class="overlay">
-      <h2>${ev.name}</h2>
-      <ul>${cktList}</ul>
-    </div>
+  <div class="main">
+    ${cardTemplateImage?`<img src="${cardTemplateImage}" class="template"/>`:'<div style="background:#ccc;padding:80px;text-align:center;border-radius:8px;margin-bottom:20px">Aucune carte uploadée</div>'}
+    <h2>${ev.name}</h2>
+    <div class="cocktails">${cktDetails}</div>
   </div>
   </body></html>`;
 
@@ -7128,7 +7134,7 @@ function renderProfile(){
       <div class="ctitle" style="margin-bottom:12px">Ma carte de cocktail</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:20px;min-height:200px;border:2px dashed var(--border)">
-          ${state.profile?.cardTemplate?`<img src="${state.profile.cardTemplate}" style="max-width:100%;max-height:200px;object-fit:contain"/>`:`<div style="font-size:12px;color:var(--text3);text-align:center">Aucune carte<br><small>Uploadez votre design</small></div>`}
+          ${cardTemplateImage?`<img src="${cardTemplateImage}" style="max-width:100%;max-height:200px;object-fit:contain"/>`:`<div style="font-size:12px;color:var(--text3);text-align:center">Aucune carte<br><small>Uploadez votre design</small></div>`}
         </div>
         <input id="card-file-input" type="file" accept="image/*" onchange="uploadCardTemplate(this)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;cursor:pointer"/>
       </div>
@@ -7185,9 +7191,7 @@ function uploadCardTemplate(input){
   const file=input.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=e=>{
-    if(!state.profile) state.profile={};
-    state.profile.cardTemplate=e.target.result;
-    save();
+    cardTemplateImage=e.target.result;
     renderProfile();
     showToastModal('Carte de cocktail uploadée');
   };
