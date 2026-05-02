@@ -1357,6 +1357,38 @@ function injectDemoData(){
         {productType:'Paille en papier',name:'Vegware — Paille en papier',brand:'Vegware',qty:1,unit:'pc',cost:0.02},
       ],
     },
+    {
+      id:now+62,name:'Daiquiri',code:'DA',category:'Classic',
+      glass:'Coupe',glassCost:0,
+      technique:'none',serviceIce:'crushed',iceTypeId:now+30,iceVal:0,iceCl:0,
+      description:'Simple et rafraîchissant',
+      priceHT:7.50,mult:5,vat:10,totalCost:1.28,
+      ingredients:[
+        {productType:'White Rum',name:'Bacardi — White Rum',brand:'Bacardi',qty:5,unit:'cl',cost:0.70},
+        {productType:'Jus de citron',name:'Innocent — Jus de citron',brand:'Innocent',qty:2,unit:'cl',cost:0.08},
+        {productType:'Sirop de sucre de canne',name:'Monin — Sirop de sucre de canne',brand:'Monin',qty:0.5,unit:'cl',cost:0.02},
+      ],
+      consumables:[
+        {productType:'Citron vert',name:'Citron vert',brand:'',qty:5,unit:'g',cost:0.02},
+        {productType:'Paille en papier',name:'Vegware — Paille en papier',brand:'Vegware',qty:1,unit:'pc',cost:0.02},
+      ],
+    },
+    {
+      id:now+63,name:'Margarita',code:'MG',category:'Modern',
+      glass:'Rocks / Old Fashioned',glassCost:0,
+      technique:'none',serviceIce:'on the rocks',iceTypeId:now+30,iceVal:0,iceCl:0,
+      description:'Saveur tropicale',
+      priceHT:10.00,mult:5,vat:10,totalCost:1.95,
+      ingredients:[
+        {productType:'Tequila Blanco',name:'El Jimador — Tequila Blanco',brand:'El Jimador',qty:5,unit:'cl',cost:0.80},
+        {productType:'Jus d\'ananas',name:'Joker — Jus d\'ananas',brand:'Joker',qty:3,unit:'cl',cost:0.08},
+        {productType:'Jus de citron',name:'Innocent — Jus de citron',brand:'Innocent',qty:1,unit:'cl',cost:0.04},
+      ],
+      consumables:[
+        {productType:'Citron vert',name:'Citron vert',brand:'',qty:8,unit:'g',cost:0.04},
+        {productType:'Paille en papier',name:'Vegware — Paille en papier',brand:'Vegware',qty:1,unit:'pc',cost:0.02},
+      ],
+    },
   ];
 
   // ── SUPPLIERS ──────────────────────────────────────────
@@ -1372,7 +1404,17 @@ function injectDemoData(){
   // ── EVENTS ─────────────────────────────────────────────
   const tomorrow=new Date();
   tomorrow.setDate(tomorrow.getDate()+1);
+  const in2Days=new Date();
+  in2Days.setDate(in2Days.getDate()+2);
+
+  // Dates passées pour l'historique
+  const lastWeek=new Date();
+  lastWeek.setDate(lastWeek.getDate()-7);
+  const last2Weeks=new Date();
+  last2Weeks.setDate(last2Weeks.getDate()-14);
+
   state.events=[
+    // Événements futurs (planning)
     {
       id:now+200,
       clientId:now+100,
@@ -1405,6 +1447,79 @@ function injectDemoData(){
           {staff:'Thomas Rey (Waiter)',qty:6,rate:18,total:108}
         ]
       }]
+    },
+    {
+      id:now+201,
+      clientId:now+100,
+      name:'Corporate Event - TechCorp',
+      date:in2Days.toISOString().split('T')[0],
+      startTime:'17:00',
+      endTime:'21:00',
+      location:'Hôtel Intercontinental, Paris',
+      type:'Corporate',
+      guests:80,
+      budget:2000,
+      notes:'Événement d\'entreprise avec cocktail party',
+      status:'confirmed',
+      cocktailsSelected:[now+61,now+62,now+63],
+      staffSelected:[now+40,now+42],
+      iceTypeId:now+30,
+      iceQty:10,
+      tasks:[],
+      devis:[]
+    },
+    // Événements passés (historique)
+    {
+      id:now+202,
+      clientId:now+100,
+      name:'Anniversaire - Jean Martin',
+      date:lastWeek.toISOString().split('T')[0],
+      startTime:'20:00',
+      endTime:'02:00',
+      location:'Loft Brooklyn, 75011 Paris',
+      type:'Birthday',
+      guests:50,
+      budget:1500,
+      notes:'Soirée anniversaire en petit comité',
+      status:'completed',
+      cocktailsSelected:[now+60,now+63],
+      stockRetourDone:true,
+      staffSelected:[now+41],
+      iceTypeId:now+30,
+      iceQty:8,
+      tasks:[],
+      devis:[],
+      pax:47,
+      cocktails:[
+        {id:now+60,qty:35,name:'Moscow Mule'},
+        {id:now+63,qty:28,name:'Margarita'}
+      ]
+    },
+    {
+      id:now+203,
+      clientId:now+100,
+      name:'Lancement Produit - StartupXyz',
+      date:last2Weeks.toISOString().split('T')[0],
+      startTime:'18:30',
+      endTime:'22:30',
+      location:'Espace Créatif, 75010 Paris',
+      type:'Product Launch',
+      guests:100,
+      budget:2800,
+      notes:'Événement de lancement avec stand cocktails',
+      status:'completed',
+      cocktailsSelected:[now+61,now+62],
+      stockRetourDone:true,
+      staffSelected:[now+40,now+41,now+42],
+      iceTypeId:now+30,
+      iceQty:12,
+      tasks:[],
+      devis:[],
+      pax:95,
+      cocktails:[
+        {id:now+61,qty:48,name:'Gin Tonic'},
+        {id:now+62,qty:42,name:'Daiquiri'}
+      ]
     }
   ];
 
