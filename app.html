@@ -4142,19 +4142,20 @@ window._evExtraProducts=window._evExtraProducts||[];
 function _renderExtraProds(){
   const el=document.getElementById('ev-extra-products');if(!el)return;
   el.innerHTML=(window._evExtraProducts||[]).map((p,i)=>{
-    const total=((p.qty||0)*(p.priceHT||0));
-    return`<div style="display:grid;grid-template-columns:1fr 65px 80px 28px;gap:6px;align-items:start;margin-bottom:10px">
-      <div style="position:relative">
-        <input id="ep-search-${i}" value="${(p.label||'').replace(/"/g,'&quot;')}" placeholder="Chercher un produit..." style="font-size:11px;width:100%" oninput="epSearch(${i},this.value)"/>
-        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:150px;overflow-y:auto;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
-        ${p.unit?`<div style="font-size:10px;color:var(--text3);margin-top:3px">→ <strong>${p.unit}</strong>${total?` · <strong style="color:var(--gold)">${total.toFixed(2)}€ HT</strong>`:''}</div>`:''}
+    const costPerUnit=p.costHT||0;
+    const priceVente=p.priceHT||costPerUnit*4;
+    const total=(p.qty||0)*priceVente;
+    return`<div style="display:grid;grid-template-columns:2fr 50px 45px 25px 55px 50px 28px;gap:6px;align-items:center;margin-bottom:6px;padding:6px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+      <div style="position:relative;min-width:0">
+        <input id="ep-search-${i}" value="${(p.label||'').replace(/"/g,'&quot;')}" placeholder="Chercher un produit..." style="font-size:11px;width:100%;background:none;border:none;padding:0" oninput="epSearch(${i},this.value)"/>
+        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:200px;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:150px;overflow-y:auto;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
       </div>
-      <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px;text-align:center" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0);updEvCalc()"/>
-      <div style="position:relative">
-        <input type="number" id="ep-price-${i}" value="${p.priceHT||''}" min="0" step="0.01" placeholder="Prix HT" style="font-size:11px;width:100%;padding-right:20px" oninput="updExtraProd(${i},'priceHT',parseFloat(this.value)||0);updEvCalc()"/>
-        <span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text3);pointer-events:none">€</span>
-      </div>
-      <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 0">×</button>
+      <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="0.1" placeholder="Qté" style="font-size:11px;text-align:center;background:none;border:none;padding:0" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0);updEvCalc()"/>
+      <div style="text-align:right;color:var(--text2);font-weight:500">${costPerUnit.toFixed(2)}€</div>
+      <div style="text-align:center;color:var(--text3);font-weight:600">×4</div>
+      <input type="number" id="ep-price-${i}" value="${priceVente.toFixed(2)}" min="0" step="0.01" placeholder="PU" style="font-size:11px;text-align:right;background:none;border:none;padding:0;font-weight:600;color:var(--gold)" oninput="updExtraProd(${i},'priceHT',parseFloat(this.value)||0);updEvCalc()"/>
+      <div style="text-align:right;font-weight:600;color:var(--gold)">${total.toFixed(2)}€</div>
+      <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0">×</button>
     </div>`;
   }).join('');
 }
