@@ -6423,20 +6423,25 @@ function buildEventSummaryHTML(ev){
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
   const cl=state.clients.find(c=>c.id===ev.clientId);
 
+  const techLabel={none:'Direct',stirred:'Mélangé',shaken:'Shaké',blended:'Blendé'};
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    const glass=state.glasses.find(g=>g.id===c.glassId);
-    const ings=(c.ingredients||[]).map(i=>{
-      const prod=state.products.find(p=>p.id===i.id);
-      return prod?`<li style="margin:6px 0;font-size:12px">${i.qty||'—'} ${i.unit||''} ${prod.name}</li>`:'';
-    }).filter(x=>x).join('');
-    return`<div style="margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid #ddd">
+    const ings=(c.ingredients||[]).map(i=>`<li style="margin:5px 0">${i.qty||''} ${i.unit||''} ${i.name||''}</li>`).join('');
+    const cons=(c.consumables||[]).map(i=>`<li style="margin:5px 0">${i.qty||''} ${i.unit||''} ${i.name||''}</li>`).join('');
+    return`<div style="margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid #ddd">
       <div style="font-weight:700;font-size:15px;color:#000;margin-bottom:12px">${c.name} <span style="color:#999;font-size:12px;font-weight:400">(x${cfg.qty})</span></div>
-      ${glass?`<div style="margin-bottom:10px;font-size:12px"><strong>Verre:</strong> ${glass.name}</div>`:''}
-      ${ings?`<div style="margin-bottom:10px"><strong style="display:block;font-size:12px;margin-bottom:6px">Ingrédients:</strong><ul style="margin:0;padding-left:20px;font-size:12px">${ings}</ul></div>`:''}
-      ${c.recipeBase?`<div style="margin-bottom:10px;font-size:12px"><strong>Méthode:</strong> ${c.recipeBase}</div>`:''}
-      ${c.recipeInstructions?`<div style="font-size:12px;line-height:1.5"><strong>Préparation:</strong><br>${c.recipeInstructions}</div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:12px">
+        <div>
+          ${c.glass?`<div style="margin-bottom:8px"><strong>Verre:</strong> ${c.glass}</div>`:''}
+          ${c.technique&&c.technique!=='none'?`<div style="margin-bottom:8px"><strong>Technique:</strong> ${techLabel[c.technique]||c.technique}</div>`:''}
+          ${c.description?`<div style="margin-bottom:8px;color:#555"><strong>Description:</strong><br>${c.description}</div>`:''}
+        </div>
+        <div>
+          ${ings?`<div><strong>Ingrédients:</strong><ul style="margin:6px 0;padding-left:18px">${ings}</ul></div>`:''}
+          ${cons?`<div style="margin-top:8px"><strong>Consommables:</strong><ul style="margin:6px 0;padding-left:18px">${cons}</ul></div>`:''}
+        </div>
+      </div>
     </div>`;
   }).join('');
   return`
