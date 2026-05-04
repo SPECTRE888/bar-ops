@@ -5693,7 +5693,7 @@ function buildDevisHTML(ev,devisNum){
     const qty=cfg.qty||0;
     const glassObj=state.glasses?.find(g=>g.name===c.glass);
     if(glassObj){
-      const glassCost=(glassObj.priceTTC||glassObj.priceHT||0)/1.10;
+      const glassCost=glassObj.priceHT||0;
       const breakageCost=glassCost*0.05;
       const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
       billedBreakage+=qty*breakageCost*(breakagePercent/100);
