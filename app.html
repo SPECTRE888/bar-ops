@@ -3775,7 +3775,7 @@ function showEvForm(ev){
   (ev.cocktails||[]).forEach(c=>{
     el._sel[c.id]={qty:c.qty||0,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};
   });
-  renderEvPicker();updEvCalc();_renderExtraProds();
+  renderEvPicker();updEvCalc();updBarSelection();_renderExtraProds();
 }
 
 function renderEvPicker(){
@@ -3980,14 +3980,14 @@ function updEvPayment(){
 
 function updBarSelection(){
   const model=document.getElementById('ef-bar-model')?.value||'';
-  const length=document.getElementById('ef-bar-length-sel')?.value||'';
+  const length=parseFloat(document.getElementById('ef-bar-length-sel')?.value||0);
   const color=document.getElementById('ef-bar-color')?.value||'';
   const style=document.getElementById('ef-bar-style')?.value||'';
-  
+
   // Chercher bar matching tous les critères
   let match=state.barItems?.find(b=>
     (model===''||b.name===model)&&
-    (length===''||b.lengthM==length)&&
+    (length===0||b.lengthM===length)&&
     (color===''||b.color===color)&&
     (style===''||b.style===style)
   );
