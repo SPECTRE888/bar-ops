@@ -133,7 +133,7 @@ git push origin main
 - Email: contact@intelligencespotlighted.com
 - Supabase: https://hrpcdtkhnewigewomcvv.supabase.co
 - GitHub: https://github.com/SPECTRE888/bar-ops
-- Live: https://resplendent-truffle-db8c68.netlify.app
+- Live: https://bar-opsv2public.netlify.app/app.html
 
 ## Roadmap Récent
 - ✅ Fiche prestation affichage direct sans select
