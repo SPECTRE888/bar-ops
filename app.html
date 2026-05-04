@@ -5146,12 +5146,12 @@ function sendDispoWA(evId,sid){
   if(!ev||!s||!s.phone){alert('Numero manquant pour ce staff.');return;}
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
-  let staffArr='?',staffDep='?';
-  if(role==='Bartender'){staffArr=ev.arrBrt||'?';staffDep=ev.depBrt||'?';}
-  else if(role==='Serveur'){staffArr=ev.arrWtr||'?';staffDep=ev.depWtr||'?';}
-  else if(role==='Bar Manager'){staffArr=ev.arrMgr||'?';staffDep=ev.depMgr||'?';}
-  else if(role==='Manutentionnaire'){staffArr=ev.arrMan||'?';staffDep=ev.depMan||'?';}
-  const msg='Bonjour '+s.name+',\n\nEs-tu disponible pour cette prestation ?\n\n'+ev.name+'\n'+fmtDate+'\nLieu: '+(ev.address||'?')+'\nHoraires: '+staffArr+' - '+staffDep+'\nPoste: '+role+'\n\nReponds OUI ou NON stp.';
+  let planning='';
+  if(ev.setup) planning+='\nMontage: '+ev.setup;
+  if(ev.start) planning+='\nOuverture bar: '+ev.start;
+  if(ev.end) planning+='\nFermeture bar: '+ev.end;
+  if(ev.breakdown) planning+='\nFin prestation: '+ev.breakdown;
+  const msg='Bonjour '+s.name+',\n\nEs-tu disponible pour cette prestation ?\n\n'+ev.name+'\n'+fmtDate+'\nLieu: '+(ev.address||'?')+planning+'\nPoste: '+role+'\n\nReponds OUI ou NON stp.';
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
@@ -5163,11 +5163,11 @@ function sendBriefWA(evId,sid){
   const role=(ev.staffRoles||{})[sid]||s.type||'';
   const tenue=(ev.dressCodes||[]).map(dcId=>{const dc=state.dressCodes.find(x=>x.id===dcId);return dc?dc.name:dcId;}).join(', ')||'Non précisée';
 
-  let staffArr='?',staffDep='?';
-  if(role==='Bartender'){staffArr=ev.arrBrt||'?';staffDep=ev.depBrt||'?';}
-  else if(role==='Serveur'){staffArr=ev.arrWtr||'?';staffDep=ev.depWtr||'?';}
-  else if(role==='Bar Manager'){staffArr=ev.arrMgr||'?';staffDep=ev.depMgr||'?';}
-  else if(role==='Manutentionnaire'){staffArr=ev.arrMan||'?';staffDep=ev.depMan||'?';}
+  let planning='';
+  if(ev.setup) planning+='Montage: '+ev.setup+'\n';
+  if(ev.start) planning+='Ouverture bar: '+ev.start+'\n';
+  if(ev.end) planning+='Fermeture bar: '+ev.end+'\n';
+  if(ev.breakdown) planning+='Fin prestation: '+ev.breakdown+'\n';
 
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
@@ -5194,9 +5194,7 @@ function sendBriefWA(evId,sid){
     '',
     'Date: '+fmtDate,
     'Lieu: '+(ev.address||'?')+(ev.access?' | Acces: '+ev.access:''),
-    'Setup: '+(ev.setup||'?'),
-    'Horaires: '+staffArr+' - '+staffDep,
-    'Bar ouvert: '+(ev.start||'?')+' - '+(ev.end||'?'),
+    planning,
     'Pax: '+(ev.pax||'?'),
     'Poste: '+role,
     'Tenue: '+tenue,
