@@ -5836,15 +5836,16 @@ function buildDevisHTML(ev,devisNum){
     </div>
     <div class="bank-info">
       <strong>COORDONNÉES BANCAIRES</strong><br/>
-      ${state.profile?.barName?`Nom: ${state.profile.barName}<br/>`:''}<br/>
-      ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:''}<br/>
-      ${state.profile?.bic?`BIC: ${state.profile.bic}<br/>`:''}<br/>
+      ${state.profile?.barName?`Nom: ${state.profile.barName}<br/>
+      ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>
+      ${state.profile?.bic?`BIC: ${state.profile.bic}<br/>
+      ${state.profile?.bic?`BANQUE: ${state.profile.banque}<br/>
     </div>
     ${Object.keys(breakageByGlass).length?`<div class="casse-info">${Object.entries(breakageByGlass).map(([glassName,data])=>`Casse verre ${glassName}: couvert en dessous de ${data.percent}%${data.cost>0?`, au-delà facturé ${data.cost.toFixed(2)}€`:''}`).join(' • ')}</div>`:''}
     <div class="signature-box">
       <div></div>
       <div style="border:none;padding:0">
-        <div style="font-size:11px;font-weight:600;margin-bottom:16px">Merci de retourner ce devis signé, daté et suivi de la mention<br/><strong>« Bon pour accord »</strong><br/>sur toutes les pages</div>
+        <div style="font-size:11px;font-weight:600;margin-bottom:16px">Merci de retourner ce devis signé, daté et suivi de la mention « Bon pour accord » sur toutes les pages</div>
         <div class="sig-zone" style="border:1px solid #ddd;min-height:100px"></div>
       </div>
     </div>
