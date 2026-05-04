@@ -5686,17 +5686,17 @@ function buildDevisHTML(ev,devisNum){
     const hoursStr=hrs>0?`${hrs.toFixed(1)}h`:'—';const rateStr=billHT>0?(s?.per==='per event'?billHT.toFixed(2)+'€/event':billHT.toFixed(2)+'€/h'):'—';
     staffLines.push(`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">${r.label}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.n}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.arr&&r.dep?r.arr+'–'+r.dep:'—'}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${hoursStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${rateStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${totalHT>0?totalHT.toFixed(2)+'€ HT':'—'}</td></tr>`);
   });
-  // Casse verres: 5% du coût des verres × % configuré par verre
-  let billedBreakage=0;
+  // Casse verres: 5% du coût des verres × % configuré par verre (regroupé par type)
+  const breakageByGlass={};let billedBreakage=0;
   (ev.cocktails||[]).forEach(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
     const qty=cfg.qty||0;
     const glassObj=state.glasses?.find(g=>g.name===c.glass);
     if(glassObj){
-      const glassCost=glassObj.priceHT||0;
-      const breakageCost=glassCost*0.05;
-      const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
-      billedBreakage+=qty*breakageCost*(breakagePercent/100);
+      const glassName=glassObj.name||'Verre';const glassCost=glassObj.priceHT||0;const breakageCost=glassCost*0.05;
+      const breakagePercent=parseFloat(glassObj.breakagePercent)||5;const billedAmount=qty*breakageCost*(breakagePercent/100);
+      if(!breakageByGlass[glassName]){breakageByGlass[glassName]={cost:glassCost,percent:breakagePercent,billed:0};}
+      breakageByGlass[glassName].billed+=billedAmount;billedBreakage+=billedAmount;
     }
   });
   const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill+billedBreakage;
@@ -5721,7 +5721,7 @@ function buildDevisHTML(ev,devisNum){
   </div>
   ${cocktailLines?`<div class="section"><div class="label">Cocktails</div><table><thead><tr><th>Cocktail</th><th style="text-align:center">Qté</th><th style="text-align:right">Prix unitaire HT</th><th style="text-align:right">Total HT</th><th style="text-align:right">Total TTC</th></tr></thead><tbody>${cocktailLines}</tbody></table></div>`:''}
   ${staffLines.length?`<div class="section"><div class="label">Équipe</div><table><thead><tr><th>Rôle</th><th style="text-align:center">Nb</th><th style="text-align:center">Horaires</th><th style="text-align:center">Durée</th><th style="text-align:right">Tarif</th><th style="text-align:right">Total HT</th></tr></thead><tbody>${staffLines.join('')}</tbody></table></div>`:''}
-  ${deliveryBill||extraBill||billedBreakage?`<div class="section"><div class="label">Frais supplémentaires</div><table><tbody>${deliveryBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Livraison & matériel</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${deliveryBill.toFixed(2)}€ HT</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Frais divers</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${extraBill.toFixed(2)}€ HT</td></tr>`:''}${billedBreakage>0?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Casse verres (+5% couvert lors de la prestation, au-delà facturé)</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${billedBreakage.toFixed(2)}€ HT</td></tr>`:''}</tbody></table></div>`:''}
+  ${deliveryBill||extraBill||billedBreakage?`<div class="section"><div class="label">Frais supplémentaires</div><table><tbody>${deliveryBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Livraison & matériel</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${deliveryBill.toFixed(2)}€ HT</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Frais divers</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${extraBill.toFixed(2)}€ HT</td></tr>`:''}${billedBreakage>0?Object.entries(breakageByGlass).map(([glassName,data])=>`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Casse verre ${glassName} (prix d'achat: ${data.cost.toFixed(2)}€ HT): couvert en dessous de ${data.percent}%</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${data.billed.toFixed(2)}€ HT</td></tr>`).join(''):''}</tbody></table></div>`:''}
   <div class="total-box"><div class="total-line"><span>Total HT</span><span>${grandHT.toFixed(2)}€</span></div><div class="total-line"><span>TVA</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div><div class="total-final"><span>Total TTC</span><span>${grandTTC.toFixed(2)}€</span></div></div>
   <div style="margin-top:56px;padding-top:10px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#999">Devis valable 30 jours · Acompte 30% à la signature · Solde à J-7</span><span style="font-size:10px;color:#ccc;font-style:italic">Propulsé par BAR OPS</span></div>
   </body></html>`;
