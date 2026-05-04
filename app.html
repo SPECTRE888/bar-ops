@@ -5681,7 +5681,7 @@ function buildDevisHTML(ev,devisNum){
     if(!r.n)return;
     const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));
     const billHT=s?.billHT||0;let hrs=0;
-    if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);hrs=Math.max(0,((dh*60+dm)-(ah*60+am))/60);}
+    if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}
     const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);staffTotalHT+=totalHT;
     const hoursStr=hrs>0?`${hrs.toFixed(1)}h`:'—';const rateStr=billHT>0?(s?.per==='per event'?billHT.toFixed(2)+'€/event':billHT.toFixed(2)+'€/h'):'—';
     staffLines.push(`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">${r.label}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.n}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.arr&&r.dep?r.arr+'–'+r.dep:'—'}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${hoursStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${rateStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${totalHT>0?totalHT.toFixed(2)+'€ HT':'—'}</td></tr>`);
@@ -5732,6 +5732,7 @@ function generateDevis(){
   if(!evId){alert('Sélectionne un événement.');return;}
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
+  updEvCalc();
   const devisNum='DEV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
   const html=buildDevisHTML(ev,devisNum);
   const withBtns=html.replace('</body></html>',`
