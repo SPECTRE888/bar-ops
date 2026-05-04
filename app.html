@@ -5725,7 +5725,6 @@ function buildDevisHTML(ev,devisNum){
   ${Object.keys(breakageByGlass).length?`<div style="margin-top:32px;padding-top:16px;border-top:1px solid #f0ede8;font-size:9px;color:#999;line-height:1.6">${Object.entries(breakageByGlass).map(([glassName,data])=>`Casse verre ${glassName}: couvert en dessous de ${data.percent}%`).join(' • ')}</div>`:''}
   <div style="margin-top:32px;padding-top:16px;border-top:1px solid #f0ede8">
     ${state.profile?.rib?`<div style="font-size:10px;color:#666;margin-bottom:8px"><span style="color:#999">RIB:</span> ${state.profile.rib}</div>`:''}
-    ${state.profile?.legalNotes?`<div style="font-size:9px;color:#999;line-height:1.6;white-space:pre-wrap">${state.profile.legalNotes}</div>`:''}
   </div>
   <div style="margin-top:24px;padding-top:10px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#999">Devis valable 30 jours · Acompte 30% à la signature · Solde à J-7</span><span style="font-size:10px;color:#ccc;font-style:italic">Propulsé par BAR OPS</span></div>
   </body></html>`;
@@ -7197,10 +7196,6 @@ function renderProfile(){
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.rib||'—'}</div>
             </div>
           </div>
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Mentions légales</div>
-            <div style="font-size:11px;color:var(--text2);line-height:1.4;white-space:pre-wrap">${state.profile?.legalNotes||'—'}</div>
-          </div>
           <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px">
             <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
             <button class="btn btn-ghost btn-sm" onclick="exportData()" style="flex:1">Exporter</button>
@@ -7230,10 +7225,6 @@ function renderProfile(){
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">RIB</div>
               <input id="prof-rib" value="${state.profile?.rib||''}" placeholder="FR76 1234..." style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
-          </div>
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Mentions légales</div>
-            <textarea id="prof-legalnotes" placeholder="Conditions de paiement, acompte, etc..." style="width:100%;font-size:11px;min-height:80px;padding:6px;border:1px solid var(--border);border-radius:3px;background:var(--surface2);color:var(--text);resize:vertical">${state.profile?.legalNotes||''}</textarea>
           </div>
           <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
             <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(false)" style="flex:1">Annuler</button>
@@ -7340,7 +7331,6 @@ function confirmBarEdit(){
       state.profile.phone=document.getElementById('prof-phone')?.value||'';
       state.profile.siret=document.getElementById('prof-siret')?.value||'';
       state.profile.rib=document.getElementById('prof-rib')?.value||'';
-      state.profile.legalNotes=document.getElementById('prof-legalnotes')?.value||'';
       save();
       showToastModal('Profil enregistré');
       renderProfile();
