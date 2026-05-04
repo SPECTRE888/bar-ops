@@ -5081,6 +5081,12 @@ function renderPrestation(){
             '<button onclick="markStaffDispo('+evId+','+sid+',true)" style="padding:3px 10px;font-size:11px;border:1px solid var(--green);color:var(--green);background:none;border-radius:4px;cursor:pointer">Oui</button>'+
             '<button onclick="markStaffDispo('+evId+','+sid+',false)" style="padding:3px 10px;font-size:11px;border:1px solid var(--red);color:var(--red);background:none;border-radius:4px;cursor:pointer">Non</button>'+
           '</div>';
+        const briefsSent=(ev.briefsSent||{});
+        const briefTime=briefsSent[sid]?new Date(briefsSent[sid]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):null;
+        const briefBtn=isConfirmed?(briefTime?
+          '<button class="btn btn-sm" style="font-size:10px;padding:4px 8px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)" title="Brief envoyé le '+briefTime+'" onclick="sendBriefWA('+evId+','+sid+')">Renvoyer</button>':
+          '<button class="btn btn-sm btn-gold" onclick="sendBriefWA('+evId+','+sid+')">Brief</button>'):
+          '';
         return'<div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.4fr 1.2fr 100px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
           '<span style="'+(isUnavail?'text-decoration:line-through;color:var(--text3)':'')+'">'+(s.name||s.type)+'</span>'+
           '<span style="color:var(--text3)">'+role+'</span>'+
@@ -5088,7 +5094,7 @@ function renderPrestation(){
           '<span>'+dispo+'</span>'+
           '<div style="display:flex;gap:4px">'+
             (!isConfirmed&&!isUnavail?'<button class="btn btn-sm btn-ghost" onclick="sendDispoWA('+evId+','+sid+')">Dispo?</button>':'')+
-            (isConfirmed?'<button class="btn btn-sm btn-gold" onclick="sendBriefWA('+evId+','+sid+')">Brief</button>':'')+
+            briefBtn+
             '<button class="btn btn-sm" style="padding:2px 6px;background:none;color:var(--text3)" onclick="toggleAssignStaff('+evId+','+sid+',false)">×</button>'+
           '</div>'+
         '</div>';
@@ -5196,6 +5202,10 @@ function sendBriefWA(evId,sid){
     'Bonne prestation !'
   ];
   const msg=lines.filter(l=>l!==undefined).join('\n');
+  if(!ev.briefsSent) ev.briefsSent={};
+  ev.briefsSent[sid]=new Date().toISOString();
+  save();
+  renderPrestation();
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
