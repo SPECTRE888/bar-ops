@@ -4112,9 +4112,10 @@ function updEvCalc(){
 
   const delivery=parseFloat(document.getElementById('ef-delivery')?.value)||0;
   const deliveryBill=parseFloat(document.getElementById('ef-delivery-bill')?.value)||0;
+  const barPrice=parseFloat(document.getElementById('ef-bar-price')?.value)||0;
 
   staffCost+=extra+delivery;
-  staffRevenue+=extraBill+deliveryBill;
+  staffRevenue+=extraBill+deliveryBill+barPrice;
   // Produits supplémentaires
   const extraProdRevenue=(window._evExtraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
   revenue+=extraProdRevenue;
