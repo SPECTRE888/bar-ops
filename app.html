@@ -5698,20 +5698,21 @@ function buildDevisHTML(ev,devisNum){
     const hoursStr=hrs>0?`${hrs.toFixed(1)}h`:'—';const rateStr=billHT>0?(s?.per==='per event'?billHT.toFixed(2)+'€/event':billHT.toFixed(2)+'€/h'):'—';
     staffLines.push(`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">${r.label}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.n}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.arr&&r.dep?r.arr+'–'+r.dep:'—'}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${hoursStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${rateStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${totalHT>0?totalHT.toFixed(2)+'€ HT':'—'}</td></tr>`);
   });
-  // Casse verres: info seulement (5% du coût des verres × % configuré par verre)
+  // Casse verres: info + facturation des verres cassés au-delà du seuil
   const breakageByGlass={};
   (ev.cocktails||[]).forEach(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
     const qty=cfg.qty||0;
     const glassObj=state.glasses?.find(g=>g.name===c.glass);
     if(glassObj){
-      const glassName=glassObj.name||'Verre';const glassCost=glassObj.priceHT||0;
+      const glassLabel=(glassObj.name||'Verre')+(glassObj.appellation?' '+glassObj.appellation:'');
+      const glassCost=glassObj.priceHT||0;
       const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
-      if(!breakageByGlass[glassName]){breakageByGlass[glassName]={cost:glassCost,percent:breakagePercent,qty:0};}
-      breakageByGlass[glassName].qty+=qty;
+      if(!breakageByGlass[glassLabel]){breakageByGlass[glassLabel]={cost:glassCost,percent:breakagePercent,qty:0};}
+      breakageByGlass[glassLabel].qty+=qty;
     }
   });
-  Object.entries(breakageByGlass).forEach(([_,data])=>{data.billableAmount=data.cost*Math.max(0,5-data.percent)/100*data.qty;});
+  Object.entries(breakageByGlass).forEach(([_,data])=>{data.billableAmount=data.cost*(data.percent/100)*data.qty;});
   const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill;
   const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20;
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
