@@ -4347,7 +4347,13 @@ function saveEv(){
     extraBillHT:parseFloat(document.getElementById('ef-extra-bill')?.value)||0,
     deliveryCostHT:parseFloat(document.getElementById('ef-delivery')?.value)||0,
     deliveryBillHT:parseFloat(document.getElementById('ef-delivery-bill')?.value)||0,
-    acompte:parseFloat(document.getElementById('ef-acompte')?.value)||existingEv?.acompte||0,
+    acompte:(()=>{
+      const manualAcompte=parseFloat(document.getElementById('ef-acompte')?.value);
+      if(!isNaN(manualAcompte)&&manualAcompte>0) return manualAcompte;
+      if(existingEv?.acompte&&existingEv.acompte>0) return existingEv.acompte;
+      const profilePct=state.profile?.acomptePercent||0;
+      return profilePct>0?Math.round(totalRevHT*profilePct/100):0;
+    })(),
     acompteDate:document.getElementById('ef-acompte-date')?.value||existingEv?.acompteDate||'',
     paid:document.getElementById('ef-paid')?.checked||existingEv?.paid||false,
     remisePct:parseFloat(document.getElementById('ef-remise-pct')?.value)||0,
@@ -7274,6 +7280,10 @@ function renderProfile(){
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Statut</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.tvaNumber?'Assujetti TVA':'Auto-entrepreneur'}</div>
             </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Acompte par défaut</div>
+              <div style="font-size:12px;color:var(--text2)">${state.profile?.acomptePercent||0}%</div>
+            </div>
           </div>
           <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px">
             <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
@@ -7319,6 +7329,10 @@ function renderProfile(){
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">N° TVA</div>
               <input id="prof-tvanumber" value="${state.profile?.tvaNumber||''}" placeholder="FR12345678901" style="width:100%;font-size:11px;font-family:monospace"/>
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Acompte par défaut (%)</div>
+              <input id="prof-acompte-percent" type="number" value="${state.profile?.acomptePercent||0}" min="0" max="100" placeholder="30" style="width:100%;font-size:11px"/>
             </div>
           </div>
           <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
@@ -7430,6 +7444,7 @@ function confirmBarEdit(){
       state.profile.iban=document.getElementById('prof-iban')?.value||'';
       state.profile.bic=document.getElementById('prof-bic')?.value||'';
       state.profile.tvaNumber=document.getElementById('prof-tvanumber')?.value||'';
+      state.profile.acomptePercent=parseFloat(document.getElementById('prof-acompte-percent')?.value)||0;
       save();
       showToastModal('Profil enregistré');
       renderProfile();
@@ -7785,7 +7800,7 @@ function renderSuivi(){
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;font-weight:500">Paiement</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
           <div class="field" style="margin:0">
-            <label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Acompte (€)</label>
+            <label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Acompte (€) ${state.profile?.acomptePercent?`<span style="color:var(--text3);font-weight:normal">(${state.profile.acomptePercent}% défaut)</span>`:''}</label>
             <input type="number" value="${ev.acompte||''}" min="0" step="1" placeholder="0"
               style="width:100px;padding:4px 8px;font-size:11px;height:24px"
               onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
