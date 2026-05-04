@@ -5706,14 +5706,14 @@ function buildDevisHTML(ev,devisNum){
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
   <title>Devis — ${ev.name}</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;padding:0;margin:0}h1{font-family:'DM Serif Display',serif;font-weight:400}.header-black{background:#1a1a1a;color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}.header-info{flex:1}.header-title{font-size:32px;font-weight:600;margin-bottom:8px}.header-subtitle{font-size:11px;color:#999;margin-bottom:12px}.header-meta{font-size:10px;color:#666;line-height:1.5}.header-right{text-align:right}.devis-title{font-size:28px;font-weight:600;margin-bottom:4px}.validity{font-size:10px;color:#666;margin-bottom:16px}.content{padding:0 32px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px;padding:16px;background:#f5f5f5;border-radius:4px}.info-col{font-size:11px}.info-label{font-weight:600;margin-bottom:4px}.info-value{color:#555;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin:24px 0}.table-header{background:#1a1a1a;color:#fff}.table-header th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase}.table-row{background:#fff;border-bottom:1px solid #f0f0f0}.table-row.alt{background:#f9f3e8}.table-row td{padding:12px 16px;font-size:11px}.table-row.section-header td{background:#1a1a1a;color:#fff;font-weight:600;padding:10px 16px}.table-row.subtotal td{background:#e8dcc8;font-weight:600;padding:10px 16px}.total-section{display:grid;grid-template-columns:2fr 1fr;gap:32px;margin:24px 0}.total-box{text-align:right;font-size:12px}.total-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #ddd}.total-line.strong{font-weight:600;border:none;padding:12px 0;font-size:13px}.acompte{background:#ffeb3b;padding:16px 24px;margin:24px 0;border-radius:4px;font-weight:600;font-size:11px}.bank-info{background:#ffeb3b;padding:16px 24px;margin:24px 0;border-radius:4px;font-size:10px;line-height:1.6}.signature-box{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}.sig-zone{border:1px solid #ddd;padding:20px;border-radius:4px;min-height:80px;display:flex;align-items:flex-end}.sig-label{font-size:10px;font-weight:600;margin-bottom:8px;display:block}.footer{background:#1a1a1a;color:#fff;padding:16px 32px;font-size:9px;margin-top:32px;text-align:center}.casse-info{font-size:9px;color:#666;margin:16px 0 0;padding:16px 0;border-top:1px solid #ddd}.footer-legal{font-size:9px;color:#666;margin-top:16px;text-align:center}@media print{.no-print{display:none!important}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1814;background:#fff;padding:20px;margin:0;max-width:850px;margin:0 auto}h1{font-family:'DM Serif Display',serif;font-weight:400}.header-black{background:#1a1814;color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}.header-info{flex:1}.header-title{font-size:32px;font-weight:600;margin-bottom:8px}.header-subtitle{font-size:11px;color:#a09890;margin-bottom:12px}.header-meta{font-size:10px;color:#6b6560;line-height:1.5}.header-right{text-align:right}.devis-title{font-size:28px;font-weight:600;margin-bottom:4px}.validity{font-size:10px;color:#6b6560;margin-bottom:16px}.content{padding:0 32px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px;padding:16px;background:#f0ede8;border-radius:4px}.info-col{font-size:11px}.info-label{font-weight:600;margin-bottom:4px}.info-value{color:#6b6560;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin:24px 0}.table-header{background:#1a1814;color:#fff}.table-header th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase}.table-row{background:#fff;border-bottom:1px solid #f0ede8}.table-row.alt{background:#f0ede8}.table-row td{padding:12px 16px;font-size:11px}.table-row.section-header td{background:#1a1814;color:#fff;font-weight:600;padding:10px 16px}.table-row.subtotal td{background:#e8e4de;font-weight:600;padding:10px 16px}.total-section{display:grid;grid-template-columns:2fr 1fr;gap:32px;margin:24px 0}.total-box{text-align:right;font-size:12px}.total-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e4de}.total-line.strong{font-weight:600;border:none;padding:12px 0;font-size:13px}.acompte{background:#f0ede8;padding:16px 24px;margin:24px 0;border-radius:4px;border-left:4px solid #9a7a3a;font-weight:600;font-size:11px;color:#1a1814}.bank-info{background:#f0ede8;padding:16px 24px;margin:24px 0;border-radius:4px;border-left:4px solid #9a7a3a;font-size:10px;line-height:1.6;color:#1a1814}.signature-box{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}.sig-zone{border:1px solid #e8e4de;padding:20px;border-radius:4px;min-height:80px;display:flex;align-items:flex-end}.sig-label{font-size:10px;font-weight:600;margin-bottom:8px;display:block}.footer{background:#1a1814;color:#fff;padding:16px 32px;font-size:9px;margin-top:32px;text-align:center}.casse-info{font-size:9px;color:#6b6560;margin:16px 0 0;padding:16px 0;border-top:1px solid #e8e4de}.footer-legal{font-size:9px;color:#6b6560;margin-top:16px;text-align:center}@media print{.no-print{display:none!important}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
   ${!isPro?`<div id="watermark">TRIAL</div>`:''}
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #ddd">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #e8e4de">
     <div style="flex:1">
       ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:60px;margin-bottom:8px"/>`:''}
-      <div style="font-size:18px;font-weight:700;color:#d4af37;margin-bottom:4px">${state.profile?.barName||''}</div>
-      <div style="font-size:10px;line-height:1.6;color:#555">
-        ${state.profile?.barName?`<div><strong>S.A.S. ${state.profile.barName}</strong></div>`:''}
+      <div style="font-size:18px;font-weight:700;color:#9a7a3a;margin-bottom:4px">${state.profile?.barName||''}</div>
+      <div style="font-size:10px;line-height:1.6;color:#6b6560">
+        ${state.profile?.legalForm&&state.profile?.barName?`<div><strong>${state.profile.legalForm} ${state.profile.barName}</strong></div>`:''}
         ${state.profile?.city?`<div>${state.profile.city}</div>`:''}
         ${state.profile?.siret?`<div>SIRET: ${state.profile.siret}</div>`:''}
         ${state.profile?.tvaNumber?`<div>T.V.A. Intracom.: ${state.profile.tvaNumber}</div>`:''}
@@ -5721,7 +5721,7 @@ function buildDevisHTML(ev,devisNum){
     </div>
     <div style="text-align:right">
       <div style="font-size:32px;font-weight:700">DEVIS</div>
-      <div style="font-size:9px;color:#666;margin-top:8px;max-width:200px">Ce devis est établi gratuitement et valide 2 semaines après édition</div>
+      <div style="font-size:9px;color:#6b6560;margin-top:8px;max-width:200px">Ce devis est établi gratuitement et valide 2 semaines après édition</div>
     </div>
   </div>
   <div class="content" style="padding:0">
@@ -5766,7 +5766,7 @@ function buildDevisHTML(ev,devisNum){
       </div>
     </div>
     <div class="acompte">Acompte de 100% du montant total T.T.C. à la confirmation</div>
-    <div style="font-size:10px;color:#666;line-height:1.6;margin:24px 0;padding:12px 0;border-top:1px solid #ddd;border-bottom:1px solid #ddd">
+    <div style="font-size:10px;color:#6b6560;line-height:1.6;margin:24px 0;padding:12px 0;border-top:1px solid #e8e4de;border-bottom:1px solid #e8e4de">
       Toute heure supplémentaire sera facturée:<br/>
       ${staffRoles.map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));return s?`${r.label}: ${s.billHT?.toFixed(2)||'—'}€/h`:''}).filter(Boolean).join(' • ')}
     </div>
@@ -5799,8 +5799,8 @@ function generateDevis(){
   const html=buildDevisHTML(ev,devisNum);
   const withBtns=html.replace('</body></html>',`
   <div class="no-print" style="text-align:center;margin-top:40px;display:flex;gap:12px;justify-content:center">
-    <button onclick="(function(){const w=window.open('','_blank');if(!w)return;w.document.write(document.documentElement.innerHTML);w.document.close();setTimeout(()=>w.print(),500);})();" style="padding:12px 28px;background:#1a1a1a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Enregistrer PDF</button>
-    <button onclick="sessionStorage.setItem('pendingSend',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));history.back()" style="padding:12px 28px;background:#c4a46b;color:#1a1a1a;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Envoyer au contact</button>
+    <button onclick="(function(){const w=window.open('','_blank');if(!w)return;w.document.write(document.documentElement.innerHTML);w.document.close();setTimeout(()=>w.print(),500);})();" style="padding:12px 28px;background:#1a1814;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Enregistrer PDF</button>
+    <button onclick="sessionStorage.setItem('pendingSend',JSON.stringify({evId:'${ev.id}',devisNum:'${devisNum}'}));history.back()" style="padding:12px 28px;background:#9a7a3a;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Envoyer au contact</button>
     <button onclick="history.back()" style="padding:12px 28px;background:none;color:#888;border:1px solid #ccc;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">← Retour</button>
   </div>
   </body></html>`);
@@ -7251,6 +7251,10 @@ function renderProfile(){
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.siret||'—'}</div>
             </div>
             <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Forme juridique</div>
+              <div style="font-size:12px;color:var(--text2)">${state.profile?.legalForm||'—'}</div>
+            </div>
+            <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Code APE</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.apeCode||'—'}</div>
             </div>
@@ -7299,6 +7303,10 @@ function renderProfile(){
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">SIRET</div>
               <input id="prof-siret" value="${state.profile?.siret||''}" placeholder="12345678901234" style="width:100%;font-size:11px;font-family:monospace"/>
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Forme juridique</div>
+              <input id="prof-legalform" value="${state.profile?.legalForm||''}" placeholder="S.A.S., SARL, EIRL..." style="width:100%;font-size:11px"/>
             </div>
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Code APE</div>
@@ -7425,6 +7433,7 @@ function confirmBarEdit(){
       state.profile.city=document.getElementById('prof-city')?.value||'';
       state.profile.phone=document.getElementById('prof-phone')?.value||'';
       state.profile.siret=document.getElementById('prof-siret')?.value||'';
+      state.profile.legalForm=document.getElementById('prof-legalform')?.value||'';
       state.profile.apeCode=document.getElementById('prof-apecode')?.value||'';
       state.profile.rib=document.getElementById('prof-rib')?.value||'';
       state.profile.iban=document.getElementById('prof-iban')?.value||'';
