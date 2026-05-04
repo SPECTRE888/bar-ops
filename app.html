@@ -5775,7 +5775,7 @@ function buildDevisHTML(ev,devisNum){
         <div class="total-line strong"><span>TOTAL T.T.C.</span><span>${grandTTC.toFixed(2)}€</span></div>
       </div>
     </div>
-    <div class="acompte">Acompte de 100% du montant total T.T.C. à la confirmation</div>
+    <div class="acompte">Acompte de ${ev.acompte>0?(ev.acompte/grandTTC*100).toFixed(0)+'%':'100%'} du montant total T.T.C. à la confirmation${ev.acompte>0?` : <strong>${ev.acompte.toFixed(2)}€</strong>`:''}</div>
     <div style="font-size:10px;color:#6b6560;line-height:1.6;margin:24px 0;padding:12px 0;border-top:1px solid #e8e4de;border-bottom:1px solid #e8e4de">
       Toute heure supplémentaire sera facturée:<br/>
       ${staffRoles.map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));return s?`${r.label}: ${s.billHT?.toFixed(2)||'—'}€/h`:''}).filter(Boolean).join(' • ')}
