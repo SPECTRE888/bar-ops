@@ -5715,28 +5715,13 @@ async function sendQuoteToClient(evId,devisNum){
 }
 
 function buildDevisHTML(ev,devisNum){
-  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
-  const cocktailLines=(ev.cocktails||[]).map(cfg=>{
-    const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';
-    const totalHT=(cfg.qty*c.priceHT).toFixed(2);
-    const totalTTC=(cfg.qty*c.priceHT*(1+(c.vat||20)/100)).toFixed(2);
-    return`<tr>
-      <td style="padding:10px 14px;border-bottom:1px solid #eee">${c.name}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:center">${cfg.qty}</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:right">${c.priceHT.toFixed(2)}€</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:right">${totalHT}€</td>
-      <td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:right">${totalTTC}€</td>
-    </tr>`;
-  }).filter(Boolean).join('');
-  const deliveryBill=ev.deliveryBillHT||0;
-  const extraBill=ev.extraBillHT||0;
   const cocktailTotalHT=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT:0);},0);
   const cocktailTotalTTC=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||20)/100):0);},0);
-  const today=new Date().toLocaleDateString('fr-FR');
-  const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
-  const staffLines=[];let staffTotalHT=0;
+  const deliveryBill=ev.deliveryBillHT||0;
+  const extraBill=ev.extraBillHT||0;
+  let staffTotalHT=0;
   const staffRoles=[
-    {label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender','Bartender']},
+    {label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender']},
     {label:'Serveur',n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',types:['Serveur']},
     {label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',types:['Bar Manager']},
     {label:'Manutentionnaire',n:ev.nManutentionnaires||0,arr:ev.arrMan||'',dep:ev.depMan||'',types:['Manutentionnaire']},
@@ -5746,111 +5731,64 @@ function buildDevisHTML(ev,devisNum){
     const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));
     const billHT=s?.billHT||0;let hrs=0;
     if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}
-    const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);staffTotalHT+=totalHT;
-    const hoursStr=hrs>0?`${hrs.toFixed(1)}h`:'—';const rateStr=billHT>0?(s?.per==='per event'?billHT.toFixed(2)+'€/event':billHT.toFixed(2)+'€/h'):'—';
-    staffLines.push(`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">${r.label}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.n}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.arr&&r.dep?r.arr+'–'+r.dep:'—'}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${hoursStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${rateStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${totalHT>0?totalHT.toFixed(2)+'€ HT':'—'}</td></tr>`);
+    staffTotalHT+=billHT*(s?.per==='per event'?r.n:r.n*hrs);
   });
-  // Casse verres: info + facturation des verres cassés au-delà du seuil
-  const breakageByGlass={};
-  (ev.cocktails||[]).forEach(cfg=>{
-    const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
-    const qty=cfg.qty||0;
-    const glassObj=state.glasses?.find(g=>g.name===c.glass);
-    if(glassObj){
-      const glassLabel=(glassObj.name||'Verre')+(glassObj.appellation?' '+glassObj.appellation:'');
-      const glassCost=glassObj.priceHT||0;
-      const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
-      if(!breakageByGlass[glassLabel]){breakageByGlass[glassLabel]={cost:glassCost,percent:breakagePercent,qty:0};}
-      breakageByGlass[glassLabel].qty+=qty;
-    }
-  });
-  Object.entries(breakageByGlass).forEach(([_,data])=>{data.billableAmount=data.cost*Math.max(0,data.percent-5)/100*data.qty;});
+  const today=new Date().toLocaleDateString('fr-FR');
+  const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
   const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill;
   const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20;
-  return`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
-  <title>Devis — ${ev.name}</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1814;background:#fff;padding:20px;margin:0;max-width:850px;margin:0 auto}h1{font-family:'DM Serif Display',serif;font-weight:400}.header-black{background:#1a1814;color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}.header-info{flex:1}.header-title{font-size:32px;font-weight:600;margin-bottom:8px}.header-subtitle{font-size:11px;color:#a09890;margin-bottom:12px}.header-meta{font-size:10px;color:#6b6560;line-height:1.5}.header-right{text-align:right}.devis-title{font-size:28px;font-weight:600;margin-bottom:4px}.validity{font-size:10px;color:#6b6560;margin-bottom:16px}.content{padding:0 32px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px;padding:16px;background:#f0ede8;border-radius:4px}.info-col{font-size:11px}.info-label{font-weight:600;margin-bottom:4px}.info-value{color:#6b6560;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin:24px 0}.table-header{background:#1a1814;color:#fff}.table-header th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase}.table-row{background:#fff;border-bottom:1px solid #f0ede8}.table-row.alt{background:#f0ede8}.table-row td{padding:12px 16px;font-size:11px}.table-row.section-header td{background:#1a1814;color:#fff;font-weight:600;padding:10px 16px}.table-row.subtotal td{background:#e8e4de;font-weight:600;padding:10px 16px}.total-section{display:grid;grid-template-columns:2fr 1fr;gap:32px;margin:24px 0}.total-box{text-align:right;font-size:12px}.total-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e4de}.total-line.strong{font-weight:600;border:none;padding:12px 0;font-size:13px}.acompte{background:#f0ede8;padding:16px 24px;margin:24px 0;border-radius:4px;border-left:4px solid #9a7a3a;font-weight:600;font-size:11px;color:#1a1814}.bank-info{background:#f0ede8;padding:16px 24px;margin:24px 0;border-radius:4px;border-left:4px solid #9a7a3a;font-size:10px;line-height:1.6;color:#1a1814}.signature-box{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}.sig-zone{border:1px solid #e8e4de;padding:20px;border-radius:4px;min-height:80px;display:flex;align-items:flex-end}.sig-label{font-size:10px;font-weight:600;margin-bottom:8px;display:block}.footer{background:#1a1814;color:#fff;padding:16px 32px;font-size:9px;margin-top:32px;text-align:center}.casse-info{font-size:9px;color:#6b6560;margin:16px 0 0;padding:16px 0;border-top:1px solid #e8e4de}.footer-legal{font-size:9px;color:#6b6560;margin-top:16px;text-align:center}@media print{.no-print{display:none!important}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
-  ${!isPro?`<div id="watermark">TRIAL</div>`:''}
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #e8e4de">
-    <div style="flex:1">
-      ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:60px;margin-bottom:8px"/>`:''}
-      <div style="font-size:18px;font-weight:700;color:#9a7a3a;margin-bottom:4px">${state.profile?.barName||''}</div>
-      <div style="font-size:10px;line-height:1.6;color:#6b6560">
-        ${state.profile?.legalForm&&state.profile?.barName?`<div><strong>${state.profile.legalForm} ${state.profile.barName}</strong></div>`:''}
-        ${state.profile?.city?`<div>${state.profile.city}</div>`:''}
-        ${state.profile?.siret?`<div>SIRET: ${state.profile.siret}</div>`:''}
-        ${state.profile?.tvaNumber?`<div>T.V.A. Intracom.: ${state.profile.tvaNumber}</div>`:''}
-      </div>
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Devis</title><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#2a2a2a;background:#fff;padding:16px;max-width:800px;margin:0 auto;line-height:1.4}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #e0e0e0}${state.profile?.logo?`.logo{max-height:45px;margin-bottom:6px}`:''}.company{flex:1}.company-name{font-size:16px;font-weight:600;margin-bottom:2px}.company-info{font-size:8.5px;color:#666;line-height:1.3}.devis-title{text-align:right}.devis-title-text{font-size:24px;font-weight:600;letter-spacing:1px}.devis-date{font-size:8px;color:#999;margin-top:4px}.event-info{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px;padding:12px;background:#f8f8f8;border-radius:2px;font-size:8.5px}.event-info-label{color:#999;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}.event-info-value{color:#2a2a2a;font-size:9px}.items-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:9px}.items-table th{background:#2a2a2a;color:#fff;padding:8px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.items-table td{padding:6px 10px;border-bottom:1px solid #e0e0e0}.items-table .label-col{color:#2a2a2a;font-weight:500}.items-table .num-col{text-align:right;color:#666}.items-table .subtotal{background:#f8f8f8;font-weight:600}.items-table .section-header{background:#f0f0f0;font-weight:600;color:#2a2a2a}.totals{display:grid;grid-template-columns:1fr 200px;gap:16px;margin:16px 0;align-items:start}.totals-box{text-align:right;font-size:9px}.total-line{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e0e0e0}.total-line.amount{font-weight:600}.total-line.main{border:none;padding:8px 0;font-size:10px;font-weight:600;border-top:1px solid #2a2a2a;padding-top:6px}.conditions{font-size:8.5px;color:#666;margin:12px 0;padding:10px;background:#f8f8f8;border-left:2px solid #2a2a2a;line-height:1.4}.bank-info{font-size:8.5px;color:#666;margin:12px 0;padding:10px;background:#f8f8f8;border-left:2px solid #2a2a2a}.signature{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}.sig-zone{border:1px solid #ddd;padding:12px;min-height:60px}.footer{font-size:7px;color:#999;text-align:center;margin-top:16px;padding-top:8px;border-top:1px solid #e0e0e0}@media print{.no-print{display:none}}</style></head><body>
+  <div class="header">
+    <div class="company">
+      ${state.profile?.logo?`<img src="${state.profile.logo}" class="logo"/>`:''}
+      <div class="company-name">${state.profile?.barName||'BAR OPS'}</div>
+      <div class="company-info">${state.profile?.city||''} ${state.profile?.siret?'• '+state.profile.siret:''}</div>
     </div>
-    <div style="text-align:right">
-      <div style="font-size:32px;font-weight:700">DEVIS</div>
-      <div style="font-size:9px;color:#6b6560;margin-top:8px;max-width:200px">Ce devis est établi gratuitement et valide 2 semaines après édition</div>
+    <div class="devis-title">
+      <div class="devis-title-text">DEVIS</div>
+      <div class="devis-date">${today}</div>
     </div>
   </div>
-  <div class="content" style="padding:0">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding:12px 0;font-size:11px">
-      <div>
-        <div style="font-weight:600">Date du devis :</div>
-        <div>${today}</div>
-      </div>
-      <div>
-        <div style="font-weight:600">Nombre d'invités :</div>
-        <div>${ev.pax||'—'}</div>
-      </div>
-      <div>
-        <div style="font-weight:600">Contact :</div>
-        <div>${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?cl.name:'—';})()}</div>
-      </div>
-      <div>
-        <div style="font-weight:600">Lieu de l'événement :</div>
-        <div>${ev.address||'—'}</div>
-      </div>
-    </div>
-    <div style="margin-bottom:24px;padding:12px 0;font-size:10px;color:#c41e3a;font-style:italic">
-      Toute éventuelle relevance due au lieu d'accueil, l'événement n'est pas incluse dans ce devis
-    </div>
-    <table>
-      <thead class="table-header">
-        <tr><th>Quantité</th><th>Désignation</th><th style="text-align:right">Prix unitaire H.T.</th><th style="text-align:right">Prix total H.T.</th></tr>
-      </thead>
-      <tbody>
-        ${cocktailLines?`<tr class="table-row section-header"><td colspan="4">COCKTAILS :</td></tr>${(ev.cocktails||[]).map((cfg,i)=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';const totalHT=(cfg.qty*c.priceHT).toFixed(2);return`<tr class="table-row ${i%2?'alt':''}"><td>${cfg.qty}</td><td>${c.name}</td><td style="text-align:right">${c.priceHT.toFixed(2)}€</td><td style="text-align:right">${totalHT}€</td></tr>`;}).filter(Boolean).join('')}<tr class="table-row subtotal"><td colspan="3" style="text-align:right">Sous-total cocktails</td><td style="text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
-        ${staffLines.length?`<tr class="table-row section-header"><td colspan="4">ÉQUIPE :</td></tr>${staffRoles.map((r,i)=>{if(!r.n)return '';const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));const billHT=s?.billHT||0;let hrs=0;if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);const hoursDetail=hrs>0?`${hrs.toFixed(1)}h @ ${billHT.toFixed(2)}€/h`:'—';return`<tr class="table-row ${i%2?'alt':''}"><td>${r.n}</td><td>${r.n} ${r.label} – ${r.arr}–${r.dep}<br/><span style="font-size:10px;color:#6b6560">${hoursDetail}</span></td><td style="text-align:right">${billHT.toFixed(2)}€/h</td><td style="text-align:right">${totalHT>0?totalHT.toFixed(2):'—'}€</td></tr>`;}).join('')}<tr class="table-row subtotal"><td colspan="3" style="text-align:right">Sous-total équipe</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
-        ${deliveryBill||extraBill?`<tr class="table-row section-header"><td colspan="4">FRAIS ANNEXES & OPTIONS :</td></tr>${deliveryBill?`<tr class="table-row"><td>1</td><td>Livraison & matériel</td><td style="text-align:right">${deliveryBill.toFixed(2)}€</td><td style="text-align:right">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr class="table-row alt"><td>1</td><td>Frais divers</td><td style="text-align:right">${extraBill.toFixed(2)}€</td><td style="text-align:right">${extraBill.toFixed(2)}€</td></tr>`:''}`:''
-}
-      </tbody>
-    </table>
-    <div class="total-section">
-      <div></div>
-      <div class="total-box">
-        <div class="total-line"><span>Sous-total H.T.</span><span>${grandHT.toFixed(2)}€</span></div>
-        <div class="total-line"><span>T.V.A. à 20%</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div>
-        <div class="total-line strong"><span>TOTAL T.T.C.</span><span>${grandTTC.toFixed(2)}€</span></div>
-      </div>
-    </div>
-    <div class="acompte">Acompte de ${(()=>{const pct=ev.acompte>0?(ev.acompte/grandTTC*100).toFixed(0):state.profile?.acomptePercent||100;return pct+'%';})() } du montant total T.T.C. à la confirmation${ev.acompte>0?` : <strong>${ev.acompte.toFixed(2)}€</strong>`:` : <strong>${Math.round(grandTTC*(state.profile?.acomptePercent||100)/100).toFixed(2)}€</strong>`}</div>
-    <div style="font-size:10px;color:#6b6560;line-height:1.6;margin:24px 0;padding:12px 0;border-top:1px solid #e8e4de;border-bottom:1px solid #e8e4de">
-      Toute heure supplémentaire sera facturée:<br/>
-      ${staffRoles.map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));return s?`${r.label}: ${s.billHT?.toFixed(2)||'—'}€/h`:''}).filter(Boolean).join(' • ')}
-    </div>
-    <div class="bank-info">
-      <strong>COORDONNÉES BANCAIRES</strong><br/>
-      ${state.profile?.barName?`Nom: ${state.profile.barName}<br/>`:``}
-      ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:``}
-      ${state.profile?.bic?`BIC: ${state.profile.bic}<br/>`:``}
-      ${state.profile?.banque?`BANQUE: ${state.profile.banque}<br/>`:``}
-    </div>
-    ${Object.keys(breakageByGlass).length?`<div class="casse-info">${Object.entries(breakageByGlass).map(([glassName,data])=>`Casse verre ${glassName}: couvert en dessous de ${data.percent}%${data.cost>0?`, au-delà facturé ${data.cost.toFixed(2)}€`:''}`).join(' • ')}</div>`:''}
-    <div class="signature-box">
-      <div></div>
-      <div style="border:none;padding:0">
-        <div style="font-size:11px;font-weight:600;margin-bottom:16px">Merci de retourner ce devis signé, daté et suivi de la mention « Bon pour accord » sur toutes les pages</div>
-        <div class="sig-zone" style="border:1px solid #ddd;min-height:100px"></div>
-      </div>
+  <div class="event-info">
+    <div><div class="event-info-label">Événement</div><div class="event-info-value">${ev.name||'—'}</div></div>
+    <div><div class="event-info-label">Contact</div><div class="event-info-value">${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?.name||'—';})()}</div></div>
+    <div><div class="event-info-label">Invités</div><div class="event-info-value">${ev.nGuests||'—'}</div></div>
+    <div><div class="event-info-label">Lieu</div><div class="event-info-value">${ev.address||'—'}</div></div>
+  </div>
+  <table class="items-table">
+    <thead><tr><th>Désignation</th><th style="text-align:center">Qté</th><th style="text-align:right">P.U. HT</th><th style="text-align:right">Total HT</th></tr></thead>
+    <tbody>
+      ${(ev.cocktails||[]).length?`<tr class="section-header"><td colspan="4">Cocktails</td></tr>${(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';const totalHT=(cfg.qty*c.priceHT).toFixed(2);return`<tr><td class="label-col">${c.name}</td><td style="text-align:center">${cfg.qty}</td><td class="num-col">${c.priceHT.toFixed(2)}€</td><td class="num-col">${totalHT}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
+      ${staffRoles.some(r=>r.n)?`<tr class="section-header"><td colspan="4">Équipe</td></tr>${staffRoles.filter(r=>r.n).map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));const billHT=s?.billHT||0;let hrs=0;if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);return`<tr><td class="label-col">${r.n} ${r.label}${r.arr&&r.dep?` (${r.arr}–${r.dep})`:''}</td><td style="text-align:center">${r.n}</td><td class="num-col">${billHT.toFixed(2)}€${s?.per==='per event'?'/event':'/h'}</td><td class="num-col">${totalHT.toFixed(2)}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
+      ${deliveryBill||extraBill?`<tr class="section-header"><td colspan="4">Options & Frais</td></tr>${deliveryBill?`<tr><td class="label-col">Livraison & matériel</td><td></td><td></td><td class="num-col">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr><td class="label-col">Frais divers</td><td></td><td></td><td class="num-col">${extraBill.toFixed(2)}€</td></tr>`:''}`:''}
+    </tbody>
+  </table>
+  <div class="totals">
+    <div></div>
+    <div class="totals-box">
+      <div class="total-line"><span>HT</span><span class="amount">${grandHT.toFixed(2)}€</span></div>
+      <div class="total-line"><span>TVA 20%</span><span class="amount">${(grandTTC-grandHT).toFixed(2)}€</span></div>
+      <div class="total-line main"><span>TOTAL TTC</span><span>${grandTTC.toFixed(2)}€</span></div>
     </div>
   </div>
-  <div class="footer">Propulsé par BAR OPS</div>
+  <div class="conditions">
+    <strong>Acompte ${(()=>{const pct=ev.acompte>0?(ev.acompte/grandTTC*100).toFixed(0):state.profile?.acomptePercent||100;return pct+'%';})()}</strong> à la confirmation${ev.acompte>0?`: ${ev.acompte.toFixed(2)}€`:`: ${Math.round(grandTTC*(state.profile?.acomptePercent||100)/100).toFixed(2)}€`}
+  </div>
+  <div class="bank-info">
+    <strong>Coordonnées bancaires:</strong><br/>
+    ${state.profile?.barName?`Titulaire: ${state.profile.barName}<br/>`:``}
+    ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:``}
+    ${state.profile?.banque?`Banque: ${state.profile.banque}`:``}
+  </div>
+  <div class="signature">
+    <div></div>
+    <div>
+      <div style="font-size:8px;margin-bottom:4px;font-weight:600">Signature & mention</div>
+      <div class="sig-zone"></div>
+      <div style="font-size:7px;color:#999;margin-top:4px">« Bon pour accord »</div>
+    </div>
+  </div>
+  <div class="footer">Devis établi gratuitement • Valide 2 semaines • BAR OPS</div>
   </body></html>`;
 }
 
@@ -7298,7 +7236,7 @@ function renderProfile(){
       <div class="card" style="display:flex;flex-direction:column;gap:8px;padding:10px">
         <div class="ctitle">Informations & Donnees</div>
         <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;gap:6px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;flex:1">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;flex:1">
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Nom</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.barName||'—'}</div>
