@@ -3590,7 +3590,10 @@ function showEvForm(ev){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
         <div class="field" style="margin:0">
           <label style="font-size:10px">Modèle</label>
-          <div id="ef-bar-model-wrap" style="width:100%"></div>
+          <select id="ef-bar-model-inp" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+            <option value="">—</option>
+            ${[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort().map(model=>`<option value="${model}">${model}</option>`).join('')}
+          </select>
         </div>
         <div class="field" style="margin:0">
           <label style="font-size:10px">Longueur</label>
@@ -3772,12 +3775,8 @@ function showEvForm(ev){
   (ev.cocktails||[]).forEach(c=>{
     el._sel[c.id]={qty:c.qty||0,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};
   });
-  const barModels=[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort();
-  mkSS('ef-bar-model-wrap',barModels,'Ex: Bar noir...',(v,isNew)=>{
-    document.getElementById('ef-bar-model-inp').value=v;updBarSelection();
-  },(ev.barType?.split('•')[0]?.trim()||''),false);
-  const barModelInp=document.querySelector('#ef-bar-model-wrap .ss-input');
-  if(barModelInp)barModelInp.id='ef-bar-model-inp';
+  const barModelInp=document.getElementById('ef-bar-model-inp');
+  if(barModelInp)barModelInp.value=(ev.barType?.split('•')[0]?.trim()||'');
   renderEvPicker();updEvCalc();updBarSelection();_renderExtraProds();
 }
 
@@ -3982,7 +3981,7 @@ function updEvPayment(){
 }
 
 function updBarSelection(){
-  const model=document.querySelector('#ef-bar-model-wrap .ss-input')?.value||'';
+  const model=document.getElementById('ef-bar-model-inp')?.value||'';
   const length=parseFloat(document.getElementById('ef-bar-length-sel')?.value||0);
   const color=document.getElementById('ef-bar-color')?.value||'';
   const style=document.getElementById('ef-bar-style')?.value||'';
