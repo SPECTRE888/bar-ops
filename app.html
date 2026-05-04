@@ -5831,13 +5831,27 @@ function buildDevisHTML(ev,devisNum){
   </body></html>`;
 }
 
+function generateDevisNumber(ev){
+  if(ev.devisNum)return ev.devisNum;
+  const barName=state.profile?.barName||'BAR OPS';
+  const initials=barName.split(' ').map(w=>w.charAt(0).toUpperCase()).join('').substring(0,2).padEnd(2,'X');
+  const year=new Date().getFullYear();
+  const yearKey=`${year}-${initials}`;
+  if(!state._devisCounters)state._devisCounters={};
+  if(!state._devisCounters[yearKey])state._devisCounters[yearKey]=0;
+  state._devisCounters[yearKey]++;
+  const num=String(state._devisCounters[yearKey]).padStart(4,'0');
+  ev.devisNum=`DEVIS-${year}-${initials}-${num}`;
+  save();
+  return ev.devisNum;
+}
 function generateDevis(){
   const evId=parseInt(document.getElementById('prest-ev-sel')?.value||0);
   if(!evId){alert('Sélectionne un événement.');return;}
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   updEvCalc();
-  const devisNum='DEV-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  const devisNum=generateDevisNumber(ev);
   const html=buildDevisHTML(ev,devisNum);
   const withBtns=html.replace('</body></html>',`
   <div class="no-print" style="text-align:center;margin-top:40px;display:flex;gap:12px;justify-content:center">
