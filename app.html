@@ -5150,6 +5150,12 @@ function sendBriefWA(evId,sid){
   const role=(ev.staffRoles||{})[sid]||s.type||'';
   const tenue=(ev.dressCodes||[]).map(dcId=>{const dc=state.dressCodes.find(x=>x.id===dcId);return dc?dc.name:dcId;}).join(', ')||'Non précisée';
 
+  let staffArr='?',staffDep='?';
+  if(role==='Bartender'){staffArr=ev.arrBrt||'?';staffDep=ev.depBrt||'?';}
+  else if(role==='Serveur'){staffArr=ev.arrWtr||'?';staffDep=ev.depWtr||'?';}
+  else if(role==='Bar Manager'){staffArr=ev.arrMgr||'?';staffDep=ev.depMgr||'?';}
+  else if(role==='Manutentionnaire'){staffArr=ev.arrMan||'?';staffDep=ev.depMan||'?';}
+
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
     let detail='═══════════════════════════════════\n';
@@ -5176,8 +5182,8 @@ function sendBriefWA(evId,sid){
     'Date: '+fmtDate,
     'Lieu: '+(ev.address||'?')+(ev.access?' | Acces: '+ev.access:''),
     'Setup: '+(ev.setup||'?'),
-    'Ouverture bar: '+(ev.start||'?'),
-    'Fermeture bar: '+(ev.end||'?'),
+    'Horaires: '+staffArr+' - '+staffDep,
+    'Bar ouvert: '+(ev.start||'?')+' - '+(ev.end||'?'),
     'Pax: '+(ev.pax||'?'),
     'Poste: '+role,
     'Tenue: '+tenue,
