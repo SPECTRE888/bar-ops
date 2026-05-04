@@ -1,0 +1,16 @@
+{
+  "readablePaths": [
+    "CLAUDE.md",
+    "PROJECT_CONTEXT.md",
+    "netlify/functions/**/*.js"
+  ],
+  "ignorePaths": [
+    "*.html",
+    "node_modules",
+    ".DS_Store",
+    "*.save",
+    "package-lock.json",
+    "deno.lock",
+    ".netlify"
+  ]
+}
