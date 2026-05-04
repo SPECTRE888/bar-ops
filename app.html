@@ -8164,7 +8164,19 @@ function renderBarItems(){
   const items=state.barItems||[];
   if(!items.length){el.innerHTML='<div class="empty" style="padding:20px 0"><div class="empty-icon"></div><p class="ts tm">Aucun bar configuré.</p></div>';return;}
 
+  // Build suggestion lists for datalist
+  const names=[...new Set(items.map(b=>b.name).filter(Boolean))].sort();
+  const colors=[...new Set(items.map(b=>b.color).filter(Boolean))].sort();
+  const styles=[...new Set(items.map(b=>b.style).filter(Boolean))].sort();
+  const transports=[...new Set(items.map(b=>b.transport).filter(Boolean))].sort();
+  const setups=[...new Set(items.map(b=>b.setup).filter(Boolean))].sort();
+
   el.innerHTML=`<div class="card" style="padding:0;overflow:visible">
+    <datalist id="bar-names">${names.map(n=>`<option value="${n}"/>`).join('')}</datalist>
+    <datalist id="bar-colors">${colors.map(c=>`<option value="${c}"/>`).join('')}</datalist>
+    <datalist id="bar-styles">${styles.map(s=>`<option value="${s}"/>`).join('')}</datalist>
+    <datalist id="bar-transports">${transports.map(t=>`<option value="${t}"/>`).join('')}</datalist>
+    <datalist id="bar-setups">${setups.map(s=>`<option value="${s}"/>`).join('')}</datalist>
     <table class="ptable" style="overflow:visible">
       <thead><tr>
         <th>Photo</th>
@@ -8192,13 +8204,13 @@ function renderBarItems(){
               </label>`
           }
         </td>
-        <td><input value="${(b.name||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'name',this.value)" placeholder="Bar White LED..." style="min-width:120px"/></td>
+        <td><input list="bar-names" value="${(b.name||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'name',this.value)" placeholder="Bar White LED..." style="min-width:120px"/></td>
         <td><input type="number" value="${b.lengthM||''}" step="0.5" min="0" placeholder="3" onchange="updBarItem(${b.id},'lengthM',parseFloat(this.value)||0)" style="width:65px"/></td>
         <td><input type="number" value="${b.priceHT||''}" step="10" min="0" placeholder="0" onchange="updBarItem(${b.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
-        <td><input value="${(b.color||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'color',this.value)" placeholder="Blanc, Noir..." style="min-width:80px"/></td>
-        <td><input value="${(b.style||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'style',this.value)" placeholder="Moderne, Vintage..." style="min-width:100px"/></td>
-        <td><input value="${(b.transport||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'transport',this.value)" placeholder="Camion, Voiture..." style="min-width:90px"/></td>
-        <td><input value="${(b.setup||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'setup',this.value)" placeholder="2h avant" style="min-width:80px"/></td>
+        <td><input list="bar-colors" value="${(b.color||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'color',this.value)" placeholder="Blanc, Noir..." style="min-width:80px"/></td>
+        <td><input list="bar-styles" value="${(b.style||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'style',this.value)" placeholder="Moderne, Vintage..." style="min-width:100px"/></td>
+        <td><input list="bar-transports" value="${(b.transport||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'transport',this.value)" placeholder="Camion, Voiture..." style="min-width:90px"/></td>
+        <td><input list="bar-setups" value="${(b.setup||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'setup',this.value)" placeholder="2h avant" style="min-width:80px"/></td>
         <td><input type="checkbox" ${b.customizable?'checked':''} onchange="updBarItem(${b.id},'customizable',this.checked)" title="Personnalisable" style="width:auto;accent-color:var(--gold)"/></td>
         <td><input value="${(b.notes||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'notes',this.value)" placeholder="Éclairage LED, logo..."/></td>
         <td><input type="checkbox" ${b.available!==false?'checked':''} onchange="updBarItem(${b.id},'available',this.checked)" title="Disponible" style="width:auto;accent-color:var(--green)"/></td>
