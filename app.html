@@ -1970,7 +1970,7 @@ function renderGlassware(){
   else{ge.style.display='none';gt.innerHTML=state.glasses.map(g=>{
     const ht=((g.priceTTC||g.priceHT||0)/1.10).toFixed(3);
     return`<tr>
-      <td><input type="checkbox" ${g.isDefault?'checked':''} onchange="updGlass(${g.id},'isDefault',this.checked);resetDefaultGlass(${g.id})" title="Par défaut"/></td>
+      <td><input type="checkbox" ${g.isDefault?'checked':''} onchange="updGlass(${g.id},'isDefault',this.checked);resetDefaultGlass(${g.id})" title="Par défaut" style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold)"/></td>
       <td><div id="gs-${g.id}" style="min-width:120px"></div></td>
       <td><input value="${(g.appellation||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
       <td><input type="number" value="${g.priceTTC||g.priceHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
