@@ -8075,7 +8075,7 @@ function toggleCoursesDone(evId){
 function addBarItem(){
   if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux bars.');return;}
   if(!state.barItems) state.barItems=[];
-  state.barItems.push({id:Date.now(),name:'',lengthM:0,priceHT:0,color:'',theme:'',style:'',transport:'',setup:'',notes:'',available:true,photo:''});
+  state.barItems.push({id:Date.now(),name:'',brand:'',lengthM:0,priceHT:0,color:'',theme:'',style:'',transport:'',setup:'',notes:'',available:true,photo:''});
   save();renderBarItems();
 }
 function delBarItem(id){if(!confirm('Supprimer ?'))return;state.barItems=state.barItems.filter(x=>x.id!==id);save();renderBarItems();}
