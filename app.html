@@ -5705,72 +5705,74 @@ function buildDevisHTML(ev,devisNum){
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
   <title>Devis — ${ev.name}</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;padding:48px 56px;max-width:860px;margin:0 auto}h1{font-family:'DM Serif Display',serif;font-weight:400}.label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#999;margin-bottom:6px}table{width:100%;border-collapse:collapse}thead tr{border-bottom:2px solid #1a1a1a}th{padding:10px 16px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-weight:500}.section{margin-bottom:36px}.total-box{background:#f8f6f2;padding:20px 24px;border-radius:4px;margin-top:32px;max-width:300px;margin-left:auto}.total-line{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#555;border-bottom:1px solid #eee}.total-final{display:flex;justify-content:space-between;padding:12px 0 0;font-size:18px;font-family:'DM Serif Display',serif}@media print{.no-print{display:none!important};body{padding:24px}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;padding:0;margin:0}h1{font-family:'DM Serif Display',serif;font-weight:400}.header-black{background:#1a1a1a;color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}.header-info{flex:1}.header-title{font-size:32px;font-weight:600;margin-bottom:8px}.header-subtitle{font-size:11px;color:#999;margin-bottom:12px}.header-meta{font-size:10px;color:#666;line-height:1.5}.header-right{text-align:right}.devis-title{font-size:28px;font-weight:600;margin-bottom:4px}.validity{font-size:10px;color:#666;margin-bottom:16px}.content{padding:0 32px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px;padding:16px;background:#f5f5f5;border-radius:4px}.info-col{font-size:11px}.info-label{font-weight:600;margin-bottom:4px}.info-value{color:#555;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin:24px 0}.table-header{background:#1a1a1a;color:#fff}.table-header th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase}.table-row{background:#fff;border-bottom:1px solid #f0f0f0}.table-row.alt{background:#f9f3e8}.table-row td{padding:12px 16px;font-size:11px}.table-row.section-header td{background:#1a1a1a;color:#fff;font-weight:600;padding:10px 16px}.table-row.subtotal td{background:#e8dcc8;font-weight:600;padding:10px 16px}.total-section{display:grid;grid-template-columns:2fr 1fr;gap:32px;margin:24px 0}.total-box{text-align:right;font-size:12px}.total-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #ddd}.total-line.strong{font-weight:600;border:none;padding:12px 0;font-size:13px}.acompte{background:#ffeb3b;padding:16px 24px;margin:24px 0;border-radius:4px;font-weight:600;font-size:11px}.bank-info{background:#ffeb3b;padding:16px 24px;margin:24px 0;border-radius:4px;font-size:10px;line-height:1.6}.signature-box{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}.sig-zone{border:1px solid #ddd;padding:20px;border-radius:4px;min-height:80px;display:flex;align-items:flex-end}.sig-label{font-size:10px;font-weight:600;margin-bottom:8px;display:block}.footer{background:#1a1a1a;color:#fff;padding:16px 32px;font-size:9px;margin-top:32px;text-align:center}.casse-info{font-size:9px;color:#666;margin:16px 0 0;padding:16px 0;border-top:1px solid #ddd}.footer-legal{font-size:9px;color:#666;margin-top:16px;text-align:center}@media print{.no-print{display:none!important}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
   ${!isPro?`<div id="watermark">TRIAL</div>`:''}
-  <div style="text-align:center;margin-bottom:48px;padding-bottom:32px;border-bottom:2px solid #1a1a1a">
-    ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:72px;max-width:220px;object-fit:contain;margin-bottom:6px;display:block;margin-left:auto;margin-right:auto"/>`:''}
-    <div style="font-size:28px;font-family:'DM Serif Display',serif;letter-spacing:.02em">${state.profile?.barName||state.profile?.companyName||''}</div>
-    ${state.profile?.city?`<div style="color:#999;font-size:12px;margin-top:4px;letter-spacing:.06em">${state.profile.city}</div>`:''}
-    <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:flex-end">
-      <div style="text-align:left"><h1 style="font-size:38px;letter-spacing:-.01em">Devis</h1><div style="color:#999;font-size:12px;margin-top:4px;letter-spacing:.04em">${devisNum} · ${today}</div></div>
-      <div style="text-align:right">${state.profile?.email?`<div style="font-size:12px;color:#555">${state.profile.email}</div>`:''}${state.profile?.phone?`<div style="font-size:12px;color:#555">${state.profile.phone}</div>`:''}${state.profile?.siret?`<div style="font-size:11px;color:#999">SIRET ${state.profile.siret}</div>`:''}</div>
+  <div class="header-black">
+    <div class="header-info">
+      <div class="header-subtitle">${state.profile?.barName||''}</div>
+      ${state.profile?.siret?`<div class="header-meta">SIRET: ${state.profile.siret}</div>`:''}
+      ${state.profile?.apeCode?`<div class="header-meta">Code APE: ${state.profile.apeCode}</div>`:''}
+      ${state.profile?.tvaNumber?`<div class="header-meta">TVA: ${state.profile.tvaNumber}</div>`:`<div class="header-meta">TVA non applicable – Régime auto-entrepreneur</div>`}
+    </div>
+    <div class="header-right">
+      <div class="devis-title">DEVIS</div>
+      <div class="validity">Ce devis est établi gratuitement et valide 2 semaines après édition</div>
+      <div class="header-meta">${devisNum} · ${today}</div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-bottom:40px">
-    <div><div class="label">Prestation</div><div style="font-size:22px;font-family:'DM Serif Display',serif;margin-bottom:6px">${ev.name}</div>${fmtDate?`<div style="color:#555;font-size:13px;margin-bottom:2px">${fmtDate}</div>`:''}${ev.address?`<div style="color:#777;font-size:12px;margin-bottom:2px">${ev.address}</div>`:''}${ev.pax?`<div style="color:#777;font-size:12px">${ev.pax} personnes</div>`:''}</div>
-    <div style="text-align:right"><div class="label">Client</div>${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?`<div style="font-size:16px;font-weight:500;margin-bottom:4px">${cl.name}</div>${cl.company?`<div style="color:#555;font-size:13px;margin-bottom:2px">${cl.company}</div>`:''}${cl.email?`<div style="color:#777;font-size:12px;margin-bottom:2px">${cl.email}</div>`:''}${cl.phone?`<div style="color:#777;font-size:12px">${cl.phone}</div>`:''}`:'<div style="color:#bbb">—</div>';})()}</div>
-  </div>
-  <div class="section">
-    <div class="label">Produits et prestations</div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-      <thead>
-        <tr style="background:#3b5998;color:white">
-          <th style="padding:12px 16px;text-align:left;font-weight:600">Produit / Prestation</th>
-          <th style="padding:12px 16px;text-align:center;font-weight:600">Qté</th>
-          <th style="padding:12px 16px;text-align:center;font-weight:600">Unité</th>
-          <th style="padding:12px 16px;text-align:right;font-weight:600">PU HT</th>
-          <th style="padding:12px 16px;text-align:center;font-weight:600">TVA</th>
-          <th style="padding:12px 16px;text-align:center;font-weight:600">Remise</th>
-          <th style="padding:12px 16px;text-align:right;font-weight:600">Total HT</th>
-        </tr>
+  <div class="content">
+    <div class="info-grid">
+      <div class="info-col">
+        <div class="info-label">Client :</div>
+        <div class="info-value">${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?cl.name:'—';})()}</div>
+        <div class="info-label">Contact :</div>
+        <div class="info-value">${ev.pax||'—'}</div>
+      </div>
+      <div class="info-col">
+        <div class="info-label">Lieu de l'événement :</div>
+        <div class="info-value">${ev.address||'—'}</div>
+        <div class="info-label">Nombre d'invités :</div>
+        <div class="info-value">${ev.pax||'—'}</div>
+        <div class="info-label">Date de l'événement :</div>
+        <div class="info-value">${fmtDate||'—'}</div>
+      </div>
+    </div>
+    <table>
+      <thead class="table-header">
+        <tr><th>Quantité</th><th>Désignation</th><th style="text-align:right">Prix unitaire H.T.</th><th style="text-align:right">Prix total H.T.</th></tr>
       </thead>
       <tbody>
-        ${cocktailLines?`<tr><td colspan="7" style="padding:12px 16px;font-weight:600;background:#f8f9fa;border-top:2px solid #ddd"><em>Cocktails</em></td></tr>${cocktailLines}<tr style="font-weight:600;background:#f8f9fa"><td style="padding:12px 16px" colspan="6">Sous-total cocktails</td><td style="padding:12px 16px;text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
-        ${staffLines.length?`<tr><td colspan="7" style="padding:12px 16px;font-weight:600;background:#f8f9fa;border-top:2px solid #ddd"><em>Équipe</em></td></tr>${staffLines.map(line=>{const m=line.match(/Total HT<\/th><\/tr><\/thead><tbody>(.+)<\/tbody>/);return line;}).join('')}<tr style="font-weight:600;background:#f8f9fa"><td style="padding:12px 16px" colspan="6">Sous-total équipe</td><td style="padding:12px 16px;text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
-        ${deliveryBill||extraBill?`<tr><td colspan="7" style="padding:12px 16px;font-weight:600;background:#f8f9fa;border-top:2px solid #ddd"><em>Frais supplémentaires</em></td></tr>${deliveryBill?`<tr><td style="padding:12px 16px">Livraison & matériel</td><td style="padding:12px 16px;text-align:center">1</td><td style="padding:12px 16px;text-align:center">forfait</td><td style="padding:12px 16px;text-align:right">${deliveryBill.toFixed(2)}</td><td style="padding:12px 16px;text-align:center">20%</td><td style="padding:12px 16px;text-align:center">—</td><td style="padding:12px 16px;text-align:right">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px">Frais divers</td><td style="padding:12px 16px;text-align:center">1</td><td style="padding:12px 16px;text-align:center">forfait</td><td style="padding:12px 16px;text-align:right">${extraBill.toFixed(2)}</td><td style="padding:12px 16px;text-align:center">20%</td><td style="padding:12px 16px;text-align:center">—</td><td style="padding:12px 16px;text-align:right">${extraBill.toFixed(2)}€</td></tr>`:''}${deliveryBill||extraBill?`<tr style="font-weight:600;background:#f8f9fa"><td style="padding:12px 16px" colspan="6">Sous-total frais</td><td style="padding:12px 16px;text-align:right">${(deliveryBill+extraBill).toFixed(2)}€</td></tr>`:''}`:''}
+        ${cocktailLines?`<tr class="table-row section-header"><td colspan="4">COCKTAILS :</td></tr>${(ev.cocktails||[]).map((cfg,i)=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';const totalHT=(cfg.qty*c.priceHT).toFixed(2);return`<tr class="table-row ${i%2?'alt':''}"><td>${cfg.qty}</td><td>${c.name}</td><td style="text-align:right">${c.priceHT.toFixed(2)}€</td><td style="text-align:right">${totalHT}€</td></tr>`;}).filter(Boolean).join('')}<tr class="table-row subtotal"><td colspan="3" style="text-align:right">Sous-total cocktails</td><td style="text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
+        ${staffLines.length?`<tr class="table-row section-header"><td colspan="4">ÉQUIPE :</td></tr>${staffRoles.map((r,i)=>{if(!r.n)return '';const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));const billHT=s?.billHT||0;let hrs=0;if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);return`<tr class="table-row ${i%2?'alt':''}"><td>${r.n}</td><td>${r.n} ${r.label} – ${r.arr}–${r.dep} (${hrs.toFixed(1)}h)</td><td style="text-align:right">${billHT.toFixed(2)}€/h</td><td style="text-align:right">${totalHT>0?totalHT.toFixed(2):'—'}€</td></tr>`;}).join('')}<tr class="table-row subtotal"><td colspan="3" style="text-align:right">Sous-total équipe</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
+        ${deliveryBill||extraBill?`<tr class="table-row section-header"><td colspan="4">FRAIS ANNEXES & OPTIONS :</td></tr>${deliveryBill?`<tr class="table-row"><td>1</td><td>Livraison & matériel</td><td style="text-align:right">${deliveryBill.toFixed(2)}€</td><td style="text-align:right">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr class="table-row alt"><td>1</td><td>Frais divers</td><td style="text-align:right">${extraBill.toFixed(2)}€</td><td style="text-align:right">${extraBill.toFixed(2)}€</td></tr>`:''}`:''
+}
       </tbody>
     </table>
-  </div>
-  <div style="margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:40px">
-    <div></div>
-    <div class="total-box" style="max-width:none">
-      <div class="total-line"><span>Total HT</span><span>${grandHT.toFixed(2)}€</span></div>
-      <div class="total-line"><span>Taux TVA</span><span>20%</span></div>
-      <div class="total-line"><span>Total TVA</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div>
-      <div class="total-line" style="border-bottom:2px solid #1a1a1a;padding-bottom:12px"><span>Total TTC</span><span>${grandTTC.toFixed(2)}€</span></div>
-      <div class="total-line" style="padding-top:12px"><span>Acompte à la commande 30%</span><span>${(grandTTC*0.3).toFixed(2)}€</span></div>
-      <div class="total-line" style="font-weight:600;font-size:15px;padding-top:12px"><span>Net à payer</span><span>${grandTTC.toFixed(2)}€</span></div>
+    <div class="total-section">
+      <div></div>
+      <div class="total-box">
+        <div class="total-line"><span>Sous-total H.T.</span><span>${grandHT.toFixed(2)}€</span></div>
+        <div class="total-line"><span>T.V.A. à 20%</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div>
+        <div class="total-line strong"><span>TOTAL T.T.C.</span><span>${grandTTC.toFixed(2)}€</span></div>
+      </div>
+    </div>
+    <div class="acompte">Acompte de 100% du montant total T.T.C. à la confirmation</div>
+    <div class="bank-info">
+      <strong>COORDONNÉES BANCAIRES</strong><br/>
+      ${state.profile?.siret?`SIRET: ${state.profile.siret}<br/>`:''}<br/>
+      ${state.profile?.rib?`IBAN: ${state.profile.rib}<br/>`:''}<br/>
+      ${state.profile?.email?`Email: ${state.profile.email}`:''}<br/>
+    </div>
+    ${Object.keys(breakageByGlass).length?`<div class="casse-info">${Object.entries(breakageByGlass).map(([glassName,data])=>`Casse verre ${glassName}: couvert en dessous de ${data.percent}%${data.billableAmount>0?`, au-delà facturé ${data.billableAmount.toFixed(2)}€ (prix d'achat du verre)`:''}`).join(' • ')}</div>`:''}
+    <div class="signature-box">
+      <div></div>
+      <div style="border:none;padding:0">
+        <div style="font-size:11px;font-weight:600;margin-bottom:16px">Merci de retourner ce devis signé, daté et suivi de la mention<br/><strong>« Bon pour accord »</strong><br/>sur toutes les pages</div>
+        <div class="sig-zone" style="border:1px solid #ddd;min-height:100px"></div>
+      </div>
     </div>
   </div>
-  <div style="margin-top:24px;font-size:11px;color:#666">Ce devis reste valable pour une période de 30 jours.</div>
-  <div style="margin-top:32px;padding:20px;border:1px solid #ddd;border-radius:4px;display:flex;gap:16px">
-    <div style="flex:1">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:12px">Signature du client</div>
-      <div style="min-height:60px;border:1px solid #ddd;border-radius:3px;background:#fafafa"></div>
-    </div>
-    <div style="flex:1">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px">Bon pour accord</div>
-      <div style="font-size:11px;color:#555;font-style:italic">Signature et cachet de l'entreprise</div>
-    </div>
-  </div>
-  ${Object.keys(breakageByGlass).length?`<div style="margin-top:32px;padding-top:16px;border-top:1px solid #f0ede8;font-size:9px;color:#999;line-height:1.6">${Object.entries(breakageByGlass).map(([glassName,data])=>`Casse verre ${glassName}: couvert en dessous de ${data.percent}%${data.billableAmount>0?`, au-delà facturé ${data.billableAmount.toFixed(2)}€ (prix d'achat du verre)`:''}`).join(' • ')}</div>`:''}
-  <div style="margin-top:32px;padding-top:16px;border-top:1px solid #f0ede8;font-size:9px;color:#999;line-height:1.6">
-    ${state.profile?.siret?`<div style="margin-bottom:4px"><span style="color:#555">SIRET:</span> ${state.profile.siret}</div>`:''}
-    ${state.profile?.apeCode?`<div style="margin-bottom:4px"><span style="color:#555">Code APE:</span> ${state.profile.apeCode}</div>`:''}
-    ${state.profile?.rib?`<div style="margin-bottom:4px"><span style="color:#555">RIB:</span> ${state.profile.rib}</div>`:''}
-    <div style="margin-top:8px">${state.profile?.tvaNumber?`TVA: ${state.profile.tvaNumber}`:'TVA non applicable – Régime auto-entrepreneur'}</div>
-  </div>
-  <div style="margin-top:24px;padding-top:10px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#999">Devis valable 30 jours · Acompte 30% à la signature · Solde à J-7</span><span style="font-size:10px;color:#ccc;font-style:italic">Propulsé par BAR OPS</span></div>
+  <div class="footer">Propulsé par BAR OPS</div>
   </body></html>`;
 }
 
