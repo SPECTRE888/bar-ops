@@ -3773,7 +3773,10 @@ function showEvForm(ev){
     el._sel[c.id]={qty:c.qty||0,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};
   });
   const barModels=[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort();
-  mkSS('ef-bar-model-wrap',barModels,'Ex: Bar noir...',(v)=>{document.getElementById('ef-bar-model-inp').value=v;updBarSelection();},(ev.barType?.split('•')[0]?.trim()||''));
+  mkSS('ef-bar-model-wrap',barModels,'Ex: Bar noir...',(v,isNew)=>{
+    if(isNew&&v){if(!state.barItems)state.barItems=[];state.barItems.push({id:Date.now(),name:v,brand:'',lengthM:0,priceHT:0,color:'',style:'',notes:'',available:true,photo:''});save();}
+    document.getElementById('ef-bar-model-inp').value=v;updBarSelection();
+  },(ev.barType?.split('•')[0]?.trim()||''));
   const barModelInp=document.querySelector('#ef-bar-model-wrap .ss-input');
   if(barModelInp)barModelInp.id='ef-bar-model-inp';
   renderEvPicker();updEvCalc();updBarSelection();_renderExtraProds();
