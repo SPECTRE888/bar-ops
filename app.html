@@ -4148,7 +4148,7 @@ function _renderExtraProds(){
     const vol=p.volume||'';
     const qty=p.qty||0;
     const total=qty*price;
-    return`<div style="background:var(--surface2);border-radius:var(--radius);padding:8px;margin-bottom:6px;display:grid;grid-template-columns:1.2fr 90px 70px 80px 80px 32px 80px 32px 80px 80px 28px 28px;gap:6px;align-items:center;font-size:11px">
+    return`<div style="background:var(--surface2);border-radius:var(--radius);padding:8px;margin-bottom:6px;display:grid;grid-template-columns:1.2fr 85px 65px 70px 24px 55px 24px 70px 24px 55px 55px 28px;gap:6px;align-items:center;font-size:11px">
       <!-- Produit (avec autocomplete) -->
       <div style="position:relative;min-width:0">
         <input id="ep-search-${i}" value="${(p.productType||'').replace(/"/g,'&quot;')}" placeholder="Vodka, Champagne..." style="width:100%;font-size:11px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 8px;color:var(--text);box-sizing:border-box" oninput="epSearch(${i},this.value)"/>
