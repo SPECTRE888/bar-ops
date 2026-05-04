@@ -4201,18 +4201,22 @@ function epSearch(i,val){
   sugg.style.display='block';
   sugg.innerHTML=matches.map(p=>{
     const costPerUnit=p.priceHT||0;
-    return`<div onmousedown="epSelect(${i},'${(p.productType||'').replace(/'/g,"\\'")}','${(p.brand||'').replace(/'/g,"\\'")}','${p.unit||'pc'}',${costPerUnit.toFixed(2)})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <strong>${p.productType}</strong> <span style="color:var(--text3);font-size:10px">(${p.brand||'?'}) [${p.unit||'?'}]</span>
+    const qty=p.qty||0;
+    const unit=p.unit||'pc';
+    return`<div onmousedown="epSelect(${i},'${(p.productType||'').replace(/'/g,"\\'")}','${(p.brand||'').replace(/'/g,"\\'")}','${unit}',${costPerUnit.toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <strong>${p.productType}</strong> <span style="color:var(--text3);font-size:10px">(${p.brand||'?'}) [${qty}${unit}]</span>
     </div>`;
   }).join('');
 }
 
-function epSelect(i,productType,brand,unit,costPerUnit){
+function epSelect(i,productType,brand,unit,costPerUnit,qty){
   if(!window._evExtraProducts[i])return;
   const sugg=document.getElementById('ep-sugg-'+i);
   if(sugg)sugg.style.display='none';
-  Object.assign(window._evExtraProducts[i],{productType,brand,unit,volume:unit,costHT:parseFloat(costPerUnit.toFixed(2))});
+  const volume=qty?qty+unit:unit;
+  Object.assign(window._evExtraProducts[i],{productType,brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1});
   _renderExtraProds();
+  epAutoPrice(i);
   setTimeout(()=>{const m=document.getElementById('ep-mult-'+i);if(m){m.focus();m.select();}},50);
 }
 
