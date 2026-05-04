@@ -4141,6 +4141,9 @@ window._evExtraProducts=window._evExtraProducts||[];
 
 function _renderExtraProds(){
   const el=document.getElementById('ev-extra-products');if(!el)return;
+  const header=`<div style="display:grid;grid-template-columns:1.2fr 85px 65px 70px 24px 55px 24px 70px 24px 55px 55px 28px;gap:6px;align-items:center;font-size:10px;font-weight:600;color:var(--text3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border2)">
+    <div>Produit</div><div style="text-align:center">Marque</div><div style="text-align:center">Format</div><div style="text-align:center">Achat HT</div><div style="text-align:center">×</div><div style="text-align:center">Mult</div><div style="text-align:center">=</div><div style="text-align:center">Vente HT</div><div style="text-align:center">×</div><div style="text-align:center">Qté</div><div style="text-align:center">Total</div><div></div>
+  </div>`;
   const rows=(window._evExtraProducts||[]).map((p,i)=>{
     const cost=p.costHT||0;
     const mult=p.mult||1;
@@ -4175,7 +4178,7 @@ function _renderExtraProds(){
       <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0;line-height:1">×</button>
     </div>`;
   }).join('');
-  el.innerHTML=rows;
+  el.innerHTML=header+rows;
 }
 
 function epAutoPrice(i){
@@ -4206,9 +4209,11 @@ function epSearch(i,val){
 
 function epSelect(i,productType,brand,unit,costPerUnit){
   if(!window._evExtraProducts[i])return;
+  const sugg=document.getElementById('ep-sugg-'+i);
+  if(sugg)sugg.style.display='none';
   Object.assign(window._evExtraProducts[i],{productType,brand,unit,volume:unit,costHT:parseFloat(costPerUnit.toFixed(2))});
   _renderExtraProds();
-  setTimeout(()=>{const q=document.getElementById('ep-mult-'+i);if(q){q.focus();q.select();}},50);
+  setTimeout(()=>{const m=document.getElementById('ep-mult-'+i);if(m){m.focus();m.select();}},50);
 }
 
 function addExtraProd(){
