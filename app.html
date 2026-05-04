@@ -5836,7 +5836,7 @@ function buildDevisHTML(ev,devisNum){
     </div>
     <div class="bank-info">
       <strong>COORDONNÉES BANCAIRES</strong><br/>
-      ${state.profile?.barName?`Nom: ${state.profile.barName}<br/>
+      ${state.profile?.barName?`Nom: ${state.profile.barName}<br/>`:``}
       ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:``}
       ${state.profile?.bic?`BIC: ${state.profile.bic}<br/>`:``}
       ${state.profile?.banque?`BANQUE: ${state.profile.banque}<br/>`:``}
