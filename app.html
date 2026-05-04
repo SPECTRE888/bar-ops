@@ -5814,8 +5814,8 @@ function generateDevis(){
     <button onclick="history.back()" style="padding:12px 28px;background:none;color:#888;border:1px solid #ccc;border-radius:4px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">← Retour</button>
   </div>
   </body></html>`);
-  const blob=new Blob([withBtns],{type:'text/html'});
-  window.location.href=URL.createObjectURL(blob);
+  const w=window.open('','_blank');
+  if(w){w.document.write(withBtns);w.document.close();}
 }
 
 function printPrestation(){
@@ -8626,14 +8626,6 @@ updateCloudStatus();
     }
   });
 
-  // ⚠️ Warn user if leaving with unsaved cloud changes
-  window.addEventListener('beforeunload',(e)=>{
-    if(cloudUser&&(isSyncing||pendingSyncChanges)){
-      e.preventDefault();
-      e.returnValue='Des changements ne sont pas encore synchronisés avec le cloud. Êtes-vous sûr de vouloir quitter ?';
-      return e.returnValue;
-    }
-  });
 })();
 </script>
 </body>
