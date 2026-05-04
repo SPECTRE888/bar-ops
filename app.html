@@ -4141,57 +4141,64 @@ window._evExtraProducts=window._evExtraProducts||[];
 
 function _renderExtraProds(){
   const el=document.getElementById('ev-extra-products');if(!el)return;
-
-  // Header row
-  const headerHtml=`<div style="display:grid;grid-template-columns:1fr 100px 90px 90px 70px 90px 28px;gap:8px;align-items:center;margin-bottom:8px;padding:6px 0;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">
-    <span>PRODUIT</span>
-    <span>MARQUE</span>
-    <span style="text-align:right">PRIX D'ACHAT</span>
-    <span style="text-align:right">PRIX DE VENTE</span>
-    <span style="text-align:center">QTÉ</span>
-    <span style="text-align:right">TOTAL</span>
-    <span></span>
-  </div>`;
-
   const rows=(window._evExtraProducts||[]).map((p,i)=>{
-    const costPerUnit=p.costHT||0;
-    const priceVente=p.priceHT||costPerUnit*4;
-    const total=(p.qty||0)*priceVente;
-    const productName=p.productType||'';
-    const brandName=p.brand||'';
-    const unitDisplay=p.unit||'pc';
-
-    return`<div style="display:grid;grid-template-columns:1fr 100px 90px 90px 70px 90px 28px;gap:8px;align-items:center;margin-bottom:6px;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
-      <!-- Produit Search/Display -->
-      <div style="position:relative;min-width:0">
-        <input id="ep-search-${i}" value="${productName.replace(/"/g,'&quot;')}" placeholder="Produit..." style="font-size:11px;width:100%;background:none;border:none;padding:0;color:var(--text);font-weight:500" oninput="epSearch(${i},this.value)"/>
-        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:150px;overflow-y:auto;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+    const cost=p.costHT||0;
+    const mult=p.mult||1;
+    const price=p.priceHT||(cost*mult);
+    const total=(p.qty||0)*price;
+    const unit=p.unit||'pc';
+    // Marque options from catalogue
+    const brands=[...new Set((state.products||[]).map(x=>x.brand).filter(Boolean))];
+    const brandOpts=`<option value="">—</option>`+brands.map(b=>`<option value="${b}" ${p.brand===b?'selected':''}>${b}</option>`).join('');
+    return`<div style="background:var(--surface2);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px">
+      <!-- Ligne 1: Recherche + Marque + Format -->
+      <div style="display:grid;grid-template-columns:1fr 130px 70px;gap:8px;align-items:center">
+        <div style="position:relative">
+          <input id="ep-search-${i}" value="${(p.productType||'').replace(/"/g,'&quot;')}" placeholder="Rechercher un produit..." style="width:100%;font-size:12px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:6px 10px;color:var(--text)" oninput="epSearch(${i},this.value)"/>
+          <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:160px;overflow-y:auto;font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.2)"></div>
+        </div>
+        <select style="font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:6px 8px;color:var(--text2)" onchange="updExtraProd(${i},'brand',this.value)">${brandOpts}</select>
+        <div style="font-size:11px;color:var(--text3);background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:6px 8px;text-align:center">${unit}</div>
       </div>
-
-      <!-- Marque & Unit Display -->
-      <div style="color:var(--text2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        <div>${brandName||'—'}</div>
-        <div style="font-size:9px;color:var(--text3)">${unitDisplay}</div>
+      <!-- Ligne 2: Prix achat × mult = prix vente | qté | total | delete -->
+      <div style="display:grid;grid-template-columns:90px 36px 90px 36px 90px 60px 70px 28px;gap:6px;align-items:center">
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">ACHAT HT</div>
+          <input type="number" id="ep-cost-${i}" value="${cost||''}" min="0" step="0.01" placeholder="0.00" style="width:100%;font-size:12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:4px 8px;color:var(--red);font-weight:500" oninput="updExtraProd(${i},'costHT',parseFloat(this.value)||0);epAutoPrice(${i});updEvCalc()"/>
+        </div>
+        <div style="text-align:center;color:var(--text3);font-size:16px">×</div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">MULT.</div>
+          <input type="number" id="ep-mult-${i}" value="${mult}" min="0.1" step="0.1" placeholder="1" style="width:100%;font-size:12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:4px 8px;color:var(--text2);font-weight:500" oninput="updExtraProd(${i},'mult',parseFloat(this.value)||1);epAutoPrice(${i});updEvCalc()"/>
+        </div>
+        <div style="text-align:center;color:var(--text3);font-size:14px">=</div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">VENTE HT</div>
+          <input type="number" id="ep-price-${i}" value="${price||''}" min="0" step="0.01" placeholder="0.00" style="width:100%;font-size:12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:4px 8px;color:var(--gold);font-weight:600" oninput="updExtraProd(${i},'priceHT',parseFloat(this.value)||0);updEvCalc()"/>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">QTÉ (${unit})</div>
+          <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="1" placeholder="0" style="width:100%;font-size:12px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:4px 8px;text-align:center" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0);updEvCalc()"/>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">TOTAL</div>
+          <div id="ep-total-${i}" style="font-size:13px;font-weight:600;color:var(--gold)">${total>0?total.toFixed(2)+'€':'—'}</div>
+        </div>
+        <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:0;margin-top:14px;line-height:1">×</button>
       </div>
-
-      <!-- Prix d'Achat (per unit) -->
-      <input type="number" id="ep-cost-${i}" value="${costPerUnit.toFixed(2)}" min="0" step="0.01" placeholder="0.00" style="font-size:11px;text-align:right;background:none;border:none;padding:0;color:var(--red);font-weight:500" oninput="updExtraProd(${i},'costHT',parseFloat(this.value)||0);updEvCalc()"/>
-
-      <!-- Prix de Vente (per unit) -->
-      <input type="number" id="ep-price-${i}" value="${priceVente.toFixed(2)}" min="0" step="0.01" placeholder="0.00" style="font-size:11px;text-align:right;background:none;border:none;padding:0;color:var(--gold);font-weight:600" oninput="updExtraProd(${i},'priceHT',parseFloat(this.value)||0);updEvCalc()"/>
-
-      <!-- Quantité -->
-      <input type="number" id="ep-qty-${i}" value="${p.qty||''}" min="0" step="1" placeholder="0" style="font-size:11px;text-align:center;background:none;border:none;padding:0" oninput="updExtraProd(${i},'qty',parseFloat(this.value)||0);updEvCalc()"/>
-
-      <!-- Total -->
-      <div style="text-align:right;font-weight:600;color:var(--gold)">${total.toFixed(2)}€</div>
-
-      <!-- Delete Button -->
-      <button onclick="removeExtraProd(${i});updEvCalc()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:0;line-height:1">×</button>
     </div>`;
   }).join('');
+  el.innerHTML=rows;
+}
 
-  el.innerHTML=headerHtml+rows;
+function epAutoPrice(i){
+  const p=window._evExtraProducts?.[i];if(!p)return;
+  const cost=p.costHT||0;
+  const mult=p.mult||1;
+  const auto=parseFloat((cost*mult).toFixed(2));
+  p.priceHT=auto;
+  const inp=document.getElementById('ep-price-'+i);
+  if(inp) inp.value=auto||'';
 }
 
 function epSearch(i,val){
