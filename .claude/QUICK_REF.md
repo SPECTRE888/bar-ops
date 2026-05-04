@@ -14,12 +14,28 @@
 - `paying.html` - pricing page
 - `netlify/functions/` - 4 backend functions (subscription, delete-account, send-quote, webhook)
 
+## Business Flow
+1. **Catalogue** → ingrédients (spi, jus, alcools, etc.)
+2. **Cocktails** → recettes à partir du catalogue
+3. **Équipe** → staff (Bartender, Serveur, Bar Manager, Manutentionnaire)
+4. **Clients** → demandes de services
+5. **Fournisseurs** → suppliers
+6. **Événements** → création + devis + assignation staff
+7. **Suivi** → validation checklist
+8. **Historique** → archivé une fois fini
+
 ## Data Models
-**Event**: id, name, date, location, nGuests, nBartenders/arrBrt/depBrt, nWaiters/arrWtr/depWtr, nManagers/arrMgr/depMgr, nManutentionnaires/arrMan/depMan, cocktails: [{id, qty}], deliveryCostHT, deliveryBillHT, assignedStaff, paid, acompte, stockRetourDone
+**Ingredient**: id, name, unit, costHT, brand, category
+
+**Cocktail**: id, name, code, category, ingredients: [{ingredientId, qty, unit}], priceHT, vat, totalCost
 
 **Staff**: id, name, type: 'Bartender'|'Serveur'|'Bar Manager'|'Manutentionnaire', rateHT, billHT, per: 'per hour'
 
-**Cocktail**: id, name, code, category, ingredients: [{name, qty, unit, cost, brand}], priceHT, vat, totalCost
+**Client**: id, name, email, phone, address
+
+**Supplier**: id, name, contact, speciality
+
+**Event**: id, name, date, location, clientId, nGuests, nBartenders/arrBrt/depBrt, nWaiters/arrWtr/depWtr, nManagers/arrMgr/depMgr, nManutentionnaires/arrMan/depMan, cocktails: [{cocktailId, qty}], assignedStaff, deliveryCostHT, deliveryBillHT, status: 'planning|suivi|historique', paid, acompte, stockRetourDone
 
 ## State Management
 - Local: `state` global object (memory)

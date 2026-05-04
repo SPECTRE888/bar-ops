@@ -38,20 +38,53 @@ netlify/functions/
 
 All functions read from `process.env` (API keys from Netlify config). Use `fetch('/.netlify/functions/<name>')` from frontend.
 
-### Data Flow
+### Business Flow (Métier)
 ```
-Event {
-  id, name, date, location, nGuests,
-  nBartenders, nWaiters, nManagers, nManutentionnaires (+ arrival/departure times),
-  cocktails: [{id, qty}],
-  deliveryCostHT, deliveryBillHT,
-  assignedStaff: [staffId],
-  paid, acompte, stockRetourDone
+1. Catalogue → Ingrédients (spi, jus, alcools, etc.)
+2. Cocktails → Recettes à partir du catalogue
+3. Équipe → Staff (Bartender, Serveur, Bar Manager, Manutentionnaire)
+4. Clients → Demandes de services
+5. Fournisseurs → Suppliers d'ingrédients
+6. Événements → Création + devis + assignation staff
+7. Suivi → Validation checklist (stock, staffing, etc.)
+8. Historique → Événements passés (archivé)
+```
+
+### Data Models
+```
+Ingredient {
+  id, name, unit, costHT, brand, category
 }
 
-Staff { id, name, type: 'Bartender|Serveur|Bar Manager|Manutentionnaire', rateHT, billHT, per: 'per hour' }
+Cocktail {
+  id, name, code, category, 
+  ingredients: [{ingredientId, qty, unit}],
+  priceHT, vat, totalCost
+}
 
-Cocktail { id, name, code, category, ingredients: [{name, qty, unit, cost, brand}], priceHT, vat, totalCost }
+Staff {
+  id, name, type: 'Bartender|Serveur|Bar Manager|Manutentionnaire',
+  rateHT, billHT, per: 'per hour'
+}
+
+Client {
+  id, name, email, phone, address
+}
+
+Supplier {
+  id, name, contact, speciality
+}
+
+Event {
+  id, name, date, location, clientId,
+  nGuests, nBartenders, nWaiters, nManagers, nManutentionnaires,
+  arrBrt, depBrt, arrWtr, depWtr, arrMgr, depMgr, arrMan, depMan,
+  cocktails: [{cocktailId, qty}],
+  assignedStaff: [staffId],
+  deliveryCostHT, deliveryBillHT,
+  status: 'planning|suivi|historique',
+  paid, acompte, stockRetourDone
+}
 ```
 
 ## Key Functions & Modules
