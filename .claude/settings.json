@@ -1,7 +1,8 @@
 {
+  "promptCaching": true,
   "readablePaths": [
     "CLAUDE.md",
-    "PROJECT_CONTEXT.md",
+    ".claude/QUICK_REF.md",
     "netlify/functions/**/*.js"
   ],
   "ignorePaths": [
@@ -9,8 +10,6 @@
     "node_modules",
     ".DS_Store",
     "*.save",
-    "package-lock.json",
-    "deno.lock",
-    ".netlify"
+    "package-lock.json"
   ]
 }
