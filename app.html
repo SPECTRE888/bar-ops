@@ -5720,16 +5720,39 @@ function buildDevisHTML(ev,devisNum){
     <div><div class="label">Prestation</div><div style="font-size:22px;font-family:'DM Serif Display',serif;margin-bottom:6px">${ev.name}</div>${fmtDate?`<div style="color:#555;font-size:13px;margin-bottom:2px">${fmtDate}</div>`:''}${ev.address?`<div style="color:#777;font-size:12px;margin-bottom:2px">${ev.address}</div>`:''}${ev.pax?`<div style="color:#777;font-size:12px">${ev.pax} personnes</div>`:''}</div>
     <div style="text-align:right"><div class="label">Client</div>${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?`<div style="font-size:16px;font-weight:500;margin-bottom:4px">${cl.name}</div>${cl.company?`<div style="color:#555;font-size:13px;margin-bottom:2px">${cl.company}</div>`:''}${cl.email?`<div style="color:#777;font-size:12px;margin-bottom:2px">${cl.email}</div>`:''}${cl.phone?`<div style="color:#777;font-size:12px">${cl.phone}</div>`:''}`:'<div style="color:#bbb">—</div>';})()}</div>
   </div>
-  ${cocktailLines?`<div class="section"><div class="label">Cocktails</div><table><thead><tr><th>Cocktail</th><th style="text-align:center">Qté</th><th style="text-align:right">Prix unitaire HT</th><th style="text-align:right">Total HT</th><th style="text-align:right">Total TTC</th></tr></thead><tbody>${cocktailLines}</tbody></table></div>`:''}
-  ${staffLines.length?`<div class="section"><div class="label">Équipe</div><table><thead><tr><th>Rôle</th><th style="text-align:center">Nb</th><th style="text-align:center">Horaires</th><th style="text-align:center">Durée</th><th style="text-align:right">Tarif</th><th style="text-align:right">Total HT</th></tr></thead><tbody>${staffLines.join('')}</tbody></table></div>`:''}
-  ${deliveryBill||extraBill?`<div class="section"><div class="label">Frais supplémentaires</div><table><tbody>${deliveryBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Livraison & matériel</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${deliveryBill.toFixed(2)}€ HT</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">Frais divers</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right" colspan="5">${extraBill.toFixed(2)}€ HT</td></tr>`:''}</tbody></table></div>`:''}
-  <div class="total-box">
-    <div class="total-line"><span>Sous-total HT</span><span>${grandHT.toFixed(2)}€</span></div>
-    <div class="total-line"><span>Taux TVA</span><span>20%</span></div>
-    <div class="total-line"><span>Total TVA</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div>
-    <div class="total-line" style="border-bottom:2px solid #1a1a1a;padding-bottom:12px"><span>Total TTC</span><span>${grandTTC.toFixed(2)}€</span></div>
-    <div class="total-line" style="padding-top:12px;font-weight:600;font-size:15px"><span>Net à payer</span><span>${grandTTC.toFixed(2)}€</span></div>
+  <div class="section">
+    <div class="label">Produits et prestations</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+      <thead>
+        <tr style="background:#3b5998;color:white">
+          <th style="padding:12px 16px;text-align:left;font-weight:600">Produit / Prestation</th>
+          <th style="padding:12px 16px;text-align:center;font-weight:600">Qté</th>
+          <th style="padding:12px 16px;text-align:center;font-weight:600">Unité</th>
+          <th style="padding:12px 16px;text-align:right;font-weight:600">PU HT</th>
+          <th style="padding:12px 16px;text-align:center;font-weight:600">TVA</th>
+          <th style="padding:12px 16px;text-align:center;font-weight:600">Remise</th>
+          <th style="padding:12px 16px;text-align:right;font-weight:600">Total HT</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cocktailLines?`<tr><td colspan="7" style="padding:12px 16px;font-weight:600;background:#f8f9fa;border-top:2px solid #ddd"><em>Cocktails</em></td></tr>${cocktailLines}<tr style="font-weight:600;background:#f8f9fa"><td style="padding:12px 16px" colspan="6">Sous-total cocktails</td><td style="padding:12px 16px;text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
+        ${staffLines.length?`<tr><td colspan="7" style="padding:12px 16px;font-weight:600;background:#f8f9fa;border-top:2px solid #ddd"><em>Équipe</em></td></tr>${staffLines.map(line=>{const m=line.match(/Total HT<\/th><\/tr><\/thead><tbody>(.+)<\/tbody>/);return line;}).join('')}<tr style="font-weight:600;background:#f8f9fa"><td style="padding:12px 16px" colspan="6">Sous-total équipe</td><td style="padding:12px 16px;text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
+        ${deliveryBill||extraBill?`<tr><td colspan="7" style="padding:12px 16px;font-weight:600;background:#f8f9fa;border-top:2px solid #ddd"><em>Frais supplémentaires</em></td></tr>${deliveryBill?`<tr><td style="padding:12px 16px">Livraison & matériel</td><td style="padding:12px 16px;text-align:center">1</td><td style="padding:12px 16px;text-align:center">forfait</td><td style="padding:12px 16px;text-align:right">${deliveryBill.toFixed(2)}</td><td style="padding:12px 16px;text-align:center">20%</td><td style="padding:12px 16px;text-align:center">—</td><td style="padding:12px 16px;text-align:right">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr><td style="padding:12px 16px">Frais divers</td><td style="padding:12px 16px;text-align:center">1</td><td style="padding:12px 16px;text-align:center">forfait</td><td style="padding:12px 16px;text-align:right">${extraBill.toFixed(2)}</td><td style="padding:12px 16px;text-align:center">20%</td><td style="padding:12px 16px;text-align:center">—</td><td style="padding:12px 16px;text-align:right">${extraBill.toFixed(2)}€</td></tr>`:''}${deliveryBill||extraBill?`<tr style="font-weight:600;background:#f8f9fa"><td style="padding:12px 16px" colspan="6">Sous-total frais</td><td style="padding:12px 16px;text-align:right">${(deliveryBill+extraBill).toFixed(2)}€</td></tr>`:''}`:''}
+      </tbody>
+    </table>
   </div>
+  <div style="margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:40px">
+    <div></div>
+    <div class="total-box" style="max-width:none">
+      <div class="total-line"><span>Total HT</span><span>${grandHT.toFixed(2)}€</span></div>
+      <div class="total-line"><span>Taux TVA</span><span>20%</span></div>
+      <div class="total-line"><span>Total TVA</span><span>${(grandTTC-grandHT).toFixed(2)}€</span></div>
+      <div class="total-line" style="border-bottom:2px solid #1a1a1a;padding-bottom:12px"><span>Total TTC</span><span>${grandTTC.toFixed(2)}€</span></div>
+      <div class="total-line" style="padding-top:12px"><span>Acompte à la commande 30%</span><span>${(grandTTC*0.3).toFixed(2)}€</span></div>
+      <div class="total-line" style="font-weight:600;font-size:15px;padding-top:12px"><span>Net à payer</span><span>${grandTTC.toFixed(2)}€</span></div>
+    </div>
+  </div>
+  <div style="margin-top:24px;font-size:11px;color:#666">Ce devis reste valable pour une période de 30 jours.</div>
   <div style="margin-top:32px;padding:20px;border:1px solid #ddd;border-radius:4px;display:flex;gap:16px">
     <div style="flex:1">
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:12px">Signature du client</div>
