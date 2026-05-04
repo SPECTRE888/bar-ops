@@ -4342,7 +4342,7 @@ function saveEv(){
     dryIce:document.getElementById('ef-dryice')?.checked||false,
     totalRevHT:totalRevHT
   };
-  if(editEvId)state.events=state.events.map(e=>e.id===editEvId?ev:e);
+  if(editEvId)state.events=state.events.map(e=>e.id===editEvId?{...e,...ev}:e);
   else state.events.push(ev);
   save();updateBadges();showEvList();
 }
