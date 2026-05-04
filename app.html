@@ -5707,35 +5707,43 @@ function buildDevisHTML(ev,devisNum){
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff;padding:0;margin:0}h1{font-family:'DM Serif Display',serif;font-weight:400}.header-black{background:#1a1a1a;color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}.header-info{flex:1}.header-title{font-size:32px;font-weight:600;margin-bottom:8px}.header-subtitle{font-size:11px;color:#999;margin-bottom:12px}.header-meta{font-size:10px;color:#666;line-height:1.5}.header-right{text-align:right}.devis-title{font-size:28px;font-weight:600;margin-bottom:4px}.validity{font-size:10px;color:#666;margin-bottom:16px}.content{padding:0 32px}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:24px;padding:16px;background:#f5f5f5;border-radius:4px}.info-col{font-size:11px}.info-label{font-weight:600;margin-bottom:4px}.info-value{color:#555;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin:24px 0}.table-header{background:#1a1a1a;color:#fff}.table-header th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase}.table-row{background:#fff;border-bottom:1px solid #f0f0f0}.table-row.alt{background:#f9f3e8}.table-row td{padding:12px 16px;font-size:11px}.table-row.section-header td{background:#1a1a1a;color:#fff;font-weight:600;padding:10px 16px}.table-row.subtotal td{background:#e8dcc8;font-weight:600;padding:10px 16px}.total-section{display:grid;grid-template-columns:2fr 1fr;gap:32px;margin:24px 0}.total-box{text-align:right;font-size:12px}.total-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #ddd}.total-line.strong{font-weight:600;border:none;padding:12px 0;font-size:13px}.acompte{background:#ffeb3b;padding:16px 24px;margin:24px 0;border-radius:4px;font-weight:600;font-size:11px}.bank-info{background:#ffeb3b;padding:16px 24px;margin:24px 0;border-radius:4px;font-size:10px;line-height:1.6}.signature-box{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}.sig-zone{border:1px solid #ddd;padding:20px;border-radius:4px;min-height:80px;display:flex;align-items:flex-end}.sig-label{font-size:10px;font-weight:600;margin-bottom:8px;display:block}.footer{background:#1a1a1a;color:#fff;padding:16px 32px;font-size:9px;margin-top:32px;text-align:center}.casse-info{font-size:9px;color:#666;margin:16px 0 0;padding:16px 0;border-top:1px solid #ddd}.footer-legal{font-size:9px;color:#666;margin-top:16px;text-align:center}@media print{.no-print{display:none!important}}${!isPro?`#watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:120px;color:rgba(0,0,0,.04);font-weight:bold;pointer-events:none;z-index:-1;white-space:nowrap;font-family:'DM Serif Display',serif;letter-spacing:20px}`:''}</style></head><body>
   ${!isPro?`<div id="watermark">TRIAL</div>`:''}
-  <div class="header-black">
-    <div class="header-info">
-      <div class="header-subtitle">${state.profile?.barName||''}</div>
-      ${state.profile?.siret?`<div class="header-meta">SIRET: ${state.profile.siret}</div>`:''}
-      ${state.profile?.apeCode?`<div class="header-meta">Code APE: ${state.profile.apeCode}</div>`:''}
-      ${state.profile?.tvaNumber?`<div class="header-meta">TVA: ${state.profile.tvaNumber}</div>`:`<div class="header-meta">TVA non applicable – Régime auto-entrepreneur</div>`}
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #ddd">
+    <div style="flex:1">
+      ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-height:60px;margin-bottom:8px"/>`:''}
+      <div style="font-size:18px;font-weight:700;color:#d4af37;margin-bottom:4px">${state.profile?.barName||''}</div>
+      <div style="font-size:10px;line-height:1.6;color:#555">
+        ${state.profile?.barName?`<div><strong>S.A.S. ${state.profile.barName}</strong></div>`:''}
+        ${state.profile?.city?`<div>${state.profile.city}</div>`:''}
+        ${state.profile?.siret?`<div>SIRET: ${state.profile.siret}</div>`:''}
+        ${state.profile?.tvaNumber?`<div>T.V.A. Intracom.: ${state.profile.tvaNumber}</div>`:''}
+      </div>
     </div>
-    <div class="header-right">
-      <div class="devis-title">DEVIS</div>
-      <div class="validity">Ce devis est établi gratuitement et valide 2 semaines après édition</div>
-      <div class="header-meta">${devisNum} · ${today}</div>
+    <div style="text-align:right">
+      <div style="font-size:32px;font-weight:700">DEVIS</div>
+      <div style="font-size:9px;color:#666;margin-top:8px;max-width:200px">Ce devis est établi gratuitement et valide 2 semaines après édition</div>
     </div>
   </div>
-  <div class="content">
-    <div class="info-grid">
-      <div class="info-col">
-        <div class="info-label">Client :</div>
-        <div class="info-value">${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?cl.name:'—';})()}</div>
-        <div class="info-label">Contact :</div>
-        <div class="info-value">${ev.pax||'—'}</div>
+  <div class="content" style="padding:0">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding:12px 0;font-size:11px">
+      <div>
+        <div style="font-weight:600">Date du devis :</div>
+        <div>${today}</div>
       </div>
-      <div class="info-col">
-        <div class="info-label">Lieu de l'événement :</div>
-        <div class="info-value">${ev.address||'—'}</div>
-        <div class="info-label">Nombre d'invités :</div>
-        <div class="info-value">${ev.pax||'—'}</div>
-        <div class="info-label">Date de l'événement :</div>
-        <div class="info-value">${fmtDate||'—'}</div>
+      <div>
+        <div style="font-weight:600">Nombre d'invités :</div>
+        <div>${ev.pax||'—'}</div>
       </div>
+      <div>
+        <div style="font-weight:600">Contact :</div>
+        <div>${(()=>{const cl=state.clients.find(c=>c.id===ev.clientId);return cl?cl.name:'—';})()}</div>
+      </div>
+      <div>
+        <div style="font-weight:600">Lieu de l'événement :</div>
+        <div>${ev.address||'—'}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:24px;padding:12px 0;font-size:10px;color:#c41e3a;font-style:italic">
+      Toute éventuelle relevance due au lieu d'accueil, l'événement n'est pas incluse dans ce devis
     </div>
     <table>
       <thead class="table-header">
