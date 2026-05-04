@@ -4303,7 +4303,11 @@ function saveEv(){
   const remiseHT=parseFloat(document.getElementById('ef-remise-ht')?.value)||0;
   const remiseMontant=remiseHT>0?remiseHT:(remisePct>0?revenueBeforeRemise*remisePct/100:0);
   const totalRevHT=revenueBeforeRemise-remiseMontant;
-  
+
+  // Calc TTC (same logic as buildDevisHTML)
+  const cocktailTotalTTC=(sel&&Object.entries(sel)||[]).reduce((s,[cid,cfg])=>{const c=state.cocktails.find(x=>x.id==cid);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||20)/100):0);},0);
+  const grandTTC=cocktailTotalTTC+staffRevenue*1.20;
+
   const ev={
     id:editEvId||Date.now(),name,
     clientId:_clientId,
@@ -4352,7 +4356,7 @@ function saveEv(){
       if(!isNaN(manualAcompte)&&manualAcompte>0) return manualAcompte;
       if(existingEv?.acompte&&existingEv.acompte>0) return existingEv.acompte;
       const profilePct=state.profile?.acomptePercent||0;
-      return profilePct>0?Math.round(totalRevHT*profilePct/100):0;
+      return profilePct>0?Math.round(grandTTC*profilePct/100):0;
     })(),
     acompteDate:document.getElementById('ef-acompte-date')?.value||existingEv?.acompteDate||'',
     paid:document.getElementById('ef-paid')?.checked||existingEv?.paid||false,
