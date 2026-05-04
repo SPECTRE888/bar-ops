@@ -5765,11 +5765,15 @@ function buildDevisHTML(ev,devisNum){
       </div>
     </div>
     <div class="acompte">Acompte de 100% du montant total T.T.C. à la confirmation</div>
+    <div style="font-size:10px;color:#666;line-height:1.6;margin:24px 0;padding:12px 0;border-top:1px solid #ddd;border-bottom:1px solid #ddd">
+      Toute heure supplémentaire sera facturée:<br/>
+      ${staffRoles.map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));return s?`${r.label}: ${s.billHT?.toFixed(2)||'—'}€/h`:''}).filter(Boolean).join(' • ')}
+    </div>
     <div class="bank-info">
       <strong>COORDONNÉES BANCAIRES</strong><br/>
-      ${state.profile?.siret?`SIRET: ${state.profile.siret}<br/>`:''}<br/>
-      ${state.profile?.rib?`IBAN: ${state.profile.rib}<br/>`:''}<br/>
-      ${state.profile?.email?`Email: ${state.profile.email}`:''}<br/>
+      ${state.profile?.barName?`Nom: ${state.profile.barName}<br/>`:''}<br/>
+      ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:''}<br/>
+      ${state.profile?.bic?`BIC: ${state.profile.bic}<br/>`:''}<br/>
     </div>
     ${Object.keys(breakageByGlass).length?`<div class="casse-info">${Object.entries(breakageByGlass).map(([glassName,data])=>`Casse verre ${glassName}: couvert en dessous de ${data.percent}%${data.billableAmount>0?`, au-delà facturé ${data.billableAmount.toFixed(2)}€ (prix d'achat du verre)`:''}`).join(' • ')}</div>`:''}
     <div class="signature-box">
@@ -7254,6 +7258,14 @@ function renderProfile(){
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.rib||'—'}</div>
             </div>
             <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">IBAN</div>
+              <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.iban||'—'}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">BIC</div>
+              <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.bic||'—'}</div>
+            </div>
+            <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">N° TVA</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.tvaNumber||'—'}</div>
             </div>
@@ -7294,6 +7306,14 @@ function renderProfile(){
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">RIB</div>
               <input id="prof-rib" value="${state.profile?.rib||''}" placeholder="FR76 1234..." style="width:100%;font-size:11px;font-family:monospace"/>
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">IBAN</div>
+              <input id="prof-iban" value="${state.profile?.iban||''}" placeholder="FR76 XXXX XXXX..." style="width:100%;font-size:11px;font-family:monospace"/>
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">BIC</div>
+              <input id="prof-bic" value="${state.profile?.bic||''}" placeholder="XXXXXXXX" style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
             <div>
               <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">N° TVA</div>
@@ -7406,6 +7426,8 @@ function confirmBarEdit(){
       state.profile.siret=document.getElementById('prof-siret')?.value||'';
       state.profile.apeCode=document.getElementById('prof-apecode')?.value||'';
       state.profile.rib=document.getElementById('prof-rib')?.value||'';
+      state.profile.iban=document.getElementById('prof-iban')?.value||'';
+      state.profile.bic=document.getElementById('prof-bic')?.value||'';
       state.profile.tvaNumber=document.getElementById('prof-tvanumber')?.value||'';
       save();
       showToastModal('Profil enregistré');
