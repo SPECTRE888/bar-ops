@@ -5753,7 +5753,7 @@ function buildDevisHTML(ev,devisNum){
   const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
   const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill;
   const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20;
-  return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Devis</title><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#2a2a2a;background:#fff;padding:16px;max-width:800px;margin:0 auto;line-height:1.4}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e0e0e0}.header-left{flex:1}.company-name{font-size:14px;font-weight:600;margin-bottom:1px}.company-info{font-size:8px;color:#666;line-height:1.2}.header-center{flex:1;text-align:center}.logo{max-height:50px;margin:0 auto}.header-right{flex:1;text-align:right}.devis-num{font-size:12px;font-weight:600}.devis-num-label{font-size:7px;color:#999;display:block;margin-bottom:1px}.client-info{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding:12px;background:#f8f8f8;border-radius:2px;font-size:8.5px}.client-section{border-right:1px solid #ddd;padding-right:12px}.client-section:last-child{border-right:none;padding-right:0}.client-label{color:#999;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-size:7px}.client-value{color:#2a2a2a;font-size:9px;line-height:1.3;margin-bottom:3px}.items-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:9px}.items-table th{background:#2a2a2a;color:#fff;padding:7px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.items-table td{padding:5px 10px;border-bottom:1px solid #e0e0e0}.items-table .label-col{color:#2a2a2a;font-weight:500}.items-table .num-col{text-align:right;color:#666}.items-table .subtotal{background:#f8f8f8;font-weight:600}.items-table .section-header{background:#f0f0f0;font-weight:600;color:#2a2a2a}.totals{display:grid;grid-template-columns:1fr 180px;gap:16px;margin:14px 0;align-items:start}.totals-box{text-align:right;font-size:9px}.total-line{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #e0e0e0}.total-line.amount{font-weight:600}.total-line.main{border:none;padding:6px 0;font-size:10px;font-weight:600;border-top:1px solid #2a2a2a;padding-top:5px}.conditions{font-size:8px;color:#666;margin:10px 0;padding:8px;background:#f8f8f8;border-left:2px solid #2a2a2a;line-height:1.3}.bank-info{font-size:8px;color:#666;margin:10px 0;padding:8px;background:#f8f8f8;border-left:2px solid #2a2a2a;line-height:1.3}.breakage-info{font-size:8px;color:#666;margin:10px 0;padding:8px;background:#f8f8f8;border-left:2px solid #2a2a2a;line-height:1.3}.signature{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0}.sig-zone{border:1px solid #ddd;padding:10px;min-height:50px}.footer{font-size:7px;color:#999;text-align:center;margin-top:12px;padding-top:6px;border-top:1px solid #e0e0e0}@media print{.no-print{display:none}}</style></head><body>
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Devis</title><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#2a2a2a;background:#fff;padding:16px;max-width:800px;margin:0 auto;line-height:1.4}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #e0e0e0}.header-left{flex:1}.company-name{font-size:18px;font-weight:600;margin-bottom:2px}.company-info{font-size:8.5px;color:#666;line-height:1.2}.header-center{flex:1;text-align:center}.logo{max-height:80px;margin:0 auto}.header-right{flex:1;text-align:right}.devis-num{font-size:16px;font-weight:600}.devis-num-label{font-size:7.5px;color:#999;display:block;margin-bottom:2px}.client-info{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding:12px;background:#f8f8f8;border-radius:2px;font-size:8.5px}.client-section{border-right:1px solid #ddd;padding-right:12px}.client-section:last-child{border-right:none;padding-right:0}.client-label{color:#999;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-size:7px}.client-value{color:#2a2a2a;font-size:9px;line-height:1.3;margin-bottom:3px}.items-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:9px}.items-table th{background:#2a2a2a;color:#fff;padding:7px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.items-table td{padding:5px 10px;border-bottom:1px solid #e0e0e0}.items-table .label-col{color:#2a2a2a;font-weight:500}.items-table .num-col{text-align:right;color:#666}.items-table .subtotal{background:#f8f8f8;font-weight:600}.items-table .section-header{background:#f0f0f0;font-weight:600;color:#2a2a2a}.totals{display:grid;grid-template-columns:1fr 180px;gap:16px;margin:14px 0;align-items:start}.totals-box{text-align:right;font-size:9px}.total-line{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #e0e0e0}.total-line.amount{font-weight:600}.total-line.main{border:none;padding:6px 0;font-size:10px;font-weight:600;border-top:1px solid #2a2a2a;padding-top:5px}.final-sections{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0}.final-box{font-size:8px;color:#666;padding:8px;background:#f8f8f8;border-left:2px solid #2a2a2a;line-height:1.4}.final-box strong{color:#2a2a2a;display:block;margin-bottom:3px;font-size:8.5px}.signature{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0}.sig-zone{border:1px solid #ddd;padding:10px;min-height:50px}.footer-container{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;padding-top:6px;border-top:1px solid #e0e0e0}.footer-right{text-align:right;font-size:7px;color:#999}.footer-left{font-size:7px;color:#999}@media print{.no-print{display:none}}</style></head><body>
   <div class="header">
     <div class="header-left">
       <div class="company-name">${state.profile?.barName||'BAR OPS'}</div>
@@ -5799,16 +5799,23 @@ function buildDevisHTML(ev,devisNum){
       <div class="total-line main"><span>TOTAL TTC</span><span>${grandTTC.toFixed(2)}€</span></div>
     </div>
   </div>
-  <div class="conditions">
-    <strong>Acompte ${(()=>{const pct=ev.acompte>0?(ev.acompte/grandTTC*100).toFixed(0):state.profile?.acomptePercent||100;return pct+'%';})()}</strong> à la confirmation${ev.acompte>0?`: ${ev.acompte.toFixed(2)}€`:`: ${Math.round(grandTTC*(state.profile?.acomptePercent||100)/100).toFixed(2)}€`}
+  <div class="final-sections">
+    <div class="final-box">
+      <strong>Acompte ${(()=>{const pct=ev.acompte>0?(ev.acompte/grandTTC*100).toFixed(0):state.profile?.acomptePercent||100;return pct+'%';})()}</strong>
+      À la confirmation<br/>
+      ${ev.acompte>0?`<strong>${ev.acompte.toFixed(2)}€</strong>`:` <strong>${Math.round(grandTTC*(state.profile?.acomptePercent||100)/100).toFixed(2)}€</strong>`}
+    </div>
+    <div class="final-box">
+      <strong>Coordonnées bancaires</strong>
+      ${state.profile?.barName?`Titulaire: ${state.profile.barName}<br/>`:``}
+      ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:``}
+      ${state.profile?.banque?`Banque: ${state.profile.banque}`:``}
+    </div>
+    <div class="final-box">
+      <strong>Casse verres</strong>
+      ${Object.keys(breakageByGlass).length?Object.entries(breakageByGlass).map(([glassName,data])=>`${glassName}: ${data.percent}%${data.cost>0?` • Au-delà: ${data.cost.toFixed(2)}€/unité`:''}`).join('<br/>'):'Aucune info'}
+    </div>
   </div>
-  <div class="bank-info">
-    <strong>Coordonnées bancaires:</strong><br/>
-    ${state.profile?.barName?`Titulaire: ${state.profile.barName}<br/>`:``}
-    ${state.profile?.iban?`IBAN: ${state.profile.iban}<br/>`:``}
-    ${state.profile?.banque?`Banque: ${state.profile.banque}`:``}
-  </div>
-  ${Object.keys(breakageByGlass).length?`<div class="breakage-info"><strong>Casse verres:</strong><br/>${Object.entries(breakageByGlass).map(([glassName,data])=>`${glassName}: couvert jusqu'à ${data.percent}%${data.cost>0?` • Au-delà: ${data.cost.toFixed(2)}€`:''}`).join('<br/>')}</div>`:''}
   <div class="signature">
     <div></div>
     <div>
@@ -5817,7 +5824,10 @@ function buildDevisHTML(ev,devisNum){
       <div style="font-size:7px;color:#999;margin-top:4px">« Bon pour accord »</div>
     </div>
   </div>
-  <div class="footer">Devis établi gratuitement • Valide 2 semaines • BAR OPS</div>
+  <div class="footer-container">
+    <div class="footer-left"></div>
+    <div class="footer-right">Propulsé par BAR OPS</div>
+  </div>
   </body></html>`;
 }
 
