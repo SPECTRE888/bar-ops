@@ -1748,7 +1748,7 @@ function updateBadges(){
 // ════════════════════════════════════════════════════════
 // SEARCHABLE SELECT
 // ════════════════════════════════════════════════════════
-function mkSS(wrapId, opts, ph, onSel, val=''){
+function mkSS(wrapId, opts, ph, onSel, val='', allowCreate=true){
   const wrap=document.getElementById(wrapId);
   if(!wrap)return null;
   wrap.className='ss-wrap';
@@ -1772,7 +1772,7 @@ function mkSS(wrapId, opts, ph, onSel, val=''){
     const fl=f.toLowerCase();
     const filt=opts.filter(o=>o.toLowerCase().includes(fl));
     dd.innerHTML=filt.map(o=>`<div class="ss-opt" data-v="${o.replace(/"/g,'&quot;')}">${o}</div>`).join('');
-    if(f&&!opts.find(o=>o.toLowerCase()===fl)) dd.innerHTML+=`<div class="ss-opt new-opt" data-v="${f}">+ Ajouter "${f}"</div>`;
+    if(allowCreate&&f&&!opts.find(o=>o.toLowerCase()===fl)) dd.innerHTML+=`<div class="ss-opt new-opt" data-v="${f}">+ Ajouter "${f}"</div>`;
     dd.querySelectorAll('.ss-opt').forEach(op=>op.addEventListener('mousedown',e=>{
       e.preventDefault();inp.value=op.dataset.v;dd.classList.remove('open');onSel(op.dataset.v, op.classList.contains('new-opt'));
     }));
@@ -3774,9 +3774,8 @@ function showEvForm(ev){
   });
   const barModels=[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort();
   mkSS('ef-bar-model-wrap',barModels,'Ex: Bar noir...',(v,isNew)=>{
-    if(isNew&&v){if(!state.barItems)state.barItems=[];state.barItems.push({id:Date.now(),name:v,brand:'',lengthM:0,priceHT:0,color:'',style:'',notes:'',available:true,photo:''});save();}
     document.getElementById('ef-bar-model-inp').value=v;updBarSelection();
-  },(ev.barType?.split('•')[0]?.trim()||''));
+  },(ev.barType?.split('•')[0]?.trim()||''),false);
   const barModelInp=document.querySelector('#ef-bar-model-wrap .ss-input');
   if(barModelInp)barModelInp.id='ef-bar-model-inp';
   renderEvPicker();updEvCalc();updBarSelection();_renderExtraProds();
