@@ -1,0 +1,15 @@
+{
+  "promptCaching": true,
+  "readablePaths": [
+    "CLAUDE.md",
+    ".claude/QUICK_REF.md",
+    "netlify/functions/**/*.js"
+  ],
+  "ignorePaths": [
+    "*.html",
+    "node_modules",
+    ".DS_Store",
+    "*.save",
+    "package-lock.json"
+  ]
+}
