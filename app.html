@@ -3627,6 +3627,13 @@ function showEvForm(ev){
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
       <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
       <input type="hidden" id="ef-bar-name" value="${ev.barType||''}"/>
+      <input type="hidden" id="ef-bar-model" value="${ev.barModel||''}"/>
+      <input type="hidden" id="ef-bar-color-val" value="${ev.barColor||''}"/>
+      <input type="hidden" id="ef-bar-style-val" value="${ev.barStyle||''}"/>
+      <div style="margin-top:10px;padding:8px;background:var(--surface2);border-radius:4px;font-size:10px;color:var(--text3)">
+        <div style="margin-bottom:3px">DÉTAILS SÉLECTIONNÉS</div>
+        <div style="font-weight:600;color:var(--text);font-size:11px" id="ef-bar-summary">—</div>
+      </div>
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
@@ -4048,13 +4055,25 @@ function updBarSelection(){
     document.getElementById('ef-bar-name').value=match.name||'';
     document.getElementById('ef-bar-length').value=match.lengthM||0;
     document.getElementById('ef-bar-price').value=match.priceHT||0;
+    document.getElementById('ef-bar-model').value=match.name||'';
+    document.getElementById('ef-bar-color-val').value=match.color||'';
+    document.getElementById('ef-bar-style-val').value=match.style||'';
     document.getElementById('ef-bar-prix').textContent=match.priceHT+'€';
+    // Update summary display
+    const summary=`${match.name} • ${match.lengthM}m • ${match.color} • ${match.style}`;
+    const sumEl=document.getElementById('ef-bar-summary');
+    if(sumEl)sumEl.textContent=summary;
   }else{
     document.getElementById('ef-bar-type').value='';
     document.getElementById('ef-bar-name').value='';
     document.getElementById('ef-bar-length').value='';
     document.getElementById('ef-bar-price').value='';
+    document.getElementById('ef-bar-model').value='';
+    document.getElementById('ef-bar-color-val').value='';
+    document.getElementById('ef-bar-style-val').value='';
     document.getElementById('ef-bar-prix').textContent='—';
+    const sumEl=document.getElementById('ef-bar-summary');
+    if(sumEl)sumEl.textContent='—';
   }
   updEvCalc();
 }
@@ -5750,9 +5769,10 @@ function buildDevisHTML(ev,devisNum){
   const today=new Date().toLocaleDateString('fr-FR');
   const eventDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR'):'—';
   const client=state.clients.find(c=>c.id===ev.clientId)||{};
+  const barPrice=ev.barPrice||0;
   const isPro=window._userPlan==='pro'||window._userPlan==='professional'||window._userPlan==='early';
-  const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill;
-  const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20;
+  const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill+barPrice;
+  const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20+barPrice*1.20;
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Devis</title><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;color:#2a2a2a;background:#fff;padding:16px;max-width:800px;margin:0 auto;line-height:1.4}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #e0e0e0}.header-left{flex:1}.company-name{font-size:18px;font-weight:600;margin-bottom:2px}.company-info{font-size:8.5px;color:#666;line-height:1.2}.header-center{flex:1;text-align:center}.logo{max-height:80px;margin:0 auto}.header-right{flex:1;text-align:right}.devis-num{font-size:16px;font-weight:600}.devis-num-label{font-size:7.5px;color:#999;display:block;margin-bottom:2px}.client-info{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;padding:12px;background:#f8f8f8;border-radius:2px;font-size:8.5px}.client-section{border-right:1px solid #ddd;padding-right:12px}.client-section:last-child{border-right:none;padding-right:0}.client-label{color:#999;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-size:7px}.client-value{color:#2a2a2a;font-size:9px;line-height:1.3;margin-bottom:3px}.items-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:9px}.items-table th{background:#2a2a2a;color:#fff;padding:7px 10px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.items-table td{padding:5px 10px;border-bottom:1px solid #e0e0e0}.items-table .label-col{color:#2a2a2a;font-weight:500}.items-table .num-col{text-align:right;color:#666}.items-table .subtotal{background:#f8f8f8;font-weight:600}.items-table .section-header{background:#f0f0f0;font-weight:600;color:#2a2a2a}.totals{display:grid;grid-template-columns:1fr 180px;gap:16px;margin:14px 0;align-items:start}.totals-box{text-align:right;font-size:9px}.total-line{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #e0e0e0}.total-line.amount{font-weight:600}.total-line.main{border:none;padding:6px 0;font-size:10px;font-weight:600;border-top:1px solid #2a2a2a;padding-top:5px}.final-sections{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0}.final-box{font-size:8px;color:#666;padding:8px;background:#f8f8f8;border-left:2px solid #2a2a2a;line-height:1.4}.final-box strong{color:#2a2a2a;display:block;margin-bottom:3px;font-size:8.5px}.signature{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0}.sig-zone{border:1px solid #ddd;padding:10px;min-height:50px}.footer-container{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;padding-top:6px;border-top:1px solid #e0e0e0}.footer-right{text-align:right;font-size:7px;color:#999}.footer-left{font-size:7px;color:#999}@media print{.no-print{display:none}}</style></head><body>
   <div class="header">
     <div class="header-left">
@@ -5780,14 +5800,19 @@ function buildDevisHTML(ev,devisNum){
       <div class="client-value"><strong>${ev.name||'—'}</strong></div>
       <div class="client-value"><strong style="color:#999">Date:</strong> ${eventDate}</div>
       <div class="client-value"><strong style="color:#999">Lieu:</strong> ${ev.address||'—'}</div>
-      <div class="client-value"><strong style="color:#999">Invités:</strong> ${ev.nGuests||'—'}</div>
+      <div class="client-value"><strong style="color:#999">Invités:</strong> ${ev.pax||'—'}</div>
     </div>
   </div>
+  ${ev.barType?`<div class="client-info" style="grid-template-columns:1fr;margin-bottom:10px;padding:10px">
+    <div class="client-label">Bar sélectionnée</div>
+    <div class="client-value"><strong>${ev.barModel||'—'}</strong> • <strong>${ev.barLength||'—'}m</strong> • <strong>${ev.barColor||'—'}</strong> • <strong>${ev.barStyle||'—'}</strong></div>
+  </div>`:''}
   <table class="items-table">
     <thead><tr><th>Désignation</th><th style="text-align:center">Qté</th><th style="text-align:right">P.U. HT</th><th style="text-align:right">Total HT</th></tr></thead>
     <tbody>
       ${(ev.cocktails||[]).length?`<tr class="section-header"><td colspan="4">Cocktails</td></tr>${(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';const totalHT=(cfg.qty*c.priceHT).toFixed(2);return`<tr><td class="label-col">${c.name}</td><td style="text-align:center">${cfg.qty}</td><td class="num-col">${c.priceHT.toFixed(2)}€</td><td class="num-col">${totalHT}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
       ${staffRoles.some(r=>r.n)?`<tr class="section-header"><td colspan="4">Équipe</td></tr>${staffRoles.filter(r=>r.n).map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));const billHT=s?.billHT||0;let hrs=0;if(r.arr&&r.dep){const[ah,am]=(r.arr||'00:00').split(':').map(Number);const[dh,dm]=(r.dep||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);return`<tr><td class="label-col">${r.n} ${r.label}${r.arr&&r.dep?` (${r.arr}–${r.dep})`:''}</td><td style="text-align:center">${r.n}</td><td class="num-col">${billHT.toFixed(2)}€${s?.per==='per event'?'/event':'/h'}</td><td class="num-col">${totalHT.toFixed(2)}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
+      ${ev.barPrice?`<tr class="section-header"><td colspan="4">Bar</td></tr><tr><td class="label-col">${ev.barModel||'—'} (${ev.barLength||'—'}m • ${ev.barColor||'—'} • ${ev.barStyle||'—'})</td><td></td><td></td><td class="num-col">${(ev.barPrice||0).toFixed(2)}€</td></tr>`:''}
       ${deliveryBill||extraBill?`<tr class="section-header"><td colspan="4">Options & Frais</td></tr>${deliveryBill?`<tr><td class="label-col">Livraison & matériel</td><td></td><td></td><td class="num-col">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr><td class="label-col">Frais divers</td><td></td><td></td><td class="num-col">${extraBill.toFixed(2)}€</td></tr>`:''}`:''}
     </tbody>
   </table>
