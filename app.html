@@ -1980,6 +1980,7 @@ function renderGlassware(){
       <td><input value="${(g.notes||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
       <td><input type="number" value="${g.stock||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${g.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
+      <td><select onchange="updGlass(${g.id},'breakagePercent',this.value)" style="width:70px;height:30px;padding:4px 6px;font-size:10px"><option value="5" ${g.breakagePercent==='5'||g.breakagePercent==5||!g.breakagePercent?'selected':''}>5%</option><option value="10" ${g.breakagePercent==='10'||g.breakagePercent==10?'selected':''}>10%</option><option value="15" ${g.breakagePercent==='15'||g.breakagePercent==15?'selected':''}>15%</option></select></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
         <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;letter-spacing:.05em;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${g.id},'glass','${g.name||''.replace(/'/g,"\\'")}','${(g.supplier||'').replace(/'/g,"\\'")}')">+ COURSES</button>
@@ -4026,10 +4027,19 @@ function updEvCalc(){
   });
   ingCost+=glassCost;
 
-  // Casse verres: 5% du coût des verres
-  const breakagePercent=parseFloat(state.profile?.glassBreakagePercent)||5;
-  const breakageCost=glassCost*0.05;
-  const billedBreakage=breakageCost*(breakagePercent/100);
+  // Casse verres: 5% du coût des verres × % configuré par verre
+  let billedBreakage=0;
+  Object.entries(sel).forEach(([cid,cfg])=>{
+    const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
+    const qty=cfg.qty||0;
+    const glassObj=state.glasses?.find(g=>g.name===c.glass);
+    if(glassObj){
+      const glassCost=(glassObj.priceTTC||glassObj.priceHT||0)/1.10;
+      const breakageCost=glassCost*0.05;
+      const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
+      billedBreakage+=qty*breakageCost*(breakagePercent/100);
+    }
+  });
   revenue+=billedBreakage;
 
   // Staff — hours computed from arrival/departure per role
@@ -5677,11 +5687,19 @@ function buildDevisHTML(ev,devisNum){
     const hoursStr=hrs>0?`${hrs.toFixed(1)}h`:'—';const rateStr=billHT>0?(s?.per==='per event'?billHT.toFixed(2)+'€/event':billHT.toFixed(2)+'€/h'):'—';
     staffLines.push(`<tr><td style="padding:12px 16px;border-bottom:1px solid #f0ede8">${r.label}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.n}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${r.arr&&r.dep?r.arr+'–'+r.dep:'—'}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:center">${hoursStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${rateStr}</td><td style="padding:12px 16px;border-bottom:1px solid #f0ede8;text-align:right">${totalHT>0?totalHT.toFixed(2)+'€ HT':'—'}</td></tr>`);
   });
-  // Casse verres: 5% du coût des verres
-  let glassCostTotal=0;
-  (ev.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(c&&cfg.qty){const glassObj=state.glasses?.find(g=>g.name===c.glass);if(glassObj) glassCostTotal+=cfg.qty*((glassObj.priceTTC||glassObj.priceHT||0)/1.10);}});
-  const breakagePercent=parseFloat(state.profile?.glassBreakagePercent)||5;
-  const billedBreakage=(glassCostTotal*0.05)*(breakagePercent/100);
+  // Casse verres: 5% du coût des verres × % configuré par verre
+  let billedBreakage=0;
+  (ev.cocktails||[]).forEach(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
+    const qty=cfg.qty||0;
+    const glassObj=state.glasses?.find(g=>g.name===c.glass);
+    if(glassObj){
+      const glassCost=(glassObj.priceTTC||glassObj.priceHT||0)/1.10;
+      const breakageCost=glassCost*0.05;
+      const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
+      billedBreakage+=qty*breakageCost*(breakagePercent/100);
+    }
+  });
   const grandHT=cocktailTotalHT+staffTotalHT+deliveryBill+extraBill+billedBreakage;
   const grandTTC=cocktailTotalTTC+staffTotalHT*1.20+deliveryBill*1.20+extraBill*1.20+billedBreakage*1.20;
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
@@ -7273,31 +7291,6 @@ function renderProfile(){
         </div>
       </div>
 
-    </div>
-
-    <!-- ROW 3: Verres & Casse -->
-    <div class="card" style="display:flex;flex-direction:column;gap:12px;padding:12px;margin-top:14px">
-      <div class="ctitle">Verres & Casse</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Casse a facturer au client</div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">
-            La casse des verres est toujours <strong>+5%</strong> du coût. Vous choisissez quel pourcentage facturer au client.
-          </div>
-          <select id="prof-glass-breakage" onchange="updProfile('glassBreakagePercent',this.value);save()" style="width:100%;font-size:11px;padding:6px">
-            <option value="5" ${state.profile?.glassBreakagePercent==='5'||state.profile?.glassBreakagePercent==5?'selected':''}>5% (je prends 95% en charge)</option>
-            <option value="10" ${state.profile?.glassBreakagePercent==='10'||state.profile?.glassBreakagePercent==10?'selected':''}>10% (je prends 90% en charge)</option>
-            <option value="15" ${state.profile?.glassBreakagePercent==='15'||state.profile?.glassBreakagePercent==15?'selected':''}>15% (je prends 85% en charge)</option>
-          </select>
-        </div>
-        <div style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:var(--radius);padding:10px;font-size:10px;color:var(--text2);line-height:1.6">
-          <div style="font-weight:600;color:var(--gold);margin-bottom:6px">Exemple :</div>
-          <div>Verres: 100€ → Casse: 5€</div>
-          <div>Si vous choisissez <strong>10%</strong></div>
-          <div>→ Facture au client: 0.50€</div>
-          <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--gold-border);color:var(--gold)">Vous absorbez 4.50€ de casse</div>
-        </div>
-      </div>
     </div>
 
   </div>`;
