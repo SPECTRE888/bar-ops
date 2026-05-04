@@ -3590,14 +3590,14 @@ function showEvForm(ev){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
         <div class="field" style="margin:0">
           <label style="font-size:10px">Modèle</label>
-          <select id="ef-bar-model-inp" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+          <select id="ef-bar-model-inp" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort().map(model=>`<option value="${model}">${model}</option>`).join('')}
           </select>
         </div>
         <div class="field" style="margin:0">
           <label style="font-size:10px">Longueur</label>
-          <select id="ef-bar-length-sel" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+          <select id="ef-bar-length-sel" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.lengthM))].sort((a,b)=>a-b).map(len=>`<option value="${len}">${len}m</option>`).join('')}
           </select>
@@ -3606,14 +3606,14 @@ function showEvForm(ev){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="field" style="margin:0">
           <label style="font-size:10px">Couleur</label>
-          <select id="ef-bar-color" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+          <select id="ef-bar-color" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).filter(b=>b.color).map(b=>b.color))].map(color=>`<option value="${color}">${color}</option>`).join('')}
           </select>
         </div>
         <div class="field" style="margin:0">
           <label style="font-size:10px">Style</label>
-          <select id="ef-bar-style" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarSelection()">
+          <select id="ef-bar-style" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).filter(b=>b.style).map(b=>b.style))].map(style=>`<option value="${style}">${style}</option>`).join('')}
           </select>
@@ -3777,7 +3777,11 @@ function showEvForm(ev){
   });
   const barModelInp=document.getElementById('ef-bar-model-inp');
   if(barModelInp)barModelInp.value=(ev.barType?.split('•')[0]?.trim()||'');
-  renderEvPicker();updEvCalc();updBarSelection();_renderExtraProds();
+  const barLenSel=document.getElementById('ef-bar-length-sel');
+  if(barLenSel&&ev.barLength)barLenSel.value=ev.barLength;
+  // Restore color & style from matched bar if available
+  if(ev.barItemId){const b=(state.barItems||[]).find(x=>x.id===ev.barItemId);if(b){if(document.getElementById('ef-bar-color'))document.getElementById('ef-bar-color').value=b.color||'';if(document.getElementById('ef-bar-style'))document.getElementById('ef-bar-style').value=b.style||'';}}
+  renderEvPicker();updBarOptions();updEvCalc();_renderExtraProds();
 }
 
 function renderEvPicker(){
@@ -3978,6 +3982,48 @@ function updEvPayment(){
   } else {
     statusEl.textContent='';
   }
+}
+
+function updBarOptions(){
+  const model=document.getElementById('ef-bar-model-inp')?.value||'';
+  const length=parseFloat(document.getElementById('ef-bar-length-sel')?.value||0);
+  const color=document.getElementById('ef-bar-color')?.value||'';
+  const bars=state.barItems||[];
+
+  // Filter lengths: show only lengths available for selected model
+  let availLengths=bars.map(b=>b.lengthM);
+  if(model)availLengths=bars.filter(b=>b.name===model).map(b=>b.lengthM);
+  availLengths=[...new Set(availLengths)].sort((a,b)=>a-b);
+  const lenSel=document.getElementById('ef-bar-length-sel');
+  if(lenSel){
+    const curVal=lenSel.value;
+    lenSel.innerHTML='<option value="">—</option>'+availLengths.map(len=>`<option value="${len}">${len}m</option>`).join('');
+    if(availLengths.includes(parseFloat(curVal)))lenSel.value=curVal;
+  }
+
+  // Filter colors: show only colors available for model+length
+  let availColors=bars.filter(b=>b.color).map(b=>b.color);
+  if(model||length>0)availColors=bars.filter(b=>(model?b.name===model:true)&&(length>0?b.lengthM===length:true)&&b.color).map(b=>b.color);
+  availColors=[...new Set(availColors)];
+  const colSel=document.getElementById('ef-bar-color');
+  if(colSel){
+    const curVal=colSel.value;
+    colSel.innerHTML='<option value="">—</option>'+availColors.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(availColors.includes(curVal))colSel.value=curVal;
+  }
+
+  // Filter styles: show only styles available for model+length+color
+  let availStyles=bars.filter(b=>b.style).map(b=>b.style);
+  if(model||length>0||color)availStyles=bars.filter(b=>(model?b.name===model:true)&&(length>0?b.lengthM===length:true)&&(color?b.color===color:true)&&b.style).map(b=>b.style);
+  availStyles=[...new Set(availStyles)];
+  const styleSel=document.getElementById('ef-bar-style');
+  if(styleSel){
+    const curVal=styleSel.value;
+    styleSel.innerHTML='<option value="">—</option>'+availStyles.map(s=>`<option value="${s}">${s}</option>`).join('');
+    if(availStyles.includes(curVal))styleSel.value=curVal;
+  }
+
+  updBarSelection();
 }
 
 function updBarSelection(){
