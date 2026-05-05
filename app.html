@@ -5248,7 +5248,7 @@ function sendDispoWA(evId,sid){
   else if(role==='Serveur'){arr=ev.arrWtr||'?';dep=ev.depWtr||'?';}
   else if(role==='Bar Manager'){arr=ev.arrMgr||'?';dep=ev.depMgr||'?';}
   else if(role==='Manutentionnaire'){arr=ev.arrMan||'?';dep=ev.depMan||'?';}
-  const msg='Bonjour '+s.name+',\n\nEs-tu disponible pour cette prestation ?\n\n'+ev.name+'\n'+fmtDate+'\nLieu: '+(ev.address||'?')+'\nHoraires: '+arr+' - '+dep+'\nPoste: '+role+'\n\nReponds OUI ou NON stp.';
+  const msg='Bonjour '+s.name+',\n\Êtes-vous disponible pour cette prestation ?\n\n'+ev.name+'\n'+fmtDate+'\nLieu: '+(ev.address||'?')+'\nHoraires: '+arr+' - '+dep+'\nPoste: '+role+'\n\nRepondez par OUI ou par NON svp.';
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
