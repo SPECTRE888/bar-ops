@@ -6705,6 +6705,8 @@ function clearSupplierOrder(supplierName){
   const sKey=supplierName||'__sans_fournisseur__';
   delete state.orders[sKey];
   save();
+  document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
+  renderSuppliers();
   showToast(`✓ Liste de courses vidée pour ${supplierName}`);
 }
 
