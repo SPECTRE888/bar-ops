@@ -1979,21 +1979,8 @@ function updProd(id,k,v){
     p[k]=v;
     if(k==='productType'||k==='brand') p.name=pDisplayName(p);
     save();
-    // Update CPU display in real-time for price/qty/unit changes
-    if(k==='priceHT'||k==='qty'||k==='unit'){
-      const cpu=getCPU(p);
-      const uLabel=p.unit==='L'?'cl':p.unit==='kg'?'100g':p.unit;
-      const cpuEl=document.getElementById('cpu-'+id);
-      if(cpuEl){
-        cpuEl.textContent=cpu>0?cpu.toFixed(2)+' €/'+uLabel:'Prix manquant';
-        cpuEl.className='cpu '+(cpu>0?'cpu-ok':'cpu-warn');
-      }
-    }
-    // Don't re-render on every keystroke — only on type/brand change
-    if(k==='productType'||k==='brand'){
-      const cat=getCurrentCat();
-      if(cat) renderCatPage(cat);
-    }
+    const cat=getCurrentCat();
+    if(cat) renderCatPage(cat);
   }
 }
 
@@ -2132,7 +2119,7 @@ function renderCatPage(cat){
 // ════════════════════════════════════════════════════════
 function addGlass(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
 function delGlass(id){if(!confirm('Supprimer?'))return;state.glasses=state.glasses.filter(x=>x.id!==id);save();renderGlassware();}
-function updGlass(id,k,v){const g=state.glasses.find(x=>x.id===id);if(g){g[k]=v;save();}}
+function updGlass(id,k,v){const g=state.glasses.find(x=>x.id===id);if(g){g[k]=v;save();renderGlassware();}}
 function resetDefaultGlass(glassId){
   const g=state.glasses.find(x=>x.id===glassId);
   if(!g || !g.isDefault) return;
@@ -2142,7 +2129,7 @@ function resetDefaultGlass(glassId){
 
 function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,qty:0,unit:'kg',notes:''});save();renderGlassware();}
 function delIce(id){if(!confirm('Supprimer?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
-function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();if(['priceHT','qty','unit'].includes(k)){const totalHT=(i.priceHT*i.qty).toFixed(2);const el=document.getElementById('ice-total-'+id);if(el)el.textContent=totalHT+'€ '+(i.unit||'kg');}}}
+function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();renderGlassware();}}
 
 function renderGlassware(){
   const gt=document.getElementById('glass-tb'),ge=document.getElementById('glass-empty');
@@ -2234,6 +2221,7 @@ function updStaff(id,k,v){
       if(linked){linked.phone=v;}
     }
     save();
+    renderStaff();
   }
 }
 
