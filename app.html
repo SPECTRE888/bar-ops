@@ -494,7 +494,12 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ FOURNISSEURS ═══ -->
 <div id="page-suppliers" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print"><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
+      <input type="text" id="suppliers-search" placeholder="Chercher..." class="input-md" oninput="renderSuppliers()"/>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
+      <button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button>
+    </div>
   </div>
   <div class="content" id="suppliers-content"></div>
 </div>
@@ -2322,10 +2327,15 @@ function showCList(){
   const cats=['Cocktail Signature','Cocktail Classique','Mocktail Signature','Mocktail Classique'];
 
   el.innerHTML=`<div class="c-grid" id="c-grid"></div>`;
-  
+
+  const topbar=document.querySelector('#page-cocktails .topbar');
   const topbarActions=document.querySelector('#page-cocktails .topbar-actions');
+
+  // Remove old filter div if exists
+  document.getElementById('c-filters-left')?.remove();
+
   const filterHTML=`
-    <input id="c-srch" placeholder="Rechercher un cocktail..." oninput="renderCGrid()" style="padding:6px 10px;font-size:12px;width:150px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:var(--font-body)"/>
+    <input id="c-srch" placeholder="Rechercher un cocktail..." oninput="renderCGrid()" class="input-md"/>
     <select id="c-filter-spirit" onchange="renderCGrid()" class="input-md">
       <option value="">Tous les spiritueux</option>
       ${spiritTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
@@ -2334,7 +2344,12 @@ function showCList(){
       <option value="">Toutes catégories</option>
       ${cats.map(c=>`<option value="${c}">${c}</option>`).join('')}
     </select>`;
-  topbarActions.insertAdjacentHTML('afterbegin',filterHTML);
+
+  const leftDiv=document.createElement('div');
+  leftDiv.id='c-filters-left';
+  leftDiv.style.cssText='display:flex;gap:8px;align-items:center;flex:0';
+  leftDiv.innerHTML=filterHTML;
+  topbar.insertBefore(leftDiv, topbarActions);
   renderCGrid();
 }
 
