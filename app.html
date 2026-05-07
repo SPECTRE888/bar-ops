@@ -137,10 +137,10 @@ h1,h2,h3{font-family:var(--font-display)}
 
 /* ── MAIN ── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;padding-bottom:35px}
-.topbar{padding:20px 28px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:0;overflow:visible;gap:24px}
-.topbar h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;letter-spacing:.06em;color:var(--gold);margin:0;white-space:nowrap}
+.topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:0;gap:32px;background:linear-gradient(to bottom,var(--bg),var(--surface))}
+.topbar h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:.08em;color:var(--gold);margin:0;white-space:nowrap;text-transform:capitalize}
 .topbar-rule{width:1px;height:16px;background:var(--border2);margin:0 4px}
-.topbar-actions{display:flex;gap:12px;align-items:center;overflow:visible;position:relative;z-index:20;flex-wrap:wrap;flex:1}
+.topbar-actions{display:flex;gap:10px;align-items:center;overflow:visible;position:relative;z-index:20}
 .content{padding:24px 28px;flex:1}
 .page{display:none}.page.active{display:block}
 
@@ -160,9 +160,10 @@ select option{background:#151515;color:#ede8e0}
 select{color-scheme:dark;cursor:pointer}
 /* Inputs/Selects avec largeur fixe */
 .input-sm{width:100px !important}
-.input-md{width:160px !important;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:4px;font-size:12px;font-family:var(--font-body);transition:.2s}
-.input-md:focus{border-color:var(--gold);outline:none}
-.input-md::placeholder{color:var(--text3)}
+.input-md{width:160px !important;background:rgba(15,15,15,.5);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:3px;font-size:12px;font-family:var(--font-body);transition:.25s;height:36px;box-sizing:border-box}
+.input-md:focus{border-color:var(--gold);outline:none;background:rgba(15,15,15,.8);box-shadow:0 0 0 2px rgba(196,164,107,.1)}
+.input-md::placeholder{color:var(--text3);opacity:.7}
+select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a09890' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:28px}
 .input-lg{width:210px !important}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
@@ -179,10 +180,11 @@ select{color-scheme:dark;cursor:pointer}
 /* ── BUTTONS ── */
 .btn{padding:7px 16px;border:1px solid var(--border2);border-radius:var(--radius);background:none;color:var(--text2);font-size:9px;cursor:pointer;font-family:var(--font-body);font-weight:400;letter-spacing:.12em;text-transform:uppercase;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .btn:hover{border-color:var(--text3);color:var(--text);background:var(--surface2)}
-.btn-gold{background:var(--gold);color:#080808;border-color:var(--gold);font-weight:600;letter-spacing:.1em;padding:8px 16px;border-radius:4px;font-size:11px;white-space:nowrap}
-.btn-gold:hover{background:var(--gold2);border-color:var(--gold2);transform:translateY(-1px);box-shadow:0 2px 6px rgba(196,164,107,.2)}
-.btn-ghost{border:1px solid var(--border2);color:var(--text3);padding:8px 12px;border-radius:4px;font-size:11px;white-space:nowrap;transition:.2s;letter-spacing:.08em;text-transform:uppercase}
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.05)}
+.btn-gold{background:var(--gold);color:#080808;border:1px solid var(--gold);font-weight:600;letter-spacing:.09em;padding:9px 18px;border-radius:3px;font-size:11px;white-space:nowrap;transition:.25s;height:36px;display:inline-flex;align-items:center;text-transform:uppercase;cursor:pointer}
+.btn-gold:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(196,164,107,.25)}
+.btn-gold:active{transform:scale(.98)}
+.btn-ghost{border:1px solid var(--border);color:var(--text2);padding:9px 12px;border-radius:3px;font-size:11px;white-space:nowrap;transition:.25s;letter-spacing:.08em;text-transform:uppercase;height:36px;display:inline-flex;align-items:center;background:transparent;cursor:pointer}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.08)}
 .btn-sm{padding:4px 10px;font-size:8px;letter-spacing:.1em}
 .btn-danger{color:var(--red);border-color:var(--border2);background:var(--red-bg)}
 .btn-danger:hover{border-color:var(--red);background:rgba(196,112,112,0.14)}
@@ -362,7 +364,7 @@ select{color-scheme:dark;cursor:pointer}
 <div id="page-catalogue" class="page">
   <div class="topbar">
     <h2 id="h-catalogue">Catalogue</h2>
-    <div style="display:flex;gap:12px;align-items:center;flex:1">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <select id="cat-filter" onchange="renderCatalogue()" class="input-md">
         <option value="Spirit"> Spiritueux</option>
         <option value="Juice"> Jus & Purées</option>
@@ -377,11 +379,11 @@ select{color-scheme:dark;cursor:pointer}
       </select>
       <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" class="input-md"/>
     </div>
-    <div class="topbar-actions no-print" style="flex:0;gap:8px">
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">📋 CSV</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">CSV</button>
       <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)"/>
-      <button class="btn btn-ghost" onclick="document.getElementById('json-import-input').click()" title="Importer JSON">{ } JSON</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('json-import-input').click()" title="Importer JSON">JSON</button>
       <input type="file" id="json-import-input" accept=".json" style="display:none" onchange="importJSON(this)"/>
     </div>
   </div>
