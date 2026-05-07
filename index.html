@@ -15,10 +15,10 @@ const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
 let currentPeriod='monthly';
 const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 async function googleAuth(action){
-  await sb.auth.signOut();
+  sb.auth.signOut();
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:window.location.origin+'/auth.html?action='+action}
+    options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action='+action}
   });
   if(error)alert('Erreur: '+error.message);
 }
