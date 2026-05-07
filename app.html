@@ -409,7 +409,7 @@ select{color-scheme:dark;cursor:pointer}
 <div id="page-staff" class="page">
   <div class="topbar"><h2 id="h-staff">Mon équipe</h2>
     <div class="topbar-actions no-print">
-      <input type="text" id="staff-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterStaff()"/>
+      <input type="text" id="staff-search" placeholder="Chercher..." class="input-md" oninput="filterStaff()"/>
       <div style="display:flex;gap:8px;margin-right:16px">
         <button class="btn btn-ghost" id="tab-staff" onclick="showStaffTab('staff')" style="background:var(--gold);color:#000">Équipe</button>
         <button class="btn btn-ghost" id="tab-dresscode" onclick="showStaffTab('dresscode')">Tenues</button>
@@ -462,7 +462,7 @@ select{color-scheme:dark;cursor:pointer}
   <div class="topbar">
     <h2 id="h-events">Événements</h2>
     <div class="topbar-actions no-print">
-      <input type="text" id="ev-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterEvList()"/>
+      <input type="text" id="ev-search" placeholder="Chercher..." class="input-md" oninput="filterEvList()"/>
       <button class="btn btn-ghost" onclick="showEvList()" id="btn-evback" style="display:none">← Retour</button>
       <button class="btn btn-gold" onclick="newEv()" id="btn-evnew">+ Nouvel événement</button>
     </div>
@@ -474,7 +474,7 @@ select{color-scheme:dark;cursor:pointer}
 <div id="page-clients" class="page">
   <div class="topbar"><h2 id="h-clients">Clients</h2>
     <div class="topbar-actions no-print">
-      <input type="text" id="clients-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterClients()"/>
+      <input type="text" id="clients-search" placeholder="Chercher..." class="input-md" oninput="filterClients()"/>
       <button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button>
     </div>
   </div>
@@ -521,7 +521,7 @@ select{color-scheme:dark;cursor:pointer}
         <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000">Suivi</button>
         <button class="btn btn-ghost" id="tab-planning" onclick="showSuiviTab('planning')">Planning</button>
       </div>
-      <input type="text" id="suivi-search" placeholder="Chercher..." style="width:180px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px" oninput="filterSuivi()"/>
+      <input type="text" id="suivi-search" placeholder="Chercher..." class="input-md" oninput="filterSuivi()"/>
     </div>
   </div>
   <div class="content" id="suivi-content"></div>
@@ -533,7 +533,7 @@ select{color-scheme:dark;cursor:pointer}
   <div class="topbar">
     <h2 id="h-historique">Historique</h2>
     <div class="topbar-actions no-print">
-      <input type="text" id="hist-search" placeholder="Chercher..." oninput="renderHistorique()" style="width:200px;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px"/>
+      <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
     </div>
   </div>
   <div class="content" id="historique-content"></div>
