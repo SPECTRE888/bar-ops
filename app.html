@@ -2642,8 +2642,9 @@ function showCForm(c){
           </select></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Service glace</label><select id="cf-service-ice" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
             <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Sans glace (0%)</option>
-            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>Glaçons (60%)</option>
+            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>Glaçon (60%)</option>
             <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (100%)</option>
+            <option value="one"${c.serviceIce==='one'?' selected':''}>Une pièce</option>
           </select></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût glace (HT)</label><input type="number" id="cf-ice-display" value="${(c.iceVal||0).toFixed(3)}" step="0.001" min="0" readonly style="font-size:13px;padding:6px;height:32px;box-sizing:border-box;background:var(--bg2);color:var(--text2)"/></div>
         </div>
@@ -3043,17 +3044,30 @@ function updIceCost(){
 
   const priceHT = iceType.priceHT||0;
 
-  // Special handling for "pièce" unit: 1 piece = 1 unit
-  if(iceType.unit==='pièce'){
-    const shakerCost = 0; // No ice thrown away for pieces
-    const serviceCost = serviceIce==='none'?0:priceHT; // 1 piece per cocktail
-    const totalCost = shakerCost+serviceCost;
-
-    const techLabels={none:'Direct',stirred:'Mélangé',shaken:'Shaké',blended:'Blendé'};
-    const svcLabels={none:'Sans glace',rocks:'Glaçons',full:'Plein de glace'};
+  // Service "one" = 1 unit of ice at its price
+  if(serviceIce==='one'){
+    const shakerCost = 0;
+    const serviceCost = priceHT;
+    const totalCost = serviceCost;
 
     const lines=[];
-    if(serviceCost>0) lines.push(`Service ${svcLabels[serviceIce]||serviceIce} : <strong>1 pièce</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>`);
+    lines.push(`Service Une pièce : <strong>1 ${iceType.unit}</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>`);
+
+    if(recap) recap.innerHTML=lines.join('<br/>');
+    if(hidden) hidden.value=totalCost;
+    updCRecap();
+    return;
+  }
+
+  // Special handling for "pièce" unit with other service types
+  if(iceType.unit==='pièce'){
+    const shakerCost = 0;
+    const serviceCost = (serviceIce==='none')?0:priceHT;
+    const totalCost = serviceCost;
+
+    const svcLabels={none:'Sans glace',rocks:'Glaçon',full:'Plein'};
+    const lines=[];
+    if(serviceCost>0) lines.push(`Service ${svcLabels[serviceIce]||serviceIce} : <strong>1 ${iceType.unit}</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>`);
 
     if(recap) recap.innerHTML=lines.length?lines.join('<br/>'):'';
     if(hidden) hidden.value=totalCost;
