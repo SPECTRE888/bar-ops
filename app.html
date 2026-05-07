@@ -364,7 +364,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <div id="page-catalogue" class="page">
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center;flex:0">
-      <select id="cat-filter" onchange="renderCatalogue()" class="input-md">
+      <select id="cat-filter" onchange="onCategoryFilterChange()" class="input-md">
         <option value="Spirit"> Spiritueux</option>
         <option value="Juice"> Jus & Purées</option>
         <option value="Mixer"> Mixers & Sodas</option>
@@ -1590,9 +1590,30 @@ function updateCategoryDropdown(){
   const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Spice','Glassware','Ice','Bar'];
   const customCats=(state.customCategories||[]);
   const options=cats.map(c=>`<option value="${c}">${{Spirit:'Spiritueux',Juice:'Jus & Purées',Mixer:'Mixers & Sodas',Syrup:'Sirops',Garnish:'Garnitures',Consumable:'Consommables',Spice:'Épices & Condiments',Glassware:'Verrerie',Ice:'Glace',Bar:'Bar & Matériel'}[c]}</option>`).join('')+
-    (customCats.length?`<optgroup label="─ Personnalisées">` + customCats.map(c=>`<option value="Custom_${c.id}">${c.name}</option>`).join('')+'</optgroup>':'');
+    (customCats.length?`<optgroup label="─ Personnalisées">` + customCats.map(c=>`<option value="Custom_${c.id}">${c.name}</option>`).join('')+'</optgroup>':'')
+    +`<option value="__ADD_CATEGORY__" style="font-style:italic;color:var(--gold)">+ Ajouter une catégorie...</option>`;
   select.innerHTML=options;
   select.value=current;
+}
+
+function onCategoryFilterChange(){
+  const select=document.getElementById('cat-filter');
+  if(select.value==='__ADD_CATEGORY__'){
+    const name=prompt('Nom de la nouvelle catégorie:');
+    if(!name?.trim()){
+      select.value=select.options[0].value;
+      return;
+    }
+    if(!state.customCategories) state.customCategories=[];
+    const newCat={id:Date.now(),name:name.trim()};
+    state.customCategories.push(newCat);
+    save();
+    updateCategoryDropdown();
+    select.value='Custom_'+newCat.id;
+    renderCatalogue();
+  }else{
+    renderCatalogue();
+  }
 }
 
 function showCategoryManager(){
