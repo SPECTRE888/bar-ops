@@ -11,5 +11,21 @@
     ".DS_Store",
     "*.save",
     "package-lock.json"
-  ]
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "git push origin main",
+            "statusMessage": "Pushing to main...",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
 }
