@@ -575,9 +575,20 @@ function showCloudModal(){} // Stub - real impl below
 function deleteAccountModal(){} // Stub
 
 async function sidebarLogout(){
-  const sb=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
-  if(sb)await sb.auth.signOut();
+  try{
+    if(window._sb)await window._sb.auth.signOut();
+    else if(window.supabase?.createClient){
+      const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+      await sb.auth.signOut();
+    }
+  }catch(e){}
+  // Clear local data
+  try{localStorage.removeItem(SK);}catch(e){}
   window.location.href='index.html';
+}
+
+async function cloudSignOut(){
+  await sidebarLogout();
 }
 
 function fmt(n){
