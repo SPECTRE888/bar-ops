@@ -359,6 +359,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <div id="page-catalogue" class="page">
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center;flex:0">
+      <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" class="input-md"/>
       <div style="display:flex;gap:6px;align-items:center">
         <select id="cat-filter" onchange="onCategoryFilterChange()" class="input-md">
           <option value="Spirit"> Spiritueux</option>
@@ -374,7 +375,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
         </select>
         <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
       </div>
-      <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" class="input-md"/>
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
