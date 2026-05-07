@@ -6642,14 +6642,22 @@ function renderClients(){
 
 function addIceOrGlassToOrder(id,type,name,supplier){
   const inp=document.getElementById('order_'+type+'_'+id);
-  const qty=parseFloat(inp?.value)||0;
+  let qty=parseFloat(inp?.value);
+  let unit='pièce';
+  if(type==='ice'){
+    const iceItem=state.iceTypes.find(i=>i.id===id);
+    unit=iceItem?.unit||'kg';
+    if(!qty) qty=unit==='Pièce'?1:1;
+  }else{
+    if(!qty) qty=1;
+  }
   if(!qty||qty<=0){inp&&(inp.style.borderColor='var(--red)');return;}
   if(!state.orders)state.orders={};
   const sKey=supplier||'__sans_fournisseur__';
   if(!state.orders[sKey])state.orders[sKey]=[];
   const existing=state.orders[sKey].find(x=>x.pid===id&&x.name===type);
   if(existing)existing.qty+=qty;
-  else state.orders[sKey].push({pid:id,name:type,brand:name||'',code:'',unit:type==='ice'?'kg':'pièce',qty});
+  else state.orders[sKey].push({pid:id,name:type,brand:name||'',code:'',unit,qty});
   inp.value='';inp.style.borderColor='';
   save();
   showToast(`✓ ${qty} × ${name} → ${sKey}`);
