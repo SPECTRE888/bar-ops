@@ -2618,7 +2618,7 @@ function showCForm(c){
       <div class="card" style="padding:12px">
         <div class="ctitle" style="margin-bottom:8px">Informations générales</div>
         <div class="g3" style="gap:6px;margin-bottom:6px">
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="ex: Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Catégorie</label><select id="cf-cat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
             <option${(c.category||'Cocktail Signature')==='Cocktail Signature'?' selected':''}>Cocktail Signature</option>
             <option${(c.category||'Cocktail Signature')==='Cocktail Classique'?' selected':''}>Cocktail Classique</option>
@@ -2640,7 +2640,7 @@ function showCForm(c){
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Service glace</label><select id="cf-service-ice" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
             <option value="none"${(c.serviceIce||'none')==='none'?' selected':''}>Sans glace (0%)</option>
-            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks (60%)</option>
+            <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>Glaçons (60%)</option>
             <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (100%)</option>
           </select></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Type glace</label><select id="cf-ice-type" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="onIceTypeChange()">
@@ -2652,7 +2652,7 @@ function showCForm(c){
         <input type="hidden" id="cf-ice" value="${c.iceVal||0}"/>
         <input type="hidden" id="cf-ice-cl" value="${c.iceCl||0}"/>
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
-          <textarea id="cf-desc" rows="2" placeholder="Passion fruit, ginger beer, lime..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
+          <textarea id="cf-desc" rows="2" placeholder="Fruits de la passion, gingembre, citron..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
         <div class="field"><label style="font-size:12px">Photo</label>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -2672,7 +2672,7 @@ function showCForm(c){
       </div>
 
       <div class="card" style="padding:12px">
-        <div class="ctitle" style="margin-bottom:10px"> Pricing (HT)</div>
+        <div class="ctitle" style="margin-bottom:10px">Tarification (HT)</div>
         <div class="g3" style="gap:6px;margin-bottom:10px">
           <div style="background:var(--bg2);padding:8px 10px;border-radius:4px;text-align:center">
             <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Prix conseillé</div>
@@ -2705,24 +2705,24 @@ function showCForm(c){
         <div style="font-size:10px;color:var(--text3);text-align:center" id="bar-lbl"></div>
       </div>
       <div class="flex-g no-print">
-        <button class="btn btn-gold" onclick="saveCocktail()">Save cocktail</button>
+        <button class="btn btn-gold" onclick="saveCocktail()">Enregistrer</button>
         <button class="btn btn-ghost" onclick="showCList()">Annuler</button>
       </div>
     </div>
 
     <div>
       <div class="card">
-        <div class="ctitle"> Ingredients</div>
-        <div class="ing-hdr"><span>Type</span><span>Marque *</span><span>Qty</span><span>Unit</span><span>Cost HT</span><span></span></div>
+        <div class="ctitle">Ingrédients</div>
+        <div class="ing-hdr"><span>Type</span><span>Marque *</span><span>Quantité</span><span>Unité</span><span>Coût HT</span><span></span></div>
         <div id="ing-list"></div>
-        <div id="ing-warn" class="warn hide"> Some products have no price set</div>
-        <button class="btn btn-sm btn-ghost mt1 no-print" onclick="addIngRow()">+ Add ingredient</button>
+        <div id="ing-warn" class="warn hide">Certains produits n'ont pas de prix défini</div>
+        <button class="btn btn-sm btn-ghost mt1 no-print" onclick="addIngRow()">+ Ajouter ingrédient</button>
       </div>
       <div class="card">
-        <div class="ctitle"> Garnish & Consumables</div>
-        <div class="ing-hdr"><span>Type</span><span>Marque *</span><span>Qty</span><span>Unit</span><span>Cost HT</span><span></span></div>
+        <div class="ctitle">Garnitures & Consommables</div>
+        <div class="ing-hdr"><span>Type</span><span>Marque *</span><span>Quantité</span><span>Unité</span><span>Coût HT</span><span></span></div>
         <div id="conso-list"></div>
-        <button class="btn btn-sm btn-ghost mt1 no-print" onclick="addConsoRow()">+ Add garnish / consumable</button>
+        <button class="btn btn-sm btn-ghost mt1 no-print" onclick="addConsoRow()">+ Ajouter garniture / consommable</button>
       </div>
     </div>
   </div>`;
@@ -2738,7 +2738,7 @@ function showCForm(c){
     return parts.join(' — ');
   };
 
-  mkSS('cf-glass-sel',glassOpts,'e.g. Highball...',(v)=>{
+  mkSS('cf-glass-sel',glassOpts,'ex: Highball...',(v)=>{
     const g=state.glasses.find(x=>v.startsWith(x.name));
     if(g){
       const newGlassCost=parseFloat(((g.priceTTC||g.priceHT||0)/1.10).toFixed(3));
@@ -2797,7 +2797,7 @@ function addConsoRow(val={}){
   irc++;const id='conso-'+irc;
   const div=document.createElement('div');div.className='ing-row';div.id=id;
   const gcTypes=[...new Set(state.products.filter(p=>p.category==='Garnish'||p.category==='Consumable').map(p=>p.productType).filter(Boolean))].sort();
-  const fallback=['Lime Wheel','Lemon Wheel','Mint Sprig','Cherry','Straw','Cocktail Pick','Edible Flower'];
+  const fallback=['Tranche de citron vert','Tranche de citron','Brin de menthe','Cerise','Paille','Pique à cocktail','Fleur comestible'];
   const opts=[...new Set([...gcTypes,...fallback])].sort();
   div.innerHTML=`
     <div id="${id}-type-ss"></div>
