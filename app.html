@@ -412,9 +412,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ STAFF ═══ -->
 <div id="page-staff" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="staff-search" placeholder="Chercher..." class="input-md" oninput="filterStaff()"/>
-      <div style="display:flex;gap:8px;margin-right:16px">
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
+      <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" id="tab-staff" onclick="showStaffTab('staff')" style="background:var(--gold);color:#000">Équipe</button>
         <button class="btn btn-ghost" id="tab-dresscode" onclick="showStaffTab('dresscode')">Tenues</button>
       </div>
@@ -528,13 +530,13 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <div id="page-suivi" class="page">
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center;flex:0">
+      <input type="text" id="suivi-search" placeholder="Chercher..." class="input-md" oninput="filterSuivi()"/>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000">Suivi</button>
         <button class="btn btn-ghost" id="tab-planning" onclick="showSuiviTab('planning')">Planning</button>
       </div>
-      <input type="text" id="suivi-search" placeholder="Chercher..." class="input-md" oninput="filterSuivi()"/>
-    </div>
-    <div class="topbar-actions no-print" style="flex:0;gap:6px">
     </div>
   </div>
   <div class="content" id="suivi-content"></div>
