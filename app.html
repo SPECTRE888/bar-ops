@@ -3055,7 +3055,7 @@ function updIceCost(){
     const lines=[];
     if(serviceCost>0) lines.push(`Service ${svcLabels[serviceIce]||serviceIce} : <strong>1 pièce</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>`);
 
-    if(recap) recap.innerHTML=lines.length?lines.join('<br/>'):`;
+    if(recap) recap.innerHTML=lines.length?lines.join('<br/>'):'';
     if(hidden) hidden.value=totalCost;
     updCRecap();
     return;
