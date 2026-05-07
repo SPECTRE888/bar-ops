@@ -381,6 +381,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
+      <button class="btn btn-ghost" onclick="showCategoryManager()" title="Gérer catégories">⚙ Catégories</button>
       <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">CSV</button>
       <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)"/>
       <button class="btn btn-ghost" onclick="document.getElementById('json-import-input').click()" title="Importer JSON">JSON</button>
@@ -1190,7 +1191,7 @@ let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], orders:{}, profile:{}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], customCategories:[], orders:{}, profile:{}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -1579,19 +1580,76 @@ const CAT_PAGE = {Spirit:'spirits',Juice:'juices',Mixer:'mixers',Syrup:'syrups',
 const PAGE_CAT = Object.fromEntries(Object.entries(CAT_PAGE).map(([c,p])=>[p,c]));
 
 let catalogOpen=true;
+
+// ════════════════════════════════════════════════════════
+// CUSTOM CATEGORIES
+// ════════════════════════════════════════════════════════
+function updateCategoryDropdown(){
+  const select=document.getElementById('cat-filter');
+  if(!select) return;
+  const current=select.value;
+  const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Spice','Glassware','Ice','Bar'];
+  const customCats=(state.customCategories||[]);
+  const options=cats.map(c=>`<option value="${c}">${{Spirit:'Spiritueux',Juice:'Jus & Purées',Mixer:'Mixers & Sodas',Syrup:'Sirops',Garnish:'Garnitures',Consumable:'Consommables',Spice:'Épices & Condiments',Glassware:'Verrerie',Ice:'Glace',Bar:'Bar & Matériel'}[c]}</option>`).join('')+
+    (customCats.length?`<optgroup label="─ Personnalisées">` + customCats.map(c=>`<option value="Custom_${c.id}">${c.name}</option>`).join('')+'</optgroup>':'');
+  select.innerHTML=options;
+  select.value=current;
+}
+
+function showCategoryManager(){
+  const customCats=(state.customCategories||[]);
+  const html=`<div style="display:flex;flex-direction:column;gap:12px">
+    <div><input id="new-cat-name" placeholder="Nom de la catégorie..." style="width:100%;padding:8px 12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:4px"/></div>
+    <button class="btn btn-gold" onclick="addCustomCategory()" style="width:100%">+ Ajouter catégorie</button>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      ${customCats.length?customCats.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--surface2);border-radius:3px;margin-bottom:6px"><strong>${c.name}</strong><button class="btn btn-sm btn-danger" onclick="delCustomCategory('${c.id}')">×</button></div>`).join(''):'<p style="color:var(--text3);font-size:12px">Aucune catégorie personnalisée</p>'}
+    </div>
+  </div>`;
+  showModal('Gérer les catégories',html,300);
+}
+
+function addCustomCategory(){
+  const input=document.getElementById('new-cat-name');
+  if(!input?.value.trim()) return;
+  if(!state.customCategories) state.customCategories=[];
+  state.customCategories.push({id:Date.now(),name:input.value.trim()});
+  save();
+  updateCategoryDropdown();
+  showCategoryManager();
+}
+
+function delCustomCategory(id){
+  if(!confirm('Supprimer cette catégorie ?')) return;
+  state.customCategories=state.customCategories.filter(c=>c.id!==id);
+  save();
+  updateCategoryDropdown();
+  showCategoryManager();
+}
+
 // ════════════════════════════════════════════════════════
 // CATALOGUE UNIFIÉ
 // ════════════════════════════════════════════════════════
 function renderCatalogue(){
-  const cat=document.getElementById('cat-filter')?.value||'Spirit';
+  updateCategoryDropdown();
+  const catSelect=document.getElementById('cat-filter');
+  if(!catSelect) return;
+  let cat=catSelect.value||'Spirit';
   const content=document.getElementById('catalogue-content');
   if(!content) return;
   // Don't clear search on sort — only on category change via this function
 
   // Update add button label
-  const labels={Spirit:t('cat_spirits'),Juice:t('cat_juices'),Mixer:t('cat_mixers'),Syrup:t('cat_syrups'),Garnish:t('cat_garnish'),Consumable:t('cat_consumables'),Spice:t('cat_spices'),Glassware:t('cat_glassware'),Ice:t('cat_ice'),Bar:t('cat_bar')};
+  let btnLabel='+ Ajouter';
+  if(cat.startsWith('Custom_')){
+    const customCat=(state.customCategories||[]).find(c=>c.id==cat.replace('Custom_',''));
+    btnLabel='+ '+(customCat?.name||'Ajouter');
+    cat='Custom_'+customCat?.id;
+  }else{
+    const labels={Spirit:t('cat_spirits'),Juice:t('cat_juices'),Mixer:t('cat_mixers'),Syrup:t('cat_syrups'),Garnish:t('cat_garnish'),Consumable:t('cat_consumables'),Spice:t('cat_spices'),Glassware:t('cat_glassware'),Ice:t('cat_ice'),Bar:t('cat_bar')};
+    btnLabel='+ '+(labels[cat]||'Ajouter');
+  }
   const addBtn=document.getElementById('cat-add-btn');
-  if(addBtn) addBtn.textContent='+ '+labels[cat];
+  if(addBtn) addBtn.textContent=btnLabel;
 
   if(cat==='Glassware'){
     // Show glassware + ice
@@ -1881,9 +1939,23 @@ function sortProducts(items){
 }
 
 function renderCatPage(cat){
-  const bodyId='body-'+CAT_PAGE[cat];
-  const body=document.getElementById(bodyId);
-  if(!body)return;
+  // Handle custom categories
+  let bodyId='body-custom';
+  if(!cat.startsWith('Custom_')){
+    bodyId='body-'+CAT_PAGE[cat];
+  }
+  let body=document.getElementById(bodyId);
+  if(!body){
+    // Create body for custom category if needed
+    if(cat.startsWith('Custom_')){
+      const content=document.getElementById('catalogue-content');
+      if(content){
+        content.innerHTML=`<div id="body-custom"></div>`;
+        body=document.getElementById('body-custom');
+      }
+    }
+    if(!body) return;
+  }
   const search=(document.getElementById('cat-search')?.value||'').toLowerCase().trim();
   const raw=state.products.filter(p=>p.category===cat);
   const filtered=search
@@ -1979,7 +2051,7 @@ function resetDefaultGlass(glassId){
 
 function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,qty:0,unit:'kg',notes:''});save();renderGlassware();}
 function delIce(id){if(!confirm('Supprimer?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
-function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();if(['priceHT','qty','unit'].includes(k)){const totalHT=(i.priceHT*i.qty).toFixed(2);const el=document.getElementById('ice-total-'+id);if(el)el.textContent=totalHT+'€';}}}
+function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();if(['priceHT','qty','unit'].includes(k)){const totalHT=(i.priceHT*i.qty).toFixed(2);const el=document.getElementById('ice-total-'+id);if(el)el.textContent=totalHT+'€ '+(i.unit||'kg');}}}
 
 function renderGlassware(){
   const gt=document.getElementById('glass-tb'),ge=document.getElementById('glass-empty');
@@ -2018,7 +2090,7 @@ function renderGlassware(){
       <td><input type="number" value="${priceHT}" step="0.01" min="0" onchange="updIce(${i.id},'priceHT',parseFloat(this.value)||0)" oninput="updIce(${i.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
       <td><input type="number" value="${qty}" step="0.5" min="0" onchange="updIce(${i.id},'qty',parseFloat(this.value)||0)" oninput="updIce(${i.id},'qty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
       <td><select onchange="updIce(${i.id},'unit',this.value)" oninput="updIce(${i.id},'unit',this.value)" style="width:55px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"><option value="kg"${unit==='kg'?' selected':''}>kg</option><option value="L"${unit==='L'?' selected':''}>L</option><option value="Pièce"${unit==='Pièce'?' selected':''}>Pièce</option></select></td>
-      <td><span class="cpu cpu-ok" id="ice-total-${i.id}">${totalHT}€</span></td>
+      <td><span class="cpu cpu-ok" id="ice-total-${i.id}">${totalHT}€ ${unit}</span></td>
       <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
       <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}</select></td>
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
