@@ -32,7 +32,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
     window.cloudUser={access_token:session.access_token,refresh_token:session.refresh_token,user:session.user};
     window._userEmail=session.user.email;
-    window._userPlan=subs?.plan||'pro';
+    window._userPlan=subs?.plan||'free';
     window._isDemo=false;
     window._userId=session.user.id;
     window._paywallDone=true;
@@ -4402,6 +4402,9 @@ function saveEv(){
     barType:document.getElementById('ef-bar-name')?.value||'',
     barLength:parseFloat(document.getElementById('ef-bar-length')?.value)||0,
     barPrice:parseFloat(document.getElementById('ef-bar-price')?.value)||0,
+    barModel:document.getElementById('ef-bar-model')?.value||'',
+    barColor:document.getElementById('ef-bar-color-val')?.value||'',
+    barStyle:document.getElementById('ef-bar-style-val')?.value||'',
     dressCodes:(function(){const v=document.getElementById('ef-tenue-select')?.value;return v?[parseInt(v)]:[];})(),
     pax:parseInt(document.getElementById('ef-pax')?.value)||0,
     cppax:parseFloat(document.getElementById('ef-cpp')?.value)||3,
@@ -4411,6 +4414,7 @@ function saveEv(){
     nBartenders:parseInt(document.getElementById('ef-nbrt')?.value)||0,
     nWaiters:parseInt(document.getElementById('ef-nwtr')?.value)||0,
     nManagers:parseInt(document.getElementById('ef-nmgr')?.value)||0,
+    nManutentionnaires:parseInt(document.getElementById('ef-nman')?.value)||0,
     arrBrt:(document.getElementById('ef-arrbrt')?.value||'').trim()||existingEv?.arrBrt||'',
     depBrt:(document.getElementById('ef-depbrt')?.value||'').trim()||existingEv?.depBrt||'',
     arrWtr:(document.getElementById('ef-arrwtr')?.value||'').trim()||existingEv?.arrWtr||'',
@@ -5819,8 +5823,8 @@ function buildDevisHTML(ev,devisNum){
   <div class="totals">
     <div></div>
     <div class="totals-box">
-      <div class="total-line"><span>HT</span><span class="amount">${grandHT.toFixed(2)}€</span></div>
-      <div class="total-line"><span>TVA 20%</span><span class="amount">${(grandTTC-grandHT).toFixed(2)}€</span></div>
+      <div class="total-line"><span>Total HT</span><span class="amount">${grandHT.toFixed(2)}€</span></div>
+      <div class="total-line"><span>TVA</span><span class="amount">${(grandTTC-grandHT).toFixed(2)}€</span></div>
       <div class="total-line main"><span>TOTAL TTC</span><span>${grandTTC.toFixed(2)}€</span></div>
     </div>
   </div>
@@ -5857,16 +5861,36 @@ function buildDevisHTML(ev,devisNum){
 }
 
 function generateDevisNumber(ev){
+  // Si déjà émis pour cet event, retourner (immutable)
   if(ev.devisNum)return ev.devisNum;
-  const barName=state.profile?.barName||'BAR OPS';
-  const initials=barName.split(' ').map(w=>w.charAt(0).toUpperCase()).join('').substring(0,2).padEnd(2,'X');
+  // Préfixe figé : la 1ère fois, on stocke les initiales courantes pour qu'elles ne changent JAMAIS
+  // (conformité comptable: numérotation continue, art. 286 CGI)
+  if(!state._devisPrefix){
+    const barName=state.profile?.barName||'BAR OPS';
+    state._devisPrefix=barName.split(' ').map(w=>w.charAt(0).toUpperCase()).join('').substring(0,2).padEnd(2,'X');
+  }
+  const initials=state._devisPrefix;
   const year=new Date().getFullYear();
   const yearKey=`${year}-${initials}`;
-  if(!state._devisCounters)state._devisCounters={};
-  if(!state._devisCounters[yearKey])state._devisCounters[yearKey]=0;
-  state._devisCounters[yearKey]++;
-  const num=String(state._devisCounters[yearKey]).padStart(4,'0');
-  ev.devisNum=`DEVIS-${year}-${initials}-${num}`;
+  // Journal des devis émis (immutable log pour éviter trous/duplications)
+  if(!state._devisLog)state._devisLog=[];
+  // Calculer le prochain numéro à partir du log réel (et non d'un compteur séparé qu'on pourrait perdre)
+  const existingNums=state._devisLog
+    .filter(d=>d.year===year&&d.prefix===initials)
+    .map(d=>d.num);
+  const nextNum=existingNums.length>0?Math.max(...existingNums)+1:1;
+  const numStr=String(nextNum).padStart(4,'0');
+  ev.devisNum=`DEVIS-${year}-${initials}-${numStr}`;
+  // Enregistrer dans le journal immuable
+  state._devisLog.push({
+    year,
+    prefix:initials,
+    num:nextNum,
+    devisNum:ev.devisNum,
+    eventId:ev.id,
+    eventName:ev.name||'',
+    createdAt:new Date().toISOString()
+  });
   save();
   return ev.devisNum;
 }
