@@ -76,7 +76,10 @@ async function googleAuthLogin(){
   await sb.auth.signOut();
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=login'}
+    options:{
+      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=login',
+      queryParams:{prompt:'select_account'}
+    }
   });
   if(error)msg(error.message,'err');
 }
@@ -85,7 +88,10 @@ async function googleAuthSignup(){
   await sb.auth.signOut();
   const{error}=await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=signup'}
+    options:{
+      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=signup',
+      queryParams:{prompt:'select_account'}
+    }
   });
   if(error)msg(error.message,'err');
 }
