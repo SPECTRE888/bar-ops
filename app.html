@@ -2381,10 +2381,10 @@ function renderCGrid(){
       </div>
       <div class="c-footer">
         <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${(c.ingredients||[]).length} ingr. · ${c.glass||'—'}</div>
-        <div class="flex-g no-print" style="flex-wrap:wrap;gap:6px">
-          <button class="btn btn-sm btn-gold" onclick="editC(${c.id})" style="padding:6px 12px">Modifier</button>
-          <button class="btn btn-sm btn-ghost" onclick="dupC(${c.id})" style="padding:6px 12px">⧉ Dupliquer</button>
-          <button class="btn btn-sm btn-danger" onclick="delC(${c.id})" style="padding:6px 12px">Supprimer</button>
+        <div class="flex-g no-print" style="flex-wrap:nowrap;gap:4px;white-space:nowrap">
+          <button class="btn btn-sm btn-gold" onclick="editC(${c.id})" style="padding:6px 8px;font-size:11px">Modifier</button>
+          <button class="btn btn-sm btn-ghost" onclick="dupC(${c.id})" style="padding:6px 8px;font-size:11px">⧉ Dup</button>
+          <button class="btn btn-sm btn-danger" onclick="delC(${c.id})" style="padding:6px 8px;font-size:11px">✕</button>
         </div>
       </div>
     </div>`;
