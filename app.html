@@ -2646,16 +2646,10 @@ function showCForm(c){
             <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (100%)</option>
             <option value="one"${c.serviceIce==='one'?' selected':''}>Une pièce</option>
           </select></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Glace à shaker</label><select id="cf-shaker-ice" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box;display:none" onchange="updIceCost()">
-            <option value="">— Sélectionner —</option>
-            ${state.iceTypes.map(i=>`<option value="${i.id}"${(c.shakerIceId||'')==i.id?' selected':''}>${i.name}</option>`).join('')}
-          </select></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût glace (HT)</label><input type="number" id="cf-ice-display" value="${(c.iceVal||0).toFixed(3)}" step="0.001" min="0" readonly style="font-size:13px;padding:6px;height:32px;box-sizing:border-box;background:var(--bg2);color:var(--text2)"/></div>
         </div>
         <input type="hidden" id="cf-ice" value="${c.iceVal||0}"/>
         <input type="hidden" id="cf-ice-cl" value="${c.iceCl||0}"/>
-        <input type="hidden" id="cf-shaker-ice-id" value="${c.shakerIceId||0}"/>
-        <input type="hidden" id="cf-shaker-ice-val" value="${c.shakerIceVal||0}"/>
         <div class="field" style="margin-bottom:6px"><label style="font-size:12px">Description menu</label>
           <textarea id="cf-desc" rows="2" placeholder="Fruits de la passion, gingembre, citron..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
@@ -3004,8 +2998,6 @@ const ICE_SERVICE = {
 function onIceTypeChange(){
   const iceTypeId=parseInt(document.getElementById('cf-ice-type')?.value)||0;
   const iceType=state.iceTypes.find(i=>i.id===iceTypeId);
-  const technique=document.getElementById('cf-technique')?.value||'none';
-  const shakerIceSelect=document.getElementById('cf-shaker-ice');
 
   // If ice type has a unit (kg, L, pièce, etc), auto-set service ice to "full"
   if(iceType && iceType.unit){
@@ -3013,33 +3005,10 @@ function onIceTypeChange(){
     if(serviceIceSelect) serviceIceSelect.value='full';
   }
 
-  // Show shaker ice select only for discrete units (pièce) when technique is shaken
-  if(technique==='shaken' && iceType && iceType.unit==='pièce'){
-    if(shakerIceSelect) shakerIceSelect.style.display='block';
-    const cubeIce=state.iceTypes.find(i=>i.name.toLowerCase().includes('cube'));
-    if(cubeIce && shakerIceSelect) shakerIceSelect.value=cubeIce.id;
-  }else{
-    if(shakerIceSelect) shakerIceSelect.style.display='none';
-  }
-
   updIceCost();
 }
 
 function onTechniqueChange(){
-  const technique=document.getElementById('cf-technique')?.value||'none';
-  const iceTypeId=parseInt(document.getElementById('cf-ice-type')?.value)||0;
-  const iceType=state.iceTypes.find(i=>i.id===iceTypeId);
-  const shakerIceSelect=document.getElementById('cf-shaker-ice');
-
-  // Show shaker ice select only for discrete units (pièce) when technique is shaken
-  if(technique==='shaken' && iceType && iceType.unit==='pièce'){
-    if(shakerIceSelect) shakerIceSelect.style.display='block';
-    const cubeIce=state.iceTypes.find(i=>i.name.toLowerCase().includes('cube'));
-    if(cubeIce && shakerIceSelect) shakerIceSelect.value=cubeIce.id;
-  }else{
-    if(shakerIceSelect) shakerIceSelect.style.display='none';
-  }
-
   updIceCost();
 }
 
@@ -3047,12 +3016,10 @@ function updIceCost(){
   const technique  = document.getElementById('cf-technique')?.value||'none';
   const serviceIce = document.getElementById('cf-service-ice')?.value||'none';
   const iceTypeId  = parseInt(document.getElementById('cf-ice-type')?.value)||0;
-  const shakerIceId = parseInt(document.getElementById('cf-shaker-ice')?.value)||0;
   const glassInput = document.querySelector('#cf-glass-sel .ss-input');
   const glassVal=glassInput?.value||'';
   const glass=state.glasses.find(g=>glassVal.startsWith(g.name)||g.name===glassVal);
   const iceType    = state.iceTypes.find(i=>i.id===iceTypeId);
-  const shakerIce  = shakerIceId>0?state.iceTypes.find(i=>i.id===shakerIceId):null;
   const recap      = document.getElementById('cf-ice-recap');
   const hidden     = document.getElementById('cf-ice');
 
@@ -3071,10 +3038,13 @@ function updIceCost(){
     let shakerCost = 0;
     let shakerText = '';
 
-    // Add shaker ice cost if technique is shaken and shaker ice is selected
-    if(technique==='shaken' && shakerIce){
-      shakerCost = shakerIce.priceHT||0;
-      shakerText = ` + Shaker ${shakerIce.name} : <strong>1 ${shakerIce.unit}</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
+    // Add shaker ice: 12 glaçons if technique is shaken
+    if(technique==='shaken'){
+      const glaçon=state.iceTypes.find(i=>i.name.toLowerCase().includes('glaçon')||i.name.toLowerCase().includes('cube'));
+      if(glaçon){
+        shakerCost = (glaçon.priceHT||0) * 12;
+        shakerText = ` + Shaker : <strong>12 glaçons</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
+      }
     }
 
     const serviceCost = priceHT;
@@ -3088,8 +3058,6 @@ function updIceCost(){
     if(hidden) hidden.value=totalCost;
     const d1=document.getElementById('cf-ice-display');
     if(d1) d1.value=totalCost.toFixed(3);
-    const shakerIceVal=document.getElementById('cf-shaker-ice-val');
-    if(shakerIceVal) shakerIceVal.value=shakerCost;
     updCRecap();
     return;
   }
@@ -3099,10 +3067,13 @@ function updIceCost(){
     let shakerCost = 0;
     let shakerText = '';
 
-    // Add shaker ice cost if technique is shaken and shaker ice is selected
-    if(technique==='shaken' && shakerIce){
-      shakerCost = shakerIce.priceHT||0;
-      shakerText = ` + Shaker ${shakerIce.name} : <strong>1 ${shakerIce.unit}</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
+    // Add shaker ice: 12 glaçons if technique is shaken
+    if(technique==='shaken'){
+      const glaçon=state.iceTypes.find(i=>i.name.toLowerCase().includes('glaçon')||i.name.toLowerCase().includes('cube'));
+      if(glaçon){
+        shakerCost = (glaçon.priceHT||0) * 12;
+        shakerText = ` + Shaker : <strong>12 glaçons</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
+      }
     }
 
     const serviceCost = (serviceIce==='none')?0:priceHT;
@@ -3111,7 +3082,7 @@ function updIceCost(){
     const svcLabels={none:'Sans glace',rocks:'Glaçon',full:'Plein'};
     const lines=[];
     if(serviceCost>0) lines.push(`Service ${svcLabels[serviceIce]||serviceIce} : <strong>1 ${iceType.unit}</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>${shakerText}`);
-    else if(shakerCost>0) lines.push(`Shaker ${shakerIce.name} : <strong>1 ${shakerIce.unit}</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`);
+    else if(shakerCost>0) lines.push(`Shaker : <strong>12 glaçons</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`);
 
     if(totalCost > 0 && (serviceCost>0 && shakerCost>0)) lines.push(`<span style="color:var(--text2)">Total glace : <strong style="color:var(--gold)">${totalCost.toFixed(3)}€ HT</strong></span>`);
 
@@ -3119,8 +3090,6 @@ function updIceCost(){
     if(hidden) hidden.value=totalCost;
     const d2=document.getElementById('cf-ice-display');
     if(d2) d2.value=totalCost.toFixed(3);
-    const shakerIceVal=document.getElementById('cf-shaker-ice-val');
-    if(shakerIceVal) shakerIceVal.value=shakerCost;
     updCRecap();
     return;
   }
@@ -3133,11 +3102,16 @@ function updIceCost(){
   const vol = glass.volumeCl;
   const cpclHT = priceHT/100;
 
-  // Shaker ice: based on actual liquid volume (ingredients), not glass size
-  const liquidVol = vol * 0.5;
-  const shakerMult  = ICE_TECHNIQUE[technique]?.mult||0;
-  const shakerVol   = liquidVol*shakerMult;
-  const shakerCost  = shakerVol*cpclHT;
+  // Shaker ice: 12 glaçons si technique est shaken
+  let shakerCost = 0;
+  let shakerText = '';
+  if(technique==='shaken'){
+    const glaçon=state.iceTypes.find(i=>i.name.toLowerCase().includes('glaçon')||i.name.toLowerCase().includes('cube'));
+    if(glaçon){
+      shakerCost = (glaçon.priceHT||0) * 12;
+      shakerText = `Shaker : <strong>12 glaçons</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace jetée)</span>`;
+    }
+  }
 
   // Service ice: still based on glass volume (how much ice goes in the glass)
   const serviceMult = ICE_SERVICE[serviceIce]?.mult||0;
@@ -3145,23 +3119,19 @@ function updIceCost(){
   const serviceCost = serviceVol*cpclHT;
 
   const totalCost = shakerCost+serviceCost;
-  const totalVol  = shakerVol+serviceVol;
 
   const techLabels={none:'Direct',stirred:'Mélangé',shaken:'Shaké',blended:'Blendé'};
   const svcLabels={none:'Sans glace',rocks:'On the rocks',full:'Plein de glace',one:'Un glaçon'};
 
   const lines=[];
-  if(shakerMult>0) lines.push(`${techLabels[technique]||technique} : ${liquidVol.toFixed(1)}cl liquide × ${shakerMult} = <strong>${shakerVol.toFixed(1)}cl glace</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace jetée)</span>`);
+  if(shakerText) lines.push(shakerText);
   if(serviceMult>0) lines.push(`Service ${svcLabels[serviceIce]||serviceIce} : ${vol}cl × ${serviceMult} = <strong>${serviceVol.toFixed(1)}cl</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>`);
-  if(shakerMult>0&&serviceMult>0) lines.push(`<span style="color:var(--text2)">Total glace : ${totalVol.toFixed(1)}cl · <strong style="color:var(--gold)">${totalCost.toFixed(3)}€ HT</strong></span>`);
+  if(shakerCost>0&&serviceMult>0) lines.push(`<span style="color:var(--text2)">Total glace : <strong style="color:var(--gold)">${totalCost.toFixed(3)}€ HT</strong></span>`);
 
   if(recap)recap.innerHTML=`<div style="line-height:1.8">${lines.join('<br/>')}</div>`;
   if(hidden)hidden.value=totalCost.toFixed(4);
   const d3=document.getElementById('cf-ice-display');
   if(d3) d3.value=totalCost.toFixed(3);
-  // Also store total ice volume in cl for shopping list
-  const hiddenCl=document.getElementById('cf-ice-cl');
-  if(hiddenCl)hiddenCl.value=totalVol.toFixed(2);
   updCRecap();
 }
 
@@ -3634,8 +3604,6 @@ function saveCocktail(){
     technique:document.getElementById('cf-technique')?.value||'none',
     serviceIce:document.getElementById('cf-service-ice')?.value||'none',
     iceTypeId:parseInt(document.getElementById('cf-ice-type')?.value)||0,
-    shakerIceId:parseInt(document.getElementById('cf-shaker-ice')?.value)||0,
-    shakerIceVal:parseFloat(document.getElementById('cf-shaker-ice-val')?.value)||0,
     description:document.getElementById('cf-desc')?.value||'',
     photo:document.getElementById('cf-photo-del')?.value==='1'?'':(window._cfPhotoData||existingC?.photo||''),
     ingredients:rowData(ingRows()),
