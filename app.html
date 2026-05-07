@@ -1613,28 +1613,49 @@ function onCategoryFilterChange(){
       select.value=select.options[0].value;
       return;
     }
-    if(!state.customCategories) state.customCategories=[];
-    const newCat={id:Date.now(),name:name.trim()};
-    state.customCategories.push(newCat);
-    save();
-    updateCategoryDropdown();
-    select.value='Custom_'+newCat.id;
-    renderCatalogue();
+    const typeHtml=`<div style="display:flex;flex-direction:column;gap:12px">
+      <p style="color:var(--text2);font-size:13px">Quel type de catégorie?</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-gold" onclick="createCategoryWithType('${name.trim()}','liquid')" style="text-align:left">💧 Liquide (unit: kg, L, pièce)</button>
+        <button class="btn btn-gold" onclick="createCategoryWithType('${name.trim()}','material')" style="text-align:left">🔨 Matériel (pas d'unit)</button>
+        <button class="btn btn-ghost" onclick="document.querySelector('[style*=fixed]').remove()" style="text-align:left">Annuler</button>
+      </div>
+    </div>`;
+    showModal('Type de catégorie',typeHtml,350);
+    select.value=select.options[0].value;
   }else{
     renderCatalogue();
   }
 }
 
+function createCategoryWithType(name,type){
+  if(!state.customCategories) state.customCategories=[];
+  const newCat={id:Date.now(),name:name.trim(),type:type};
+  state.customCategories.push(newCat);
+  save();
+  updateCategoryDropdown();
+  document.querySelector('[style*=fixed]').remove();
+  const select=document.getElementById('cat-filter');
+  select.value='Custom_'+newCat.id;
+  renderCatalogue();
+}
+
 function showCategoryManager(){
   const customCats=(state.customCategories||[]);
+  const typeLabel={liquid:'💧 Liquide',material:'🔨 Matériel'};
   const html=`<div style="display:flex;flex-direction:column;gap:12px">
-    <div><input id="new-cat-name" placeholder="Nom de la catégorie..." style="width:100%;padding:8px 12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:4px"/></div>
-    <button class="btn btn-gold" onclick="addCustomCategory()" style="width:100%">+ Ajouter catégorie</button>
+    <p style="color:var(--text2);font-size:12px">Ajouter rapidement via le dropdown du catalogue →</p>
     <div style="border-top:1px solid var(--border);padding-top:12px">
-      ${customCats.length?customCats.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--surface2);border-radius:3px;margin-bottom:6px"><strong>${c.name}</strong><button class="btn btn-sm btn-danger" onclick="delCustomCategory('${c.id}')">×</button></div>`).join(''):'<p style="color:var(--text3);font-size:12px">Aucune catégorie personnalisée</p>'}
+      ${customCats.length?customCats.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--surface2);border-radius:3px;margin-bottom:6px">
+        <div>
+          <strong>${c.name}</strong><br/>
+          <span style="font-size:11px;color:var(--text2)">${typeLabel[c.type]||'Sans type'}</span>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="delCustomCategory('${c.id}')">×</button>
+      </div>`).join(''):'<p style="color:var(--text3);font-size:12px">Aucune catégorie personnalisée</p>'}
     </div>
   </div>`;
-  showModal('Gérer les catégories',html,300);
+  showModal('Gérer les catégories',html,350);
 }
 
 function addCustomCategory(){
