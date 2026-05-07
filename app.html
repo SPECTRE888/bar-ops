@@ -395,7 +395,7 @@ select{color-scheme:dark;cursor:pointer}
   <div class="content">
     <div id="glass-tb-wrap"><table class="ptable"><thead><tr><th>Par défaut</th><th>Type</th><th>Gamme</th><th>${t('cat_glass_price')}</th><th>${t('cat_glass_vol')}</th><th>${t('cat_glass_ht')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="glass-tb"></tbody></table></div>
     <div id="glass-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucun verre</p></div>
-    <table class="ptable" style="margin-top:16px"><thead><tr><th>Type de glace</th><th>Prix TTC/kg (€)</th><th>Qté (kg)</th><th>Min. commande</th><th>Total TTC → HT</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="ice-tb"></tbody></table>
+    <table class="ptable" style="margin-top:16px"><thead><tr><th>Type de glace</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="ice-tb"></tbody></table>
     <div id="ice-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucune glace</p></div>
   </div>
 </div>
@@ -1307,7 +1307,7 @@ function injectDemoData(){
 
   // ── ICE ────────────────────────────────────────────────
   state.iceTypes=[
-    {id:now+30,name:'Glaçons cube',pricePerKgTTC:3.50,kgQty:10,supplier:'Glace Express',supplierPhone:''},
+    {id:now+30,name:'Glaçons cube',priceHT:2.90,qty:10,unit:'kg',supplier:'Glace Express'},
   ];
 
   // ── STAFF ──────────────────────────────────────────────
@@ -1960,7 +1960,7 @@ function resetDefaultGlass(glassId){
   save();renderGlassware();
 }
 
-function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
+function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,qty:0,unit:'kg',notes:''});save();renderGlassware();}
 function delIce(id){if(!confirm('Supprimer?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
 function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();}}
 
@@ -1992,19 +1992,17 @@ function renderGlassware(){
   const it=document.getElementById('ice-tb'),ie=document.getElementById('ice-empty');
   if(!state.iceTypes.length){it.innerHTML='';ie.style.display='block';}
   else{ie.style.display='none';it.innerHTML=state.iceTypes.map(i=>{
-    // price per kg TTC, qty in kg ordered
-    const pricePerKgTTC=i.pricePerKgTTC||i.priceTTC||i.priceHT||0;
-    const kgQty=i.kgQty||0;
-    const totalTTC=(pricePerKgTTC*kgQty).toFixed(2);
-    const totalHT=(parseFloat(totalTTC)/1.20).toFixed(2);
-    // cost per cl = pricePerKgTTC / 1000g * density ~1 → price per cl ≈ pricePerKgTTC/100
-    const cpclHT=(pricePerKgTTC/100/1.20).toFixed(4);
+    const priceHT=i.priceHT||0;
+    const qty=i.qty||0;
+    const unit=i.unit||'kg';
+    const totalHT=(priceHT*qty).toFixed(2);
     return`<tr>
       <td><input value="${(i.name||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'name',this.value)" placeholder="Glaçons, Glace pilée..."/></td>
-      <td><input type="number" value="${pricePerKgTTC}" step="0.01" min="0" onchange="updIce(${i.id},'pricePerKgTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
-      <td><input type="number" value="${kgQty}" step="0.5" min="0" onchange="updIce(${i.id},'kgQty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
+      <td><input type="number" value="${priceHT}" step="0.01" min="0" onchange="updIce(${i.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
+      <td><input type="number" value="${qty}" step="0.5" min="0" onchange="updIce(${i.id},'qty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
+      <td><select onchange="updIce(${i.id},'unit',this.value)" style="width:55px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"><option value="kg"${unit==='kg'?' selected':''}>kg</option><option value="L"${unit==='L'?' selected':''}>L</option><option value="Pièce"${unit==='Pièce'?' selected':''}>Pièce</option></select></td>
+      <td><span class="cpu cpu-ok">${totalHT}€</span></td>
       <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
-      <td><span class="cpu cpu-ok">${totalTTC}€ TTC → ${totalHT}€ HT</span></td>
       <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}</select></td>
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${i.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
@@ -2829,8 +2827,8 @@ function updIceCost(){
   }
 
   const vol = glass.volumeCl;
-  const pricePerKgTTC = iceType.pricePerKgTTC||iceType.priceTTC||iceType.priceHT||0;
-  const cpclHT = pricePerKgTTC/100/1.20;
+  const priceHT = iceType.priceHT||0;
+  const cpclHT = priceHT/100;
 
   // Shaker ice: based on actual liquid volume (ingredients), not glass size
   // A shaker uses ~same volume of ice as liquid. Glass vol overestimates.
@@ -3223,8 +3221,8 @@ function recalcAllCocktailsIce(){
       const techMult={none:0,stirred:1.5,shaken:2.0,blended:2.5}[c.technique]||0;
       const svcMult={none:0,rocks:0.6,full:0.9,one:0.2}[c.serviceIce||'none']||0;
       c.iceCl=(vol*0.5*techMult)+(vol*svcMult);
-      const pricePerKgTTC=iceType.pricePerKgTTC||iceType.priceTTC||iceType.priceHT||0;
-      c.iceVal=c.iceCl*(pricePerKgTTC/100/1.20);
+      const priceHT=iceType.priceHT||0;
+      c.iceVal=c.iceCl*(priceHT/100);
     }
 
     // 4. Recalc glass cost
@@ -4934,13 +4932,13 @@ function renderShopping(){
       // Ice: convert portions to kg then to bags
       if(cat==='Ice'){
         const iceType=state.iceTypes.find(i=>i.id===item.iceTypeId);
-        const pricePerKgTTC=iceType?(iceType.pricePerKgTTC||iceType.priceTTC||iceType.priceHT||0):0;
+        const priceHT=iceType?(iceType.priceHT||0):0;
         let totalKg=0;
         if(item.totalCl>0){
           // Direct from iceCl: 1cl = 0.01kg
           totalKg=item.totalCl*0.01;
-        } else if(pricePerKgTTC>0){
-          totalKg=item.costTotal/(pricePerKgTTC/1.20);
+        } else if(priceHT>0){
+          totalKg=item.costTotal/priceHT;
         } else {
           totalKg=item.total*0.2;
         }
