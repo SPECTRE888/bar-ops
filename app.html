@@ -32,7 +32,7 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
     window.cloudUser={access_token:session.access_token,refresh_token:session.refresh_token,user:session.user};
     window._userEmail=session.user.email;
-    window._userPlan=subs?.plan||'free';
+    window._userPlan=subs?.plan||'pro';
     window._isDemo=false;
     window._userId=session.user.id;
     window._paywallDone=true;
