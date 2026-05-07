@@ -453,10 +453,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ COCKTAILS ═══ -->
 <div id="page-cocktails" class="page">
   <div class="topbar">
-    <div style="display:flex;gap:8px;align-items:center;flex:0">
-      <button class="btn btn-ghost" onclick="showCList()" id="btn-cback" style="display:none">← Retour</button>
-    </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
+      <button class="btn btn-ghost" onclick="showCList()" id="btn-cback" style="display:none">← Retour</button>
       <button class="btn btn-ghost" onclick="recalcAllCocktailsIce()" title="Recalcule coûts et prix de vente de tous les cocktails" id="btn-recalc-ice" style="font-size:11px">Recalculer tout</button>
       <button class="btn btn-gold" onclick="newCocktail()" id="btn-cnew">+ Nouveau cocktail</button>
     </div>
@@ -3038,22 +3036,40 @@ function updIceCost(){
   const noIce = technique==='none' && serviceIce==='none';
   if(noIce){if(recap)recap.textContent='';if(hidden)hidden.value=0;updCRecap();return;}
 
-  if(!glass?.volumeCl){
-    if(recap)recap.innerHTML=`<span style="color:var(--gold)"> Renseigne le volume (cl) du verre dans Glassware</span>`;
-    if(hidden)hidden.value=0;updCRecap();return;
-  }
   if(!iceType){
     if(recap)recap.innerHTML=`<span style="color:var(--gold)"> Sélectionne un type de glace</span>`;
     if(hidden)hidden.value=0;updCRecap();return;
   }
 
-  const vol = glass.volumeCl;
   const priceHT = iceType.priceHT||0;
+
+  // Special handling for "pièce" unit: 1 piece = 1 unit
+  if(iceType.unit==='pièce'){
+    const shakerCost = 0; // No ice thrown away for pieces
+    const serviceCost = serviceIce==='none'?0:priceHT; // 1 piece per cocktail
+    const totalCost = shakerCost+serviceCost;
+
+    const techLabels={none:'Direct',stirred:'Mélangé',shaken:'Shaké',blended:'Blendé'};
+    const svcLabels={none:'Sans glace',rocks:'Glaçons',full:'Plein de glace'};
+
+    const lines=[];
+    if(serviceCost>0) lines.push(`Service ${svcLabels[serviceIce]||serviceIce} : <strong>1 pièce</strong> → <strong style="color:var(--gold)">${serviceCost.toFixed(3)}€ HT</strong>`);
+
+    if(recap) recap.innerHTML=lines.length?lines.join('<br/>'):`;
+    if(hidden) hidden.value=totalCost;
+    updCRecap();
+    return;
+  }
+
+  if(!glass?.volumeCl){
+    if(recap)recap.innerHTML=`<span style="color:var(--gold)"> Renseigne le volume (cl) du verre dans Glassware</span>`;
+    if(hidden)hidden.value=0;updCRecap();return;
+  }
+
+  const vol = glass.volumeCl;
   const cpclHT = priceHT/100;
 
   // Shaker ice: based on actual liquid volume (ingredients), not glass size
-  // A shaker uses ~same volume of ice as liquid. Glass vol overestimates.
-  // We use glass vol * 0.5 as proxy for liquid content (typically ~50% of glass)
   const liquidVol = vol * 0.5;
   const shakerMult  = ICE_TECHNIQUE[technique]?.mult||0;
   const shakerVol   = liquidVol*shakerMult;
