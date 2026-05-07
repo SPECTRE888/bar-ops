@@ -364,23 +364,25 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <div id="page-catalogue" class="page">
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center;flex:0">
-      <select id="cat-filter" onchange="onCategoryFilterChange()" class="input-md">
-        <option value="Spirit"> Spiritueux</option>
-        <option value="Juice"> Jus & Purées</option>
-        <option value="Mixer"> Mixers & Sodas</option>
-        <option value="Syrup"> Sirops</option>
-        <option value="Garnish"> Garnitures</option>
-        <option value="Consumable"> Consommables</option>
-        <option value="Spice"> Épices & Condiments</option>
-        <option value="Glassware"> Verrerie</option>
-        <option value="Ice"> Glace</option>
-        <option value="Bar"> Bar & Matériel</option>
-      </select>
+      <div style="display:flex;gap:6px;align-items:center">
+        <select id="cat-filter" onchange="onCategoryFilterChange()" class="input-md">
+          <option value="Spirit"> Spiritueux</option>
+          <option value="Juice"> Jus & Purées</option>
+          <option value="Mixer"> Mixers & Sodas</option>
+          <option value="Syrup"> Sirops</option>
+          <option value="Garnish"> Garnitures</option>
+          <option value="Consumable"> Consommables</option>
+          <option value="Spice"> Épices & Condiments</option>
+          <option value="Glassware"> Verrerie</option>
+          <option value="Ice"> Glace</option>
+          <option value="Bar"> Bar & Matériel</option>
+        </select>
+        <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
+      </div>
       <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" class="input-md"/>
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
-      <button class="btn btn-ghost" onclick="showCategoryManager()" title="Gérer catégories">⚙ Catégories</button>
       <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">CSV</button>
       <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)"/>
       <button class="btn btn-ghost" onclick="document.getElementById('json-import-input').click()" title="Importer JSON">JSON</button>
@@ -449,8 +451,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ COCKTAILS ═══ -->
 <div id="page-cocktails" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <button class="btn btn-ghost" onclick="showCList()" id="btn-cback" style="display:none">← Retour</button>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-ghost" onclick="recalcAllCocktailsIce()" title="Recalcule coûts et prix de vente de tous les cocktails" id="btn-recalc-ice" style="font-size:11px">Recalculer tout</button>
       <button class="btn btn-gold" onclick="newCocktail()" id="btn-cnew">+ Nouveau cocktail</button>
     </div>
@@ -461,9 +465,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ EVENTS ═══ -->
 <div id="page-events" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="ev-search" placeholder="Chercher..." class="input-md" oninput="filterEvList()"/>
       <button class="btn btn-ghost" onclick="showEvList()" id="btn-evback" style="display:none">← Retour</button>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" onclick="newEv()" id="btn-evnew">+ Nouvel événement</button>
     </div>
   </div>
@@ -473,8 +479,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ CLIENTS ═══ -->
 <div id="page-clients" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="clients-search" placeholder="Chercher..." class="input-md" oninput="filterClients()"/>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button>
     </div>
   </div>
@@ -492,8 +500,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ SHOPPING (accessible via events) ═══ -->
 <div id="page-shopping" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <select id="shop-ev-sel" class="input-lg" onchange="renderShopping()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" onclick="printShoppingPDF()"> PDF</button>
       <button class="btn" onclick="shareShoppingWA()"> Envoyer</button>
     </div>
@@ -504,8 +514,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ FICHE PRESTATION (accessible via events) ═══ -->
 <div id="page-prestation" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <select id="prest-ev-sel" class="input-lg" onchange="renderPrestation()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" onclick="generateDevis()">Devis</button>
     </div>
   </div>
@@ -515,12 +527,14 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ SUIVI ═══ -->
 <div id="page-suivi" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
-      <div style="display:flex;gap:8px;margin-right:16px">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
+      <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000">Suivi</button>
         <button class="btn btn-ghost" id="tab-planning" onclick="showSuiviTab('planning')">Planning</button>
       </div>
       <input type="text" id="suivi-search" placeholder="Chercher..." class="input-md" oninput="filterSuivi()"/>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
     </div>
   </div>
   <div class="content" id="suivi-content"></div>
@@ -530,8 +544,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ HISTORIQUE ═══ -->
 <div id="page-historique" class="page">
   <div class="topbar">
-    <div class="topbar-actions no-print">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0;gap:6px">
     </div>
   </div>
   <div class="content" id="historique-content"></div>
@@ -1603,6 +1619,27 @@ function updateCategoryDropdown(){
     +`<option value="__ADD_CATEGORY__" style="font-style:italic;color:var(--gold)">+ Ajouter une catégorie...</option>`;
   select.innerHTML=options;
   select.value=current;
+
+  // Show/hide delete button based on selected category
+  const deleteBtn=document.getElementById('cat-delete-btn');
+  if(deleteBtn){
+    deleteBtn.style.display=current.startsWith('Custom_')?'block':'none';
+  }
+}
+
+function deleteSelectedCategory(){
+  const select=document.getElementById('cat-filter');
+  const catId=select.value.replace('Custom_','');
+  const cat=(state.customCategories||[]).find(c=>c.id==catId);
+  if(!cat) return;
+
+  if(!confirm(`Supprimer la catégorie "${cat.name}" ?`)) return;
+
+  state.customCategories=state.customCategories.filter(c=>c.id!==cat.id);
+  save();
+  updateCategoryDropdown();
+  select.value='Spirit';
+  renderCatalogue();
 }
 
 function onCategoryFilterChange(){
@@ -1616,8 +1653,8 @@ function onCategoryFilterChange(){
     const typeHtml=`<div style="display:flex;flex-direction:column;gap:12px">
       <p style="color:var(--text2);font-size:13px">Quel type de catégorie?</p>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-gold" onclick="createCategoryWithType('${name.trim()}','liquid')" style="text-align:left">💧 Liquide (unit: kg, L, pièce)</button>
-        <button class="btn btn-gold" onclick="createCategoryWithType('${name.trim()}','material')" style="text-align:left">🔨 Matériel (pas d'unit)</button>
+        <button class="btn btn-gold" onclick="createCategoryWithType('${name.trim()}','liquid')" style="text-align:left">Liquide (unit: kg, L, pièce)</button>
+        <button class="btn btn-gold" onclick="createCategoryWithType('${name.trim()}','material')" style="text-align:left">Matériel (pas d'unit)</button>
         <button class="btn btn-ghost" onclick="document.querySelector('[style*=fixed]').remove()" style="text-align:left">Annuler</button>
       </div>
     </div>`;
