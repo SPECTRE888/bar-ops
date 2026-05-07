@@ -2616,7 +2616,7 @@ function showCForm(c){
   <div class="g2" style="align-items:start;gap:12px">
     <div style="flex:1;min-width:0">
       <div class="card" style="padding:12px">
-        <div class="ctitle" style="margin-bottom:8px"> General info</div>
+        <div class="ctitle" style="margin-bottom:8px">Informations générales</div>
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Catégorie</label><select id="cf-cat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
@@ -2630,7 +2630,7 @@ function showCForm(c){
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre</label><div id="cf-glass-sel"></div></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût verre €</label><input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Préparation</label><select id="cf-technique" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Préparation</label><select id="cf-technique" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="onTechniqueChange()">
             <option value="none"${(c.technique||'none')==='none'?' selected':''}>Direct</option>
             <option value="stirred"${c.technique==='stirred'?' selected':''}>Mélangé</option>
             <option value="shaken"${c.technique==='shaken'?' selected':''}>Shaké</option>
@@ -2643,7 +2643,7 @@ function showCForm(c){
             <option value="rocks"${c.serviceIce==='rocks'?' selected':''}>On rocks (60%)</option>
             <option value="full"${c.serviceIce==='full'?' selected':''}>Plein (100%)</option>
           </select></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Type glace</label><select id="cf-ice-type" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updIceCost()">
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Type glace</label><select id="cf-ice-type" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="onIceTypeChange()">
             <option value="">— Sélectionner —</option>
             ${state.iceTypes.map(i=>`<option value="${i.id}"${(c.iceTypeId||'')==i.id?' selected':''}>${i.name}</option>`).join('')}
           </select></div>
@@ -2995,6 +2995,34 @@ const ICE_SERVICE = {
   full:  {label:'Plein de glace', mult:0.9},
   one:   {label:'Un glaçon',      mult:0.2},
 };
+
+function onIceTypeChange(){
+  const iceTypeId=parseInt(document.getElementById('cf-ice-type')?.value)||0;
+  const iceType=state.iceTypes.find(i=>i.id===iceTypeId);
+
+  // If ice type is "pièce" (not kg), auto-set service ice to "full"
+  if(iceType && iceType.unit==='pièce'){
+    const serviceIceSelect=document.getElementById('cf-service-ice');
+    if(serviceIceSelect) serviceIceSelect.value='full';
+  }
+
+  updIceCost();
+}
+
+function onTechniqueChange(){
+  const technique=document.getElementById('cf-technique')?.value||'none';
+
+  // If shake technique, auto-select cube ice type
+  if(technique==='shaken'){
+    const cubeIce=state.iceTypes.find(i=>i.name.toLowerCase().includes('cube'));
+    if(cubeIce){
+      const iceTypeSelect=document.getElementById('cf-ice-type');
+      if(iceTypeSelect) iceTypeSelect.value=cubeIce.id;
+    }
+  }
+
+  updIceCost();
+}
 
 function updIceCost(){
   const technique  = document.getElementById('cf-technique')?.value||'none';
