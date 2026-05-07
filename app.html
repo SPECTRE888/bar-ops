@@ -985,7 +985,7 @@ async function doSyncNow(){
       // Clear any existing timeout to reset the timer
       if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
 
-      statusEl.style.display='block';
+      statusEl.style.display='flex';
       statusEl.style.background='#86efac';
       statusEl.style.color='#1f2937';
       const timeEl=document.getElementById('save-time');
@@ -1236,7 +1236,7 @@ function save(){
       // Clear any existing timeout to reset the timer
       if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
 
-      statusEl.style.display='block';
+      statusEl.style.display='flex';
       statusEl.style.background='#86efac';
       statusEl.style.color='#1f2937';
       const now=new Date();
