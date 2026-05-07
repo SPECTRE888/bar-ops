@@ -2260,7 +2260,7 @@ function renderStaff(){
 // ════════════════════════════════════════════════════════
 function showCList(){
   editCId=null;
-  document.getElementById('h-cocktails').textContent=t('nav_cocktails');
+  // Header h2 removed - no longer display title
   document.getElementById('btn-cback').style.display='none';
   document.getElementById('btn-cnew').style.display='flex';
   document.getElementById('btn-cnew').textContent=t('btn_new_cocktail');
@@ -2541,7 +2541,7 @@ function newCocktail(){
 function editC(id){editCId=id;showCForm(state.cocktails.find(x=>x.id===id)||{});}
 
 function showCForm(c){
-  document.getElementById('h-cocktails').textContent=c.id?'Modifier: '+c.name:'Nouveau cocktail';
+  // Header h2 removed - no longer display title
   document.getElementById('btn-cback').style.display='flex';
   document.getElementById('btn-cnew').style.display='none';
   irc=0;
@@ -3489,7 +3489,7 @@ function saveCocktail(){
 // ════════════════════════════════════════════════════════
 function showEvList(){
   editEvId=null;
-  document.getElementById('h-events').textContent=t('nav_events');
+  // Header h2 removed - no longer display title
   document.getElementById('btn-evback').style.display='none';
   document.getElementById('btn-evnew').style.display='flex';
   document.getElementById('btn-evnew').textContent=t('btn_new_event');
@@ -3608,7 +3608,7 @@ function editEv(id){editEvId=id;showEvForm(state.events.find(x=>x.id===id)||{});
 
 function showEvForm(ev){
   window._evExtraProducts=JSON.parse(JSON.stringify(ev.extraProducts||[]));
-  document.getElementById('h-events').textContent=ev.id?ev.name:t('btn_new_event').replace('+ ','');
+  // Header h2 removed - no longer display title
   document.getElementById('btn-evback').style.display='flex';
   document.getElementById('btn-evnew').style.display='none';
   const el=document.getElementById('ev-content');
@@ -4994,15 +4994,12 @@ function renderShopping(){
   
   const evId=parseInt(sel.value);
   const el=document.getElementById('shop-content');
-  const titleEl=document.getElementById('h-shopping');
   if(!evId){
     el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Select an event above.</p></div>';
-    if(titleEl) titleEl.textContent=' Liste de courses';
     return;
   }
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
-  if(titleEl) titleEl.textContent=' '+ev.name;
   const total=evTot(ev);
   const needed={};
   (ev.cocktails||[]).forEach(cfg=>{
@@ -5279,15 +5276,12 @@ function renderPrestation(){
   if(savedVal) sel.value=savedVal;
   const evId=parseInt(sel.value);
   const el=document.getElementById('prest-content');
-  const titleEl=document.getElementById('h-prestation');
   if(!evId){
     el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Sélectionne un événement.</p></div>';
-    if(titleEl) titleEl.textContent=' Fiche Prestation';
     return;
   }
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
-  if(titleEl) titleEl.textContent=' '+ev.name;
   const assignedIds=ev.assignedStaff||[];
   const confirmed=ev.staffConfirmed||[];
   const unavail=ev.staffUnavail||[];
