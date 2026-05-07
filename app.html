@@ -356,7 +356,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ DASHBOARD ═══ -->
 <div id="page-dashboard" class="page active">
-  <div class="topbar"><h2 id="h-dashboard">Dashboard</h2></div>
+  <div class="topbar"></div>
   <div class="content" id="dashboard-content"></div>
 </div>
 
@@ -409,7 +409,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ STAFF ═══ -->
 <div id="page-staff" class="page">
-  <div class="topbar"><h2 id="h-staff">Mon équipe</h2>
+  <div class="topbar">
     <div class="topbar-actions no-print">
       <input type="text" id="staff-search" placeholder="Chercher..." class="input-md" oninput="filterStaff()"/>
       <div style="display:flex;gap:8px;margin-right:16px">
@@ -449,7 +449,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ COCKTAILS ═══ -->
 <div id="page-cocktails" class="page">
   <div class="topbar">
-    <h2 id="h-cocktails">Cocktails</h2>
     <div class="topbar-actions no-print">
       <button class="btn btn-ghost" onclick="showCList()" id="btn-cback" style="display:none">← Retour</button>
       <button class="btn btn-ghost" onclick="recalcAllCocktailsIce()" title="Recalcule coûts et prix de vente de tous les cocktails" id="btn-recalc-ice" style="font-size:11px">Recalculer tout</button>
@@ -462,7 +461,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ EVENTS ═══ -->
 <div id="page-events" class="page">
   <div class="topbar">
-    <h2 id="h-events">Événements</h2>
     <div class="topbar-actions no-print">
       <input type="text" id="ev-search" placeholder="Chercher..." class="input-md" oninput="filterEvList()"/>
       <button class="btn btn-ghost" onclick="showEvList()" id="btn-evback" style="display:none">← Retour</button>
@@ -474,7 +472,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ CLIENTS ═══ -->
 <div id="page-clients" class="page">
-  <div class="topbar"><h2 id="h-clients">Clients</h2>
+  <div class="topbar">
     <div class="topbar-actions no-print">
       <input type="text" id="clients-search" placeholder="Chercher..." class="input-md" oninput="filterClients()"/>
       <button class="btn btn-gold" onclick="addClient()">${t('client_new')}</button>
@@ -485,7 +483,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ FOURNISSEURS ═══ -->
 <div id="page-suppliers" class="page">
-  <div class="topbar"><h2 id="h-suppliers">Fournisseurs</h2>
+  <div class="topbar">
     <div class="topbar-actions no-print"><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>
   </div>
   <div class="content" id="suppliers-content"></div>
@@ -493,7 +491,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ SHOPPING (accessible via events) ═══ -->
 <div id="page-shopping" class="page">
-  <div class="topbar"><h2 id="h-shopping"> Liste de courses</h2>
+  <div class="topbar">
     <div class="topbar-actions no-print">
       <select id="shop-ev-sel" class="input-lg" onchange="renderShopping()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="printShoppingPDF()"> PDF</button>
@@ -505,7 +503,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ FICHE PRESTATION (accessible via events) ═══ -->
 <div id="page-prestation" class="page">
-  <div class="topbar"><h2 id="h-prestation"> Fiche Prestation</h2>
+  <div class="topbar">
     <div class="topbar-actions no-print">
       <select id="prest-ev-sel" class="input-lg" onchange="renderPrestation()" style="display:none"><option value="">— Sélectionner un événement —</option></select>
       <button class="btn btn-gold" onclick="generateDevis()">Devis</button>
@@ -517,7 +515,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ SUIVI ═══ -->
 <div id="page-suivi" class="page">
   <div class="topbar">
-    <h2 id="h-suivi"> Suivi des prestations</h2>
     <div class="topbar-actions no-print">
       <div style="display:flex;gap:8px;margin-right:16px">
         <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000">Suivi</button>
@@ -533,7 +530,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ HISTORIQUE ═══ -->
 <div id="page-historique" class="page">
   <div class="topbar">
-    <h2 id="h-historique">Historique</h2>
     <div class="topbar-actions no-print">
       <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
     </div>
@@ -543,7 +539,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- ═══ PROFIL ═══ -->
 <div id="page-profile" class="page">
-  <div class="topbar"><h2 id="h-profile">Profil</h2></div>
+  <div class="topbar"></div>
   <div class="content" id="profile-content"></div>
 </div>
 
@@ -700,6 +696,19 @@ async function ensureWorkspace(){
     }
     return true;
   }catch(e){return false;}
+}
+
+function showModal(title, html, maxWidth=400){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:${maxWidth}px;width:100%;max-height:80vh;overflow-y:auto">
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;color:var(--text);display:flex;justify-content:space-between;align-items:center">
+      <span>${title}</span>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;color:var(--text2);cursor:pointer;padding:0">×</button>
+    </div>
+    <div>${html}</div>
+  </div>`;
+  document.body.appendChild(modal);
 }
 
 function showConfirmModal(title, message, onConfirm){
