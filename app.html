@@ -8395,31 +8395,29 @@ function renderSuivi(){
 
         return`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500">Paiement</div>
-          <div style="display:grid;grid-template-columns:1.2fr 1.2fr 1fr 1fr 1.2fr;gap:1px;border:1px solid var(--border);border-radius:6px;overflow:hidden">
-            <div style="background:var(--surface);padding:10px 6px;text-align:center;border-right:1px solid var(--border)">
-              <div style="font-size:14px;font-weight:600;color:var(--text);line-height:1.2">${total.toFixed(0)}€</div>
-              <div style="font-size:7px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:3px">Total HT</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px">
+            <div style="background:var(--surface);padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+              <div style="font-size:16px;font-weight:600;color:var(--text);line-height:1.2">${total.toFixed(0)}€</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">Total HT</div>
             </div>
-            <div style="background:var(--surface);padding:10px 6px;text-align:center;border-right:1px solid var(--border)">
+            <div style="background:var(--surface);padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
               <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
-                style="width:100%;padding:2px 0;font-size:14px;font-weight:600;height:20px;border:none;background:transparent;text-align:center;color:var(--text)"
+                style="width:100%;padding:2px 0;font-size:16px;font-weight:600;height:22px;border:none;background:transparent;text-align:center;color:var(--text)"
                 onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()" onkeydown="if(event.key==='Enter')event.target.blur()"/>
-              <div style="font-size:7px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:2px">€ Acompte</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">€ Acompte</div>
             </div>
-            <div style="padding:6px 4px;border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center">
-              <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="font-size:8px;padding:4px 6px;width:100%" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
-                ${acompteRecu?'✓ Reçu':'Reçu'}
-              </button>
+            <div style="background:var(--surface);padding:12px 8px;text-align:center">
+              <div style="font-size:16px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};line-height:1.2">${ev.paid?'✓':reste.toFixed(0)}€</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${ev.paid?'Payée':'À encaisser'}</div>
             </div>
-            <div style="padding:6px 4px;border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center">
-              <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="font-size:8px;padding:4px 6px;width:100%" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
-                ${ev.paid?'✓ Payée':'Payée'}
-              </button>
-            </div>
-            <div style="background:var(--surface);padding:10px 6px;text-align:center">
-              <div style="font-size:14px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};line-height:1.2">${ev.paid?'✓':reste.toFixed(0)}€</div>
-              <div style="font-size:7px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:3px">${ev.paid?'Payée':'À encaisser'}</div>
-            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
+              ${acompteRecu?'✓ Acompte reçu':'Acompte reçu'}
+            </button>
+            <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
+              ${ev.paid?'✓ Prestation payée':'Prestation payée'}
+            </button>
           </div>
         </div>`;
       })()}
