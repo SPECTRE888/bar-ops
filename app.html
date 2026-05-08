@@ -5242,6 +5242,15 @@ function allocateStock(evId,itemKey,qty,unit){
   renderShopping();
 }
 
+function onShopStockOkChange(checkbox){
+  const evId=parseInt(checkbox.dataset.ev);
+  const itemKey=checkbox.dataset.item;
+  const unit=checkbox.dataset.unit;
+  const qtyInput=document.getElementById(checkbox.dataset.input);
+  const qty=checkbox.checked?parseInt(qtyInput?.value||0):0;
+  allocateStock(evId,itemKey,qty,unit);
+}
+
 function renderShopping(){
   const savedVal=document.getElementById('shop-ev-sel')?.value;
   renderShopEvSel();
@@ -5324,8 +5333,8 @@ function renderShopping(){
   items.forEach(item=>{
     const allocQty=item.allocQty;
     const stockOkId='stock_ok_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
+    const qtyInputId='order_qty_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
     const cmdKey='shop_order_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
-    const ikey='order_qty_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
     const pQtyStr=item.prod?.qty&&item.prod?.unit?`→ ${Math.ceil(item.total/item.prod.qty)} ${['cl','ml','L'].includes(item.prod.unit)?'btl':'unit'}`:'';
     html+=`<tr style="border-bottom:1px solid var(--border2);height:48px">
       <td style="padding:10px">${item.productType}</td>
@@ -5333,12 +5342,12 @@ function renderShopping(){
       <td style="padding:10px;text-align:right">${item.costTotal.toFixed(2)}€</td>
       <td style="padding:10px;text-align:center;color:${item.avail.available>item.total?'var(--gold)':item.avail.available>0?'var(--text2)':'var(--red)'};font-weight:500">${item.avail.available}/${item.avail.stock} ${item.unit}</td>
       <td style="padding:10px;text-align:center">${item.total.toFixed(1)} ${item.unit} ${pQtyStr}</td>
-      <td style="padding:10px;text-align:center"><input type="number" id="${ikey}" value="${Math.ceil(item.total)}" min="1" style="width:50px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
+      <td style="padding:10px;text-align:center"><input type="number" id="${qtyInputId}" value="${Math.ceil(item.total)}" min="1" style="width:50px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
       <td style="padding:10px;text-align:center">
-        <input type="checkbox" id="${stockOkId}" ${allocQty>0?'checked':''} onchange="allocateStock(${evId},'${item.itemKey.replace(/'/g,"\\'"})',this.checked?document.getElementById('${ikey}').value:0,'${item.unit}')" style="cursor:pointer;width:18px;height:18px"/>
+        <input type="checkbox" id="${stockOkId}" data-ev="${evId}" data-item="${item.itemKey}" data-unit="${item.unit}" data-input="${qtyInputId}" ${allocQty>0?'checked':''} onchange="onShopStockOkChange(this)" style="cursor:pointer;width:18px;height:18px"/>
         ${allocQty>0?`<div style="font-size:10px;color:var(--text2);margin-top:2px">${allocQty} ${item.unit}</div>`:''}
       </td>
-      <td style="padding:10px;text-align:right"><button class="btn-profile" onclick="openShopOrderModal('${cmdKey}','${ikey}','${item.brand.replace(/'/g,"\\'") }','${item.supplierEmail}','${item.supplierName.replace(/'/g,"\\'") }','${item.supplierCode}')" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap">→</button></td>
+      <td style="padding:10px;text-align:right"><button class="btn-profile" onclick="openShopOrderModal('${cmdKey}','${qtyInputId}','${item.brand.replace(/'/g,"&apos;")}','${item.supplierEmail}','${item.supplierName.replace(/'/g,"&apos;")}','${item.supplierCode}')" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap">→</button></td>
     </tr>`;
   });
   html+=`</tbody></table>
