@@ -2741,15 +2741,15 @@ function showCForm(c){
             <option value="10"${(c.vat===undefined||c.vat===10||c.vat===null)?'selected':''}>10%</option>
             <option value="15"${(c.vat===15)?'selected':''}>15%</option>
           </select></div>
-          <div style="background:var(--surface2);padding:10px 6px;border-radius:6px;text-align:center">
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">HT Final</div>
-            <div style="font-size:16px;font-weight:600;color:var(--gold)" id="r-ht-final">—</div>
-          </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
           <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
             <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Coût production</div>
             <div style="font-weight:bold;font-size:15px" id="r-cost">—</div>
+          </div>
+          <div style="background:var(--surface2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">HT Final</div>
+            <div style="font-weight:bold;font-size:15px;color:var(--gold)" id="r-ht-final">—</div>
           </div>
           <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
             <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Marge €</div>
