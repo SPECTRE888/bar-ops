@@ -5236,27 +5236,31 @@ function allocateStock(evId,itemKey,qty,unit){
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   if(!ev.stockAllocations) ev.stockAllocations={};
-  const parts=itemKey.split('||');
-  const productType=parts[0];
-  const brand=parts[1];
-  const oldQty=ev.stockAllocations[itemKey]?.qty||0;
-  const qtyDiff=qty-oldQty;
-  if(qty>0){
-    ev.stockAllocations[itemKey]={qty,unit};
-    const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
-    if(prod&&qtyDiff!==0){
-      prod.stock=(prod.stock||0)-qtyDiff;
-      if(prod.stock<0) prod.stock=0;
-    }
-  }else{
-    delete ev.stockAllocations[itemKey];
-    const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
-    if(prod&&oldQty>0){
-      prod.stock=(prod.stock||0)+oldQty;
-    }
-  }
+  if(qty>0){ev.stockAllocations[itemKey]={qty,unit};}
+  else{delete ev.stockAllocations[itemKey];}
   save();
   renderShopping();
+}
+
+function getStockAfterAllocations(productType,brand,unit){
+  const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
+  if(!prod) return 0;
+  let allocated=0;
+  (state.events||[]).forEach(ev=>{
+    if(ev.status==='historique'||ev.paid) return;
+    Object.entries(ev.stockAllocations||{}).forEach(([key,alloc])=>{
+      const parts=key.split('||');
+      if(parts[0]===productType&&(!brand||parts[1]===brand)){
+        let allocQty=alloc.qty;
+        if(prod.unit==='L'&&unit==='cl') allocQty/=100;
+        else if(prod.unit==='cl'&&unit==='ml') allocQty/=10;
+        else if(prod.unit==='ml'&&unit==='cl') allocQty*=10;
+        else if(prod.unit==='kg'&&unit==='g') allocQty/=1000;
+        allocated+=allocQty;
+      }
+    });
+  });
+  return Math.max(0,prod.stock-allocated);
 }
 
 function onShopStockOkChange(checkbox){
@@ -5368,13 +5372,13 @@ function renderShopping(){
     const qtyInputId='order_qty_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
     const pQty=item.prod?.qty&&item.prod?.unit?Math.ceil(item.total/item.prod.qty):Math.ceil(item.total);
     const pUnit=item.prod?.qty&&item.prod?.unit?(['cl','ml','L'].includes(item.prod.unit)?'btl':'unit'):'unit';
-    const stockInCatalog=item.prod?.stock||0;
+    const stockAfterAlloc=item.prod?.qty&&item.prod?.unit?Math.floor(getStockAfterAllocations(item.productType,item.brand,item.unit)/item.prod.qty):getStockAfterAllocations(item.productType,item.brand,item.unit);
     html+=`<tr style="border-bottom:1px solid var(--border2);height:48px">
       <td style="padding:10px">${item.productType}</td>
       <td style="padding:10px"><strong>${item.brand}</strong>${item.supplierCode?` <span style="color:var(--text3);font-size:10px">#${item.supplierCode}</span>`:''}</td>
       <td style="padding:10px;text-align:right">${item.costTotal.toFixed(2)}€</td>
       <td style="padding:10px;text-align:center;font-weight:500">${pQty} ${pUnit}</td>
-      <td style="padding:10px;text-align:center;color:${stockInCatalog>pQty?'var(--gold)':stockInCatalog>0?'var(--text2)':'var(--red)'};font-weight:500">${pQty}/${stockInCatalog} ${pUnit}</td>
+      <td style="padding:10px;text-align:center;color:${stockAfterAlloc>pQty?'var(--gold)':stockAfterAlloc>0?'var(--text2)':'var(--red)'};font-weight:500">${pQty}/${stockAfterAlloc} ${pUnit}</td>
       <td style="padding:10px;text-align:center">
         <input type="checkbox" id="${stockOkId}" data-ev="${evId}" data-item="${item.itemKey}" data-unit="${item.unit}" data-input="${qtyInputId}" ${allocQty>0?'checked':''} onchange="onShopStockOkChange(this)" style="cursor:pointer;width:18px;height:18px"/>
       </td>
