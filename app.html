@@ -5236,6 +5236,10 @@ function allocateStock(evId,itemKey,qty,unit){
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   if(!ev.stockAllocations) ev.stockAllocations={};
+  const p=itemKey.split('||');
+  const prod=state.products.find(x=>x.productType===p[0]&&(!p[1]||x.brand===p[1]||!x.brand));
+  const old=ev.stockAllocations[itemKey]?.qty||0;
+  if(prod) prod.stock=Math.max(0,(prod.stock||0)-(qty-old));
   if(qty>0) ev.stockAllocations[itemKey]={qty,unit};
   else delete ev.stockAllocations[itemKey];
   save();
@@ -5244,16 +5248,7 @@ function allocateStock(evId,itemKey,qty,unit){
 
 function getStockAfterAllocations(productType,brand){
   const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
-  if(!prod) return 0;
-  let allocated=0;
-  (state.events||[]).forEach(ev=>{
-    if(!ev.stockAllocations) return;
-    Object.entries(ev.stockAllocations).forEach(([key,a])=>{
-      const p=key.split('||');
-      if(p[0]===productType&&p[1]===(brand||'')) allocated+=a.qty||0;
-    });
-  });
-  return Math.max(0,(prod.stock||0)-allocated);
+  return prod?.stock||0;
 }
 
 function onShopStockOkChange(checkbox){
