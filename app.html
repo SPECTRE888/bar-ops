@@ -2835,6 +2835,7 @@ function showCForm(c){
   (c.consumables||[]).forEach(i=>addConsoRow(i));
   if(!(c.consumables||[]).length){addConsoRow();}
   updIceCost();
+  updCRecap();
 }
 
 function addIngRow(val={}){
