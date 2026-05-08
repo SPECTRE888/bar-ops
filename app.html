@@ -5236,6 +5236,21 @@ function allocateStock(evId,itemKey,qty,unit){
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   if(!ev.stockAllocations) ev.stockAllocations={};
+  const parts=itemKey.split('||');
+  const productType=parts[0];
+  const brand=parts[1];
+  const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
+  const oldQty=ev.stockAllocations[itemKey]?.qty||0;
+
+  if(prod){
+    const qtyDiff=qty-oldQty;
+    console.log(`allocateStock: ${productType}/${brand}, qty=${qty}, oldQty=${oldQty}, diff=${qtyDiff}, stock before=${prod.stock}, stock after=${prod.stock-qtyDiff}`);
+    if(qtyDiff!==0){
+      prod.stock=(prod.stock||0)-qtyDiff;
+      if(prod.stock<0) prod.stock=0;
+    }
+  }
+
   if(qty>0){ev.stockAllocations[itemKey]={qty,unit};}
   else{delete ev.stockAllocations[itemKey];}
   save();
