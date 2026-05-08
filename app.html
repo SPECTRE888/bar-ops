@@ -8411,13 +8411,16 @@ function renderSuivi(){
               <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${ev.paid?'Payée':'À encaisser'}</div>
             </div>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
               ${acompteRecu?'✓ Acompte reçu':'Acompte reçu'}
             </button>
-            <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
+            <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
               ${ev.paid?'✓ Prestation payée':'Prestation payée'}
             </button>
+            <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goPage('prestation',${ev.id})">Modifier</button>
+            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:var(--blue);color:white;border:1px solid var(--blue)" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
+            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:var(--gold);color:var(--text);border:1px solid var(--gold)" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
           </div>
         </div>`;
       })()}
