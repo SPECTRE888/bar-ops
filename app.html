@@ -8406,13 +8406,15 @@ function renderSuivi(){
                 onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()" onkeydown="if(event.key==='Enter')event.target.blur()"/>
               <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:2px">€ Acompte</div>
             </div>
-            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border);cursor:pointer" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
-              <div style="font-size:15px;color:${acompteRecu?'var(--green)':'var(--text3)'};margin-bottom:3px">${acompteRecu?'✓':'◇'}</div>
-              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Acompte reçu</div>
+            <div style="flex:1;min-width:0;text-align:center;padding:4px;border-right:1px solid var(--border)">
+              <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="width:100%;font-size:9px" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
+                ${acompteRecu?'✓ Reçu':'Acompte reçu'}
+              </button>
             </div>
-            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border);cursor:pointer" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
-              <div style="font-size:15px;color:${ev.paid?'var(--green)':'var(--text3)'};margin-bottom:3px">${ev.paid?'✓':'◇'}</div>
-              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Prestation payée</div>
+            <div style="flex:1;min-width:0;text-align:center;padding:4px;border-right:1px solid var(--border)">
+              <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="width:100%;font-size:9px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
+                ${ev.paid?'✓ Payée':'Prestation payée'}
+              </button>
             </div>
             <div style="flex:1;min-width:0;text-align:center;padding:8px 4px">
               <div style="font-size:13px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};margin-bottom:3px">${ev.paid?'✓':reste.toFixed(0)}€</div>
