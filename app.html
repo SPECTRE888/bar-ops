@@ -2735,9 +2735,10 @@ function showCForm(c){
             <div style="font-weight:bold;font-size:16px;color:var(--gold)" id="r-suggested">—</div>
           </div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix de vente HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">TVA</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
-            <option value="20"${(c.vat===undefined||c.vat===20||c.vat===null)?'selected':''}>20%</option>
-            <option value="10"${(c.vat===10)?'selected':''}>10%</option>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">% de perte</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
+            <option value="5"${(c.vat===5)?'selected':''}>5%</option>
+            <option value="10"${(c.vat===undefined||c.vat===10||c.vat===null)?'selected':''}>10%</option>
+            <option value="15"${(c.vat===15)?'selected':''}>15%</option>
           </select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
@@ -4104,7 +4105,6 @@ function showEvForm(ev){
 
   // Hidden compat fields
   el.insertAdjacentHTML('beforeend',`
-    <input type="hidden" id="ef-buf" value="${ev.buffer??0}"/>
     <input type="hidden" id="ef-cpp" value="${ev.cppax||3}"/>
     <input type="hidden" id="ef-barm" value="${ev.barMeters||1}"/>
     <input type="hidden" id="ef-extra" value="${ev.extraCostHT||0}"/>
@@ -5384,7 +5384,7 @@ function renderShopping(){
   const totalCost=items.reduce((s,i)=>s+i.costTotal,0);
   let html=`<div class="card flex-b mb1" style="padding:14px 18px">
     <div><div style="font-size:16px;font-family:'DM Serif Display',serif">${ev.name}</div>
-    <div class="ts tm">${ev.date||''} · ${ev.pax||'?'} guests · ${total} cocktails (incl. ${(ev.buffer??15)}% buffer)</div></div>
+    <div class="ts tm">${ev.date||''} · ${ev.pax||'?'} guests · ${total} cocktails</div></div>
     <button class="btn no-print" onclick="window.print()"> Print</button></div>
     <table class="shop-table" style="width:100%;border-collapse:collapse;font-size:12px">
     <thead style="border-bottom:2px solid var(--border)">
