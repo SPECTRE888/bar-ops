@@ -3606,14 +3606,6 @@ function updCRecap(){
 
   const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
 
-  // Loss % calcule HT proposé = Coût / (1 - loss%) — compense perte sur prix final
-  const loss=(parseFloat(document.getElementById('cf-vat')?.value)||10)/100;
-  const proposedHT=loss<1?total/(1-loss):total;
-  const htInput=document.getElementById('cf-pht');
-  if(htInput && !htInput.matches(':focus')){
-    htInput.value=proposedHT.toFixed(2);
-  }
-
   // Prix conseillé adapté par catégorie
   const cat=document.getElementById('cf-cat')?.value||'Cocktail Signature';
   let mult=4;
@@ -3624,15 +3616,23 @@ function updCRecap(){
   const suggested=total*mult;
   const sugEl=document.getElementById('r-suggested');if(sugEl)sugEl.textContent=total>0?suggested.toFixed(2)+'€':'—';
 
-  const ht=parseFloat(document.getElementById('cf-pht')?.value)||0;
-  if(ht>0&&total>0){
-    const mg=ht-total,mgPct=mg/ht*100;
+  // Auto-fill Prix vente avec Prix conseillé (modifiable)
+  const htInput=document.getElementById('cf-pht');
+  if(htInput && !htInput.matches(':focus') && (parseFloat(htInput.value)||0)===0){
+    htInput.value=suggested.toFixed(2);
+  }
+
+  const prixVente=parseFloat(document.getElementById('cf-pht')?.value)||0;
+  const loss=(parseFloat(document.getElementById('cf-vat')?.value)||10)/100;
+  const ht=prixVente*(1+loss);
+  if(prixVente>0&&total>0){
+    const mg=prixVente-total,mgPct=mg/prixVente*100;
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
-    
+
     // Barre linéaire : 0€ = 0%, 25€ = 100%
-    const pricePct=(ht/suggested-1)*100;
-    const barRatio=Math.max(0,Math.min(100,ht/25*100));
+    const pricePct=(prixVente/suggested-1)*100;
+    const barRatio=Math.max(0,Math.min(100,prixVente/25*100));
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=barRatio+'%';
@@ -3687,8 +3687,10 @@ async function saveCocktail(){
     photo:document.getElementById('cf-photo-del')?.value==='1'?'':(window._cfPhotoData||existingC?.photo||''),
     ingredients:rowData(ingRows()),
     consumables:rowData(consoRows()),
-    priceHT:parseFloat(document.getElementById('cf-pht')?.value)||0,
-    vat:parseFloat(document.getElementById('cf-vat')?.value)||20,
+    prixVente:parseFloat(document.getElementById('cf-pht')?.value)||0,
+    loss:parseFloat(document.getElementById('cf-vat')?.value)||10,
+    priceHT:parseFloat(document.getElementById('cf-pht')?.value)*(1+(parseFloat(document.getElementById('cf-vat')?.value)||10)/100)||0,
+    vat:20,
     totalCost:total
   };
   if(editCId) state.cocktails=state.cocktails.map(c=>c.id===editCId?cocktail:c);
