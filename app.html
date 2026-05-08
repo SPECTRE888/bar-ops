@@ -5205,12 +5205,13 @@ function toRealUnits(productType, brand, totalG){
   return null;
 }
 
-function getAvailableStock(productType,brand,unit){
+function getAvailableStock(productType,brand,unit,excludeEvId){
   const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
   if(!prod) return {stock:0,reserved:0,available:0};
   let reserved=0;
   (state.events||[]).forEach(ev=>{
     if(ev.status==='historique'||ev.paid) return;
+    if(excludeEvId&&ev.id===excludeEvId) return;
     const evTotalCktl=evTot(ev);
     (ev.cocktails||[]).forEach(cfg=>{
       const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
@@ -5231,13 +5232,23 @@ function getAvailableStock(productType,brand,unit){
   return {stock:prod.stock,reserved:Math.round(reserved*10)/10,available:Math.round(available*10)/10};
 }
 
+function allocateStock(evId,itemKey,qty,unit){
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev)return;
+  if(!ev.stockAllocations) ev.stockAllocations={};
+  if(qty>0){ev.stockAllocations[itemKey]={qty,unit};}
+  else{delete ev.stockAllocations[itemKey];}
+  save();
+  renderShopping();
+}
+
 function renderShopping(){
   const savedVal=document.getElementById('shop-ev-sel')?.value;
   renderShopEvSel();
   const sel=document.getElementById('shop-ev-sel');
   if(savedVal) sel.value=savedVal;
   else if(sel.children.length>1) sel.value=sel.children[1].value;
-  
+
   const evId=parseInt(sel.value);
   const el=document.getElementById('shop-content');
   if(!evId){
@@ -5246,6 +5257,7 @@ function renderShopping(){
   }
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
+  if(!ev.stockAllocations) ev.stockAllocations={};
   const total=evTot(ev);
   const needed={};
   (ev.cocktails||[]).forEach(cfg=>{
@@ -5256,14 +5268,12 @@ function renderShopping(){
       if(!needed[key])needed[key]={productType:ing.productType||ing.name,brand:ing.brand||'',unit:ing.unit,total:0,costTotal:0};
       needed[key].total+=ing.qty*qty;needed[key].costTotal+=ing.cost*qty;
     });
-    // Ice: use event override if set, else recipe default
     const iceTypeId=cfg.iceTypeId!=null?cfg.iceTypeId:c.iceTypeId;
     const serviceIce=cfg.serviceIce!=null?cfg.serviceIce:c.serviceIce;
     const iceType=state.iceTypes.find(i=>i.id===iceTypeId);
     if(iceType&&serviceIce&&serviceIce!=='none'){
       const iceName=iceType.name;
       const k='Ice||'+iceName;
-      // Compute iceCl from glass volume + service multiplier
       const glass=state.glasses.find(g=>g.name===(cfg.glass||c.glass||''));
       const svcMult={none:0,rocks:0.6,full:0.9,one:0.2}[serviceIce]||0;
       const techMult={none:0,stirred:1.5,shaken:2.0,blended:2.5}[c.technique||'none']||0;
@@ -5273,129 +5283,68 @@ function renderShopping(){
       const cpclHT=pricePerKgTTC/100/1.20;
       const iceVal=iceClPerCocktail*cpclHT;
       if(!needed[k])needed[k]={productType:'Ice',brand:iceName,unit:'portion',total:0,costTotal:0,totalCl:0,iceTypeId};
-      needed[k].total+=qty;
-      needed[k].costTotal+=iceVal*qty;
-      needed[k].totalCl+=iceClPerCocktail*qty;
+      needed[k].total+=qty;needed[k].costTotal+=iceVal*qty;needed[k].totalCl+=iceClPerCocktail*qty;
     }
     if(c.glassCost>0){const k='Glass||'+(c.glass||'')+'||pc';if(!needed[k])needed[k]={productType:'Glass',brand:c.glass||'',unit:'pc',total:0,costTotal:0};needed[k].total+=qty;needed[k].costTotal+=c.glassCost*qty;}
   });
-  const grouped={};
-  Object.values(needed).forEach(item=>{
+  const items=Object.values(needed).filter(i=>i.productType!=='Ice'&&i.productType!=='Glass').map(item=>{
     const prod=state.products.find(p=>p.productType===item.productType&&(!item.brand||p.brand===item.brand||!p.brand));
-    const cat=prod?.category||(item.productType==='Ice'?'Ice':item.productType==='Glass'?'Glassware':'Other');
-    if(!grouped[cat])grouped[cat]=[];
-    let pQty='',pUnit='';
-    if(prod&&prod.qty&&prod.unit){
-      let inRU=item.total;
-      if(prod.unit==='L'&&item.unit==='cl')inRU=item.total/100;
-      else if(prod.unit==='cl'&&item.unit==='ml')inRU=item.total/10;
-      else if(prod.unit==='ml'&&item.unit==='cl')inRU=item.total*10;
-      else if(prod.unit==='kg'&&item.unit==='g')inRU=item.total/1000;
-      pQty=Math.ceil(inRU/prod.qty);
-      pUnit=['cl','ml','L'].includes(prod.unit)?'bottle(s)':prod.unit;
-    }
-    grouped[cat].push({...item,pQty,pUnit});
+    const itemKey=(item.productType||'')+'||'+(item.brand||'')+'||'+item.unit;
+    const alloc=ev.stockAllocations[itemKey]||{};
+    return {
+      ...item,
+      prod,
+      itemKey,
+      supplierEmail:prod?.supplierEmail||'',
+      supplierName:prod?.supplier||'',
+      supplierCode:prod?.supplierCode||'',
+      allocQty:alloc.qty||0,
+      avail:getAvailableStock(item.productType,item.brand,item.unit,evId)
+    };
   });
-  const ICONS={Spirit:'',Juice:'',Mixer:'',Syrup:'',Spice:'',Garnish:'',Consumable:'',Glassware:'',Ice:'',Other:''};
-  const ORDER=['Spirit','Juice','Mixer','Syrup','Spice','Garnish','Consumable','Glassware','Ice','Other'];
+  const totalCost=items.reduce((s,i)=>s+i.costTotal,0);
   let html=`<div class="card flex-b mb1" style="padding:14px 18px">
     <div><div style="font-size:16px;font-family:'DM Serif Display',serif">${ev.name}</div>
     <div class="ts tm">${ev.date||''} · ${ev.pax||'?'} guests · ${total} cocktails (incl. ${(ev.buffer??15)}% buffer)</div></div>
-    <button class="btn no-print" onclick="window.print()"> Print</button></div>`;
-  const sortedCats=ORDER.filter(c=>grouped[c]).concat(Object.keys(grouped).filter(c=>!ORDER.includes(c)));
-  sortedCats.forEach(cat=>{
-    const items=grouped[cat];
-    const catTotal=items.reduce((s,i)=>s+i.costTotal,0);
-    html+=`<div class="shop-sec"><h4>${ICONS[cat]||''} ${cat} <span class="txs tm">(est. ${catTotal.toFixed(2)}€ HT)</span></h4>`;
-    items.forEach(item=>{
-      const label=item.brand?item.brand+(item.brand!==item.productType?' — '+item.productType:''):item.productType;
-      let qtyDisplay=`${item.total.toFixed(1)} ${item.unit}`;
-      let bagDisplay='';
-      // Ice: convert portions to kg then to bags
-      if(cat==='Ice'){
-        const iceType=state.iceTypes.find(i=>i.id===item.iceTypeId);
-        const priceHT=iceType?(iceType.priceHT||0):0;
-        let totalKg=0;
-        if(item.totalCl>0){
-          // Direct from iceCl: 1cl = 0.01kg
-          totalKg=item.totalCl*0.01;
-        } else if(priceHT>0){
-          totalKg=item.costTotal/priceHT;
-        } else {
-          totalKg=item.total*0.2;
-        }
-        // Round up to nearest bag size
-        const conv=iceBags(item.brand,totalKg);
-        // Apply minimum order if set
-        const minOrder=iceType?.minOrder||0;
-        const orderedKg=Math.max(conv.bags*conv.bagKg, minOrder>0?Math.ceil(minOrder/conv.bagKg)*conv.bagKg:0);
-        const orderedBags=orderedKg/conv.bagKg;
-        qtyDisplay=`${totalKg.toFixed(1)} kg nécessaires`;
-        bagDisplay=`→ ${orderedBags} sac${orderedBags>1?'s':''} de ${conv.bagKg}kg = ${orderedKg}kg commandés${minOrder>0&&orderedKg>conv.bags*conv.bagKg?` <span style="color:var(--gold);font-size:9px">(min. ${minOrder}kg)</span>`:''}`;
-        // Update conv for WhatsApp message
-        conv.bags=orderedBags;
-        conv.orderedKg=orderedKg;
-
-        // WhatsApp order button — opens editable modal
-        const supplierPhone=iceType?.supplierPhone||'';
-        const supplierName=iceType?.supplier||'';
-        if(supplierPhone){
-          const orderMsg=buildIceOrderMsg(ev, item.brand, totalKg, conv);
-          const msgKey='ice_order_'+ev.id+'_'+(item.iceTypeId||item.brand);
-          // Store msg in window cache to avoid template escaping issues
-          if(!window._iceOrderMsgs) window._iceOrderMsgs={};
-          window._iceOrderMsgs[msgKey]={phone:waPhone(supplierPhone),supplier:supplierName,msg:orderMsg,ev,iceName:item.brand,totalKg,conv};
-          bagDisplay+=`&nbsp;<button onclick="openIceOrderModal('${msgKey}')" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#25D366;color:#fff;border-radius:5px;font-size:10px;text-decoration:none;border:none;cursor:pointer"> Commander${supplierName?' — '+supplierName:''}</button>`;
-        }
-      } else if(item.pQty){
-        bagDisplay=`→ ${item.pQty} ${item.pUnit}`;
-      }
-
-      // Unit converter hint for g/kg items
-      let convertHint='';
-      if(['g','kg'].includes(item.unit)){
-        const totalG=item.unit==='kg'?item.total*1000:item.total;
-        const hint=toRealUnits(item.productType,item.brand,totalG);
-        if(hint) convertHint=`<span style="color:var(--text3);font-size:10px;font-style:italic;margin-left:6px">${hint}</span>`;
-      }
-      const prod=state.products.find(p=>p.productType===item.productType&&(!item.brand||p.brand===item.brand||!p.brand));
-      const supplierEmail=prod?.supplierEmail||'';
-      const supplierName=prod?.supplier||'';
-      const supplierCode=prod?.supplierCode||'';
-      const defaultQty=item.pQty||Math.ceil(item.total);
-      const ikey='order_'+cat+'_'+label.replace(/[^a-z0-9]/gi,'_');
-
-      // Stock availability
-      let stockDisplay='';
-      if(cat!=='Ice'&&cat!=='Glassware'){
-        const avail=getAvailableStock(item.productType,item.brand,item.unit);
-        const statusColor=avail.available>item.total?'var(--gold)':avail.available>0?'var(--text2)':'var(--red)';
-        stockDisplay=`<span style="font-size:10px;color:${statusColor};margin-left:6px">Stock: ${avail.available}/${avail.stock} ${item.unit}</span>`;
-      }
-
-      let cmdBtn='';
-      if(cat!=='Ice'){
-        const orderKey='shop_order_'+ikey;
-        cmdBtn=`<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px">
-          <input type="number" id="${ikey}" value="${defaultQty}" min="1" style="width:52px;padding:2px 5px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center" onclick="event.stopPropagation()"/>
-          <button class="btn-profile" onclick="openShopOrderModal('${orderKey}','${ikey}','${label.replace(/'/g,"\\'")}','${supplierEmail}','${supplierName.replace(/'/g,"\\'")}','${supplierCode}')" style="padding:8px 14px;font-size:11px;margin:0;flex:0;white-space:nowrap">Commander</button>
-        </span>`;
-      }
-      html+=`<div class="shop-item"><span>${label}${supplierCode?`<span style="font-size:9px;color:var(--text3);margin-left:6px;font-family:monospace">#${supplierCode}</span>`:''}</span>
-        <span class="flex-g">
-          <span class="ts tm">${qtyDisplay}${stockDisplay}${convertHint}</span>
-          ${bagDisplay?`<span class="shop-qty">${bagDisplay}</span>`:''}
-          <span class="txs tm">${item.costTotal.toFixed(2)}€ HT</span>
-          ${cmdBtn}
-        </span></div>`;
-    });
-    html+=`</div>`;
+    <button class="btn no-print" onclick="window.print()"> Print</button></div>
+    <table class="shop-table" style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead style="border-bottom:2px solid var(--border)">
+    <tr style="background:var(--surface2)">
+      <th style="padding:10px;text-align:left;font-weight:500">Type</th>
+      <th style="padding:10px;text-align:left;font-weight:500">Marque</th>
+      <th style="padding:10px;text-align:right;font-weight:500">Prix HT</th>
+      <th style="padding:10px;text-align:center;font-weight:500">Stock Dispo</th>
+      <th style="padding:10px;text-align:center;font-weight:500">Stock Presta</th>
+      <th style="padding:10px;text-align:center;font-weight:500">Qty Cmd</th>
+      <th style="padding:10px;text-align:center;font-weight:500">Stock OK</th>
+      <th style="padding:10px;text-align:right;font-weight:500">Cmd</th>
+    </tr>
+    </thead>
+    <tbody>`;
+  items.forEach(item=>{
+    const allocQty=item.allocQty;
+    const stockOkId='stock_ok_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
+    const cmdKey='shop_order_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
+    const ikey='order_qty_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
+    const pQtyStr=item.prod?.qty&&item.prod?.unit?`→ ${Math.ceil(item.total/item.prod.qty)} ${['cl','ml','L'].includes(item.prod.unit)?'btl':'unit'}`:'';
+    html+=`<tr style="border-bottom:1px solid var(--border2);height:48px">
+      <td style="padding:10px">${item.productType}</td>
+      <td style="padding:10px"><strong>${item.brand}</strong>${item.supplierCode?` <span style="color:var(--text3);font-size:10px">#${item.supplierCode}</span>`:''}</td>
+      <td style="padding:10px;text-align:right">${item.costTotal.toFixed(2)}€</td>
+      <td style="padding:10px;text-align:center;color:${item.avail.available>item.total?'var(--gold)':item.avail.available>0?'var(--text2)':'var(--red)'};font-weight:500">${item.avail.available}/${item.avail.stock} ${item.unit}</td>
+      <td style="padding:10px;text-align:center">${item.total.toFixed(1)} ${item.unit} ${pQtyStr}</td>
+      <td style="padding:10px;text-align:center"><input type="number" id="${ikey}" value="${Math.ceil(item.total)}" min="1" style="width:50px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
+      <td style="padding:10px;text-align:center">
+        <input type="checkbox" id="${stockOkId}" ${allocQty>0?'checked':''} onchange="allocateStock(${evId},'${item.itemKey.replace(/'/g,"\\'"})',this.checked?document.getElementById('${ikey}').value:0,'${item.unit}')" style="cursor:pointer;width:18px;height:18px"/>
+        ${allocQty>0?`<div style="font-size:10px;color:var(--text2);margin-top:2px">${allocQty} ${item.unit}</div>`:''}
+      </td>
+      <td style="padding:10px;text-align:right"><button class="btn-profile" onclick="openShopOrderModal('${cmdKey}','${ikey}','${item.brand.replace(/'/g,"\\'") }','${item.supplierEmail}','${item.supplierName.replace(/'/g,"\\'") }','${item.supplierCode}')" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap">→</button></td>
+    </tr>`;
   });
-  if(!Object.keys(needed).length)html+='<div class="empty"><p>No ingredients found.</p></div>';
+  html+=`</tbody></table>
+    <div class="card flex-b mt1" style="padding:10px 18px;background:var(--surface2)"><div style="font-weight:500">Total estimé: ${totalCost.toFixed(2)}€ HT</div></div>`;
   el.innerHTML=html;
-
-  // Auto-mark courses as done in suivi when viewed
-  if(evId&&Object.keys(needed).length>0){
+  if(evId&&items.length>0){
     const evObj=state.events.find(x=>x.id===evId);
     if(evObj&&!evObj.coursesDone){evObj.coursesDone=true;save();}
   }
