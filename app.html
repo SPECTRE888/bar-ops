@@ -6924,7 +6924,7 @@ function renderSuppliers(){
       <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
         <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${s.phone||'—'}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${s.email||'—'}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${s.address}</span></div>`:''}\n      </div>
       <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
-        <button class="btn btn-sm btn-ghost" onclick="editSupplier(${s.id})">Modifier</button>
+        <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})">Modifier</button>
         <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">
           Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px\">${orderCount}</span>`:''}\n        </button>
       </div>
@@ -8427,8 +8427,8 @@ function renderSuivi(){
               ${ev.paid?'✓ Prestation payée':'Prestation payée'}
             </button>
             <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goPage('prestation',${ev.id})">Modifier</button>
-            <button class="btn btn-sm btn-blue" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-            <button class="btn btn-sm btn-gold" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
+            <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
+            <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
           </div>
         </div>`;
       })()}
