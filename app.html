@@ -5236,8 +5236,25 @@ function allocateStock(evId,itemKey,qty,unit){
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   if(!ev.stockAllocations) ev.stockAllocations={};
-  if(qty>0){ev.stockAllocations[itemKey]={qty,unit};}
-  else{delete ev.stockAllocations[itemKey];}
+  const parts=itemKey.split('||');
+  const productType=parts[0];
+  const brand=parts[1];
+  const oldQty=ev.stockAllocations[itemKey]?.qty||0;
+  const qtyDiff=qty-oldQty;
+  if(qty>0){
+    ev.stockAllocations[itemKey]={qty,unit};
+    const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
+    if(prod&&qtyDiff!==0){
+      prod.stock=(prod.stock||0)-qtyDiff;
+      if(prod.stock<0) prod.stock=0;
+    }
+  }else{
+    delete ev.stockAllocations[itemKey];
+    const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
+    if(prod&&oldQty>0){
+      prod.stock=(prod.stock||0)+oldQty;
+    }
+  }
   save();
   renderShopping();
 }
@@ -5251,9 +5268,9 @@ function onShopStockOkChange(checkbox){
   allocateStock(evId,itemKey,qty,unit);
 }
 
-async function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail,supplierName,supplierCode){
+function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail,supplierName,supplierCode){
   const qtyNum=parseInt(qty||0);
-  if(qtyNum<=0){await alertModal('Quantité invalide');return;}
+  if(qtyNum<=0){alertModal('Quantité invalide');return;}
   if(!state.supplierBaskets) state.supplierBaskets={};
   const supplierKey=supplierEmail||supplierName||'unknown';
   if(!state.supplierBaskets[supplierKey]){
@@ -5263,7 +5280,7 @@ async function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail
     evId,productType,brand,unit,qty:qtyNum,supplierCode,timestamp:Date.now()
   });
   save();
-  await alertModal(`✓ Ajouté au panier ${supplierName||supplierEmail}`);
+  alertModal(`✓ Ajouté au panier ${supplierName||supplierEmail}`);
 }
 
 function renderShopping(){
