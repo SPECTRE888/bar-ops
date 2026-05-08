@@ -743,7 +743,7 @@ function showConfirmModal(title, message, onConfirm){
     <div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6">${message}</div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button onclick="this.closest('[style*=fixed]').remove()" style="padding:8px 16px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">Annuler</button>
-      <button onclick="this.closest('[style*=fixed]').remove();(${onConfirm.toString()})()" style="padding:8px 16px;background:#c96e6e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500">Confirmer</button>
+      <button onclick="this.closest('[style*=fixed]').remove();(${onConfirm.toString()})()" style="padding:8px 16px;background:var(--red);color:#fff;border:1px solid var(--red);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;font-family:var(--font-body);transition:.2s" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">Confirmer</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
