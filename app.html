@@ -745,6 +745,37 @@ function showConfirmModal(title, message, onConfirm){
   document.body.appendChild(modal);
 }
 
+function confirmModal(message, isDangerous=true){
+  return new Promise((resolve)=>{
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+
+    const btnColor=isDangerous?'var(--red)':'var(--gold)';
+    const btnBg=isDangerous?'var(--red-bg)':'var(--gold-bg)';
+    const btnBorder=isDangerous?'rgba(196,112,112,.2)':'rgba(196,164,107,.2)';
+
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="font-size:15px;color:var(--text);margin-bottom:16px;line-height:1.5;font-weight:400">${message}</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="modal-btn-cancel" style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">Annuler</button>
+        <button class="modal-btn-confirm" style="padding:10px 20px;background:${btnColor};color:#fff;border:1px solid ${btnColor};border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">Confirmer</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(modal);
+
+    const btnCancel=modal.querySelector('.modal-btn-cancel');
+    const btnConfirm=modal.querySelector('.modal-btn-confirm');
+
+    const cleanup=()=>modal.remove();
+
+    btnCancel.onclick=()=>{cleanup();resolve(false);};
+    btnConfirm.onclick=()=>{cleanup();resolve(true);};
+
+    modal.onclick=(e)=>{if(e.target===modal){cleanup();resolve(false);}};
+  });
+}
+
 function deleteAccountModal(){
   showConfirmModal(
     'Êtes-vous certain ?',
@@ -1631,13 +1662,13 @@ function updateCategoryDropdown(){
   }
 }
 
-function deleteSelectedCategory(){
+async function deleteSelectedCategory(){
   const select=document.getElementById('cat-filter');
   const catId=select.value.replace('Custom_','');
   const cat=(state.customCategories||[]).find(c=>c.id==catId);
   if(!cat) return;
 
-  if(!confirm(`Supprimer la catégorie "${cat.name}" ?`)) return;
+  if(!await confirmModal(`Supprimer la catégorie "${cat.name}" ?`)) return;
 
   state.customCategories=state.customCategories.filter(c=>c.id!==cat.id);
   save();
@@ -1709,8 +1740,8 @@ function addCustomCategory(){
   showCategoryManager();
 }
 
-function delCustomCategory(id){
-  if(!confirm('Supprimer cette catégorie ?')) return;
+async function delCustomCategory(id){
+  if(!await confirmModal('Supprimer cette catégorie ?')) return;
   state.customCategories=state.customCategories.filter(c=>c.id!==id);
   save();
   updateCategoryDropdown();
@@ -1841,8 +1872,8 @@ function mkTimeOpts(val=''){
 // ════════════════════════════════════════════════════════
 // LOGOUT
 // ════════════════════════════════════════════════════════
-function doLogout(){
-  if(!confirm('Déconnexion confirmée ?')) return;
+async function doLogout(){
+  if(!await confirmModal('Déconnexion confirmée ?', false)) return;
   if(window._sb){
     window._sb.auth.signOut().then(()=>{
       localStorage.removeItem(SK);
@@ -1965,8 +1996,8 @@ function addProduct(cat){
   renderCatPage(cat);
 }
 
-function delProduct(id){
-  if(!confirm('Supprimer ce produit ?'))return;
+async function delProduct(id){
+  if(!await confirmModal('Supprimer ce produit ?'))return;
   state.products=state.products.filter(p=>p.id!==id);
   save();
   const cat=getCurrentCat();
@@ -2118,7 +2149,7 @@ function renderCatPage(cat){
 // GLASSWARE & ICE
 // ════════════════════════════════════════════════════════
 function addGlass(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
-function delGlass(id){if(!confirm('Supprimer?'))return;state.glasses=state.glasses.filter(x=>x.id!==id);save();renderGlassware();}
+async function delGlass(id){if(!await confirmModal('Supprimer ce verre ?'))return;state.glasses=state.glasses.filter(x=>x.id!==id);save();renderGlassware();}
 function updGlass(id,k,v){const g=state.glasses.find(x=>x.id===id);if(g){g[k]=v;save();renderGlassware();}}
 function resetDefaultGlass(glassId){
   const g=state.glasses.find(x=>x.id===glassId);
@@ -2128,7 +2159,7 @@ function resetDefaultGlass(glassId){
 }
 
 function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,qty:0,unit:'kg',notes:''});save();renderGlassware();}
-function delIce(id){if(!confirm('Supprimer?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
+async function delIce(id){if(!await confirmModal('Supprimer ce type de glaçons ?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
 function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();renderGlassware();}}
 
 function renderGlassware(){
@@ -2383,9 +2414,9 @@ function dupC(id){
   state.cocktails.push(copy);save();updateBadges();showCList();
 }
 
-function delC(id){
+async function delC(id){
   const c=state.cocktails.find(x=>x.id===id);
-  if(!c||!confirm('Supprimer "'+c.name+'"?'))return;
+  if(!c||!await confirmModal('Supprimer "'+c.name+'" ?'))return;
   state.cocktails=state.cocktails.filter(x=>x.id!==id);save();updateBadges();showCList();
 }
 
@@ -3723,9 +3754,9 @@ function evTot(ev){
   return (ev.cocktails||[]).reduce((s,c)=>s+(c.qty||0),0);
 }
 
-function delEv(id){
+async function delEv(id){
   const ev=state.events.find(x=>x.id===id);
-  if(!ev||!confirm('Supprimer "'+ev.name+'"?'))return;
+  if(!ev||!await confirmModal('Supprimer "'+ev.name+'" ?'))return;
   state.events=state.events.filter(x=>x.id!==id);save();updateBadges();showEvList();
 }
 
@@ -6195,7 +6226,7 @@ function addContact(preset={}){
   state.contacts.push({id:Date.now(),name:preset.name||'',role:preset.role||'Bartender',phone:preset.phone||'',staffId:preset.staffId||null});
   save();renderContacts();
 }
-function delContact(id){if(!confirm('Supprimer ce contact ?'))return;state.contacts=state.contacts.filter(x=>x.id!==id);save();renderContacts();}
+async function delContact(id){if(!await confirmModal('Supprimer ce contact ?'))return;state.contacts=state.contacts.filter(x=>x.id!==id);save();renderContacts();}
 function updContact(id,k,v){const c=state.contacts.find(x=>x.id===id);if(c){c[k]=v;save();renderContacts();}}
 
 function importStaffContacts(){
@@ -6543,8 +6574,8 @@ function addClient(){
   state.clients.push({id:Date.now(),name:'',company:'',email:'',phone:'',address:'',notes:'',events:[]});
   save();renderClients();
 }
-function delClient(id){
-  if(!confirm('Supprimer ce client ?')) return;
+async function delClient(id){
+  if(!await confirmModal('Supprimer ce client ?')) return;
   state.clients=state.clients.filter(x=>x.id!==id);
   save();
   updateBadges();
@@ -6827,8 +6858,8 @@ function saveSupplier(id){
   renderSuppliers();
 }
 
-function delSupplier(id){
-  if(!confirm('Supprimer ce fournisseur ?'))return;
+async function delSupplier(id){
+  if(!await confirmModal('Supprimer ce fournisseur ?'))return;
   state.suppliers=state.suppliers.filter(x=>x.id!==id);
   save();cloudPush();renderSuppliers();
 }
@@ -7238,8 +7269,8 @@ function buildEventSummaryHTML(ev){
 </html>`;
 }
 
-function delEvHistorique(id){
-  if(!confirm('Supprimer définitivement cette prestation de l\'historique ?'))return;
+async function delEvHistorique(id){
+  if(!await confirmModal('Supprimer définitivement cette prestation de l\'historique ?'))return;
   state.events=state.events.filter(x=>x.id!==id);
   save();renderHistorique();updateBadges();
 }
@@ -8450,7 +8481,7 @@ function addBarItem(){
   state.barItems.push({id:Date.now(),name:'',brand:'',lengthM:0,priceHT:0,color:'',theme:'',style:'',transport:'',setup:'',notes:'',available:true,photo:''});
   save();renderBarItems();
 }
-function delBarItem(id){if(!confirm('Supprimer ?'))return;state.barItems=state.barItems.filter(x=>x.id!==id);save();renderBarItems();}
+async function delBarItem(id){if(!await confirmModal('Supprimer ce bar ?'))return;state.barItems=state.barItems.filter(x=>x.id!==id);save();renderBarItems();}
 function updBarItem(id,k,v){const b=(state.barItems||[]).find(x=>x.id===id);if(b){b[k]=v;save();}}
 
 function uploadBarPhoto(id, input){
