@@ -3779,6 +3779,24 @@ function evTot(ev){
   return (ev.cocktails||[]).reduce((s,c)=>s+(c.qty||0),0);
 }
 
+function isAllStockOk(ev){
+  if(!ev.stockAllocations) return false;
+  const total=evTot(ev);
+  if(!total) return false;
+  const needed={};
+  (ev.cocktails||[]).forEach(cfg=>{
+    const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
+    const qty=cfg.qty||Math.ceil(total*(cfg.pct||0)/100);
+    [...(c.ingredients||[]),...(c.consumables||[])].forEach(ing=>{
+      if(ing.productType==='Ice'||ing.productType==='Glass') return;
+      const key=(ing.productType||ing.name)+'||'+(ing.brand||'')+'||'+ing.unit;
+      needed[key]=true;
+    });
+  });
+  const keys=Object.keys(needed);
+  return keys.length>0&&keys.every(k=>(ev.stockAllocations[k]?.qty||0)>0);
+}
+
 async function delEv(id){
   const ev=state.events.find(x=>x.id===id);
   if(!ev||!await confirmModal('Supprimer "'+ev.name+'" ?'))return;
@@ -8297,8 +8315,8 @@ function renderSuivi(){
     // 4. Brief envoyé (au moins 1 confirmed = brief envoyé)
     const briefSent=confirmed>0;
 
-    // 5. Courses faites (manually toggled)
-    const coursesDone=ev.coursesDone||false;
+    // 5. Stock OK (auto: all shopping list items confirmed)
+    const coursesDone=isAllStockOk(ev);
 
     // 6. Fiche prestation générée (ev has assignedStaff + cocktails = ready)
     const ficheReady=hasCocktails&&hasStaff;
@@ -8358,8 +8376,8 @@ function renderSuivi(){
         !briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer brief</button>`:''
       )}
       ${check(coursesDone,
-        t('suivi_courses'),
-        `<button class="btn btn-sm btn-ghost" onclick="toggleCoursesDone(${ev.id})">${coursesDone?'Annuler':'Marquer fait'}</button>`
+        'Stock OK',
+        `<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses →</button>`
       )}
       ${check(ficheReady,
         t('suivi_fiche'),
@@ -8480,7 +8498,7 @@ function filterSuivi(){
     const confirmed=(ev.staffConfirmed||[]).length;
     const allConfirmed=assigned>0&&confirmed>=assigned;
     const briefSent=confirmed>0;
-    const coursesDone=ev.coursesDone||false;
+    const coursesDone=isAllStockOk(ev);
     const ficheReady=hasCocktails&&hasStaff;
     const checks=[hasCocktails,hasStaff,allConfirmed,briefSent,coursesDone,ficheReady];
     const score=checks.filter(Boolean).length;
@@ -8499,7 +8517,7 @@ function filterSuivi(){
       ${check(hasStaff,`Staff assigné (${assigned}${needed>0?' / '+needed:''})`,`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`)}
       ${check(allConfirmed,`Staff confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer dispo ?</button>`:'')}
       ${check(briefSent,'Brief envoyé',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer brief</button>`:'')}
-      ${check(coursesDone,'Courses faites',`<button class="btn btn-sm btn-ghost" onclick="toggleCoursesDone(${ev.id})">${coursesDone?'Annuler':'Marquer fait'}</button>`)}
+      ${check(coursesDone,'Stock OK',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses →</button>`)}
       ${check(ficheReady,'Fiche prête',ficheReady?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Voir →</button>`:'')}
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Paiement</div>
