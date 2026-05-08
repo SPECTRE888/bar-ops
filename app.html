@@ -5369,10 +5369,8 @@ function renderShopping(){
       let stockDisplay='';
       if(cat!=='Ice'&&cat!=='Glassware'){
         const avail=getAvailableStock(item.productType,item.brand,item.unit);
-        if(avail.stock>0){
-          const statusColor=avail.available>item.total?'var(--gold)':avail.available>0?'var(--text2)':'var(--red)';
-          stockDisplay=`<span style="font-size:10px;color:${statusColor};margin-left:6px">Stock: ${avail.available}/${avail.stock} ${item.unit}</span>`;
-        }
+        const statusColor=avail.available>item.total?'var(--gold)':avail.available>0?'var(--text2)':'var(--red)';
+        stockDisplay=`<span style="font-size:10px;color:${statusColor};margin-left:6px">Stock: ${avail.available}/${avail.stock} ${item.unit}</span>`;
       }
 
       let cmdBtn='';
