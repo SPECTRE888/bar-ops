@@ -8394,21 +8394,34 @@ function renderSuivi(){
         const reste=Math.max(0,total-acompte);
 
         return`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;font-weight:500">Paiement</div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap;font-size:11px">
-            <span><strong>${total.toFixed(0)}€</strong></span>
-            <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
-              style="width:50px;padding:3px 6px;font-size:10px;height:20px;border:1px solid var(--border);border-radius:3px"
-              onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
-            <input type="date" value="${ev.acompteDate||''}"
-              style="padding:3px 6px;font-size:10px;height:20px;border:1px solid var(--border);border-radius:3px"
-              onchange="updEvField(${ev.id},'acompteDate',this.value)"/>
-            <span style="color:var(--text3);cursor:pointer" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">Reçu: <strong style="color:${acompteRecu?'var(--green)':'var(--red)'}${acompteRecu?';text-decoration:underline':''}">${acompteRecu?'OUI':'NON'}</strong></span>
-            <span style="color:var(--text3);cursor:pointer" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">Payée: <strong style="color:${ev.paid?'var(--green)':'var(--red)'}${ev.paid?';text-decoration:underline':''}">${ev.paid?'OUI':'NON'}</strong></span>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500">Paiement</div>
+          <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px">
+            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border)">
+              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${total.toFixed(0)}€</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Total</div>
+            </div>
+            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border)">
+              <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
+                style="width:100%;padding:3px 4px;font-size:11px;height:18px;border:none;text-align:center"
+                onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:2px">Acompte</div>
+            </div>
+            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border);cursor:pointer" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
+              <div style="font-size:15px;color:${acompteRecu?'var(--green)':'var(--text3)'};margin-bottom:3px">${acompteRecu?'✓':'◇'}</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Reçu</div>
+            </div>
+            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border);cursor:pointer" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
+              <div style="font-size:15px;color:${ev.paid?'var(--green)':'var(--text3)'};margin-bottom:3px">${ev.paid?'✓':'◇'}</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Payée</div>
+            </div>
+            <div style="flex:1;min-width:0;text-align:center;padding:8px 4px">
+              <div style="font-size:13px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};margin-bottom:3px">${ev.paid?'✓':reste>0?reste.toFixed(0):0}${!ev.paid&&reste>0?'€':''}</div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">${ev.paid?'Soldé':'Reste'}</div>
+            </div>
           </div>
-          <div style="font-size:10px;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'}">
-            ${ev.paid?'✓ Payée':reste>0?`Reste: ${reste.toFixed(0)}€`:'✓ Soldé'}
-          </div>
+          <input type="date" value="${ev.acompteDate||''}"
+            style="padding:4px 8px;font-size:10px;height:22px;border:1px solid var(--border);border-radius:3px;width:100%"
+            onchange="updEvField(${ev.id},'acompteDate',this.value)"/>
         </div>`;
       })()}
 
