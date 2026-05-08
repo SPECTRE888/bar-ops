@@ -5245,22 +5245,7 @@ function allocateStock(evId,itemKey,qty,unit){
 function getStockAfterAllocations(productType,brand,unit){
   const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
   if(!prod) return 0;
-  let allocated=0;
-  (state.events||[]).forEach(ev=>{
-    if(ev.status==='historique'||ev.paid) return;
-    Object.entries(ev.stockAllocations||{}).forEach(([key,alloc])=>{
-      const parts=key.split('||');
-      if(parts[0]===productType&&(!brand||parts[1]===brand)){
-        let allocQty=alloc.qty;
-        if(prod.unit==='L'&&unit==='cl') allocQty/=100;
-        else if(prod.unit==='cl'&&unit==='ml') allocQty/=10;
-        else if(prod.unit==='ml'&&unit==='cl') allocQty*=10;
-        else if(prod.unit==='kg'&&unit==='g') allocQty/=1000;
-        allocated+=allocQty;
-      }
-    });
-  });
-  return Math.max(0,prod.stock-allocated);
+  return prod.stock||0;
 }
 
 function onShopStockOkChange(checkbox){
