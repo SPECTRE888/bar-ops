@@ -5408,7 +5408,7 @@ async function prestCancelClientForm(){
   document.getElementById('prest-client-form').style.display='none';
 }
 
-function prestCreateClient(evId){
+async function prestCreateClient(evId){
   const name=(document.getElementById('prest-client-name')?.value||'').trim();
   const company=(document.getElementById('prest-client-company')?.value||'').trim();
   const email=(document.getElementById('prest-client-email')?.value||'').trim();
@@ -6497,7 +6497,7 @@ async function sharePrestation(){
   document.body.appendChild(modal);
 }
 
-function sendToSelected(btn){
+async function sendToSelected(btn){
   const evId=parseInt(document.getElementById('prest-ev-sel').value);
   const ev=state.events.find(x=>x.id===evId);if(!ev) return;
   const msg=buildShareMsg(ev);
@@ -6857,7 +6857,7 @@ function editSupplier(id){
   document.body.appendChild(modal);
 }
 
-function saveSupplier(id){
+async function saveSupplier(id){
   const name=document.getElementById('sp-name')?.value.trim();
   if(!name)return await alertModal('Nom requis');
   const categories=[...document.querySelectorAll('.sp-cat-chk:checked')].map(el=>el.value);
@@ -6931,7 +6931,7 @@ function showDresscodeModal(evId){
   document.body.appendChild(backdrop);
 }
 
-function showAvailabilityModal(evId){
+async function showAvailabilityModal(evId){
   const ev=state.events.find(x=>x.id===evId)||{};
   const date=ev.date||document.getElementById('ef-date')?.value||'';
   if(!date){await alertModal('Définis d\'abord la date de l\'événement.');return;}
