@@ -776,6 +776,26 @@ function confirmModal(message, isDangerous=true){
   });
 }
 
+function alertModal(message){
+  return new Promise((resolve)=>{
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="font-size:15px;color:var(--text);margin-bottom:20px;line-height:1.6;font-weight:400">${message}</div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="modal-btn-ok" style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">OK</button>
+      </div>
+    </div>`;
+
+    document.body.appendChild(modal);
+    const btnOk=modal.querySelector('.modal-btn-ok');
+    const cleanup=()=>modal.remove();
+    btnOk.onclick=()=>{cleanup();resolve(true);};
+    modal.onclick=(e)=>{if(e.target===modal){cleanup();resolve(true);}};
+  });
+}
+
 function deleteAccountModal(){
   showConfirmModal(
     'Êtes-vous certain ?',
@@ -1818,9 +1838,9 @@ function renderCatalogue(){
   renderCatPage(cat);
 }
 
-function catAdd(){
+async function catAdd(){
   if(window._isDemo){
-    alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
+    await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
     return;
   }
   const cat=document.getElementById('cat-filter')?.value||'Spirit';
@@ -1987,7 +2007,7 @@ function getCurrentCat(){
 
 function addProduct(cat){
   if(window._isDemo){
-    alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
+    await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
     return;
   }
   const def=CAT_DEFAULTS[cat]||{qty:1,unit:'pc'};
@@ -2148,7 +2168,7 @@ function renderCatPage(cat){
 // ════════════════════════════════════════════════════════
 // GLASSWARE & ICE
 // ════════════════════════════════════════════════════════
-function addGlass(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
+async function addGlass(){if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
 async function delGlass(id){if(!await confirmModal('Supprimer ce verre ?'))return;state.glasses=state.glasses.filter(x=>x.id!==id);save();renderGlassware();}
 function updGlass(id,k,v){const g=state.glasses.find(x=>x.id===id);if(g){g[k]=v;save();renderGlassware();}}
 function resetDefaultGlass(glassId){
@@ -2158,7 +2178,7 @@ function resetDefaultGlass(glassId){
   save();renderGlassware();
 }
 
-function addIce(){if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,qty:0,unit:'kg',notes:''});save();renderGlassware();}
+async function addIce(){if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux types de glaçons.');return;}state.iceTypes.push({id:Date.now(),name:'',priceHT:0,qty:0,unit:'kg',notes:''});save();renderGlassware();}
 async function delIce(id){if(!await confirmModal('Supprimer ce type de glaçons ?'))return;state.iceTypes=state.iceTypes.filter(x=>x.id!==id);save();renderGlassware();}
 function updIce(id,k,v){const i=state.iceTypes.find(x=>x.id===id);if(i){i[k]=v;save();renderGlassware();}}
 
@@ -2235,8 +2255,8 @@ function updStaffType(id, type){
   if(d.per) s.per=d.per;
   save(); renderStaff();
 }
-function addStaff(){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux membres du staff.');return;}
+async function addStaff(){
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux membres du staff.');return;}
   const d=STAFF_DEFAULTS['Bartender'];
   state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,notes:''});
   save();renderStaff();
@@ -2538,12 +2558,12 @@ function selectClientFromSearch(clientId){
   document.getElementById('ef-client-form').style.display='none';
 }
 
-function cancelClientForm(){
+async function cancelClientForm(){
   document.getElementById('ef-client-search').value='';
   document.getElementById('ef-client-form').style.display='none';
 }
 
-function createClientFromForm(){
+async function createClientFromForm(){
   const fname=(document.getElementById('ef-client-fname')?.value||'').trim();
   const lname=(document.getElementById('ef-client-lname')?.value||'').trim();
   const name=(fname+' '+lname).trim();
@@ -2554,7 +2574,7 @@ function createClientFromForm(){
   const address=(document.getElementById('ef-client-address')?.value||'').trim();
   const notes=(document.getElementById('ef-client-notes')?.value||'').trim();
   
-  if(!name){alert('Nom requis');return;}
+  if(!name){await alertModal('Nom requis');return;}
   
   // Check duplicate by email or phone
   let existing=state.clients.find(c=>
@@ -2562,7 +2582,7 @@ function createClientFromForm(){
     (phone && c.phone===phone)
   );
   if(existing){
-    alert(`✓ Client "${existing.name}" existe déjà`);
+    await alertModal(`✓ Client "${existing.name}" existe déjà`);
     window._selectedClientId=existing.id;
     linkClientToEvent(existing.id);
     return;
@@ -3163,7 +3183,7 @@ function setMult(v){
   if(el){el.value=v;applyMult();}
 }
 
-function applyMult(){
+async function applyMult(){
   const mult=parseFloat(document.getElementById('cf-mult')?.value)||0;
   const costRaw=document.getElementById('r-cost')?.textContent||'0';
   const cost=parseFloat(costRaw.replace('€','').replace(',','.'))||0;
@@ -3177,11 +3197,11 @@ function applyMult(){
     :'—';
 }
 
-function applySuggestedPrice(){
+async function applySuggestedPrice(){
   const mult=parseFloat(document.getElementById('cf-mult')?.value)||0;
   const costRaw=document.getElementById('r-cost')?.textContent||'0';
   const cost=parseFloat(costRaw.replace('€','').replace(',','.'))||0;
-  if(!cost){alert('Renseigne d\'abord les ingrédients pour calculer le coût.');return;}
+  if(!cost){await alertModal('Renseigne d\'abord les ingrédients pour calculer le coût.');return;}
   const suggested=cost*mult;
   const rounded=Math.ceil(suggested*2)/2; // arrondi au 0.50€ supérieur
   const pht=document.getElementById('cf-pht');
@@ -3595,9 +3615,9 @@ function updCRecap(){
   if(iceDisp)iceDisp.value=iceVal.toFixed(3);
 }
 
-function saveCocktail(){
+async function saveCocktail(){
   const name=document.getElementById('cf-name')?.value.trim();
-  if(!name){alert('Please enter a cocktail name.');return;}
+  if(!name){await alertModal('Please enter a cocktail name.');return;}
   const existingC=editCId?state.cocktails.find(x=>x.id===editCId):null;
   let total=parseFloat(document.getElementById('cf-ice')?.value)||0;
   total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
@@ -4252,7 +4272,7 @@ function saveDeliveryPreset(cost,bill){
   if(!state.profile.deliveryPresets) state.profile.deliveryPresets=[];
   state.profile.deliveryPresets.push({name,cost:parseFloat(cost)||0,bill:parseFloat(bill)||0});
   save();
-  alert('Preset sauvegardé !');
+  await alertModal('Preset sauvegardé !');
 }
 function setDelivery(amount){
   const cost=document.getElementById('ef-delivery');
@@ -4601,7 +4621,7 @@ function epSelect(i,productType,brand,unit,costPerUnit,qty){
   setTimeout(()=>{const m=document.getElementById('ep-mult-'+i);if(m){m.focus();m.select();}},50);
 }
 
-function addExtraProd(){
+async function addExtraProd(){
   window._evExtraProducts=window._evExtraProducts||[];
   window._evExtraProducts.push({name:'',productType:'',brand:'',qty:0,unit:'pc'});
   _renderExtraProds();
@@ -4614,9 +4634,9 @@ function removeExtraProd(i){
   _renderExtraProds();
 }
 
-function saveEv(){
+async function saveEv(){
   const name=document.getElementById('ef-name')?.value.trim();
-  if(!name){alert('Please enter an event name.');return;}
+  if(!name){await alertModal('Please enter an event name.');return;}
   const sel=document.getElementById('ev-content')?._sel||{};
   const existingEv=editEvId?state.events.find(x=>x.id===editEvId):null;
   const _clientId=parseInt(document.getElementById('ev-content')?._clientId||0)||existingEv?.clientId||null;
@@ -4800,7 +4820,7 @@ function openMenu(evId){
   body+=`<div class="footer"><span>${items.length} cocktail(s) — ${now}</span><span>Prices HT & TTC shown</span></div></div>
   <button class="pbtn" onclick="window.print()"> Print / Save as PDF</button>`;
   const w=window.open('','_blank');
-  if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
+  if(!w){await alertModal('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${escHtml(ev.name||'Menu')}</title>${css}</head><body>${body}</body></html>`);
   w.document.close();
 }
@@ -4820,7 +4840,7 @@ function buildTmpEv(){
 // ════════════════════════════════════════════════════════
 // SHOPPING LIST
 // ════════════════════════════════════════════════════════
-function renderShopEvSel(){
+async function renderShopEvSel(){
   const sel=document.getElementById('shop-ev-sel');
   sel.innerHTML='<option value="">— Select an event —</option>'+
     state.events.map(ev=>`<option value="${ev.id}">${ev.name}${ev.date?' — '+ev.date:''}</option>`).join('');
@@ -4836,9 +4856,9 @@ function shopSendOrder(ikey,label,email,supplier,code){
   window.location.href=`mailto:${email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-function openIceOrderModal(msgKey){
+async function openIceOrderModal(msgKey){
   const cache=(window._iceOrderMsgs||{})[msgKey];
-  if(!cache){alert('Recharge la shopping list d\'abord.');return;}
+  if(!cache){await alertModal('Recharge la shopping list d\'abord.');return;}
   const {phone, supplier:supplierName, msg:defaultMsg, ev, iceName, totalKg, conv}=cache;
   const saved=localStorage.getItem('bcp_msg_'+msgKey);
   const msg=saved||defaultMsg;
@@ -4946,12 +4966,12 @@ function buildShoppingText(ev){
   return msg;
 }
 
-function printShoppingPDF(){
+async function printShoppingPDF(){
   const evId=parseInt(document.getElementById('shop-ev-sel')?.value||0);
   const ev=state.events.find(x=>x.id===evId);
-  if(!ev){alert('Sélectionne un événement.');return;}
+  if(!ev){await alertModal('Sélectionne un événement.');return;}
   const w=window.open('','_blank');
-  if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
+  if(!w){await alertModal('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
   const content=document.getElementById('shop-content')?.innerHTML||'';
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
   <title>Courses — ${ev.name}</title>
@@ -4978,10 +4998,10 @@ function printShoppingPDF(){
   w.document.close();
 }
 
-function shareShoppingWA(){
+async function shareShoppingWA(){
   const evId=parseInt(document.getElementById('shop-ev-sel')?.value||0);
   const ev=state.events.find(x=>x.id===evId);
-  if(!ev){alert('Sélectionne un événement.');return;}
+  if(!ev){await alertModal('Sélectionne un événement.');return;}
   const msg=buildShoppingText(ev);
   const encoded=encodeURIComponent(msg);
 
@@ -5383,7 +5403,7 @@ function prestSelectClient(clientId, evId){
   renderPrestation();
 }
 
-function prestCancelClientForm(){
+async function prestCancelClientForm(){
   document.getElementById('prest-client-search').value='';
   document.getElementById('prest-client-form').style.display='none';
 }
@@ -5396,7 +5416,7 @@ function prestCreateClient(evId){
   const address=(document.getElementById('prest-client-address')?.value||'').trim();
   const notes=(document.getElementById('prest-client-notes')?.value||'').trim();
   
-  if(!name){alert('Nom requis');return;}
+  if(!name){await alertModal('Nom requis');return;}
   
   // Check duplicate by email or phone
   let existing=state.clients.find(c=>
@@ -5404,7 +5424,7 @@ function prestCreateClient(evId){
     (phone && c.phone===phone)
   );
   if(existing){
-    alert(`✓ Client "${existing.name}" existe déjà`);
+    await alertModal(`✓ Client "${existing.name}" existe déjà`);
     prestSelectClient(existing.id, evId);
     return;
   }
@@ -5532,7 +5552,7 @@ function markStaffDispo(evId,sid,dispo){
 function sendDispoWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
-  if(!ev||!s||!s.phone){alert('Numero manquant pour ce staff.');return;}
+  if(!ev||!s||!s.phone){await alertModal('Numero manquant pour ce staff.');return;}
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
   let arr='?',dep='?';
@@ -5547,7 +5567,7 @@ function sendDispoWA(evId,sid){
 function sendBriefWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
-  if(!ev||!s||!s.phone){alert('Numero manquant pour ce staff.');return;}
+  if(!ev||!s||!s.phone){await alertModal('Numero manquant pour ce staff.');return;}
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
   const tenue=(ev.dressCodes||[]).map(dcId=>{const dc=state.dressCodes.find(x=>x.id===dcId);return dc?dc.name:dcId;}).join(', ')||'Non précisée';
@@ -5606,7 +5626,7 @@ function sendBriefWA(evId,sid){
 function sendBriefFromClient(evId){
   const ev=state.events.find(x=>x.id===evId);
   const client=state.clients.find(x=>x.id===ev?.clientId);
-  if(!ev||!client||!client.whatsapp){alert('WhatsApp du client manquant');return;}
+  if(!ev||!client||!client.whatsapp){await alertModal('WhatsApp du client manquant');return;}
   
   const staffNames=(ev.assignedStaff||[]).map(sid=>{
     const s=state.staffItems.find(x=>x.id===sid);
@@ -5994,8 +6014,8 @@ async function sendQuoteToClient(evId,devisNum){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   const email=ev?.contactEmail||ev?.email||'';
   const contactName=ev?.contact||ev?.clientName||(ev?.clientId&&state.clients.find(x=>x.id===ev.clientId)?.name)||'';
-  if(!ev||!email){alert('Aucun email trouvé sur cet événement. Renseigne le dans la fiche événement.');return;}
-  if(!state.profile?.sendgridApiKey){alert('Configure ta clé SendGrid dans Profil.');return;}
+  if(!ev||!email){await alertModal('Aucun email trouvé sur cet événement. Renseigne le dans la fiche événement.');return;}
+  if(!state.profile?.sendgridApiKey){await alertModal('Configure ta clé SendGrid dans Profil.');return;}
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);
@@ -6021,8 +6041,8 @@ async function sendQuoteToClient(evId,devisNum){
     });
     const res=await r.json();
     if(res.success){toast('Devis envoyé à '+email);}
-    else{alert('Erreur: '+res.error);}
-  }catch(e){alert('Erreur: '+e.message);}
+    else{await alertModal('Erreur: '+res.error);}
+  }catch(e){await alertModal('Erreur: '+e.message);}
 }
 
 function buildDevisHTML(ev,devisNum){
@@ -6182,9 +6202,9 @@ function generateDevisNumber(ev){
   save();
   return ev.devisNum;
 }
-function generateDevis(){
+async function generateDevis(){
   const evId=parseInt(document.getElementById('prest-ev-sel')?.value||0);
-  if(!evId){alert('Sélectionne un événement.');return;}
+  if(!evId){await alertModal('Sélectionne un événement.');return;}
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   updEvCalc();
@@ -6201,11 +6221,11 @@ function generateDevis(){
   if(w){w.document.write(withBtns);w.document.close();w.focus();}
 }
 
-function printPrestation(){
+async function printPrestation(){
   const evId=parseInt(document.getElementById('prest-ev-sel').value);
-  const ev=state.events.find(x=>x.id===evId);if(!ev){alert('Sélectionne un événement.');return;}
+  const ev=state.events.find(x=>x.id===evId);if(!ev){await alertModal('Sélectionne un événement.');return;}
   const w=window.open('','_blank');
-  if(!w){alert('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
+  if(!w){await alertModal('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Fiche — ${escHtml(ev.name)}</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>*{box-sizing:border-box;margin:0;padding:0}body{background:#f5f4f0;padding:2rem;font-family:'DM Sans',sans-serif}
@@ -6292,7 +6312,7 @@ function waPhone(p){
 }
 
 function testSendContact(id){
-  const c=state.contacts.find(x=>x.id===id);if(!c?.phone){alert('Entre un numéro de téléphone.');return;}
+  const c=state.contacts.find(x=>x.id===id);if(!c?.phone){await alertModal('Entre un numéro de téléphone.');return;}
   const phone=waPhone(c.phone);
   const msg=encodeURIComponent(` Bonjour ${c.name||''} — test envoi BAR OPS by Intelligence Spotlighted `);
   window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
@@ -6302,19 +6322,19 @@ function testSendContact(id){
 // DRESS CODES
 // ════════════════════════════════════════════════════════
 function addDressCode(name,desc){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   if(state.dressCodes.find(d=>d.name===name))return;
   state.dressCodes.push({id:Date.now(),name,desc,active:true});
   save();renderDressCodes();
 }
-function addDressCodeModal(){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
+async function addDressCodeModal(){
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   state.dressCodes.push({id:Date.now(),name:'',desc:'',active:true});
   save();renderDressCodes();
 }
 
-function addDressCodeCustom(){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
+async function addDressCodeCustom(){
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   const name=document.getElementById('dc-custom-name')?.value.trim()||'Nouvelle tenue';
   const desc=document.getElementById('dc-custom-desc')?.value.trim();
   state.dressCodes.push({id:Date.now(),name,desc:desc||'',active:true});
@@ -6429,9 +6449,9 @@ function buildShareMsg(ev){
   return msg;
 }
 
-function sharePrestation(){
+async function sharePrestation(){
   const evId=parseInt(document.getElementById('prest-ev-sel').value);
-  const ev=state.events.find(x=>x.id===evId);if(!ev){alert('Sélectionne un événement.');return;}
+  const ev=state.events.find(x=>x.id===evId);if(!ev){await alertModal('Sélectionne un événement.');return;}
   const msg=buildShareMsg(ev);
   const encoded=encodeURIComponent(msg);
 
@@ -6484,7 +6504,7 @@ function sendToSelected(btn){
   
   // Get checked contacts
   const checked=Array.from(document.querySelectorAll('#staff-list input[type="checkbox"]:checked'));
-  if(!checked.length){alert('Sélectionne au moins un contact.');return;}
+  if(!checked.length){await alertModal('Sélectionne au moins un contact.');return;}
   
   // Loop & send
   checked.forEach((c,i)=>{
@@ -6569,8 +6589,8 @@ function scrollToPlanEvent(dateStr){
 // ════════════════════════════════════════════════════════
 // CLIENTS
 // ════════════════════════════════════════════════════════
-function addClient(){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux clients.');return;}
+async function addClient(){
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux clients.');return;}
   state.clients.push({id:Date.now(),name:'',company:'',email:'',phone:'',address:'',notes:'',events:[]});
   save();renderClients();
 }
@@ -6779,8 +6799,8 @@ function renderSuppliers(){
   }).join('')}</div>`;
 }
 
-function addSupplier(){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux fournisseurs.');return;}
+async function addSupplier(){
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux fournisseurs.');return;}
   const cats=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Glassware','Ice','Autre'];
   const modal=document.createElement('div');
   modal.id='supplier-modal';
@@ -6839,7 +6859,7 @@ function editSupplier(id){
 
 function saveSupplier(id){
   const name=document.getElementById('sp-name')?.value.trim();
-  if(!name)return alert('Nom requis');
+  if(!name)return await alertModal('Nom requis');
   const categories=[...document.querySelectorAll('.sp-cat-chk:checked')].map(el=>el.value);
   const sup={
     id:id||Date.now(),
@@ -6914,7 +6934,7 @@ function showDresscodeModal(evId){
 function showAvailabilityModal(evId){
   const ev=state.events.find(x=>x.id===evId)||{};
   const date=ev.date||document.getElementById('ef-date')?.value||'';
-  if(!date){alert('Définis d\'abord la date de l\'événement.');return;}
+  if(!date){await alertModal('Définis d\'abord la date de l\'événement.');return;}
   const fmtDate=new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'});
 
   const rows=state.staffItems.map(s=>{
@@ -7029,7 +7049,7 @@ function downloadEventPDF(evId){
   element.innerHTML=html;
   const opt={margin:10,filename:`${ev.name}-recap.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}};
   if(window.html2pdf) window.html2pdf().set(opt).from(element).save();
-  else alert('PDF library not loaded. Using HTML view instead.'),openEventHTML(evId);
+  else await alertModal('PDF library not loaded. Using HTML view instead.'),openEventHTML(evId);
 }
 
 function openEventHTML(evId){
@@ -8475,8 +8495,8 @@ function toggleCoursesDone(evId){
 // ════════════════════════════════════════════════════════
 // BAR & MATÉRIEL
 // ════════════════════════════════════════════════════════
-function addBarItem(){
-  if(window._isDemo){alert('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux bars.');return;}
+async function addBarItem(){
+  if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux bars.');return;}
   if(!state.barItems) state.barItems=[];
   state.barItems.push({id:Date.now(),name:'',brand:'',lengthM:0,priceHT:0,color:'',theme:'',style:'',transport:'',setup:'',notes:'',available:true,photo:''});
   save();renderBarItems();
