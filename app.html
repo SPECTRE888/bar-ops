@@ -5251,6 +5251,21 @@ function onShopStockOkChange(checkbox){
   allocateStock(evId,itemKey,qty,unit);
 }
 
+async function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail,supplierName,supplierCode){
+  const qtyNum=parseInt(qty||0);
+  if(qtyNum<=0){await alertModal('Quantité invalide');return;}
+  if(!state.supplierBaskets) state.supplierBaskets={};
+  const supplierKey=supplierEmail||supplierName||'unknown';
+  if(!state.supplierBaskets[supplierKey]){
+    state.supplierBaskets[supplierKey]={supplier:supplierName,email:supplierEmail,code:supplierCode,items:[]};
+  }
+  state.supplierBaskets[supplierKey].items.push({
+    evId,productType,brand,unit,qty:qtyNum,supplierCode,timestamp:Date.now()
+  });
+  save();
+  await alertModal(`✓ Ajouté au panier ${supplierName||supplierEmail}`);
+}
+
 function renderShopping(){
   const savedVal=document.getElementById('shop-ev-sel')?.value;
   renderShopEvSel();
@@ -5324,9 +5339,9 @@ function renderShopping(){
       <th style="padding:10px;text-align:right;font-weight:500">Prix HT</th>
       <th style="padding:10px;text-align:center;font-weight:500">Besoins Presta</th>
       <th style="padding:10px;text-align:center;font-weight:500">Stock Dispo</th>
-      <th style="padding:10px;text-align:center;font-weight:500">Qty Cmd</th>
       <th style="padding:10px;text-align:center;font-weight:500">Stock OK</th>
-      <th style="padding:10px;text-align:right;font-weight:500">Cmd</th>
+      <th style="padding:10px;text-align:center;font-weight:500">Qty Cmd</th>
+      <th style="padding:10px;text-align:center;font-weight:500"></th>
     </tr>
     </thead>
     <tbody>`;
@@ -5334,7 +5349,6 @@ function renderShopping(){
     const allocQty=item.allocQty;
     const stockOkId='stock_ok_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
     const qtyInputId='order_qty_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
-    const cmdKey='shop_order_'+item.itemKey.replace(/[^a-z0-9]/gi,'_');
     const pQty=item.prod?.qty&&item.prod?.unit?Math.ceil(item.total/item.prod.qty):Math.ceil(item.total);
     const pUnit=item.prod?.qty&&item.prod?.unit?(['cl','ml','L'].includes(item.prod.unit)?'btl':'unit'):'unit';
     const availQty=item.prod?.qty&&item.prod?.unit?Math.ceil(item.avail.available/item.prod.qty):item.avail.available;
@@ -5344,13 +5358,13 @@ function renderShopping(){
       <td style="padding:10px"><strong>${item.brand}</strong>${item.supplierCode?` <span style="color:var(--text3);font-size:10px">#${item.supplierCode}</span>`:''}</td>
       <td style="padding:10px;text-align:right">${item.costTotal.toFixed(2)}€</td>
       <td style="padding:10px;text-align:center;font-weight:500">${pQty} ${pUnit}</td>
-      <td style="padding:10px;text-align:center;color:${availQty>pQty?'var(--gold)':availQty>0?'var(--text2)':'var(--red)'};font-weight:500">${availQty}/${availTotal} ${pUnit}</td>
-      <td style="padding:10px;text-align:center"><input type="number" id="${qtyInputId}" value="${pQty}" min="1" style="width:50px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
+      <td style="padding:10px;text-align:center;color:${availQty>pQty?'var(--gold)':availQty>0?'var(--text2)':'var(--red)'};font-weight:500">${pQty}/${availQty} ${pUnit}</td>
       <td style="padding:10px;text-align:center">
         <input type="checkbox" id="${stockOkId}" data-ev="${evId}" data-item="${item.itemKey}" data-unit="${item.unit}" data-input="${qtyInputId}" ${allocQty>0?'checked':''} onchange="onShopStockOkChange(this)" style="cursor:pointer;width:18px;height:18px"/>
         ${allocQty>0?`<div style="font-size:10px;color:var(--text2);margin-top:2px">${allocQty} ${item.unit}</div>`:''}
       </td>
-      <td style="padding:10px;text-align:right"><button class="btn-profile" onclick="openShopOrderModal('${cmdKey}','${qtyInputId}','${item.brand.replace(/'/g,"&apos;")}','${item.supplierEmail}','${item.supplierName.replace(/'/g,"&apos;")}','${item.supplierCode}')" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap">→</button></td>
+      <td style="padding:10px;text-align:center"><input type="number" id="${qtyInputId}" value="${pQty}" min="1" style="width:50px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
+      <td style="padding:10px;text-align:center"><button class="btn-profile" onclick="addToSupplierBasket(${evId},'${item.productType}','${item.brand.replace(/'/g,"&apos;")}','${item.unit}',document.getElementById('${qtyInputId}').value,'${item.supplierEmail}','${item.supplierName.replace(/'/g,"&apos;")}','${item.supplierCode}')" style="padding:6px 12px;font-size:13px;margin:0;white-space:nowrap;background:var(--gold);color:#0d0d0d;border:none;border-radius:6px;cursor:pointer;font-weight:500">+</button></td>
     </tr>`;
   });
   html+=`</tbody></table>
