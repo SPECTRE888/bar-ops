@@ -5303,7 +5303,7 @@ function renderShopping(){
       if(cat!=='Ice'){
         cmdBtn=`<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px">
           <input type="number" id="${ikey}" value="${defaultQty}" min="1" style="width:52px;padding:2px 5px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center" onclick="event.stopPropagation()"/>
-          <button onclick="shopSendOrder('${ikey}','${label.replace(/'/g,"\\'")}','${supplierEmail}','${supplierName.replace(/'/g,"\\'")}','${supplierCode}')" style="padding:2px 9px;font-size:10px;background:var(--gold);color:#080808;border:none;border-radius:3px;cursor:pointer;font-weight:500;white-space:nowrap">Commander</button>
+          <button class="btn-profile" onclick="shopSendOrder('${ikey}','${label.replace(/'/g,"\\'")}','${supplierEmail}','${supplierName.replace(/'/g,"\\'")}','${supplierCode}')" style="padding:8px 14px;font-size:11px;margin:0;flex:0;white-space:nowrap">Commander</button>
         </span>`;
       }
       html+=`<div class="shop-item"><span>${label}${supplierCode?`<span style="font-size:9px;color:var(--text3);margin-left:6px;font-family:monospace">#${supplierCode}</span>`:''}</span>
