@@ -192,6 +192,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn-danger:hover{border-color:var(--red);background:rgba(196,112,112,0.14)}
 .btn-logout{border-color:var(--border2);color:var(--text3);font-size:11px}
 .btn-logout:hover{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
+.btn-profile{padding:10px 16px;font-size:11px;border-radius:5px;border:1px solid var(--gold-border);color:var(--text2);background:transparent;font-weight:500;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;justify-content:center}
+.btn-profile:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+.btn-profile.btn-danger{border-color:var(--red);color:var(--red);background:transparent}
+.btn-profile.btn-danger:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
 
 /* ── PRODUCT TABLE ── */
 .ptable{width:100%;border-collapse:collapse}
@@ -3705,9 +3709,9 @@ function showEvList(){
         <div>${tot} cocktails</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1">Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1">Courses</button>
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Courses</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -3744,9 +3748,9 @@ function filterEvList(){
         <div>${tot} cocktails</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1">Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1">Courses</button>
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Courses</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -7714,10 +7718,10 @@ function renderProfile(){
             </div>
           </div>
           <div style="display:flex;gap:8px;border-top:1px solid var(--border);padding-top:12px">
-            <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(true)" style="flex:1;padding:8px 12px;border-color:var(--gold-border);color:var(--text2)" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--gold-border)';this.style.color='var(--text2)';this.style.background='transparent'">Modifier</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportData()" style="flex:1;padding:8px 12px;border-color:var(--gold-border);color:var(--text2)" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--gold-border)';this.style.color='var(--text2)';this.style.background='transparent'">Exporter</button>
-            <button class="btn btn-ghost btn-sm" onclick="confirmResetData()" style="flex:1;padding:8px 12px;border-color:var(--gold-border);color:var(--text2)" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--gold-border)';this.style.color='var(--text2)';this.style.background='transparent'">Reinit</button>
-            <button class="btn btn-danger btn-sm" onclick="confirmDeleteAccount()" style="flex:1;padding:8px 12px;border-color:var(--red);color:var(--red)" onmouseover="this.style.background='var(--red-bg)';this.style.borderColor='var(--red)'" onmouseout="this.style.background='transparent';this.style.borderColor='var(--border2)'">Supprimer</button>
+            <button class="btn-profile" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
+            <button class="btn-profile" onclick="exportData()" style="flex:1">Exporter</button>
+            <button class="btn-profile" onclick="confirmResetData()" style="flex:1">Reinit</button>
+            <button class="btn-profile btn-danger" onclick="confirmDeleteAccount()" style="flex:1">Supprimer</button>
           </div>
         </div>
         <div id="prof-bar-edit" style="display:none;flex-direction:column;gap:8px">
