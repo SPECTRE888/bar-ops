@@ -2741,6 +2741,10 @@ function showCForm(c){
             <option value="10"${(c.vat===undefined||c.vat===10||c.vat===null)?'selected':''}>10%</option>
             <option value="15"${(c.vat===15)?'selected':''}>15%</option>
           </select></div>
+          <div style="background:var(--surface2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">HT Final</div>
+            <div style="font-size:16px;font-weight:600;color:var(--gold)" id="r-ht-final">—</div>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
           <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
@@ -3625,6 +3629,7 @@ function updCRecap(){
   const prixVente=parseFloat(document.getElementById('cf-pht')?.value)||0;
   const loss=(parseFloat(document.getElementById('cf-vat')?.value)||10)/100;
   const ht=prixVente*(1+loss);
+  const htFinalEl=document.getElementById('r-ht-final');if(htFinalEl)htFinalEl.textContent=prixVente>0?ht.toFixed(2)+'€':'—';
   if(prixVente>0&&total>0){
     const mg=prixVente-total,mgPct=mg/prixVente*100;
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
