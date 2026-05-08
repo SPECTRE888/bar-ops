@@ -8426,9 +8426,9 @@ function renderSuivi(){
             <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
               ${ev.paid?'✓ Prestation payée':'Prestation payée'}
             </button>
-            <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goPage('prestation',${ev.id})">Modifier</button>
-            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:var(--blue);color:white;border:1px solid var(--blue)" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:var(--gold);color:var(--text);border:1px solid var(--gold)" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
+            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:#5ab474;color:white;border:1px solid #5ab474;font-weight:600;border-radius:3px" onclick="goPage('prestation',${ev.id})">Modifier</button>
+            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:#6ba3e5;color:white;border:1px solid #6ba3e5;font-weight:600;border-radius:3px" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
+            <button class="btn btn-sm" style="flex:0;min-width:fit-content;background:#d4b87a;color:#080808;border:1px solid #d4b87a;font-weight:600;border-radius:3px" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
           </div>
         </div>`;
       })()}
@@ -8473,12 +8473,6 @@ function renderSuivi(){
         </div>`;
       })():''}
 
-      <!-- Quick actions -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px" class="no-print">
-        <button class="btn btn-sm btn-ghost" onclick="goToEventSuivi(${ev.id})"> Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')"> Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')"> Courses</button>
-      </div>
     </div>`;
   }).join('');
 }
