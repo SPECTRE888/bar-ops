@@ -5275,16 +5275,15 @@ function onShopStockOkChange(checkbox){
 function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail,supplierName,supplierCode){
   const qtyNum=parseInt(qty||0);
   if(qtyNum<=0){alertModal('Quantité invalide');return;}
-  if(!state.supplierBaskets) state.supplierBaskets={};
-  const supplierKey=supplierEmail||supplierName||'unknown';
-  if(!state.supplierBaskets[supplierKey]){
-    state.supplierBaskets[supplierKey]={supplier:supplierName,email:supplierEmail,code:supplierCode,items:[]};
-  }
-  state.supplierBaskets[supplierKey].items.push({
-    evId,productType,brand,unit,qty:qtyNum,supplierCode,timestamp:Date.now()
+  if(!state.orders) state.orders={};
+  const supplierKey=supplierName||supplierEmail||'Sans fournisseur';
+  if(!state.orders[supplierKey]) state.orders[supplierKey]=[];
+  state.orders[supplierKey].push({
+    name:productType,brand:brand||productType,code:supplierCode,unit,qty:qtyNum,evId,timestamp:Date.now()
   });
   save();
   alertModal(`✓ Ajouté au panier ${supplierName||supplierEmail}`);
+  renderSuppliers();
 }
 
 function renderShopping(){
