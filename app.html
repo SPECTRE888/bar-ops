@@ -8391,18 +8391,20 @@ function renderSuivi(){
         const defautAcompte=state.profile?.acomptePercent?total*state.profile.acomptePercent/100:0;
         const acompte=ev.acompte>0?ev.acompte:defautAcompte;
         const acompteRecu=ev.acompte>0;
-        const reste=Math.max(0,total-acompte);
+        const reste=acompteRecu?Math.max(0,total-acompte):total;
 
         return`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
           <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500">Paiement</div>
-          <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px">
+          <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
             <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border)">
               <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${total.toFixed(0)}€</div>
               <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Total HT</div>
             </div>
             <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border)">
-              <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${acompte.toFixed(0)}€</div>
-              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Acompte</div>
+              <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
+                style="width:100%;padding:0;font-size:13px;font-weight:600;height:auto;border:none;text-align:center;color:var(--text)"
+                onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()" onkeydown="if(event.key==='Enter')event.target.blur()"/>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:2px">€ Acompte</div>
             </div>
             <div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border);cursor:pointer" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});renderSuivi()">
               <div style="font-size:15px;color:${acompteRecu?'var(--green)':'var(--text3)'};margin-bottom:3px">${acompteRecu?'✓':'◇'}</div>
@@ -8413,22 +8415,8 @@ function renderSuivi(){
               <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Prestation payée</div>
             </div>
             <div style="flex:1;min-width:0;text-align:center;padding:8px 4px">
-              <div style="font-size:13px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};margin-bottom:3px">${ev.paid?'✓':reste>0?reste.toFixed(0):'0'}${!ev.paid&&reste>0?'€':''}</div>
+              <div style="font-size:13px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};margin-bottom:3px">${ev.paid?'✓':reste.toFixed(0)}€</div>
               <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">${ev.paid?'Payée':'À encaisser'}</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <div style="flex:1">
-              <label style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:3px">Montant acompte</label>
-              <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
-                style="width:100%;padding:6px 8px;font-size:11px;height:28px;border:1px solid var(--border);border-radius:4px"
-                onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
-            </div>
-            <div style="flex:1">
-              <label style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:3px">Date paiement</label>
-              <input type="date" value="${ev.acompteDate||''}"
-                style="width:100%;padding:6px 8px;font-size:11px;height:28px;border:1px solid var(--border);border-radius:4px"
-                onchange="updEvField(${ev.id},'acompteDate',this.value)"/>
             </div>
           </div>
         </div>`;
