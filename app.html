@@ -3237,10 +3237,13 @@ async function applySuggestedPrice(){
 // DASHBOARD
 // ════════════════════════════════════════════════════════
 function goToEventSuivi(eventId){
-  goPage('events');
+  goPage('suivi');
   setTimeout(()=>{
-    document.getElementById('prest-ev-sel').value=eventId;
-    renderPrestation();
+    const ev=state.events.find(x=>x.id===eventId);
+    if(ev){
+      document.getElementById('suivi-search').value=ev.name;
+      filterSuivi();
+    }
   },50);
 }
 
