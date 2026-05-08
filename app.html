@@ -4850,14 +4850,53 @@ async function renderShopEvSel(){
     state.events.map(ev=>`<option value="${ev.id}">${ev.name}${ev.date?' — '+ev.date:''}</option>`).join('');
 }
 
-// Ice bag conversion: name-based detection
-function shopSendOrder(ikey,label,email,supplier,code){
-  const qty=document.getElementById(ikey)?.value||'1';
+// Shop order modal
+async function openShopOrderModal(orderKey,ikey,label,email,supplier,code){
+  const qty=parseInt(document.getElementById(ikey)?.value||'1');
   const ev=state.events.find(x=>x.id===parseInt(document.getElementById('shop-ev-sel').value));
   const evName=ev?ev.name:'';
   const subject=`Commande — ${label}${code?' ['+code+']':''}`;
-  const body=`Bonjour${supplier?' '+supplier:''},\n\nNous souhaitons passer commande pour l'événement : ${evName}\n\nProduit : ${label}\nRéférence fournisseur : ${code||'—'}\nQuantité : ${qty}\n\nMerci de confirmer la disponibilité et les délais.\n\nCordialement`;
-  window.location.href=`mailto:${email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const defaultBody=`Bonjour${supplier?' '+supplier:''},\n\nNous souhaitons passer commande pour l'événement : ${evName}\n\nProduit : ${label}\nRéférence fournisseur : ${code||'—'}\nQuantité : ${qty}\n\nMerci de confirmer la disponibilité et les délais.\n\nCordialement`;
+  const savedBody=localStorage.getItem('shop_msg_'+orderKey)||defaultBody;
+
+  const modal=document.createElement('div');
+  modal.id='shop-order-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:560px;width:92%;max-height:88vh;overflow-y:auto">
+    <div style="font-size:15px;font-weight:500;margin-bottom:4px;color:var(--text)">Commande${supplier?' — '+supplier:''}</div>
+    <div class="txs tm" style="margin-bottom:14px">Produit: <strong>${label}</strong>${code?` [${code}]`:''} • Qty: <strong>${qty}</strong></div>
+
+    <div class="field" style="margin-bottom:14px">
+      <label style="font-size:11px;color:var(--text3);margin-bottom:4px;display:block">Email fournisseur</label>
+      <div style="font-size:13px;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border2);color:var(--text);font-family:monospace;word-break:break-all">${email||'(Aucun email configuré)'}</div>
+    </div>
+
+    <textarea id="shop-order-txt" rows="11" style="width:100%;font-size:12px;line-height:1.7;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical">${savedBody}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
+      <button onclick="sendShopOrder('${orderKey}','${email}')"
+        style="padding:9px 18px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500"> Envoyer Email</button>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('shop-order-txt').value);this.textContent=' Copié!'"
+        style="padding:9px 14px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500"> Copier</button>
+      <button onclick="saveShopOrderDraft('${orderKey}');this.textContent=' Sauvegardé!'"
+        style="padding:9px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:8px;font-size:12px;cursor:pointer"> Sauvegarder</button>
+      <button onclick="document.getElementById('shop-order-modal').remove()"
+        style="margin-left:auto;padding:9px 14px;background:none;border:1px solid var(--border2);border-radius:8px;font-size:12px;cursor:pointer;color:var(--text2)">Fermer</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveShopOrderDraft(orderKey){
+  const txt=document.getElementById('shop-order-txt')?.value||'';
+  localStorage.setItem('shop_msg_'+orderKey,txt);
+}
+
+function sendShopOrder(orderKey,email){
+  saveShopOrderDraft(orderKey);
+  const txt=document.getElementById('shop-order-txt')?.value||'';
+  const subject=document.querySelector('#shop-order-modal .txs')?.textContent?.split('•')[0]?.trim()||'Commande';
+  window.location.href=`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(txt)}`;
+  document.getElementById('shop-order-modal').remove();
 }
 
 async function openIceOrderModal(msgKey){
@@ -5166,6 +5205,32 @@ function toRealUnits(productType, brand, totalG){
   return null;
 }
 
+function getAvailableStock(productType,brand,unit){
+  const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
+  if(!prod) return {stock:0,reserved:0,available:0};
+  let reserved=0;
+  (state.events||[]).forEach(ev=>{
+    if(ev.status==='historique'||ev.paid) return;
+    const evTotalCktl=evTot(ev);
+    (ev.cocktails||[]).forEach(cfg=>{
+      const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
+      const qty=cfg.qty||Math.ceil(evTotalCktl*(cfg.pct||0)/100);
+      [...(c.ingredients||[]),...(c.consumables||[])].forEach(ing=>{
+        if(ing.productType===productType&&(!brand||ing.brand===brand)){
+          let reservedQty=ing.qty*qty;
+          if(prod.unit==='L'&&unit==='cl') reservedQty/=100;
+          else if(prod.unit==='cl'&&unit==='ml') reservedQty/=10;
+          else if(prod.unit==='ml'&&unit==='cl') reservedQty*=10;
+          else if(prod.unit==='kg'&&unit==='g') reservedQty/=1000;
+          reserved+=reservedQty;
+        }
+      });
+    });
+  });
+  const available=Math.max(0,prod.stock-reserved);
+  return {stock:prod.stock,reserved:Math.round(reserved*10)/10,available:Math.round(available*10)/10};
+}
+
 function renderShopping(){
   const savedVal=document.getElementById('shop-ev-sel')?.value;
   renderShopEvSel();
@@ -5299,16 +5364,28 @@ function renderShopping(){
       const supplierCode=prod?.supplierCode||'';
       const defaultQty=item.pQty||Math.ceil(item.total);
       const ikey='order_'+cat+'_'+label.replace(/[^a-z0-9]/gi,'_');
+
+      // Stock availability
+      let stockDisplay='';
+      if(cat!=='Ice'&&cat!=='Glassware'){
+        const avail=getAvailableStock(item.productType,item.brand,item.unit);
+        if(avail.stock>0){
+          const statusColor=avail.available>item.total?'var(--gold)':avail.available>0?'var(--text2)':'var(--red)';
+          stockDisplay=`<span style="font-size:10px;color:${statusColor};margin-left:6px">Stock: ${avail.available}/${avail.stock} ${item.unit}</span>`;
+        }
+      }
+
       let cmdBtn='';
       if(cat!=='Ice'){
+        const orderKey='shop_order_'+ikey;
         cmdBtn=`<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px">
           <input type="number" id="${ikey}" value="${defaultQty}" min="1" style="width:52px;padding:2px 5px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center" onclick="event.stopPropagation()"/>
-          <button class="btn-profile" onclick="shopSendOrder('${ikey}','${label.replace(/'/g,"\\'")}','${supplierEmail}','${supplierName.replace(/'/g,"\\'")}','${supplierCode}')" style="padding:8px 14px;font-size:11px;margin:0;flex:0;white-space:nowrap">Commander</button>
+          <button class="btn-profile" onclick="openShopOrderModal('${orderKey}','${ikey}','${label.replace(/'/g,"\\'")}','${supplierEmail}','${supplierName.replace(/'/g,"\\'")}','${supplierCode}')" style="padding:8px 14px;font-size:11px;margin:0;flex:0;white-space:nowrap">Commander</button>
         </span>`;
       }
       html+=`<div class="shop-item"><span>${label}${supplierCode?`<span style="font-size:9px;color:var(--text3);margin-left:6px;font-family:monospace">#${supplierCode}</span>`:''}</span>
         <span class="flex-g">
-          <span class="ts tm">${qtyDisplay}${convertHint}</span>
+          <span class="ts tm">${qtyDisplay}${stockDisplay}${convertHint}</span>
           ${bagDisplay?`<span class="shop-qty">${bagDisplay}</span>`:''}
           <span class="txs tm">${item.costTotal.toFixed(2)}€ HT</span>
           ${cmdBtn}
