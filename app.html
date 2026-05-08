@@ -1908,7 +1908,7 @@ async function doLogout(){
   }
 }
 
-function goPage(p){
+function goPage(p,_evId){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   const pageEl=document.getElementById('page-'+p);
@@ -1932,10 +1932,16 @@ function goPage(p){
   else if(p==='prestation') {
     renderPrestEvSel();
     const sel=document.getElementById('prest-ev-sel');
-    if(sel && sel.children.length>1){
-      sel.value=sel.children[1].value;
-    }
+    if(_evId) sel.value=String(_evId);
+    else if(sel && sel.children.length>1) sel.value=sel.children[1].value;
     renderPrestation();
+  }
+  else if(p==='shopping'){
+    renderShopEvSel();
+    const sSel=document.getElementById('shop-ev-sel');
+    if(_evId) sSel.value=String(_evId);
+    else if(sSel && sSel.children.length>1) sSel.value=sSel.children[1].value;
+    renderShopping();
   }
   else if(p==='cocktails') showCList();
   else if(p==='events') showEvList();
@@ -3758,19 +3764,9 @@ function filterEvList(){
 
 function goEvTab(evId, tab){
   if(tab==='prestation'){
-    goPage('prestation');
-    setTimeout(()=>{
-      renderPrestEvSel();
-      const sel=document.getElementById('prest-ev-sel');
-      if(sel){sel.value=evId;}
-      renderPrestation();
-    },50);
+    goPage('prestation', evId);
   } else if(tab==='shopping'){
-    goPage('shopping');
-    setTimeout(()=>{
-      const sel=document.getElementById('shop-ev-sel');
-      if(sel){sel.value=evId;renderShopping();}
-    },50);
+    goPage('shopping', evId);
   }
 }
 
