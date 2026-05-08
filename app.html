@@ -5256,8 +5256,24 @@ function onShopStockOkChange(checkbox){
   const itemKey=checkbox.dataset.item;
   const unit=checkbox.dataset.unit;
   const qtyInput=document.getElementById(checkbox.dataset.input);
-  const qty=checkbox.checked?parseInt(qtyInput?.value||0):0;
-  allocateStock(evId,itemKey,qty,unit);
+  if(checkbox.checked){
+    const qty=parseInt(qtyInput?.value||0);
+    const ev=state.events.find(x=>x.id===evId);
+    const p=itemKey.split('||');
+    const prod=state.products.find(x=>x.productType===p[0]&&(!p[1]||x.brand===p[1]||!x.brand));
+    const oldAlloc=(ev?.stockAllocations?.[itemKey]?.qty)||0;
+    // available = current prod.stock + what this event already had allocated (it will be replaced)
+    const available=(prod?.stock||0)+oldAlloc;
+    if(available<qty){
+      checkbox.checked=false;
+      alertModal(`Stock insuffisant pour "${p[0]} ${p[1]||''}".\nDisponible : ${available} — Besoin : ${qty}`);
+      return;
+    }
+    allocateStock(evId,itemKey,qty,unit);
+  } else {
+    // uncheck: restore exactly the stored allocation amount
+    allocateStock(evId,itemKey,0,unit);
+  }
 }
 
 function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail,supplierName,supplierCode){
