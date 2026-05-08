@@ -8381,44 +8381,57 @@ function renderSuivi(){
       </div>
 
       <!-- Paiement -->
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;font-weight:500">Paiement</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
-          <div class="field" style="margin:0">
-            <label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Acompte (€) ${state.profile?.acomptePercent?`<span style="color:var(--text3);font-weight:normal">(${state.profile.acomptePercent}% défaut)</span>`:''}</label>
-            <input type="number" value="${ev.acompte||''}" min="0" step="1" placeholder="0"
-              style="width:100px;padding:4px 8px;font-size:11px;height:24px"
-              onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
-          </div>
-          <div class="field" style="margin:0">
-            <label style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Date</label>
+      ${(()=>{
+        const rev=(ev.cocktails||[]).reduce((s,cfg)=>{
+          const c=state.cocktails.find(x=>x.id===cfg.id);
+          return s+(c?cfg.qty*(c.priceHT||0):0);
+        },0)+(ev.deliveryBillHT||0);
+        const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
+        const total=rev-remise;
+        const acompte=ev.acompte||0;
+        const acompteRecu=acompte>0;
+        const reste=Math.max(0,total-acompte);
+
+        return`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px;font-weight:500">Paiement</div>
+
+          <!-- Total + Date -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px">
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Total:</span>
+              <span style="font-size:18px;font-weight:600;color:var(--text)">${total.toFixed(0)}€ HT</span>
+            </div>
             <input type="date" value="${ev.acompteDate||''}"
-              style="padding:4px 8px;font-size:11px;height:24px"
+              style="padding:4px 8px;font-size:11px;height:24px;border:1px solid var(--border);border-radius:4px"
               onchange="updEvField(${ev.id},'acompteDate',this.value)"/>
           </div>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;margin-bottom:2px">
-            <input type="checkbox" ${ev.paid?'checked':''} style="width:auto;accent-color:var(--green)"
-              onchange="updEvField(${ev.id},'paid',this.checked);renderSuivi()"/>
-            <span>Payée</span>
-          </label>
-        </div>
-        ${(()=>{
-          const rev=(ev.cocktails||[]).reduce((s,cfg)=>{
-            const c=state.cocktails.find(x=>x.id===cfg.id);
-            return s+(c?cfg.qty*(c.priceHT||0):0);
-          },0)+(ev.deliveryBillHT||0);
-          const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-          const total=rev-remise;
-          const acompte=ev.acompte||0;
-          if(ev.paid) return `<div style="margin-top:6px;font-size:11px;color:var(--green);font-weight:500">✓ Prestation payée</div>`;
-          if(total>0&&acompte>0){
-            const reste=total-acompte;
-            return `<div style="margin-top:6px;font-size:11px;color:${reste>0?'var(--gold)':'var(--green)'};font-weight:500">${reste>0?'Reste à encaisser : '+reste.toFixed(0)+'€ HT':'✓ Soldé'}</div>`;
-          }
-          if(total>0) return `<div style="margin-top:6px;font-size:11px;color:var(--text3)">Total : ${total.toFixed(0)}€ HT — aucun paiement reçu</div>`;
-          return '';
-        })()}
-      </div>
+
+          <!-- Payment buttons -->
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px">
+              <span style="font-size:11px;color:var(--text3)">Acompte:</span>
+              <input type="number" value="${acompte||''}" min="0" step="1" placeholder="0"
+                style="width:60px;padding:4px 6px;font-size:11px;height:20px;border:1px solid var(--border);border-radius:3px"
+                onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);renderSuivi()"/>
+              <span style="font-size:11px;color:var(--text3)">€</span>
+            </div>
+            <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="font-size:10px;padding:6px 10px"
+              onclick="updEvField(${ev.id},'acompte',${ev.acompte||0});renderSuivi()">
+              ${acompteRecu?'✓ Acompte reçu':'Acompte reçu'}
+            </button>
+            <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="font-size:10px;padding:6px 10px"
+              onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
+              ${ev.paid?'✓ Prestation payée':'Prestation payée'}
+            </button>
+          </div>
+
+          <!-- Status -->
+          <div style="font-size:11px;font-weight:500;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'}">
+            ${ev.paid?'✓ Prestation complètement payée':reste>0?`Reste à encaisser: ${reste.toFixed(0)}€ HT`:'✓ Soldé'}
+          </div>
+        </div>`;
+      })()}
+
       ${isPast?(()=>{
         const ingredients={};
         (ev.cocktails||[]).forEach(cfg=>{
