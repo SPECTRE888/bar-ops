@@ -3709,9 +3709,9 @@ function showEvList(){
         <div>${tot} cocktails</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Courses</button>
+        <button class="btn btn-sm" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 12px;height:auto;border:1px solid var(--gold-border);color:var(--text2);background:transparent;border-radius:5px;font-size:10px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--gold-border)';this.style.color='var(--text2)';this.style.background='transparent'">Modifier</button>
+        <button class="btn btn-sm" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 12px;height:auto;border:1px solid var(--border);color:var(--text2);background:transparent;border-radius:5px;font-size:10px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'">Fiche</button>
+        <button class="btn btn-sm" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 12px;height:auto;border:1px solid var(--border);color:var(--text2);background:transparent;border-radius:5px;font-size:10px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'">Courses</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -3748,9 +3748,9 @@ function filterEvList(){
         <div>${tot} cocktails</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Courses</button>
+        <button class="btn btn-sm" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 12px;height:auto;border:1px solid var(--gold-border);color:var(--text2);background:transparent;border-radius:5px;font-size:10px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--gold-border)';this.style.color='var(--text2)';this.style.background='transparent'">Modifier</button>
+        <button class="btn btn-sm" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 12px;height:auto;border:1px solid var(--border);color:var(--text2);background:transparent;border-radius:5px;font-size:10px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'">Fiche</button>
+        <button class="btn btn-sm" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:8px 12px;height:auto;border:1px solid var(--border);color:var(--text2);background:transparent;border-radius:5px;font-size:10px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)';this.style.background='var(--gold-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='transparent'">Courses</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -7956,7 +7956,8 @@ async function changeEmail(){
 }
 
 
-function exportData(){
+async function exportData(){
+  await alertModal('Téléchargement de votre sauvegarde en cours...');
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
