@@ -3606,9 +3606,9 @@ function updCRecap(){
 
   const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
 
-  // Loss % calcule HT proposé = Coût × (1 + loss%)
+  // Loss % calcule HT proposé = Coût / (1 - loss%) — compense perte sur prix final
   const loss=(parseFloat(document.getElementById('cf-vat')?.value)||10)/100;
-  const proposedHT=total*(1+loss);
+  const proposedHT=loss<1?total/(1-loss):total;
   const htInput=document.getElementById('cf-pht');
   if(htInput && !htInput.matches(':focus')){
     htInput.value=proposedHT.toFixed(2);
