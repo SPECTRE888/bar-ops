@@ -3238,7 +3238,116 @@ async function applySuggestedPrice(){
 // ════════════════════════════════════════════════════════
 function goToEventSuivi(eventId){
   goPage('suivi');
-  // renderSuivi() called by goPage() automatically - displays detailed format
+  setTimeout(()=>showSingleEventSuivi(eventId),50);
+}
+
+function showSingleEventSuivi(eventId){
+  const el=document.getElementById('suivi-content');if(!el)return;
+  const ev=state.events.find(x=>x.id===eventId);
+  if(!ev){el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Événement non trouvé.</p></div>`;return;}
+
+  const now=new Date();
+  const total=evTot(ev);
+  const evDate=ev.date?new Date(ev.date):null;
+  const isPast=evDate&&evDate<now;
+  const isToday=evDate&&evDate.toDateString()===now.toDateString();
+  const fmtDate=evDate?evDate.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'-';
+
+  const hasCocktails=(ev.cocktails||[]).length>0;
+  const assigned=(ev.assignedStaff||[]).length;
+  const needed=(ev.nBartenders||0)+(ev.nWaiters||0)+(ev.nManagers||0);
+  const hasStaff=assigned>0&&(needed===0||assigned>=needed);
+  const confirmed=(ev.staffConfirmed||[]).length;
+  const allConfirmed=assigned>0&&confirmed>=assigned;
+  const briefSent=confirmed>0;
+  const coursesDone=isAllStockOk(ev);
+  const ficheReady=hasCocktails&&hasStaff;
+
+  const checks=[hasCocktails,hasStaff,allConfirmed,briefSent,coursesDone,ficheReady];
+  const score=checks.filter(Boolean).length;
+  const total6=checks.length;
+  const pct=Math.round(score/total6*100);
+
+  const statusColor=pct===100?'var(--green)':pct>=50?'var(--gold)':'var(--red)';
+  const borderColor=isToday?'var(--gold)':isPast&&pct<100?'var(--red)':pct===100?'var(--green)':'var(--border)';
+
+  const col=(done,label,action)=>`<div style="flex:1;min-width:0;text-align:center;padding:8px 4px;border-right:1px solid var(--border)">
+    <div style="font-size:15px;color:${done?'var(--green)':'var(--text3)'};margin-bottom:3px">${done?'✓':'◇'}</div>
+    <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:${done?'var(--text)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:${action?'4px':'0'}">${label}</div>
+    ${action?`<div>${action}</div>`:''}
+  </div>`;
+
+  const html=`<div class="card" style="border-left:3px solid ${borderColor};padding:10px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="min-width:0;flex:1">
+        <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
+        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:12px">
+        <div style="font-size:20px;font-family:'DM Serif Display',serif;color:${statusColor};font-weight:500;line-height:1">${pct}%</div>
+        <div style="font-size:9px;color:var(--text3)">${score}/${total6}</div>
+      </div>
+    </div>
+    <div style="height:2px;background:var(--surface3);border-radius:2px;margin-bottom:8px">
+      <div style="width:${pct}%;height:100%;background:${statusColor};border-radius:2px;transition:.4s"></div>
+    </div>
+
+    <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px">
+      ${col(hasCocktails,'Cocktails',!hasCocktails?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Config</button>`:'')}
+      ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
+      ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
+      ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
+      ${col(coursesDone,'Stock OK',`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
+      <div style="flex:1;min-width:0;text-align:center;padding:8px 4px">
+        <div style="font-size:15px;color:${ficheReady?'var(--green)':'var(--text3)'};margin-bottom:3px">${ficheReady?'✓':'◇'}</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:${ficheReady?'var(--text)':'var(--text3)'};margin-bottom:${ficheReady?'4px':'0'}">Fiche</div>
+        ${ficheReady?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Voir</button>`:''}
+      </div>
+    </div>
+
+    ${(()=>{
+      const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);
+      const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
+      const total=rev-remise;
+      const defautAcompte=state.profile?.acomptePercent?total*state.profile.acomptePercent/100:0;
+      const acompte=ev.acompte>0?ev.acompte:defautAcompte;
+      const acompteRecu=ev.acompte>0;
+      const reste=acompteRecu?Math.max(0,total-acompte):total;
+      return`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500">Paiement</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px">
+          <div style="background:var(--surface);padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+            <div style="font-size:16px;font-weight:600;color:var(--text);line-height:1.2">${total.toFixed(0)}€</div>
+            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">Total HT</div>
+          </div>
+          <div style="background:var(--surface);padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
+            <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
+              style="width:100%;padding:2px 0;font-size:16px;font-weight:600;height:22px;border:none;background:transparent;text-align:center;color:var(--text)"
+              onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);showSingleEventSuivi(${ev.id})" onkeydown="if(event.key==='Enter')event.target.blur()"/>
+            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">€ Acompte</div>
+          </div>
+          <div style="background:var(--surface);padding:12px 8px;text-align:center">
+            <div style="font-size:16px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};line-height:1.2">${ev.paid?'✓':reste.toFixed(0)}€</div>
+            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${ev.paid?'Payée':'À encaisser'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});showSingleEventSuivi(${ev.id})">
+            ${acompteRecu?'✓ Acompte reçu':'Acompte reçu'}
+          </button>
+          <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});showSingleEventSuivi(${ev.id})">
+            ${ev.paid?'✓ Prestation payée':'Prestation payée'}
+          </button>
+          <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
+        </div>
+      </div>`;
+    })()}
+  </div>`;
+
+  el.innerHTML=html;
 }
 
 function updCARange(){
