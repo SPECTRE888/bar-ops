@@ -3238,13 +3238,7 @@ async function applySuggestedPrice(){
 // ════════════════════════════════════════════════════════
 function goToEventSuivi(eventId){
   goPage('suivi');
-  setTimeout(()=>{
-    const ev=state.events.find(x=>x.id===eventId);
-    if(ev){
-      document.getElementById('suivi-search').value=ev.name;
-      filterSuivi();
-    }
-  },50);
+  // renderSuivi() called by goPage() automatically - displays detailed format
 }
 
 function updCARange(){
