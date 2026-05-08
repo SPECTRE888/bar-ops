@@ -3444,20 +3444,24 @@ function renderDashboard(){
       Object.values(neededMap).forEach(({ing,total})=>{
         const product=state.products.find(p=>p.productType===ing.productType&&p.brand===ing.brand)||state.products.find(p=>p.productType===ing.productType);
         if(!product||product.stock==null) return;
-        // stock en unités bouteilles, total en cl → convertir: total cl / contenance bouteille
+        const isConfirmed=ev.stockAllocations&&Object.keys(ev.stockAllocations).some(k=>{
+          const pts=k.split('||');return pts[0]===ing.productType&&pts[1]===(ing.brand||'');
+        });
+        if(isConfirmed) return;
         const bottlesNeeded=total/(product.qty||1);
         if(product.stock<bottlesNeeded){
           const missing=(bottlesNeeded-product.stock).toFixed(1);
           eventStockIssues.push({productType:ing.productType,brand:ing.brand,missing,stock:product.stock,needed:bottlesNeeded.toFixed(1)});
         }
       });
-      
+
       let staffIcon='✔',staffColor='var(--green)';
       if(assigned===0){staffIcon='—';staffColor='var(--text3)';}
       else if(confirmed<assigned){staffIcon='⚠';staffColor='var(--gold)';}
-      
+
       let stockIcon='✔',stockColor='var(--green)';
-      if(eventStockIssues.length>0){
+      if(isAllStockOk(ev)){stockIcon='✔';stockColor='var(--green)';}
+      else if(eventStockIssues.length>0){
         if(eventStockIssues.length>=3){stockIcon='❌';stockColor='var(--red)';}
         else {stockIcon='⚠';stockColor='var(--gold)';}
       }
