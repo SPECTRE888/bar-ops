@@ -5236,24 +5236,24 @@ function allocateStock(evId,itemKey,qty,unit){
   const ev=state.events.find(x=>x.id===evId);
   if(!ev)return;
   if(!ev.stockAllocations) ev.stockAllocations={};
-  const parts=itemKey.split('||');
-  const productType=parts[0];
-  const brand=parts[1];
-  const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
-  const oldQty=ev.stockAllocations[itemKey]?.qty||0;
-  if(prod){
-    const diff=qty-oldQty;
-    prod.stock=Math.max(0,(prod.stock||0)-diff);
-  }
-  if(qty>0){ev.stockAllocations[itemKey]={qty,unit};}
-  else{delete ev.stockAllocations[itemKey];}
+  if(qty>0) ev.stockAllocations[itemKey]={qty,unit};
+  else delete ev.stockAllocations[itemKey];
   save();
   renderShopping();
 }
 
 function getStockAfterAllocations(productType,brand){
   const prod=state.products.find(p=>p.productType===productType&&(!brand||p.brand===brand||!p.brand));
-  return prod?.stock||0;
+  if(!prod) return 0;
+  let allocated=0;
+  (state.events||[]).forEach(ev=>{
+    if(!ev.stockAllocations) return;
+    Object.entries(ev.stockAllocations).forEach(([key,a])=>{
+      const p=key.split('||');
+      if(p[0]===productType&&p[1]===(brand||'')) allocated+=a.qty||0;
+    });
+  });
+  return Math.max(0,(prod.stock||0)-allocated);
 }
 
 function onShopStockOkChange(checkbox){
@@ -6794,8 +6794,8 @@ function openSupplierOrder(supplierName){
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
-  const supKey=JSON.stringify(supplierName);
-  const html=items.map((i,idx)=>{const u=i.unit==='cl'?'btl':i.unit;return `<tr id="sup-row-${idx}" style="border-bottom:1px solid var(--border2)"><td style="padding:6px">${i.name}</td><td style="padding:6px">${i.brand||'—'}</td><td style="padding:6px;font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="padding:6px"><input type="number" value="${i.qty}" min="1" style="width:55px;padding:3px 5px;font-size:12px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text)" onchange="updateSupplierOrderQty(${supKey},${idx},this.value)"/> ${u}</td><td style="padding:6px;text-align:center"><button onclick="removeSupplierOrderLine(${supKey},${idx})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕</button></td></tr>`}).join('');
+  const sEsc=supplierName.replace(/'/g,"\\'");
+  const html=items.map((i,idx)=>{const u=i.unit==='cl'?'btl':i.unit;return `<tr style="border-bottom:1px solid var(--border2)"><td style="padding:6px">${i.name}</td><td style="padding:6px">${i.brand||'—'}</td><td style="padding:6px;font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="padding:6px"><input type="number" value="${i.qty}" min="1" style="width:55px;padding:3px 5px;font-size:12px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text)" onchange="updateSupplierOrderQty('${sEsc}',${idx},this.value)"/> ${u}</td><td style="padding:6px;text-align:center"><button onclick="removeSupplierOrderLine('${sEsc}',${idx})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕</button></td></tr>`}).join('');
   const modal=document.createElement('div');
   modal.id='supplier-order-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
