@@ -2741,6 +2741,10 @@ function showCForm(c){
             <option value="10"${(c.vat===undefined||c.vat===10||c.vat===null)?'selected':''}>10%</option>
             <option value="15"${(c.vat===15)?'selected':''}>15%</option>
           </select></div>
+          <div style="background:var(--surface2);padding:10px 6px;border-radius:6px;text-align:center">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Prix TTC</div>
+            <div style="font-size:16px;font-weight:600;color:var(--gold)" id="cf-ttc">—</div>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
           <div style="background:var(--bg2);padding:10px 6px;border-radius:6px;text-align:center">
@@ -3617,7 +3621,9 @@ function updCRecap(){
   const sugEl=document.getElementById('r-suggested');if(sugEl)sugEl.textContent=total>0?suggested.toFixed(2)+'€':'—';
 
   const ht=parseFloat(document.getElementById('cf-pht')?.value)||0;
-  const vat=(parseFloat(document.getElementById('cf-vat')?.value)||20)/100;
+  const vat=(parseFloat(document.getElementById('cf-vat')?.value)||10)/100;
+  const ttc=ht*(1+vat);
+  const ttcEl=document.getElementById('cf-ttc');if(ttcEl)ttcEl.textContent=ht>0?ttc.toFixed(2)+'€':'—';
   if(ht>0&&total>0){
     const mg=ht-total,mgPct=mg/ht*100;
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
