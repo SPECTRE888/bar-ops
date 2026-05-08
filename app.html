@@ -2005,7 +2005,7 @@ function getCurrentCat(){
   return null;
 }
 
-function addProduct(cat){
+async function addProduct(cat){
   if(window._isDemo){
     await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
     return;
@@ -4266,7 +4266,7 @@ function updQtyDisplay(cid, priceHT, costHT){
 function updEvCQ(id,v){const sel=document.getElementById('ev-content')._sel;if(sel&&sel[id])sel[id].qty=v;updEvCalc();}
 function updEvCP(id,v){const sel=document.getElementById('ev-content')._sel;if(sel[id])sel[id].pct=v;updEvCalc();}
 
-function saveDeliveryPreset(cost,bill){
+async function saveDeliveryPreset(cost,bill){
   const name=prompt('Nom du preset (ex: Paris, IDF...):');
   if(!name) return;
   if(!state.profile.deliveryPresets) state.profile.deliveryPresets=[];
@@ -4767,7 +4767,7 @@ async function saveEv(){
 // ════════════════════════════════════════════════════════
 // CLIENT MENU
 // ════════════════════════════════════════════════════════
-function openMenu(evId){
+async function openMenu(evId){
   const ev=evId===-1?buildTmpEv():state.events.find(x=>x.id===evId);if(!ev)return;
   const total=evTot(ev);
   const items=(ev.cocktails||[]).map(cfg=>{
@@ -5549,7 +5549,7 @@ function markStaffDispo(evId,sid,dispo){
   }
 }
 
-function sendDispoWA(evId,sid){
+async function sendDispoWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
   if(!ev||!s||!s.phone){await alertModal('Numero manquant pour ce staff.');return;}
@@ -5564,7 +5564,7 @@ function sendDispoWA(evId,sid){
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
-function sendBriefWA(evId,sid){
+async function sendBriefWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
   if(!ev||!s||!s.phone){await alertModal('Numero manquant pour ce staff.');return;}
@@ -5623,7 +5623,7 @@ function sendBriefWA(evId,sid){
   window.open('https://wa.me/'+waPhone(s.phone)+'?text='+encodeURIComponent(msg),'_blank');
 }
 
-function sendBriefFromClient(evId){
+async function sendBriefFromClient(evId){
   const ev=state.events.find(x=>x.id===evId);
   const client=state.clients.find(x=>x.id===ev?.clientId);
   if(!ev||!client||!client.whatsapp){await alertModal('WhatsApp du client manquant');return;}
@@ -6311,7 +6311,7 @@ function waPhone(p){
   return n;
 }
 
-function testSendContact(id){
+async function testSendContact(id){
   const c=state.contacts.find(x=>x.id===id);if(!c?.phone){await alertModal('Entre un numéro de téléphone.');return;}
   const phone=waPhone(c.phone);
   const msg=encodeURIComponent(` Bonjour ${c.name||''} — test envoi BAR OPS by Intelligence Spotlighted `);
@@ -6321,7 +6321,7 @@ function testSendContact(id){
 // ════════════════════════════════════════════════════════
 // DRESS CODES
 // ════════════════════════════════════════════════════════
-function addDressCode(name,desc){
+async function addDressCode(name,desc){
   if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouvelles tenues.');return;}
   if(state.dressCodes.find(d=>d.name===name))return;
   state.dressCodes.push({id:Date.now(),name,desc,active:true});
@@ -7042,7 +7042,7 @@ function handleExternalParams(){
 // ════════════════════════════════════════════════════════
 // HISTORIQUE
 // ════════════════════════════════════════════════════════
-function downloadEventPDF(evId){
+async function downloadEventPDF(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   const html=buildEventSummaryHTML(ev);
   const element=document.createElement('div');
