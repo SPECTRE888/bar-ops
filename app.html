@@ -3709,9 +3709,9 @@ function showEvList(){
         <div>${tot} cocktails</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px">Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px">Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px">Stock</button>
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1">Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1">Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1">Stock</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -3748,9 +3748,9 @@ function filterEvList(){
         <div>${tot} cocktails</div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px">Modifier</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px">Fiche</button>
-        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px">Stock</button>
+        <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1">Modifier</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1">Fiche</button>
+        <button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:32px;padding:0 12px;font-size:10px;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1">Stock</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -7718,7 +7718,7 @@ function renderProfile(){
             </div>
           </div>
           <div style="display:flex;gap:8px;border-top:1px solid var(--border);padding-top:12px">
-            <button class="btn-profile" onclick="toggleBarEdit(true)" style="flex:1">Modifier</button>
+            <button class="btn-profile" onclick="showProfileEditModal()" style="flex:1">Modifier</button>
             <button class="btn-profile" onclick="exportData()" style="flex:1">Exporter</button>
             <button class="btn-profile" onclick="confirmResetData()" style="flex:1">Reinit</button>
             <button class="btn-profile btn-danger" onclick="confirmDeleteAccount()" style="flex:1">Supprimer</button>
@@ -7856,6 +7856,25 @@ function updProfile(k,v){
   if(!state.profile) state.profile={};
   state.profile[k]=v;
   save();
+}
+
+function showProfileEditModal(){
+  const result=new Promise((resolve)=>{
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="font-size:15px;color:var(--text);margin-bottom:16px;line-height:1.5;font-weight:400">Modifier les informations de votre profil ?</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">Annuler</button>
+        <button style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">Modifier</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    const btnCancel=modal.querySelector('button:first-of-type');
+    const btnModify=modal.querySelector('button:last-of-type');
+    btnCancel.onclick=()=>{modal.remove();resolve(false);};
+    btnModify.onclick=()=>{modal.remove();resolve(true);toggleBarEdit(true);};
+  });
 }
 
 function toggleBarEdit(show){
