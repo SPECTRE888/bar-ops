@@ -2736,6 +2736,7 @@ function showCForm(c){
           </div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix de vente HT €</label><input type="number" id="cf-pht" value="${c.priceHT||''}" step="0.01" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">% de perte</label><select id="cf-vat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
+            <option value="0"${(c.vat===0)?'selected':''}>0%</option>
             <option value="5"${(c.vat===5)?'selected':''}>5%</option>
             <option value="10"${(c.vat===undefined||c.vat===10||c.vat===null)?'selected':''}>10%</option>
             <option value="15"${(c.vat===15)?'selected':''}>15%</option>
