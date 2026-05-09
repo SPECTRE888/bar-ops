@@ -1851,8 +1851,6 @@ function commandProductFromLowStock(pid){
   save();
   const supplier=state.suppliers?.find(s=>s.id===sKey||s.name===sKey);
   toast(`✓ ${qty} × ${p.productType} → ${supplier?.name||sKey}`);
-  // Open supplier order modal to confirm
-  setTimeout(()=>openSupplierOrder(sKey),100);
 }
 
 function renderCatalogue(){
@@ -7218,14 +7216,47 @@ function sendSupplierOrder(supplierName){
   // Show "Commande passée" success message
   showToast('✓ Commande passée');
 
-  // Auto-send mail if available
+  // Auto-send mail if available, then show confirmation popup
   if(sup.email){
+    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+    // Show confirmation popup after mail client opens
     setTimeout(()=>{
-      window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
-    },500);
+      const modal=document.createElement('div');
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+      modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:28px">✓</div>
+        <div style="font-size:18px;font-weight:600">Commande passée</div>
+        <div style="font-size:13px;color:var(--text2)">La commande a été enregistrée et tu peux suivre sa réception dans "Commandes en cours"</div>
+        <button class="btn btn-gold" style="width:100%" onclick="this.closest('[style*=fixed]').remove()">Super !</button>
+      </div>`;
+      document.body.appendChild(modal);
+    },2000);
   }else if(sup.phone){
+    window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+    // Show confirmation popup after WhatsApp opens
     setTimeout(()=>{
-      window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+      const modal=document.createElement('div');
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+      modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:28px">✓</div>
+        <div style="font-size:18px;font-weight:600">Commande passée</div>
+        <div style="font-size:13px;color:var(--text2)">La commande a été enregistrée et tu peux suivre sa réception dans "Commandes en cours"</div>
+        <button class="btn btn-gold" style="width:100%" onclick="this.closest('[style*=fixed]').remove()">Super !</button>
+      </div>`;
+      document.body.appendChild(modal);
+    },2000);
+  }else{
+    // No email/phone, just show confirmation
+    setTimeout(()=>{
+      const modal=document.createElement('div');
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+      modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;gap:16px">
+        <div style="font-size:28px">✓</div>
+        <div style="font-size:18px;font-weight:600">Commande passée</div>
+        <div style="font-size:13px;color:var(--text2)">La commande a été enregistrée et tu peux suivre sa réception dans "Commandes en cours"</div>
+        <button class="btn btn-gold" style="width:100%" onclick="this.closest('[style*=fixed]').remove()">Super !</button>
+      </div>`;
+      document.body.appendChild(modal);
     },500);
   }
 }
