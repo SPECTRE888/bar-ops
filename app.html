@@ -7213,6 +7213,9 @@ function sendSupplierOrder(supplierName){
   save();
   document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
 
+  // Update supplier badge in real-time
+  renderSuppliers();
+
   // Show "Commande passée" success message
   showToast('✓ Commande passée');
 
