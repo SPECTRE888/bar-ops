@@ -3605,6 +3605,10 @@ function renderDashboard(){
           <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} • ${days}j</div>
           ${cl?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${cl.name}</div>`:''}
+          <div style="font-size:9px;color:var(--text3);margin-top:4px;display:flex;gap:12px">
+            ${ev.location?`<span>📍 ${ev.location}</span>`:''}
+            <span>👥 ${assigned}</span>
+          </div>
           <div style="font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
             ${ev.paid?`<div style="color:var(--green);font-weight:500">✓ Entièrement payé</div>`:ev.acompte>0?`<div>Acompte: <span style="color:var(--gold);font-weight:500">${ev.acompte}€</span></div>`:'<div style="color:var(--text3)">En attente</div>'}
           </div>
@@ -3627,8 +3631,8 @@ function renderDashboard(){
             <div style="font-size:13px;color:${stockColor};font-weight:500">${stockIcon}</div>
           </div>
           <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Acompte</div>
-            <div style="font-size:13px;color:${ev.acompte>0?'var(--green)':'var(--text3)'};font-weight:500">${ev.acompte>0?'✔':'○'}</div>
+            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Cocktails</div>
+            <div style="font-size:13px;color:var(--gold);font-weight:500">${(ev.cocktails||[]).length}</div>
           </div>
           <div style="text-align:center;flex:1">
             <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Payé</div>
