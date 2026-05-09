@@ -502,6 +502,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <input type="text" id="suppliers-search" placeholder="Chercher..." class="input-md" oninput="renderSuppliers()"/>
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
+      <button class="btn btn-ghost" onclick="showPendingOrders()">Commandes en cours</button>
+      <button class="btn btn-ghost" onclick="showOrderHistory()">Historique</button>
       <button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button>
     </div>
   </div>
@@ -1280,8 +1282,23 @@ let state = {};
 let now = 0;
 let editCId=null, editEvId=null, irc=0;
 
+// ════════════════════════════════════════════════════════
+// VERSIONING & CHANGELOG
+// ════════════════════════════════════════════════════════
+const APP_CHANGELOG=[
+  {version:'1.2.0',date:'2025-05-09',changes:[
+    '✓ Système de suivi des commandes',
+    '✓ Commandes en cours avec réception par produit',
+    '✓ Historique des commandes reçues',
+    '✓ Édition de quantités reçues',
+    '✓ Mise à jour auto du stock',
+    '✓ Fenêtre "Commande passée" au sending'
+  ]}
+];
+const CURRENT_VERSION=APP_CHANGELOG[0].version;
+
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], customCategories:[], orders:{}, profile:{}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], customCategories:[], orders:{}, submittedOrders:{}, profile:{}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -1342,6 +1359,33 @@ function load(){
       else c.glass=c.glass.split(' — ')[0].trim();
     }
   });
+}
+
+function showChangelogIfNew(){
+  const lastSeenVersion=localStorage.getItem('_lastSeenVersion');
+  if(lastSeenVersion===CURRENT_VERSION) return;
+
+  const changelog=APP_CHANGELOG[0];
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:20px;max-height:80vh;overflow-y:auto">
+    <div style="text-align:center">
+      <div style="font-size:24px;font-weight:600;margin-bottom:4px">Nouvelle mise à jour 🎉</div>
+      <div style="font-size:13px;color:var(--text3);letter-spacing:.05em">v${changelog.version}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${changelog.changes.map(c=>`<div style="display:flex;align-items:flex-start;gap:8px;font-size:13px">
+        <span style="color:var(--green);flex-shrink:0">${c.split(' ')[0]}</span>
+        <span style="color:var(--text2)">${c.substring(2)}</span>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="this.closest('[style*=fixed]').remove()">Fermer</button>
+      <button class="btn btn-gold" style="flex:1" onclick="localStorage.setItem('_lastSeenVersion','${CURRENT_VERSION}');this.closest('[style*=fixed]').remove()">Super !</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  localStorage.setItem('_lastSeenVersion',CURRENT_VERSION);
 }
 
 // ════════════════════════════════════════════════════════
@@ -7107,12 +7151,44 @@ function sendSupplierOrder(supplierName,method){
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${u}`}).join('\n');
   const contact=sup.contact?'Bonjour '+sup.contact+',':'Bonjour,';
-  delete state.orders[sKey];save();
+
+  // Store submitted order
+  if(!state.submittedOrders) state.submittedOrders={};
+  if(!state.submittedOrders[sKey]) state.submittedOrders[sKey]=[];
+  const submittedOrder={
+    id:Date.now(),
+    supplierName,
+    items:items.map(i=>({pid:i.pid,name:i.name,brand:i.brand,code:i.code,qty:i.qty,unit:i.unit,receivedQty:0,received:false})),
+    date:new Date().toISOString(),
+    method:method,
+    status:'pending'
+  };
+  state.submittedOrders[sKey].push(submittedOrder);
+
+  delete state.orders[sKey];
+  save();
   document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
+
+  // Show "Commande passée" modal
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;gap:16px">
+    <div style="font-size:28px">✓</div>
+    <div style="font-size:18px;font-weight:600">Commande passée</div>
+    <div style="font-size:13px;color:var(--text2)">La commande a été enregistrée et tu peux suivre sa réception dans "Commandes en cours"</div>
+    <button class="btn btn-gold" style="width:100%" onclick="this.closest('[style*=fixed]').remove();showPendingOrders()">Voir commandes en cours</button>
+  </div>`;
+  document.body.appendChild(modal);
+
+  // Send via mail/whatsapp
   if(method==='email'&&sup.email){
-    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+    setTimeout(()=>{
+      window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+    },500);
   }else if(method==='whatsapp'&&sup.phone){
-    window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+    setTimeout(()=>{
+      window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+    },500);
   }
 }
 
@@ -7120,6 +7196,161 @@ function showToast(msg){
   let t=document.getElementById('_toast');
   if(!t){t=document.createElement('div');t.id='_toast';t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--gold);color:#080808;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:500;z-index:9999;opacity:0;transition:opacity .3s';document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._to);t._to=setTimeout(()=>t.style.opacity='0',2500);
+}
+
+function showPendingOrders(){
+  if(!state.submittedOrders){state.submittedOrders={};return;}
+  const allPending=[];
+  Object.keys(state.submittedOrders).forEach(sKey=>{
+    (state.submittedOrders[sKey]||[]).forEach(order=>{
+      if(order.status==='pending') allPending.push({supplier:sKey,...order});
+    });
+  });
+
+  if(!allPending.length){
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;text-align:center">
+      <div style="font-size:13px;color:var(--text3)">Aucune commande en cours</div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:16px" onclick="this.closest('[style*=fixed]').remove()">Fermer</button>
+    </div>`;
+    document.body.appendChild(modal);
+    return;
+  }
+
+  const ordersList=allPending.map((order)=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;font-weight:600;color:var(--text2)">
+        <span>${order.supplier}</span>
+        <span style="font-size:11px;color:var(--text3)">${new Date(order.date).toLocaleDateString('fr-FR')}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${order.items.map((item,iidx)=>`
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px">
+            <input type="checkbox" id="chk-${order.id}-${iidx}" ${item.received?'checked':''} style="width:auto;accent-color:var(--gold)" onchange="toggleOrderItem('${order.supplier}',${order.id},${iidx})"/>
+            <div style="flex:1">
+              <div>${item.brand||item.name}</div>
+              <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+item.code:''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
+              <input type="number" value="${item.receivedQty||item.qty}" min="0" style="width:40px;padding:2px 4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:10px;text-align:center" onchange="updateReceivedQty('${order.supplier}',${order.id},${iidx},this.value)"/>
+              <span style="color:var(--text3);font-size:10px">${item.unit}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn btn-sm btn-gold" style="width:100%;margin-top:8px" onclick="receiveOrder('${order.supplier}',${order.id})">Marquer comme reçue</button>
+    </div>
+  `).join('');
+
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:16px;font-weight:600">Commandes en cours (${allPending.length})</div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button>
+    </div>
+    <div>${ordersList}</div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function showOrderHistory(){
+  if(!state.submittedOrders){state.submittedOrders={};return;}
+  const allHistory=[];
+  Object.keys(state.submittedOrders).forEach(sKey=>{
+    (state.submittedOrders[sKey]||[]).forEach(order=>{
+      if(order.status==='received') allHistory.push({supplier:sKey,...order});
+    });
+  });
+
+  if(!allHistory.length){
+    const modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;text-align:center">
+      <div style="font-size:13px;color:var(--text3)">Aucun historique</div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:16px" onclick="this.closest('[style*=fixed]').remove()">Fermer</button>
+    </div>`;
+    document.body.appendChild(modal);
+    return;
+  }
+
+  const historyList=allHistory.map(order=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;font-weight:600;color:var(--text2)">
+        <span>${order.supplier}</span>
+        <span style="font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px">✓ Reçue</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+        ${order.items.map(item=>`
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div>${item.brand||item.name}</div>
+              <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+item.code:''}</div>
+            </div>
+            <div style="text-align:right;color:var(--text2)">
+              <div>${item.receivedQty||item.qty} ${item.unit}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:8px">${new Date(order.date).toLocaleDateString('fr-FR')}</div>
+    </div>
+  `).join('');
+
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:16px;font-weight:600">Historique (${allHistory.length})</div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button>
+    </div>
+    <div>${historyList}</div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function toggleOrderItem(supplier,orderId,itemIdx){
+  const order=state.submittedOrders[supplier]?.find(o=>o.id===orderId);
+  if(order&&order.items[itemIdx]){
+    order.items[itemIdx].received=!order.items[itemIdx].received;
+    save();
+  }
+}
+
+function updateReceivedQty(supplier,orderId,itemIdx,newQty){
+  const order=state.submittedOrders[supplier]?.find(o=>o.id===orderId);
+  if(order&&order.items[itemIdx]){
+    order.items[itemIdx].receivedQty=parseInt(newQty)||0;
+    save();
+  }
+}
+
+function receiveOrder(supplier,orderId){
+  const order=state.submittedOrders[supplier]?.find(o=>o.id===orderId);
+  if(!order)return;
+
+  // Check if all items are received
+  if(!order.items.every(i=>i.received)){
+    alert('Marque tous les produits comme reçus');
+    return;
+  }
+
+  // Update stock
+  order.items.forEach(item=>{
+    const p=state.products.find(x=>x.id===item.pid);
+    if(p){
+      p.stock=(p.stock||0)+(item.receivedQty||item.qty);
+    }
+  });
+
+  // Mark order as received
+  order.status='received';
+  order.receivedDate=new Date().toISOString();
+  save();
+
+  showToast(`✓ ${order.items.length} produit(s) ajouté(s) au stock`);
+  showPendingOrders();
 }
 
 function renderSuppliers(){
@@ -9437,6 +9668,7 @@ updateCloudStatus();
   updateBadges();
   renderDashboard();
   applyTheme();
+  setTimeout(()=>showChangelogIfNew(),500);
   window.addEventListener('pageshow',()=>{
     const pending=sessionStorage.getItem('pendingSend');
     if(pending){
