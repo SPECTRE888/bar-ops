@@ -372,22 +372,20 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input id="cat-search" placeholder="Rechercher..." oninput="renderCatalogue()" class="input-md"/>
-      <div style="display:flex;gap:6px;align-items:center">
-        <select id="cat-filter" onchange="onCategoryFilterChange()" class="input-md">
-          <option value="Spirit"> Spiritueux</option>
-          <option value="Juice"> Jus & Purées</option>
-          <option value="Mixer"> Mixers & Sodas</option>
-          <option value="Syrup"> Sirops</option>
-          <option value="Garnish"> Garnitures</option>
-          <option value="Consumable"> Consommables</option>
-          <option value="Spice"> Épices & Condiments</option>
-          <option value="Glassware"> Verrerie</option>
-          <option value="Ice"> Glace</option>
-          <option value="Bar"> Bar & Matériel</option>
-        </select>
-        <button id="toggle-low-stock" class="btn btn-sm btn-ghost" onclick="toggleLowStock()" style="color:var(--text2)">Stock faible</button>
-        <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
-      </div>
+      <select id="cat-filter" onchange="onCategoryFilterChange()" class="input-md">
+        <option value="Spirit"> Spiritueux</option>
+        <option value="Juice"> Jus & Purées</option>
+        <option value="Mixer"> Mixers & Sodas</option>
+        <option value="Syrup"> Sirops</option>
+        <option value="Garnish"> Garnitures</option>
+        <option value="Consumable"> Consommables</option>
+        <option value="Spice"> Épices & Condiments</option>
+        <option value="Glassware"> Verrerie</option>
+        <option value="Ice"> Glace</option>
+        <option value="Bar"> Bar & Matériel</option>
+      </select>
+      <button id="toggle-low-stock" class="btn btn-ghost" onclick="toggleLowStock()" style="color:var(--text2);padding:9px 12px;font-size:11px;text-transform:uppercase">Stock faible</button>
+      <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
@@ -1794,6 +1792,23 @@ function toggleLowStock(){
   renderCatalogue();
 }
 
+function commandProductFromLowStock(pid){
+  const p=state.products.find(x=>x.id===pid);if(!p)return;
+  const inp=document.getElementById('order-'+pid);
+  const qty=parseFloat(inp?.value)||0;
+  if(!qty||qty<=0){inp&&(inp.style.borderColor='var(--red)');return;}
+  if(!state.orders)state.orders={};
+  const sKey=p.supplierId||'__sans_fournisseur__';
+  if(!state.orders[sKey])state.orders[sKey]=[];
+  const existing=state.orders[sKey].find(x=>x.pid===pid);
+  if(existing)existing.qty+=qty;
+  else state.orders[sKey].push({pid,name:p.productType,brand:p.brand||'',code:p.supplierCode||'',unit:p.unit||'',qty});
+  inp.value='';inp.style.borderColor='';
+  save();
+  const supplier=state.suppliers?.find(s=>s.id===p.supplierId);
+  toast(`✓ ${qty} × ${p.productType} → ${supplier?.name||'Fournisseur'}`);
+}
+
 function renderCatalogue(){
   updateCategoryDropdown();
   const catSelect=document.getElementById('cat-filter');
@@ -1888,7 +1903,7 @@ function renderCatalogue(){
           <td style="text-align:right">${p.stockAlert}</td>
           <td style="text-align:right"><input type="number" value="${toOrder.toFixed(1)}" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:3px;font-size:11px" id="order-${p.id}" min="0" step="0.1"/></td>
           <td style="text-align:right">${(p.priceHT||0)*toOrder.toFixed(2)}€</td>
-          <td style="text-align:right"><button class="btn btn-sm btn-gold" onclick="goPage('suppliers');setTimeout(()=>{if(document.querySelector('[data-supplier-id=\\'${p.supplierId}\\']')) document.querySelector('[data-supplier-id=\\'${p.supplierId}\\']').scrollIntoView()},200)">${supplier?'Contacter':'Fournisseur'}</button></td>
+          <td style="text-align:right"><button class="btn btn-sm btn-gold" onclick="commandProductFromLowStock(${p.id})">Commander</button></td>
         </tr>`;
       });
       html+=`</tbody></table>`;
