@@ -386,8 +386,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       </select>
       <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
     </div>
+    <button id="toggle-low-stock" class="btn btn-ghost" onclick="toggleLowStock()" style="color:var(--text2)">Stock faible <span class="nb" id="nb-low-stock" style="color:var(--red)">0</span></button>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
-      <button id="toggle-low-stock" class="btn btn-ghost" onclick="toggleLowStock()" style="color:var(--text2)">Stock faible</button>
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
       <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">CSV</button>
       <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)"/>
@@ -2028,6 +2028,12 @@ function goPage(p,_evId){
 
 function updateBadges(){
   document.getElementById('nb-c').textContent=state.cocktails.length;
+  const lowStockCount=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).length;
+  const el=document.getElementById('nb-low-stock');
+  if(el){
+    el.textContent=lowStockCount;
+    el.style.display=lowStockCount>0?'inline':'none';
+  }
   const now=new Date();
   const ongoingEvents=state.events.filter(ev=>{
     const isPast=ev.date&&new Date(ev.date)<now;
