@@ -289,10 +289,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
       Catalogue
     </div>
-    <div class="nav-item" onclick="goPage('low-stock')" id="nav-low-stock">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 1v10M4 6h8M8 15v0M3 3l9 9M13 3l-9 9"/></svg>
-      Stock faible <span class="nb" id="nb-low-stock" style="color:var(--red)">0</span>
-    </div>
     <div class="nav-item" onclick="goPage('cocktails')" id="nav-cocktails">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 2h10L8 9v5M5 14h6"/></svg>
       Cocktails <span class="nb" id="nb-c">0</span>
@@ -390,6 +386,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
           <option value="Bar"> Bar & Matériel</option>
         </select>
         <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
+        <button id="toggle-low-stock" class="btn btn-sm btn-ghost" onclick="toggleLowStock()" style="color:var(--text2)">📊 Stock faible</button>
       </div>
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
@@ -1787,6 +1784,16 @@ async function delCustomCategory(id){
 // ════════════════════════════════════════════════════════
 // CATALOGUE UNIFIÉ
 // ════════════════════════════════════════════════════════
+function toggleLowStock(){
+  window._showLowStockOnly=!window._showLowStockOnly;
+  const btn=document.getElementById('toggle-low-stock');
+  if(btn){
+    btn.style.color=window._showLowStockOnly?'var(--red)':'var(--text2)';
+    btn.style.fontWeight=window._showLowStockOnly?'600':'400';
+  }
+  renderCatalogue();
+}
+
 function renderCatalogue(){
   updateCategoryDropdown();
   const catSelect=document.getElementById('cat-filter');
@@ -1849,9 +1856,45 @@ function renderCatalogue(){
     return;
   }
   // Product categories — render inline
-  const bodyId='body-'+{Spirit:'spirits',Juice:'juices',Mixer:'mixers',Syrup:'syrups',Garnish:'garnish',Consumable:'consumables',Spice:'spices'}[cat];
-  content.innerHTML=`<div id="${bodyId}"></div>`;
-  renderCatPage(cat);
+  if(window._showLowStockOnly){
+    // Show low-stock products grouped by category
+    const lowStockByCategory={};
+    state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).forEach(p=>{
+      const catName=p.category||'Unknown';
+      if(!lowStockByCategory[catName]) lowStockByCategory[catName]=[];
+      lowStockByCategory[catName].push(p);
+    });
+
+    let html=`<div style="padding:20px">`;
+    if(Object.keys(lowStockByCategory).length===0){
+      html+=`<div class="empty"><div class="empty-icon">✅</div><p>Tous les stocks sont OK!</p></div>`;
+    } else {
+      Object.entries(lowStockByCategory).sort().forEach(([cat,prods])=>{
+        html+=`<div class="card" style="margin-bottom:16px">
+          <div class="ctitle">${cat}</div>
+          <div style="display:grid;gap:10px;padding:12px">`;
+        prods.sort((a,b)=>(a.stock||0)-(b.stock||0)).forEach(p=>{
+          const missing=(p.stockAlert-p.stock).toFixed(1);
+          html+=`<div style="padding:10px;background:var(--surface2);border-left:3px solid var(--red);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center">
+            <div style="flex:1">
+              <div style="font-weight:500;margin-bottom:4px">${p.brand?p.brand+' ':''}${p.productType}</div>
+              <div style="font-size:11px;color:var(--text2)">
+                Stock: <span style="color:var(--red);font-weight:600">${p.stock||0}</span> / ${p.stockAlert} (manque: ${missing})
+              </div>
+            </div>
+            <button class="btn btn-sm btn-gold" onclick="editProduct(${p.id})" style="margin-left:10px">Modifier</button>
+          </div>`;
+        });
+        html+=`</div></div>`;
+      });
+    }
+    html+=`</div>`;
+    content.innerHTML=html;
+  } else {
+    const bodyId='body-'+{Spirit:'spirits',Juice:'juices',Mixer:'mixers',Syrup:'syrups',Garnish:'garnish',Consumable:'consumables',Spice:'spices'}[cat];
+    content.innerHTML=`<div id="${bodyId}"></div>`;
+    renderCatPage(cat);
+  }
 }
 
 async function catAdd(){
@@ -1936,7 +1979,6 @@ function goPage(p,_evId){
   if(p==='dashboard') renderDashboard();
   else if(p==='profile') renderProfile();
   else if(p==='catalogue') renderCatalogue();
-  else if(p==='low-stock') renderLowStock();
   else if(PAGE_CAT[p]){renderCatPage(PAGE_CAT[p]);document.getElementById('nav-catalogue')?.classList.add('active');}
   else if(p==='glassware') renderGlassware();
   else if(p==='staff'){renderStaff();renderDressCodes();}
@@ -1966,8 +2008,6 @@ function goPage(p,_evId){
 
 function updateBadges(){
   document.getElementById('nb-c').textContent=state.cocktails.length;
-  const lowStockCount=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).length;
-  document.getElementById('nb-low-stock').textContent=lowStockCount;
   const now=new Date();
   const ongoingEvents=state.events.filter(ev=>{
     const isPast=ev.date&&new Date(ev.date)<now;
@@ -2090,38 +2130,6 @@ function sortProducts(items){
     if(typeof va==='string') return catSort.dir*(va<vb?-1:va>vb?1:0);
     return catSort.dir*(va-vb);
   });
-}
-
-function renderLowStock(){
-  const el=document.getElementById('page-content');if(!el)return;
-
-  const lowStockProducts=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).sort((a,b)=>(a.stock||0)-(b.stock||0));
-
-  let html=`<div style="padding:20px">
-    <h2 style="font-family:var(--font-display);font-size:24px;color:var(--gold);margin-bottom:20px">Stock faible</h2>`;
-
-  if(lowStockProducts.length===0){
-    html+=`<div class="empty"><div class="empty-icon">✅</div><p>Tous les stocks sont OK!</p></div>`;
-  } else {
-    html+=`<div style="display:grid;gap:12px">`;
-    lowStockProducts.forEach(p=>{
-      const missing=(p.stockAlert-p.stock).toFixed(1);
-      html+=`<div class="card" style="padding:14px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--red)">
-        <div style="flex:1">
-          <div style="font-weight:500;color:var(--text);margin-bottom:4px">${p.brand?p.brand+' ':''}${p.productType}</div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:6px">
-            <span style="color:var(--red);font-weight:500">${p.stock||0}</span> / ${p.stockAlert} (manque: ${missing})
-          </div>
-          ${p.qty?`<div style="font-size:10px;color:var(--text3)">Format: ${p.qty}cl • Prix: ${p.priceHT}€</div>`:''}
-        </div>
-        <button class="btn btn-sm btn-gold" onclick="goPage('catalogue');setTimeout(()=>{document.getElementById('cat-search').value='${p.productType}';renderCatalogue()},100)" style="margin-left:12px">Voir produit</button>
-      </div>`;
-    });
-    html+=`</div>`;
-  }
-  html+=`</div>`;
-  el.innerHTML=html;
-  updateBadges();
 }
 
 function renderCatPage(cat){
@@ -3568,10 +3576,7 @@ function renderDashboard(){
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
-      let onclick='';
-      if(a.type==='stock_retour'){onclick=`goPage('suivi')`;}
-      else if(a.product){onclick=`goPage('low-stock')`;}
-      else if(a.event){onclick=`editEv(${a.event.id});goPage('events')`;}
+      const onclick=a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
       html+=`<div style="padding:10px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
         <span style="color:${textColor};font-weight:500">${icon} ${a.text}</span>
       </div>`;
@@ -9284,7 +9289,6 @@ function applyLang(){
     const p=active.id.replace('page-','');
     if(p==='dashboard') renderDashboard();
     else if(p==='catalogue') renderCatalogue();
-    else if(p==='low-stock') renderLowStock();
     else if(p==='cocktails') showCList();
     else if(p==='events') showEvList();
     else if(p==='historique') renderHistorique();
