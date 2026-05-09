@@ -23,7 +23,7 @@ Plateforme simple et fiable pour gérer l'organisation complète d'événements 
 
 ### Flux Métier
 ```
-Client → Événement → Cocktails → Staff → Logistique → Devis → Paiement
+Catalogue → Cocktails → Mon Équipe → Clients → Fournisseurs → Événements → Devis → Paiement
 ```
 
 ## Données Clés
@@ -80,20 +80,20 @@ Client → Événement → Cocktails → Staff → Logistique → Devis → Paie
 - Code existant préservé sauf refonte explicite
 
 ### 4. Cohérence Métier Stricte
-- Respect du flux client → event → cocktails → staff → logistique → devis
+- Respect du flux Catalogue → Cocktails → Mon Équipe → Clients → Fournisseurs → Événements
 - Données centralisées et cohérentes
 - Pas de duplication inutile
 
 ## Conventions de Code
 
 ### Noms Staff
-- `'Bartender'` (pas Head Bartender, Bar Supervisor)
-- `'Serveur'` (pas Waiter/Server)
+- `'Bartender'` 
+- `'Serveur'` 
 - `'Bar Manager'`
 - `'Manutentionnaire'`
 
 ### Tarification Staff
-- Uniquement `'per hour'` (pas `'per event'`)
+- Uniquement `'per hour'` 
 - Tous les calculs basés sur heures × tarif
 
 ### Variables Event
@@ -133,13 +133,5 @@ git push origin main
 - Email: contact@intelligencespotlighted.com
 - Supabase: https://hrpcdtkhnewigewomcvv.supabase.co
 - GitHub: https://github.com/SPECTRE888/bar-ops
-- Live: https://bar-opsv2public.netlify.app/app.html
+- Live: https://bar-opsv2public.netlify.app
 
-## Roadmap Récent
-- ✅ Fiche prestation affichage direct sans select
-- ✅ Staff: calcul prix en temps réel selon heures
-- ✅ Manutentionnaire ajouté
-- ✅ Livraison: champs libres (coût/facturé)
-- ✅ Planning: calendrier mensuel simple
-- ✅ Historique: recherche en topbar
-- ✅ Cocktails: séparation en boîtes indépendantes
