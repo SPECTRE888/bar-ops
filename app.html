@@ -1947,7 +1947,7 @@ function renderCatalogue(){
           <td style="text-align:right">${p.stockAlert}</td>
           <td style="text-align:right"><input type="number" value="${toOrder.toFixed(1)}" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:3px;font-size:11px" id="order-${p.id}" min="0" step="0.1"/></td>
           <td style="text-align:right">${(p.priceHT||0)*toOrder.toFixed(2)}€</td>
-          <td style="text-align:right"><button class="btn btn-sm btn-gold" onclick="commandProductFromLowStock(${p.id})">Commander</button></td>
+          <td style="text-align:right"><button class="btn btn-sm ${p.orderPending?'btn-ghost':'btn-gold'}" ${p.orderPending?'disabled':''} onclick="commandProductFromLowStock(${p.id})">${p.orderPending?'Commande passée':'Commander'}</button></td>
         </tr>`;
       });
       html+=`</tbody></table>`;
@@ -7102,8 +7102,7 @@ function openSupplierOrder(supplierName){
   modal.id='supplier-order-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
   const btns=[];
-  if(sup.email)btns.push('<button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder(\''+supplierName+'\',\'email\')"> Mail</button>');
-  if(sup.phone)btns.push('<button class="btn" style="flex:1;background:#25D366;color:white;border-color:#25D366;cursor:pointer" onclick="sendSupplierOrder(\''+supplierName+'\',\'whatsapp\')"> WhatsApp</button>');
+  btns.push('<button class="btn btn-gold" style="flex:1" onclick="confirmSupplierOrder(\''+supplierName+'\')">Commander</button>');
   btns.push('<button class="btn btn-danger" style="flex:1" onclick="clearSupplierOrder(\''+supplierName+'\');this.closest(\'[style*=fixed]\').remove()"> Vider</button>');
   const content=!items.length?'<p style="color:var(--text3);font-size:13px">Aucun article en liste de course pour ce fournisseur.</p>':'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.1em"><th style="text-align:left;padding:4px 6px">Produit</th><th style="text-align:left;padding:4px 6px">Marque</th><th style="text-align:left;padding:4px 6px">Réf</th><th style="text-align:left;padding:4px 6px">Qté</th><th style="padding:4px 6px"></th></tr></thead><tbody>'+html+'</tbody></table><div style="display:flex;gap:8px;margin-top:12px">'+btns.join('')+'</div>';
   modal.innerHTML='<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Commande — '+supplierName+'</div><button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button></div>'+content+'</div>';
@@ -7142,7 +7141,27 @@ function clearSupplierOrder(supplierName){
   showToast(`✓ Liste de courses vidée pour ${supplierName}`);
 }
 
-function sendSupplierOrder(supplierName,method){
+function confirmSupplierOrder(supplierName){
+  const sKey=supplierName||'__sans_fournisseur__';
+  let items=state.orders[sKey]||[];
+  const deduped={};
+  items.forEach(i=>{const k=i.pid+'|'+i.unit;if(!deduped[k])deduped[k]={...i};else deduped[k].qty+=i.qty;});
+  items=Object.values(deduped);
+
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2001;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;gap:20px">
+    <div style="font-size:18px;font-weight:600">Confirmer la commande ?</div>
+    <div style="font-size:13px;color:var(--text2)">${items.length} produit(s) pour ${supplierName}</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="this.closest('[style*=fixed]').remove()">NON</button>
+      <button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder('${supplierName}');this.closest('[style*=fixed]').remove()">OUI</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function sendSupplierOrder(supplierName){
   const sKey=supplierName||'__sans_fournisseur__';
   let items=state.orders[sKey]||[];
   const deduped={};
@@ -7155,12 +7174,20 @@ function sendSupplierOrder(supplierName,method){
   // Store submitted order
   if(!state.submittedOrders) state.submittedOrders={};
   if(!state.submittedOrders[sKey]) state.submittedOrders[sKey]=[];
+
+  // Mark products as ordered to prevent duplicate orders in low-stock
+  items.forEach(i=>{
+    if(i.pid){
+      const p=state.products.find(x=>x.id===i.pid);
+      if(p) p.orderPending=true;
+    }
+  });
+
   const submittedOrder={
     id:Date.now(),
     supplierName,
     items:items.map(i=>({pid:i.pid,name:i.name,brand:i.brand,code:i.code,qty:i.qty,unit:i.unit,receivedQty:0,received:false})),
     date:new Date().toISOString(),
-    method:method,
     status:'pending'
   };
   state.submittedOrders[sKey].push(submittedOrder);
@@ -7169,23 +7196,15 @@ function sendSupplierOrder(supplierName,method){
   save();
   document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
 
-  // Show "Commande passée" modal
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
-  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:40px;width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;gap:16px">
-    <div style="font-size:28px">✓</div>
-    <div style="font-size:18px;font-weight:600">Commande passée</div>
-    <div style="font-size:13px;color:var(--text2)">La commande a été enregistrée et tu peux suivre sa réception dans "Commandes en cours"</div>
-    <button class="btn btn-gold" style="width:100%" onclick="this.closest('[style*=fixed]').remove();showPendingOrders()">Voir commandes en cours</button>
-  </div>`;
-  document.body.appendChild(modal);
+  // Show "Commande passée" success message
+  showToast('✓ Commande passée');
 
-  // Send via mail/whatsapp
-  if(method==='email'&&sup.email){
+  // Auto-send mail if available
+  if(sup.email){
     setTimeout(()=>{
       window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
     },500);
-  }else if(method==='whatsapp'&&sup.phone){
+  }else if(sup.phone){
     setTimeout(()=>{
       window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
     },500);
@@ -7336,11 +7355,12 @@ function receiveOrder(supplier,orderId){
     return;
   }
 
-  // Update stock
+  // Update stock and clear orderPending flag
   order.items.forEach(item=>{
     const p=state.products.find(x=>x.id===item.pid);
     if(p){
       p.stock=(p.stock||0)+(item.receivedQty||item.qty);
+      p.orderPending=false;
     }
   });
 
