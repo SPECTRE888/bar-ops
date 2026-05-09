@@ -3568,7 +3568,10 @@ function renderDashboard(){
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
-      const onclick=a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
+      let onclick='';
+      if(a.type==='stock_retour'){onclick=`goPage('suivi')`;}
+      else if(a.product){onclick=`goPage('low-stock')`;}
+      else if(a.event){onclick=`editEv(${a.event.id});goPage('events')`;}
       html+=`<div style="padding:10px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
         <span style="color:${textColor};font-weight:500">${icon} ${a.text}</span>
       </div>`;
