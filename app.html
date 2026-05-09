@@ -3473,7 +3473,11 @@ function renderDashboard(){
       }
     });
   });
-  
+
+  // ═══ SEPARATE ALERTS BY CATEGORY ═══
+  const genericAlerts=alerts.filter(a=>a.type==='stock'||a.type==='stock_retour');
+  const eventAlerts=alerts.filter(a=>a.type==='staff'||a.type==='stock_event');
+
   // ═══ KPIs TOP ROW ═══
   const trackingCount=state.products.filter(p=>p.stock!=null).length;
   const stockOk=state.products.filter(p=>p.stock!=null&&(p.stockAlert==null||p.stock>p.stockAlert)).length;
@@ -3517,12 +3521,11 @@ function renderDashboard(){
     </div>
   </div>`;
   
-  // ═══ CRITICAL ALERTS ═══
-  if(alerts.length>0){
+  // ═══ GENERIC ALERTS (INVENTORY LEVEL) ═══
+  if(genericAlerts.length>0){
     html+=`<div style="margin-bottom:16px">`;
-    // Show all alerts in a grid, 5 per row
     html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">`;
-    alerts.forEach(a=>{
+    genericAlerts.forEach(a=>{
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
@@ -3590,8 +3593,14 @@ function renderDashboard(){
       let payIcon='○',payColor='var(--text3)';
       if(ev.paid){payIcon='✔';payColor='var(--green)';}
       else if(ev.acompte>0){payIcon='◐';payColor='var(--gold)';}
-      
-      html+=`<div class="card" style="padding:10px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between" onclick="goToEventSuivi(${ev.id})">
+
+      // Event-specific alerts for this event
+      const evAlerts=eventAlerts.filter(a=>a.event?.id===ev.id);
+      const hasAlerts=evAlerts.length>0;
+      const hasCriticalAlerts=evAlerts.some(a=>a.severity==='critical');
+      const borderStyle=hasCriticalAlerts?'border-top:2px solid var(--red)':hasAlerts?'border-color:var(--gold-border)':'';
+
+      html+=`<div class="card" style="padding:10px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between;${borderStyle}" onclick="goToEventSuivi(${ev.id})">
         <div>
           <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} • ${days}j</div>
@@ -3600,6 +3609,14 @@ function renderDashboard(){
             ${ev.paid?`<div style="color:var(--green);font-weight:500">✓ Entièrement payé</div>`:ev.acompte>0?`<div>Acompte: <span style="color:var(--gold);font-weight:500">${ev.acompte}€</span></div>`:'<div style="color:var(--text3)">En attente</div>'}
           </div>
         </div>
+        ${hasAlerts?`<div style="margin:8px 0;padding:8px;background:${hasCriticalAlerts?'var(--red-bg)':'var(--gold-bg)'};border-left:3px solid ${hasCriticalAlerts?'var(--red)':'var(--gold)'};border-radius:var(--radius);font-size:9px">
+          ${evAlerts.map(a=>{
+            const txt=a.text.includes(' — ')?a.text.split(' — ')[1]:a.text;
+            return `<div style="color:${a.severity==='critical'?'var(--red)':'var(--gold)'}; margin-bottom:3px">
+              ${a.severity==='critical'?'🚨':'⚠️'} ${txt}
+            </div>`;
+          }).join('')}
+        </div>`:''}
         <div style="display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);justify-content:space-between">
           <div style="text-align:center;flex:1">
             <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Équipe</div>
