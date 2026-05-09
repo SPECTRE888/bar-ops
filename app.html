@@ -289,6 +289,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
       Catalogue
     </div>
+    <div class="nav-item" onclick="goPage('low-stock')" id="nav-low-stock">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 1v10M4 6h8M8 15v0M3 3l9 9M13 3l-9 9"/></svg>
+      Stock faible <span class="nb" id="nb-low-stock" style="color:var(--red)">0</span>
+    </div>
     <div class="nav-item" onclick="goPage('cocktails')" id="nav-cocktails">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 2h10L8 9v5M5 14h6"/></svg>
       Cocktails <span class="nb" id="nb-c">0</span>
@@ -1932,6 +1936,7 @@ function goPage(p,_evId){
   if(p==='dashboard') renderDashboard();
   else if(p==='profile') renderProfile();
   else if(p==='catalogue') renderCatalogue();
+  else if(p==='low-stock') renderLowStock();
   else if(PAGE_CAT[p]){renderCatPage(PAGE_CAT[p]);document.getElementById('nav-catalogue')?.classList.add('active');}
   else if(p==='glassware') renderGlassware();
   else if(p==='staff'){renderStaff();renderDressCodes();}
@@ -1961,6 +1966,8 @@ function goPage(p,_evId){
 
 function updateBadges(){
   document.getElementById('nb-c').textContent=state.cocktails.length;
+  const lowStockCount=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).length;
+  document.getElementById('nb-low-stock').textContent=lowStockCount;
   const now=new Date();
   const ongoingEvents=state.events.filter(ev=>{
     const isPast=ev.date&&new Date(ev.date)<now;
@@ -2083,6 +2090,38 @@ function sortProducts(items){
     if(typeof va==='string') return catSort.dir*(va<vb?-1:va>vb?1:0);
     return catSort.dir*(va-vb);
   });
+}
+
+function renderLowStock(){
+  const el=document.getElementById('page-content');if(!el)return;
+
+  const lowStockProducts=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).sort((a,b)=>(a.stock||0)-(b.stock||0));
+
+  let html=`<div style="padding:20px">
+    <h2 style="font-family:var(--font-display);font-size:24px;color:var(--gold);margin-bottom:20px">Stock faible</h2>`;
+
+  if(lowStockProducts.length===0){
+    html+=`<div class="empty"><div class="empty-icon">✅</div><p>Tous les stocks sont OK!</p></div>`;
+  } else {
+    html+=`<div style="display:grid;gap:12px">`;
+    lowStockProducts.forEach(p=>{
+      const missing=(p.stockAlert-p.stock).toFixed(1);
+      html+=`<div class="card" style="padding:14px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--red)">
+        <div style="flex:1">
+          <div style="font-weight:500;color:var(--text);margin-bottom:4px">${p.brand?p.brand+' ':''}${p.productType}</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:6px">
+            <span style="color:var(--red);font-weight:500">${p.stock||0}</span> / ${p.stockAlert} (manque: ${missing})
+          </div>
+          ${p.qty?`<div style="font-size:10px;color:var(--text3)">Format: ${p.qty}cl • Prix: ${p.priceHT}€</div>`:''}
+        </div>
+        <button class="btn btn-sm btn-gold" onclick="goPage('catalogue');setTimeout(()=>{document.getElementById('cat-search').value='${p.productType}';renderCatalogue()},100)" style="margin-left:12px">Voir produit</button>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  el.innerHTML=html;
+  updateBadges();
 }
 
 function renderCatPage(cat){
@@ -9242,6 +9281,7 @@ function applyLang(){
     const p=active.id.replace('page-','');
     if(p==='dashboard') renderDashboard();
     else if(p==='catalogue') renderCatalogue();
+    else if(p==='low-stock') renderLowStock();
     else if(p==='cocktails') showCList();
     else if(p==='events') showEvList();
     else if(p==='historique') renderHistorique();
