@@ -7280,7 +7280,7 @@ function showPendingOrders(){
             </div>
             <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
               <input type="number" value="${item.receivedQty||item.qty}" min="0" style="width:40px;padding:2px 4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:10px;text-align:center" onchange="updateReceivedQty('${order.supplier}',${order.id},${iidx},this.value)"/>
-              <span style="color:var(--text3);font-size:10px">${item.unit}</span>
+              <span style="color:var(--text3);font-size:10px">${item.unit==='cl'?'btl':item.unit==='pièce'?'pièce':'pièce'}</span>
             </div>
           </div>
         `).join('')}
@@ -7335,7 +7335,7 @@ function showOrderHistory(){
               <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+item.code:''}</div>
             </div>
             <div style="text-align:right;color:var(--text2)">
-              <div>${item.receivedQty||item.qty} ${item.unit}</div>
+              <div>${item.receivedQty||item.qty} ${item.unit==='cl'?'btl':item.unit==='pièce'?'pièce':'pièce'}</div>
             </div>
           </div>
         `).join('')}
