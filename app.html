@@ -1851,6 +1851,8 @@ function commandProductFromLowStock(pid){
   save();
   const supplier=state.suppliers?.find(s=>s.id===sKey||s.name===sKey);
   toast(`✓ ${qty} × ${p.productType} → ${supplier?.name||sKey}`);
+  // Open supplier order modal to confirm
+  setTimeout(()=>openSupplierOrder(sKey),100);
 }
 
 function renderCatalogue(){
@@ -1916,41 +1918,58 @@ function renderCatalogue(){
   }
   // Product categories — render inline
   if(window._showLowStockOnly){
-    const lowStockProds=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).sort((a,b)=>(a.stock||0)-(b.stock||0));
+    const allLowStock=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert);
+    const toOrder=allLowStock.filter(p=>!p.orderPending).sort((a,b)=>(a.stock||0)-(b.stock||0));
+    const inProgress=allLowStock.filter(p=>p.orderPending).sort((a,b)=>(a.stock||0)-(b.stock||0));
 
-    let html=`<div style="padding:20px">`;
-    if(lowStockProds.length===0){
-      html+=`<div class="empty"><div class="empty-icon">✅</div><p>Tous les stocks sont OK!</p></div>`;
-    } else {
-      html+=`<table class="ptable" style="width:100%">
-        <thead>
-          <tr>
-            <th style="text-align:left">Type</th>
-            <th style="text-align:left">Marque</th>
-            <th style="text-align:right">Prix HT</th>
-            <th style="text-align:right">Stock actuel</th>
-            <th style="text-align:right">Min.</th>
-            <th style="text-align:right">À commander</th>
-            <th style="text-align:right">Prix total HT</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>`;
-      lowStockProds.forEach(p=>{
-        const toOrder=Math.max(0,p.stockAlert-(p.stock||0));
-        const supplier=state.suppliers?.find(s=>s.id===p.supplierId);
+    const renderTable=(prods,title,showBtn=true)=>{
+      if(!prods.length) return '';
+      let html=`<div style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.1em">${title}</div>
+        <table class="ptable" style="width:100%">
+          <thead>
+            <tr>
+              <th style="text-align:left">Type</th>
+              <th style="text-align:left">Marque</th>
+              <th style="text-align:right">Prix HT</th>
+              <th style="text-align:right">Stock actuel</th>
+              <th style="text-align:right">Min.</th>
+              <th style="text-align:right">À commander</th>
+              <th style="text-align:right">Prix total HT</th>
+              ${showBtn?'<th></th>':''}
+            </tr>
+          </thead>
+          <tbody>`;
+      prods.forEach(p=>{
+        const deficit=Math.max(0,p.stockAlert-(p.stock||0));
         html+=`<tr>
           <td>${p.productType}</td>
           <td>${p.brand||'—'}</td>
           <td style="text-align:right">${p.priceHT||'—'}€</td>
-          <td style="text-align:right;color:var(--red);font-weight:600">${p.stock||0}</td>
+          <td style="text-align:right;color:${p.stock<=0?'var(--red)':'var(--text2)'};font-weight:600">${p.stock||0}</td>
           <td style="text-align:right">${p.stockAlert}</td>
-          <td style="text-align:right"><input type="number" value="${toOrder.toFixed(1)}" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:3px;font-size:11px" id="order-${p.id}" min="0" step="0.1"/></td>
-          <td style="text-align:right">${(p.priceHT||0)*toOrder.toFixed(2)}€</td>
-          <td style="text-align:right"><button class="btn btn-sm ${p.orderPending?'btn-ghost':'btn-gold'}" ${p.orderPending?'disabled':''} onclick="commandProductFromLowStock(${p.id})">${p.orderPending?'Commande passée':'Commander'}</button></td>
+          <td style="text-align:right"><input type="number" value="${deficit.toFixed(1)}" style="width:60px;padding:4px;border:1px solid var(--border);border-radius:3px;font-size:11px" id="order-${p.id}" min="0" step="0.1"/></td>
+          <td style="text-align:right">${(p.priceHT||0)*deficit.toFixed(2)}€</td>
+          ${showBtn?`<td style="text-align:right"><button class="btn btn-sm btn-gold" onclick="commandProductFromLowStock(${p.id})">Commander</button></td>`:''}
         </tr>`;
       });
-      html+=`</tbody></table>`;
+      html+=`</tbody></table></div>`;
+      return html;
+    };
+
+    let html=`<div style="padding:20px">`;
+    if(allLowStock.length===0){
+      html+=`<div class="empty"><div class="empty-icon">✅</div><p>Tous les stocks sont OK!</p></div>`;
+    } else {
+      if(toOrder.length>0){
+        html+=renderTable(toOrder,'À Commander',true);
+      }
+      if(inProgress.length>0){
+        html+=`<div style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:var(--radius);padding:12px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--gold);font-weight:600">⏳ En attente de réception (${inProgress.length})</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">${inProgress.map(p=>`${p.brand||p.productType}`).join(', ')}</div>
+        </div>`;
+      }
     }
     html+=`</div>`;
     content.innerHTML=html;
@@ -2072,7 +2091,7 @@ function goPage(p,_evId){
 
 function updateBadges(){
   document.getElementById('nb-c').textContent=state.cocktails.length;
-  const lowStockCount=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert).length;
+  const lowStockCount=state.products.filter(p=>p.stock!=null&&p.stockAlert>0&&p.stock<=p.stockAlert&&!p.orderPending).length;
   const el=document.getElementById('nb-low-stock');
   if(el){
     el.textContent=lowStockCount;
@@ -7368,6 +7387,10 @@ function receiveOrder(supplier,orderId){
   order.status='received';
   order.receivedDate=new Date().toISOString();
   save();
+
+  // Update UI in real-time
+  updateBadges();
+  if(window._showLowStockOnly) renderCatalogue();
 
   showToast(`✓ ${order.items.length} produit(s) ajouté(s) au stock`);
   showPendingOrders();
