@@ -4558,7 +4558,7 @@ function updEvCGlass(cid, glassIdStr){
   // Update unit cost display immediately
   const cocktail=state.cocktails.find(x=>x.id===cid);
   if(cocktail){
-    const totalCostUnit=cocktail.totalCost + sel[cid].glassCostHT;
+    const totalCostUnit=(cocktail.totalCost||0)-(cocktail.glassCost||0)+sel[cid].glassCostHT;
     const unitCostEl=document.getElementById('unit-cost-'+cid);
     if(unitCostEl) unitCostEl.textContent=totalCostUnit.toFixed(3)+'€';
   }
