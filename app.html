@@ -4116,7 +4116,8 @@ function showEvForm(ev){
   if(ev.clientId) el._clientId=ev.clientId;
 
   el.innerHTML=`
-  <div style="max-width:1200px">
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start">
+    <div style="min-width:0">
 
     <!-- SECTION 1: CLIENT & CONTACT -->
     <div class="card">
@@ -4342,7 +4343,10 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 4: SUMMARY -->
+    </div>
+
+    <!-- SECTION 4: SUMMARY (STICKY RIGHT) -->
+    <div style="position:sticky;top:0;height:fit-content">
     <div class="card">
       <div class="ctitle">${t('ev_summary')}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px">
@@ -4384,9 +4388,10 @@ function showEvForm(ev){
         </div>
       </div>
     </div>
+    </div>
 
     <!-- ACTIONS -->
-    <div class="flex-g no-print" style="margin-bottom:24px">
+    <div class="flex-g no-print" style="grid-column:1;margin-bottom:24px">
       <button class="btn btn-gold" onclick="saveEv()">${t('ev_save')}</button>
       <button class="btn btn-ghost" onclick="showEvList()">${t('btn_cancel')}</button>
     </div>
