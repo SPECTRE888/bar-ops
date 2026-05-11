@@ -4813,9 +4813,6 @@ function updEvCalc(){
   const delivery=parseFloat(document.getElementById('ef-delivery')?.value)||0;
   const deliveryBill=parseFloat(document.getElementById('ef-delivery-bill')?.value)||0;
   const barPrice=parseFloat(document.getElementById('ef-bar-price')?.value)||0;
-
-  staffCost+=extra+delivery;
-  staffRevenue+=extraBill+deliveryBill+barPrice;
   // Produits supplémentaires
   const extraProdRevenue=(window._evExtraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
   revenue+=extraProdRevenue;
@@ -4831,8 +4828,8 @@ function updEvCalc(){
   // Remise
   const remisePct=parseFloat(document.getElementById('ef-remise-pct')?.value)||0;
   const remiseHT=parseFloat(document.getElementById('ef-remise-ht')?.value)||0;
-  const tc=ingCost+staffCost;
-  const revenueBeforeRemise=revenue+staffRevenue;
+  const tc=ingCost+staffCost+extra+delivery;
+  const revenueBeforeRemise=revenue+staffRevenue+extraBill+deliveryBill+barPrice;
   const remiseMontant=remiseHT>0?remiseHT:(remisePct>0?revenueBeforeRemise*remisePct/100:0);
   const totalRevenue=revenueBeforeRemise-remiseMontant;
   const mg=totalRevenue-tc, mgp=totalRevenue>0?mg/totalRevenue*100:0;
@@ -5003,11 +5000,10 @@ async function saveEv(){
   
   staffRevenue=nB*calcHours('ef-arrbrt','ef-depbrt')*staffBillPerRole.brt+
                nW*calcHours('ef-arrwtr','ef-depwtr')*staffBillPerRole.wtr+
-               nM*calcHours('ef-arrmgr','ef-depmgr')*staffBillPerRole.mgr+
-               extraBill+deliveryBill;
+               nM*calcHours('ef-arrmgr','ef-depmgr')*staffBillPerRole.mgr;
 
   const barPrice=parseFloat(document.getElementById('ef-bar-price')?.value)||0;
-  const revenueBeforeRemise=revenue+staffRevenue+barPrice;
+  const revenueBeforeRemise=revenue+staffRevenue+extraBill+deliveryBill+barPrice;
   const remisePct=parseFloat(document.getElementById('ef-remise-pct')?.value)||0;
   const remiseHT=parseFloat(document.getElementById('ef-remise-ht')?.value)||0;
   const remiseMontant=remiseHT>0?remiseHT:(remisePct>0?revenueBeforeRemise*remisePct/100:0);
@@ -5015,7 +5011,7 @@ async function saveEv(){
 
   // Calc TTC (same logic as buildDevisHTML)
   const cocktailTotalTTC=(sel&&Object.entries(sel)||[]).reduce((s,[cid,cfg])=>{const c=state.cocktails.find(x=>x.id==cid);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||20)/100):0);},0);
-  const grandTTC=cocktailTotalTTC+staffRevenue*1.20+barPrice*1.20;
+  const grandTTC=cocktailTotalTTC+(staffRevenue+extraBill+deliveryBill+barPrice)*1.20;
 
   const ev={
     id:editEvId||Date.now(),name,
