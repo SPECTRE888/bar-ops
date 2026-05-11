@@ -4807,11 +4807,9 @@ function renderStaffList(evId){
       <span style="color:var(--gold);font-weight:600;text-align:center">${hours.toFixed(1)}h</span>
       <div style="display:flex;flex-direction:column;gap:2px">
         <input type="number" value="${s.costHT||''}" placeholder="0" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
-        <span style="font-size:8px;color:var(--text3)">${cost>0?cost.toFixed(2)+'€':''}</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:2px">
         <input type="number" value="${s.billHT||''}" placeholder="0" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
-        <span style="font-size:8px;color:var(--text3)">${bill>0?bill.toFixed(2)+'€':''}</span>
       </div>
       <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
       <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
@@ -4951,39 +4949,13 @@ function updEvCalc(){
   const extra=parseFloat(document.getElementById('ef-extra')?.value)||0;
   const extraBill=parseFloat(document.getElementById('ef-extra-bill')?.value)||0;
 
-  // Per-role cost & billing breakdown
-  const roleMap={
-    'Bartender':         {qty:nB,  hrs:hrsBrt, costEl:'ef-costbrt', billEl:'ef-billbrt', mgEl:'ef-mgbrt'},
-    'Serveur':           {qty:nW,  hrs:hrsWtr, costEl:'ef-costwtr', billEl:'ef-billwtr', mgEl:'ef-mgwtr'},
-    'Bar Manager':       {qty:nM,  hrs:hrsMgr, costEl:'ef-costmgr', billEl:'ef-billmgr', mgEl:'ef-mgmgr'},
-    'Manutentionnaire':  {qty:nMn, hrs:hrsMan, costEl:'ef-costman', billEl:'ef-billman', mgEl:'ef-mgman'},
-  };
-  Object.values(roleMap).forEach(r=>{
-    ['costEl','billEl','mgEl'].forEach(k=>{const e=document.getElementById(r[k]);if(e)e.textContent='—';});
-  });
-
+  // Staff cost from staffAssignments (new line-item model)
   let staffCost=0, staffRevenue=0;
-  const roleAcc={'Bartender':{c:0,b:0},'Serveur':{c:0,b:0},'Bar Manager':{c:0,b:0},'Manutentionnaire':{c:0,b:0}};
-
-  state.staffItems.forEach(s=>{
-    const rm=roleMap[s.type];
-    if(!rm)return;
-    const hrs=rm.hrs||1;
-    const mult=rm.qty*hrs;
-    roleAcc[s.type].c += (s.rateHT||0)*mult;
-    roleAcc[s.type].b += (s.billHT||s.rateHT||0)*mult;
-  });
-
-  Object.entries(roleAcc).forEach(([type,acc])=>{
-    const rm=roleMap[type];if(!rm)return;
-    if(acc.c>0||acc.b>0){
-      const mg=acc.b-acc.c;
-      const ce=document.getElementById(rm.costEl);if(ce)ce.textContent=acc.c.toFixed(2)+'€';
-      const be=document.getElementById(rm.billEl);if(be)be.textContent=acc.b.toFixed(2)+'€';
-      const me=document.getElementById(rm.mgEl);if(me){me.textContent=(mg>=0?'+':'')+mg.toFixed(2)+'€';me.style.color=mg>=0?'var(--green)':'var(--red)';}
-    }
-    staffCost+=acc.c;
-    staffRevenue+=acc.b;
+  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+  (curEv?.staffAssignments||[]).forEach(s=>{
+    const hrs=calcStaffHours(s.arrivalTime,s.departureTime);
+    staffCost+=(s.costHT||0)*hrs;
+    staffRevenue+=(s.billHT||0)*hrs;
   });
 
   const delivery=parseFloat(document.getElementById('ef-delivery')?.value)||0;
