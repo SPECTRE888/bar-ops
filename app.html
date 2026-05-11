@@ -1453,9 +1453,9 @@ function injectDemoData(){
 
   // ── GLASSES ────────────────────────────────────────────
   state.glasses=[
-    {id:now+20,name:'Rocks / Old Fashioned',priceHT:0.70,volumeCl:30},
-    {id:now+21,name:'Highball',priceHT:0.45,volumeCl:40},
-    {id:now+22,name:'Coupe',priceHT:0.60,volumeCl:20},
+    {id:now+20,name:'Rocks / Old Fashioned',priceHT:0.70,priceBilledHT:0.70,volumeCl:30},
+    {id:now+21,name:'Highball',priceHT:0.45,priceBilledHT:0.45,volumeCl:40},
+    {id:now+22,name:'Coupe',priceHT:0.60,priceBilledHT:0.60,volumeCl:20},
   ];
 
   // ── ICE ────────────────────────────────────────────────
@@ -2331,7 +2331,7 @@ function renderCatPage(cat){
 // ════════════════════════════════════════════════════════
 // GLASSWARE & ICE
 // ════════════════════════════════════════════════════════
-async function addGlass(){if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,notes:''});save();renderGlassware();}
+async function addGlass(){if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux verres.');return;}state.glasses.push({id:Date.now(),name:'',priceHT:0,priceBilledHT:0,notes:''});save();renderGlassware();}
 async function delGlass(id){if(!await confirmModal('Supprimer ce verre ?'))return;state.glasses=state.glasses.filter(x=>x.id!==id);save();renderGlassware();}
 function updGlass(id,k,v){const g=state.glasses.find(x=>x.id===id);if(g){g[k]=v;save();renderGlassware();}}
 function resetDefaultGlass(glassId){
@@ -2354,6 +2354,7 @@ function renderGlassware(){
       <td><div id="gs-${g.id}" style="min-width:120px"></div></td>
       <td><input value="${(g.appellation||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
       <td><input type="number" value="${g.priceHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
+      <td><input type="number" value="${g.priceBilledHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceBilledHT',parseFloat(this.value)||0)" style="width:80px"/></td>
       <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box" placeholder="cl"/></td>
       <td><select onchange="updGlass(${g.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${g.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
       <td><input value="${(g.notes||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
@@ -3847,7 +3848,7 @@ function recalcAllCocktailsIce(){
     }
 
     // 4. Recalc glass cost
-    if(glass) c.glassCost=parseFloat((glass.priceHT||0).toFixed(3));
+    if(glass) c.glassCost=parseFloat((glass.priceBilledHT||glass.priceHT||0).toFixed(3));
 
     // 5. Update totalCost
     c.totalCost=parseFloat((ingCost+consoCost+(c.iceVal||0)+(c.glassCost||0)).toFixed(4));
@@ -4553,7 +4554,7 @@ function updEvCGlass(cid, glassIdStr){
   const g=glassId?state.glasses.find(x=>x.id===glassId):null;
   sel[cid].glassId=glassId;
   sel[cid].glass=g?g.name:'';
-  sel[cid].glassCostHT=g?((g.priceTTC||g.priceHT||0)/1.10):0;
+  sel[cid].glassCostHT=g?(g.priceBilledHT||g.priceHT||0):0;
   // Update unit cost display immediately
   const cocktail=state.cocktails.find(x=>x.id===cid);
   if(cocktail){
