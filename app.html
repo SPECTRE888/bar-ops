@@ -4870,13 +4870,12 @@ function updEvCalc(){
   Object.entries(sel).forEach(([cid,cfg])=>{
     const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
     const qty=cfg.qty||0;
-    ingCost+=qty*c.totalCost;
     const gc=cfg.glassCostHT||0;
+    ingCost+=qty*((c.totalCost||0)-(c.glassCost||0)+gc);
     const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
     revenue+=qty*adjustedPrice;
     glassCost+=qty*gc;
   });
-  ingCost+=glassCost;
 
   // Casse verres: 5% du coût des verres × % configuré par verre
   let billedBreakage=0;
