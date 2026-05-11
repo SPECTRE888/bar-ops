@@ -4291,31 +4291,11 @@ function showEvForm(ev){
     <!-- SECTION 3: STAFF -->
     <div class="card">
       <div class="ctitle">${t('ev_staff_section')}</div>
-      <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;align-items:center;padding:4px 0;margin-bottom:4px;font-size:11px;color:var(--text3);font-weight:500">
-        <span>Rôle</span><span>Nb</span><span>Arrivée</span><span>Départ</span><span>H.</span><span style="color:var(--red)">Coût</span><span style="color:var(--green)">Fact.</span><span>Marge</span>
+      <div style="display:grid;grid-template-columns:100px 140px 85px 85px 50px 70px 70px 60px 28px;gap:6px;align-items:center;padding:4px 0;margin-bottom:8px;font-size:10px;color:var(--text3);font-weight:500">
+        <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold)">H.</span><span style="color:var(--red)">Coût</span><span style="color:var(--green)">Fact.</span><span>Marge</span><span></span>
       </div>
-      ${[
-        {key:'brt',label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||''},
-        {key:'wtr',label:'Serveur',  n:ev.nWaiters||0,  arr:ev.arrWtr||'',dep:ev.depWtr||''},
-        {key:'mgr',label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||''},
-        {key:'man',label:'Manutentionnaire',n:ev.nManutentionnaires||0,arr:ev.arrMan||'',dep:ev.depMan||''},
-      ].map(r=>`
-      <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <span style="font-weight:500">${r.label}</span>
-        <input type="number" id="ef-n${r.key}" value="${r.n}" min="0" style="width:40px;padding:4px 6px;font-size:12px;height:28px" oninput="updEvField(${ev.id},'n${r.key==='brt'?'Bartenders':r.key==='wtr'?'Waiters':r.key==='mgr'?'Managers':'Manutentionnaires'}',parseInt(this.value)||0);updEvCalc()"/>
-        <select id="ef-arr${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvField(${ev.id},'arr${r.key.charAt(0).toUpperCase()+r.key.slice(1)}',this.value);updEvCalc()">${mkTimeOpts(r.arr)}</select>
-        <select id="ef-dep${r.key}" style="width:100%;font-size:12px;padding:4px 6px;height:28px" onchange="updEvField(${ev.id},'dep${r.key.charAt(0).toUpperCase()+r.key.slice(1)}',this.value);updEvCalc()">${mkTimeOpts(r.dep)}</select>
-        <span id="ef-hrs${r.key}" style="color:var(--gold);font-size:11px;font-weight:500">—</span>
-        <span id="ef-cost${r.key}" style="color:var(--red);font-size:11px">—</span>
-        <span id="ef-bill${r.key}" style="color:var(--green);font-size:11px">—</span>
-        <span id="ef-mg${r.key}" style="font-size:11px">—</span>
-      </div>`).join('')}
-      <div style="display:grid;grid-template-columns:120px 50px 90px 90px 60px 80px 80px 60px;gap:6px;padding:6px 0;font-size:12px;font-weight:600;border-top:1px solid var(--border)">
-        <span>Total</span><span></span><span></span><span></span><span></span>
-        <span id="ef-total-cost" style="color:var(--red)">—</span>
-        <span id="ef-total-bill" style="color:var(--green)">—</span>
-        <span id="ef-total-mg">—</span>
-      </div>
+      <div id="ev-staff-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="addStaffAssignment(${ev.id})">+ Ajouter staff</button>
 
       <!-- Tenue -->
       ${state.dressCodes.length?`
@@ -4327,6 +4307,16 @@ function showEvForm(ev){
         </select>
       </div>
       `:''}
+
+      <!-- Staff Total -->
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
+        <div style="display:grid;grid-template-columns:100px 140px 85px 85px 50px 70px 70px 60px;gap:6px;padding:4px 0;font-size:11px;font-weight:600">
+          <span colspan="5"></span>
+          <span id="ef-staff-total-cost" style="color:var(--red)">—</span>
+          <span id="ef-staff-total-bill" style="color:var(--green)">—</span>
+          <span id="ef-staff-total-mg">—</span>
+        </div>
+      </div>
     </div>
 
     <!-- SECTION 3.5: LIVRAISON & NOTES -->
@@ -4431,7 +4421,7 @@ function showEvForm(ev){
   if(ev.barItemId){const b=(state.barItems||[]).find(x=>x.id===ev.barItemId);if(b){if(document.getElementById('ef-bar-color'))document.getElementById('ef-bar-color').value=b.color||'';if(document.getElementById('ef-bar-style'))document.getElementById('ef-bar-style').value=b.style||'';}}
   // Restore notes
   if(ev.notes){const notesEl=document.getElementById('ef-notes');if(notesEl)notesEl.value=ev.notes;}
-  renderEvPicker();updBarOptions();updEvCalc();_renderExtraProds();
+  migrateOldStaffData(ev);renderEvPicker();updBarOptions();renderStaffList(ev.id);updEvCalc();_renderExtraProds();
 }
 
 function renderEvPicker(){
@@ -4719,6 +4709,145 @@ function updBarSelection(){
     if(sumEl)sumEl.textContent='—';
   }
   updEvCalc();
+}
+
+// ════════════════════════════════════════════════════════
+// STAFF ASSIGNMENTS MANAGEMENT
+// ════════════════════════════════════════════════════════
+function addStaffAssignment(evId){
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev) return;
+  if(!ev.staffAssignments) ev.staffAssignments=[];
+
+  const defaultRole='Bartender';
+  const defaultStaff=state.staffItems.find(s=>s.type===defaultRole);
+
+  ev.staffAssignments.push({
+    id:Date.now(),
+    name:defaultStaff?.name||'',
+    role:defaultRole,
+    arrivalTime:'14:00',
+    departureTime:'22:00',
+    costHT:defaultStaff?.rateHT||25,
+    billHT:defaultStaff?.billHT||45
+  });
+
+  save();
+  renderStaffList(evId);
+  updEvCalc();
+}
+
+function delStaffAssignment(evId, assignId){
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev || !ev.staffAssignments) return;
+  ev.staffAssignments=ev.staffAssignments.filter(s=>s.id!==assignId);
+  save();
+  renderStaffList(evId);
+  updEvCalc();
+}
+
+function calcStaffHours(arrivalTime, departureTime){
+  if(!arrivalTime || !departureTime) return 0;
+  const [ah,am]=arrivalTime.split(':').map(Number);
+  const [dh,dm]=departureTime.split(':').map(Number);
+  let h=(dh*60+dm)-(ah*60+am);
+  if(h<0) h+=24*60;
+  return h/60;
+}
+
+function renderStaffList(evId){
+  const ev=state.events.find(x=>x.id===evId);
+  const list=document.getElementById('ev-staff-list');
+  if(!list) return;
+
+  const staffList=ev?.staffAssignments||[];
+
+  if(!staffList.length){
+    list.innerHTML='<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun staff assigné</div>';
+    // Reset totals
+    const elCost=document.getElementById('ef-staff-total-cost');
+    const elBill=document.getElementById('ef-staff-total-bill');
+    const elMg=document.getElementById('ef-staff-total-mg');
+    if(elCost) elCost.textContent='—';
+    if(elBill) elBill.textContent='—';
+    if(elMg) elMg.textContent='—';
+    return;
+  }
+
+  let totalCost=0, totalBill=0;
+
+  list.innerHTML=staffList.map(s=>{
+    const hours=calcStaffHours(s.arrivalTime, s.departureTime);
+    const cost=(s.costHT||0)*hours;
+    const bill=(s.billHT||0)*hours;
+    const margin=bill-cost;
+
+    totalCost+=cost;
+    totalBill+=bill;
+
+    const roleOpts=['Bartender','Serveur','Bar Manager','Manutentionnaire'];
+    const staffNames=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
+
+    return`<div style="display:grid;grid-template-columns:100px 140px 85px 85px 50px 70px 70px 60px 28px;gap:6px;align-items:center;padding:6px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+      <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px">
+        ${roleOpts.map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}
+      </select>
+      <input value="${(s.name||'').replace(/"/g,'&quot;')}" onchange="updStaffAssignment(${evId},${s.id},'name',this.value);updEvCalc()" placeholder="Nom staff..." style="padding:4px 6px;font-size:11px"/>
+      <select onchange="updStaffAssignment(${evId},${s.id},'arrivalTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px">${mkTimeOpts(s.arrivalTime)}</select>
+      <select onchange="updStaffAssignment(${evId},${s.id},'departureTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px">${mkTimeOpts(s.departureTime)}</select>
+      <span style="color:var(--gold);font-weight:500;text-align:center">${hours.toFixed(1)}h</span>
+      <input type="number" value="${(s.costHT||0).toFixed(2)}" step="0.01" min="0" onchange="updStaffAssignment(${evId},${s.id},'costHT',parseFloat(this.value)||0);renderStaffList(${evId});updEvCalc()" style="width:100%;padding:4px 6px;font-size:11px;text-align:right"/>
+      <input type="number" value="${(s.billHT||0).toFixed(2)}" step="0.01" min="0" onchange="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);renderStaffList(${evId});updEvCalc()" style="width:100%;padding:4px 6px;font-size:11px;text-align:right"/>
+      <span style="text-align:right;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</span>
+      <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:2px 4px">×</button>
+    </div>`;
+  }).join('');
+
+  // Update totals
+  const elCost=document.getElementById('ef-staff-total-cost');
+  const elBill=document.getElementById('ef-staff-total-bill');
+  const elMg=document.getElementById('ef-staff-total-mg');
+  if(elCost) elCost.textContent=totalCost>0?totalCost.toFixed(2)+'€':'—';
+  if(elBill) elBill.textContent=totalBill>0?totalBill.toFixed(2)+'€':'—';
+  if(elMg) elMg.textContent=totalBill>0?((totalBill-totalCost)>=0?'+':'')+(totalBill-totalCost).toFixed(2)+'€':'—';
+}
+
+function updStaffAssignment(evId, assignId, key, value){
+  const ev=state.events.find(x=>x.id===evId);
+  if(!ev || !ev.staffAssignments) return;
+  const assign=ev.staffAssignments.find(s=>s.id===assignId);
+  if(assign){
+    assign[key]=key==='costHT'||key==='billHT'?parseFloat(value)||0:value;
+    save();
+  }
+}
+
+function migrateOldStaffData(ev){
+  if(ev.staffAssignments && ev.staffAssignments.length>0) return;
+  if(!ev.nBartenders && !ev.nWaiters && !ev.nManagers && !ev.nManutentionnaires) return;
+
+  ev.staffAssignments=[];
+  const roles=[
+    {n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',role:'Bartender'},
+    {n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',role:'Serveur'},
+    {n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',role:'Bar Manager'},
+    {n:ev.nManutentionnaires||0,arr:ev.arrMan||'',dep:ev.depMan||'',role:'Manutentionnaire'},
+  ];
+
+  roles.forEach(r=>{
+    for(let i=0;i<r.n;i++){
+      const defaultStaff=state.staffItems.find(s=>s.type===r.role);
+      ev.staffAssignments.push({
+        id:Date.now()+i,
+        name:defaultStaff?.name||'',
+        role:r.role,
+        arrivalTime:r.arr,
+        departureTime:r.dep,
+        costHT:defaultStaff?.rateHT||25,
+        billHT:defaultStaff?.billHT||45
+      });
+    }
+  });
 }
 
 function updEvCalc(){
@@ -5062,6 +5191,7 @@ async function saveEv(){
     depMgr:(document.getElementById('ef-depmgr')?.value||'').trim()||existingEv?.depMgr||'',
     arrMan:(document.getElementById('ef-arrman')?.value||'').trim()||existingEv?.arrMan||'',
     depMan:(document.getElementById('ef-depman')?.value||'').trim()||existingEv?.depMan||'',
+    staffAssignments:existingEv?.staffAssignments||[],
     extraCostHT:parseFloat(document.getElementById('ef-extra')?.value)||0,
     extraBillHT:parseFloat(document.getElementById('ef-extra-bill')?.value)||0,
     deliveryCostHT:parseFloat(document.getElementById('ef-delivery')?.value)||0,
