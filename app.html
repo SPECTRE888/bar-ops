@@ -1453,9 +1453,9 @@ function injectDemoData(){
 
   // ── GLASSES ────────────────────────────────────────────
   state.glasses=[
-    {id:now+20,name:'Rocks / Old Fashioned',priceTTC:1.20,volumeCl:30},
-    {id:now+21,name:'Highball',priceTTC:1.00,volumeCl:40},
-    {id:now+22,name:'Coupe',priceTTC:1.50,volumeCl:20},
+    {id:now+20,name:'Rocks / Old Fashioned',priceHT:1.00,volumeCl:30},
+    {id:now+21,name:'Highball',priceHT:0.83,volumeCl:40},
+    {id:now+22,name:'Coupe',priceHT:1.25,volumeCl:20},
   ];
 
   // ── ICE ────────────────────────────────────────────────
@@ -2354,7 +2354,6 @@ function renderGlassware(){
       <td><div id="gs-${g.id}" style="min-width:120px"></div></td>
       <td><input value="${(g.appellation||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
       <td><input type="number" value="${g.priceHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
-      <td><input type="number" value="${g.priceTTC||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceTTC',parseFloat(this.value)||0)" style="width:80px"/></td>
       <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box" placeholder="cl"/></td>
       <td><select onchange="updGlass(${g.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${g.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
       <td><input value="${(g.notes||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
@@ -2805,7 +2804,7 @@ function showCForm(c){
         const parts=[g.name];
         if(g.appellation) parts.push(g.appellation);
         if(g.volumeCl) parts.push(g.volumeCl+'cl');
-        const cost=parseFloat(((g.priceTTC||g.priceHT||0)/1.10).toFixed(2));
+        const cost=parseFloat((g.priceHT||0).toFixed(2));
         if(cost>0) parts.push(fmt(cost)+'€');
         return parts.join(' — ');
       }).filter(Boolean)
@@ -2948,7 +2947,7 @@ function showCForm(c){
   mkSS('cf-glass-sel',glassOpts,'ex: Highball...',(v)=>{
     const g=state.glasses.find(x=>v.startsWith(x.name));
     if(g){
-      const newGlassCost=parseFloat(((g.priceTTC||g.priceHT||0)/1.10).toFixed(3));
+      const newGlassCost=parseFloat((g.priceHT||0).toFixed(3));
       document.getElementById('cf-glass-cost').value=newGlassCost;
       updIceCost();updCRecap();
       setTimeout(()=>{
@@ -2969,7 +2968,7 @@ function showCForm(c){
   if(!editCId){
     const defaultGlass=state.glasses.find(x=>x.isDefault);
     if(defaultGlass){
-      const ht=parseFloat(((defaultGlass.priceTTC||defaultGlass.priceHT||0)/1.10).toFixed(3));
+      const ht=parseFloat((defaultGlass.priceHT||0).toFixed(3));
       document.getElementById('cf-glass-cost').value=ht;
       updIceCost();updCRecap();
     }
@@ -3848,7 +3847,7 @@ function recalcAllCocktailsIce(){
     }
 
     // 4. Recalc glass cost
-    if(glass) c.glassCost=parseFloat(((glass.priceTTC||glass.priceHT||0)/1.10).toFixed(3));
+    if(glass) c.glassCost=parseFloat((glass.priceHT||0).toFixed(3));
 
     // 5. Update totalCost
     c.totalCost=parseFloat((ingCost+consoCost+(c.iceVal||0)+(c.glassCost||0)).toFixed(4));
@@ -4453,7 +4452,7 @@ function renderEvPicker(){
     // Gamme selection — stored by glass id
     const selectedGlassId=cfg.glassId||null;
     const selectedGlassObj=state.glasses.find(x=>x.id===selectedGlassId)||null;
-    const glassCostHT=selectedGlassObj?((selectedGlassObj.priceTTC||selectedGlassObj.priceHT||0)/1.10):0;
+    const glassCostHT=selectedGlassObj?(selectedGlassObj.priceHT||0):0;
     // Sync into sel for calc
     sel[c.id].glassCostHT=glassCostHT;
 
@@ -4475,7 +4474,7 @@ function renderEvPicker(){
       :[];
     const allGlassesOfType=matchingGlasses.length?matchingGlasses:state.glasses;
     const gammeOptions=allGlassesOfType.map(g=>{
-      const ht=((g.priceTTC||g.priceHT||0)/1.10);
+      const ht=g.priceHT||0;
       return`<option value="${g.id}"${g.id===selectedGlassId?' selected':''}>
         ${g.appellation||'Sans gamme'}${ht>0?' · '+ht.toFixed(3)+'€ HT':''}
       </option>`;
@@ -4888,7 +4887,7 @@ function updEvCalc(){
     const qty=cfg.qty||0;
     const glassObj=state.glasses?.find(g=>g.name===c.glass);
     if(glassObj){
-      const glassCost=(glassObj.priceTTC||glassObj.priceHT||0)/1.10;
+      const glassCost=glassObj.priceHT||0;
       const breakageCost=glassCost*0.05;
       const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
       billedBreakage+=qty*breakageCost*(breakagePercent/100);
