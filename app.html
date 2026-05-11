@@ -2946,7 +2946,7 @@ function showCForm(c){
   mkSS('cf-glass-sel',glassOpts,'ex: Highball...',(v)=>{
     const g=state.glasses.find(x=>v.startsWith(x.name));
     if(g){
-      const newGlassCost=parseFloat((g.priceHT||0).toFixed(3));
+      const newGlassCost=parseFloat((g.priceBilledHT||g.priceHT||0).toFixed(3));
       document.getElementById('cf-glass-cost').value=newGlassCost;
       updIceCost();updCRecap();
       setTimeout(()=>{
@@ -2967,7 +2967,7 @@ function showCForm(c){
   if(!editCId){
     const defaultGlass=state.glasses.find(x=>x.isDefault);
     if(defaultGlass){
-      const ht=parseFloat((defaultGlass.priceHT||0).toFixed(3));
+      const ht=parseFloat((defaultGlass.priceBilledHT||defaultGlass.priceHT||0).toFixed(3));
       document.getElementById('cf-glass-cost').value=ht;
       updIceCost();updCRecap();
     }
