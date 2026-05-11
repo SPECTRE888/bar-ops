@@ -4254,7 +4254,7 @@ function showEvForm(ev){
           <span style="font-size:13px;font-weight:600;color:var(--gold);height:28px;display:flex;align-items:center;padding:0 4px" id="ef-bar-prix">—</span>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px" id="ef-bar-summary"></div>
+      <input type="hidden" id="ef-bar-summary"/>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
       <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
@@ -4777,11 +4777,9 @@ function renderStaffList(evId){
       <span style="color:var(--gold);font-weight:600;text-align:center">${hours.toFixed(1)}h</span>
       <div style="display:flex;flex-direction:column;gap:1px">
         <input type="number" value="${hours>0?cost.toFixed(2):s.costHT||''}" placeholder="Total €" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
-        ${hours>0&&s.costHT>0?`<span style="font-size:8px;color:var(--text3);text-align:right">${(s.costHT).toFixed(0)}€/h</span>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:1px">
+      <div>
         <input type="number" value="${hours>0?bill.toFixed(2):s.billHT||''}" placeholder="Total €" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
-        ${hours>0&&s.billHT>0?`<span style="font-size:8px;color:var(--text3);text-align:right">${(s.billHT).toFixed(0)}€/h</span>`:''}
       </div>
       <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
       <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
