@@ -4291,7 +4291,7 @@ function showEvForm(ev){
     <!-- SECTION 3: STAFF -->
     <div class="card">
       <div class="ctitle">${t('ev_staff_section')}</div>
-      <div style="display:grid;grid-template-columns:110px 150px 80px 80px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
+      <div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
         <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold);text-align:center">Heures</span><span style="color:var(--red);text-align:right">Coût HT</span><span style="color:var(--green);text-align:right">Facturation HT</span><span style="text-align:right">Marge</span><span></span>
       </div>
       <div id="ev-staff-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
@@ -4309,12 +4309,18 @@ function showEvForm(ev){
       `:''}
 
       <!-- Staff Total -->
-      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
-        <div style="display:grid;grid-template-columns:100px 140px 85px 85px 50px 70px 70px 60px;gap:6px;padding:4px 0;font-size:11px;font-weight:600">
-          <span colspan="5"></span>
-          <span id="ef-staff-total-cost" style="color:var(--red)">—</span>
-          <span id="ef-staff-total-bill" style="color:var(--green)">—</span>
-          <span id="ef-staff-total-mg">—</span>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:flex-end;gap:32px">
+        <div style="text-align:right">
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Coût HT</div>
+          <div id="ef-staff-total-cost" style="font-size:16px;font-weight:600;color:var(--red)">—</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Facturation HT</div>
+          <div id="ef-staff-total-bill" style="font-size:16px;font-weight:600;color:var(--green)">—</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Marge</div>
+          <div id="ef-staff-total-mg" style="font-size:16px;font-weight:600;color:var(--gold)">—</div>
         </div>
       </div>
     </div>
@@ -4787,7 +4793,7 @@ function renderStaffList(evId){
 
     const staffForRole=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
 
-    return`<div style="display:grid;grid-template-columns:110px 150px 80px 80px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+    return`<div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
       <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">
         ${roleOpts.map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}
       </select>
