@@ -4798,6 +4798,7 @@ function renderStaffList(evId){
 
     return`<div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
       <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">
+        <option value="">— Rôle —</option>
         ${roleOpts.map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}
       </select>
       <div id="staff-name-ss-${s.id}" style="min-width:0"></div>
@@ -4810,17 +4811,27 @@ function renderStaffList(evId){
       </div>
       <div style="display:flex;flex-direction:column;gap:2px">
         <input type="number" value="${s.billHT||''}" placeholder="0" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
-        <span style="font-size:8px;color:var(--text3)">${bill.toFixed(2)}€</span>
+        <span style="font-size:8px;color:var(--text3)">${bill>0?bill.toFixed(2)+'€':''}</span>
       </div>
       <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
       <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
     </div>`;
   }).join('');
 
-  // Init mkSS for each staff name
+  // Init mkSS for each staff name — selecting a name auto-fills rates
   staffList.forEach(s=>{
-    const staffForRole=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
-    mkSS('staff-name-ss-'+s.id, staffForRole, 'Nom staff...', (v)=>updStaffAssignment(evId,s.id,'name',v), s.name||'');
+    const staffForRole=state.staffItems.filter(x=>x.type===s.role);
+    const names=staffForRole.map(x=>x.name);
+    mkSS('staff-name-ss-'+s.id, names, 'Nom staff...', (v)=>{
+      updStaffAssignment(evId,s.id,'name',v);
+      const found=staffForRole.find(x=>x.name===v);
+      if(found){
+        updStaffAssignment(evId,s.id,'costHT',found.rateHT||0);
+        updStaffAssignment(evId,s.id,'billHT',found.billHT||found.rateHT||0);
+        renderStaffList(evId);
+        updEvCalc();
+      }
+    }, s.name||'');
   });
 
   // Update totals
