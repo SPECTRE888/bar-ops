@@ -1890,7 +1890,7 @@ function renderCatalogue(){
     // Show glassware + ice
     content.innerHTML=`
       <div class="card">
-        <div class="ctitle"> Verrerie <span class="txs tm">(prix TTC → HT TVA 10%)</span></div>
+        <div class="ctitle"> Verrerie</div>
         <div class="card" style="padding:0;overflow:hidden">
           <table class="ptable"><thead><tr><th>Par défaut</th><th>${t('cat_type')}</th><th>Gamme</th><th style="color:var(--text3);font-size:9px">Prix achat HT</th><th style="color:var(--text3);font-size:9px">Prix vente HT</th><th>${t('cat_glass_vol')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th style="color:var(--text3);font-size:8px">% Casse</th><th></th></tr></thead>
           <tbody id="glass-tb"></tbody></table>
@@ -2805,7 +2805,7 @@ function showCForm(c){
         const parts=[g.name];
         if(g.appellation) parts.push(g.appellation);
         if(g.volumeCl) parts.push(g.volumeCl+'cl');
-        const cost=parseFloat((g.priceHT||0).toFixed(2));
+        const cost=parseFloat((g.priceBilledHT||g.priceHT||0).toFixed(2));
         if(cost>0) parts.push(fmt(cost)+'€');
         return parts.join(' — ');
       }).filter(Boolean)
@@ -4453,7 +4453,7 @@ function renderEvPicker(){
     // Gamme selection — stored by glass id
     const selectedGlassId=cfg.glassId||null;
     const selectedGlassObj=state.glasses.find(x=>x.id===selectedGlassId)||null;
-    const glassCostHT=selectedGlassObj?(selectedGlassObj.priceHT||0):0;
+    const glassCostHT=selectedGlassObj?(selectedGlassObj.priceBilledHT||selectedGlassObj.priceHT||0):0;
     // Sync into sel for calc
     sel[c.id].glassCostHT=glassCostHT;
 
@@ -4475,7 +4475,7 @@ function renderEvPicker(){
       :[];
     const allGlassesOfType=matchingGlasses.length?matchingGlasses:state.glasses;
     const gammeOptions=allGlassesOfType.map(g=>{
-      const ht=g.priceHT||0;
+      const ht=g.priceBilledHT||g.priceHT||0;
       return`<option value="${g.id}"${g.id===selectedGlassId?' selected':''}>
         ${g.appellation||'Sans gamme'}${ht>0?' · '+ht.toFixed(3)+'€ HT':''}
       </option>`;
