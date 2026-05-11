@@ -4222,44 +4222,42 @@ function showEvForm(ev){
       </div>
     </div>
 
-    <!-- SECTION 5: BAR (5 DROPDOWNS) -->
+    <!-- SECTION 5: BAR -->
     <div class="card">
       <div class="ctitle">Bar</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-        <div class="field" style="margin:0">
-          <label style="font-size:10px">Modèle</label>
-          <select id="ef-bar-model-inp" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Modèle</label>
+          <select id="ef-bar-model-inp" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort().map(model=>`<option value="${model}">${model}</option>`).join('')}
           </select>
         </div>
-        <div class="field" style="margin:0">
-          <label style="font-size:10px">Longueur</label>
-          <select id="ef-bar-length-sel" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Longueur</label>
+          <select id="ef-bar-length-sel" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.lengthM))].sort((a,b)=>a-b).map(len=>`<option value="${len}">${len}m</option>`).join('')}
           </select>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="field" style="margin:0">
-          <label style="font-size:10px">Couleur</label>
-          <select id="ef-bar-color" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Couleur</label>
+          <select id="ef-bar-color" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).filter(b=>b.color).map(b=>b.color))].map(color=>`<option value="${color}">${color}</option>`).join('')}
           </select>
         </div>
-        <div class="field" style="margin:0">
-          <label style="font-size:10px">Style</label>
-          <select id="ef-bar-style" style="width:100%;font-size:11px;padding:4px 6px;height:28px" onchange="updBarOptions()">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Style</label>
+          <select id="ef-bar-style" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).filter(b=>b.style).map(b=>b.style))].map(style=>`<option value="${style}">${style}</option>`).join('')}
           </select>
         </div>
       </div>
-      <div style="margin-top:10px;padding:10px;background:var(--surface2);border-radius:6px;text-align:center">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px">PRIX</div>
-        <div style="font-size:18px;font-weight:600;color:var(--gold)" id="ef-bar-prix">—</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--surface2);border-radius:var(--radius)">
+        <span style="font-size:10px;color:var(--text3);font-weight:600">Prix HT</span>
+        <div style="font-size:12px;font-weight:600;color:var(--gold)" id="ef-bar-prix">—</div>
       </div>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
@@ -4355,7 +4353,11 @@ function showEvForm(ev){
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_revenue')}</div>
-          <div style="font-size:32px;font-family:var(--font-display);color:var(--green);font-weight:600" id="es-rev">—</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <div style="font-size:32px;font-family:var(--font-display);color:var(--green);font-weight:600" id="es-rev">—</div>
+            <button style="background:none;border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-size:11px;cursor:pointer;color:var(--text2)" onclick="toggleRevEdit()" title="Modifer si formule/devis convenu">✎</button>
+          </div>
+          <input type="number" id="ef-rev-custom" style="display:none;width:120px;padding:8px;font-size:14px;margin-top:8px" placeholder="Montant facturé" oninput="updEvCalc()"/>
           <div style="font-size:10px;color:var(--text2);margin-top:6px" id="es-ttc"></div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--gold-border)">
@@ -4427,6 +4429,8 @@ function showEvForm(ev){
   if(ev.barItemId){const b=(state.barItems||[]).find(x=>x.id===ev.barItemId);if(b){if(document.getElementById('ef-bar-color'))document.getElementById('ef-bar-color').value=b.color||'';if(document.getElementById('ef-bar-style'))document.getElementById('ef-bar-style').value=b.style||'';}}
   // Restore notes
   if(ev.notes){const notesEl=document.getElementById('ef-notes');if(notesEl)notesEl.value=ev.notes;}
+  // Restore custom billing amount
+  if(ev.customBillHT){const customRevEl=document.getElementById('ef-rev-custom');if(customRevEl)customRevEl.value=ev.customBillHT;}
   migrateOldStaffData(ev);renderEvPicker();updBarOptions();renderStaffList(ev.id);updEvCalc();_renderExtraProds();
 }
 
@@ -4867,6 +4871,16 @@ function migrateOldStaffData(ev){
   });
 }
 
+function toggleRevEdit(){
+  const inp=document.getElementById('ef-rev-custom');
+  if(inp.style.display==='none'){
+    inp.style.display='block';
+    inp.focus();
+  } else {
+    inp.style.display='none';
+  }
+}
+
 function updEvCalc(){
   const pax=parseInt(document.getElementById('ef-pax')?.value)||0;
   const cpp=parseFloat(document.getElementById('ef-cpp')?.value)||3;
@@ -4991,21 +5005,27 @@ function updEvCalc(){
   // Sync the other field
   if(remisePct>0&&remiseHT===0){const e=document.getElementById('ef-remise-ht');if(e&&document.activeElement!==e)e.placeholder=remiseMontant.toFixed(0);}
   if(remiseHT>0&&remisePct===0){const e=document.getElementById('ef-remise-pct');if(e&&document.activeElement!==e)e.placeholder=revenueBeforeRemise>0?(remiseHT/revenueBeforeRemise*100).toFixed(1):0;}
+  // Custom billing amount (formule/devis convenu)
+  const customRevenue=parseFloat(document.getElementById('ef-rev-custom')?.value)||0;
+  const displayRevenue=customRevenue>0?customRevenue:totalRevenue;
+  const finalMg=displayRevenue-tc;
+
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
-  const revTTC=totalRevenue*(1+avgVat/100);
+  const revTTC=displayRevenue*(1+avgVat/100);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   set('es-ckt',total||'—');
   // Compact summary: coût / facturé / marge
   set('es-total',tc>0?tc.toFixed(0)+'€':'—');
-  set('es-rev',totalRevenue>0?totalRevenue.toFixed(0)+'€':'—');
+  set('es-rev',displayRevenue>0?displayRevenue.toFixed(0)+'€':'—');
   // Sub labels
   set('es-ing',ingCost>0?ingCost.toFixed(0)+'€':''+'  staff '+(staffCost>0?staffCost.toFixed(0)+'€':''));
   set('es-staff',staffCost>0?staffCost.toFixed(0)+'€':'—');
   set('es-staffbill',staffRevenue>0?staffRevenue.toFixed(0)+'€':'—');
   set('es-rev-cock',revenue>0?revenue.toFixed(0)+'€':'—');
   const mgEl=document.getElementById('es-mg');
-  if(mgEl){mgEl.textContent=totalRevenue>0?mg.toFixed(0)+'€':'—';mgEl.style.color=mg>0?'var(--green)':mg<0?'var(--red)':'var(--text)';}
-  set('es-mgp',totalRevenue>0?mgp.toFixed(1)+'%':'—');
+  if(mgEl){mgEl.textContent=displayRevenue>0?finalMg.toFixed(0)+'€':'—';mgEl.style.color=finalMg>0?'var(--green)':finalMg<0?'var(--red)':'var(--text)';}
+  const finalMgp=displayRevenue>0?finalMg/displayRevenue*100:0;
+  set('es-mgp',displayRevenue>0?finalMgp.toFixed(1)+'%':'—');
   const ttcEl=document.getElementById('es-ttc');
   if(ttcEl) ttcEl.textContent=revTTC>0?'soit '+revTTC.toFixed(0)+'€ TTC':'';
 }
@@ -5229,6 +5249,7 @@ async function saveEv(){
     exchanges:document.getElementById('ef-exchanges')?.value||'',
     exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||'',
     dryIce:document.getElementById('ef-dryice')?.checked||false,
+    customBillHT:parseFloat(document.getElementById('ef-rev-custom')?.value)||0,
     totalRevHT:totalRevHT
   };
   if(editEvId)state.events=state.events.map(e=>e.id===editEvId?{...e,...ev}:e);
