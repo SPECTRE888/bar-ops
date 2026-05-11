@@ -4116,7 +4116,7 @@ function showEvForm(ev){
   if(ev.clientId) el._clientId=ev.clientId;
 
   el.innerHTML=`
-  <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start">
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
     <div style="min-width:0">
 
     <!-- SECTION 1: CLIENT & CONTACT -->
@@ -4274,17 +4274,15 @@ function showEvForm(ev){
     </div>
 
     <!-- SECTION 6: COCKTAILS (MOVED UP) -->
-    <div style="display:grid;grid-template-columns:1fr 2fr;gap:14px">
-      <div class="card">
-        <div class="ctitle">${t('ev_cocktails_qty')}</div>
-        <div id="ev-picker"></div>
-      </div>
-      <div class="card">
-        <div class="ctitle">Produits supplémentaires</div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:10px">Produits supplémentaires</div>
-        <div id="ev-extra-products"></div>
-        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addExtraProd()">+ Ajouter</button>
-      </div>
+    <div class="card">
+      <div class="ctitle">${t('ev_cocktails_qty')}</div>
+      <div id="ev-picker"></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Produits supplémentaires</div>
+      <div id="ev-extra-products"></div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addExtraProd()">+ Ajouter</button>
     </div>
 
     <!-- SECTION 3: STAFF -->
@@ -4346,7 +4344,7 @@ function showEvForm(ev){
     </div>
 
     <!-- SECTION 4: SUMMARY (STICKY RIGHT) -->
-    <div style="position:sticky;top:0;height:fit-content">
+    <div style="position:sticky;top:60px;height:fit-content;max-height:calc(100vh - 80px);overflow-y:auto">
     <div class="card">
       <div class="ctitle">${t('ev_summary')}</div>
       <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:6px">
