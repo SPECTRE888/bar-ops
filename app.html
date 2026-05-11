@@ -4291,8 +4291,8 @@ function showEvForm(ev){
     <!-- SECTION 3: STAFF -->
     <div class="card">
       <div class="ctitle">${t('ev_staff_section')}</div>
-      <div style="display:grid;grid-template-columns:100px 140px 85px 85px 50px 70px 70px 60px 28px;gap:6px;align-items:center;padding:4px 0;margin-bottom:8px;font-size:10px;color:var(--text3);font-weight:500">
-        <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold)">H.</span><span style="color:var(--red)">Coût</span><span style="color:var(--green)">Fact.</span><span>Marge</span><span></span>
+      <div style="display:grid;grid-template-columns:110px 150px 80px 80px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
+        <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold);text-align:center">Heures</span><span style="color:var(--red);text-align:right">Coût HT</span><span style="color:var(--green);text-align:right">Facturation HT</span><span style="text-align:right">Marge</span><span></span>
       </div>
       <div id="ev-staff-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
       <button class="btn btn-ghost btn-sm" style="width:100%" onclick="addStaffAssignment(${ev.id})">+ Ajouter staff</button>
@@ -4764,7 +4764,6 @@ function renderStaffList(evId){
 
   if(!staffList.length){
     list.innerHTML='<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun staff assigné</div>';
-    // Reset totals
     const elCost=document.getElementById('ef-staff-total-cost');
     const elBill=document.getElementById('ef-staff-total-bill');
     const elMg=document.getElementById('ef-staff-total-mg');
@@ -4775,8 +4774,9 @@ function renderStaffList(evId){
   }
 
   let totalCost=0, totalBill=0;
+  const roleOpts=['Bartender','Serveur','Bar Manager','Manutentionnaire'];
 
-  list.innerHTML=staffList.map(s=>{
+  list.innerHTML=staffList.map((s,idx)=>{
     const hours=calcStaffHours(s.arrivalTime, s.departureTime);
     const cost=(s.costHT||0)*hours;
     const bill=(s.billHT||0)*hours;
@@ -4785,23 +4785,34 @@ function renderStaffList(evId){
     totalCost+=cost;
     totalBill+=bill;
 
-    const roleOpts=['Bartender','Serveur','Bar Manager','Manutentionnaire'];
-    const staffNames=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
+    const staffForRole=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
 
-    return`<div style="display:grid;grid-template-columns:100px 140px 85px 85px 50px 70px 70px 60px 28px;gap:6px;align-items:center;padding:6px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
-      <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px">
+    return`<div style="display:grid;grid-template-columns:110px 150px 80px 80px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+      <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">
         ${roleOpts.map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}
       </select>
-      <input value="${(s.name||'').replace(/"/g,'&quot;')}" onchange="updStaffAssignment(${evId},${s.id},'name',this.value);updEvCalc()" placeholder="Nom staff..." style="padding:4px 6px;font-size:11px"/>
-      <select onchange="updStaffAssignment(${evId},${s.id},'arrivalTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px">${mkTimeOpts(s.arrivalTime)}</select>
-      <select onchange="updStaffAssignment(${evId},${s.id},'departureTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px">${mkTimeOpts(s.departureTime)}</select>
-      <span style="color:var(--gold);font-weight:500;text-align:center">${hours.toFixed(1)}h</span>
-      <input type="number" value="${(s.costHT||0).toFixed(2)}" step="0.01" min="0" onchange="updStaffAssignment(${evId},${s.id},'costHT',parseFloat(this.value)||0);renderStaffList(${evId});updEvCalc()" style="width:100%;padding:4px 6px;font-size:11px;text-align:right"/>
-      <input type="number" value="${(s.billHT||0).toFixed(2)}" step="0.01" min="0" onchange="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);renderStaffList(${evId});updEvCalc()" style="width:100%;padding:4px 6px;font-size:11px;text-align:right"/>
-      <span style="text-align:right;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</span>
-      <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:2px 4px">×</button>
+      <div id="staff-name-ss-${s.id}" style="min-width:0"></div>
+      <select onchange="updStaffAssignment(${evId},${s.id},'arrivalTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.arrivalTime)}</select>
+      <select onchange="updStaffAssignment(${evId},${s.id},'departureTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.departureTime)}</select>
+      <span style="color:var(--gold);font-weight:600;text-align:center">${hours.toFixed(1)}h</span>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <input type="number" value="${(s.costHT||0).toFixed(2)}" step="0.01" min="0" onchange="updStaffAssignment(${evId},${s.id},'costHT',parseFloat(this.value)||0);renderStaffList(${evId});updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
+        <span style="font-size:8px;color:var(--text3)">${cost.toFixed(2)}€</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <input type="number" value="${(s.billHT||0).toFixed(2)}" step="0.01" min="0" onchange="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);renderStaffList(${evId});updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
+        <span style="font-size:8px;color:var(--text3)">${bill.toFixed(2)}€</span>
+      </div>
+      <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
+      <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
     </div>`;
   }).join('');
+
+  // Init mkSS for each staff name
+  staffList.forEach(s=>{
+    const staffForRole=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
+    mkSS('staff-name-ss-'+s.id, staffForRole, 'Nom staff...', (v)=>updStaffAssignment(evId,s.id,'name',v), s.name||'');
+  });
 
   // Update totals
   const elCost=document.getElementById('ef-staff-total-cost');
