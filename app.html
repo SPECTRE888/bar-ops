@@ -2805,8 +2805,6 @@ function showCForm(c){
         const parts=[g.name];
         if(g.appellation) parts.push(g.appellation);
         if(g.volumeCl) parts.push(g.volumeCl+'cl');
-        const cost=parseFloat((g.priceBilledHT||g.priceHT||0).toFixed(2));
-        if(cost>0) parts.push(fmt(cost)+'€');
         return parts.join(' — ');
       }).filter(Boolean)
     :GLASS_TYPES;
@@ -4475,9 +4473,8 @@ function renderEvPicker(){
       :[];
     const allGlassesOfType=matchingGlasses.length?matchingGlasses:state.glasses;
     const gammeOptions=allGlassesOfType.map(g=>{
-      const ht=g.priceBilledHT||g.priceHT||0;
       return`<option value="${g.id}"${g.id===selectedGlassId?' selected':''}>
-        ${g.appellation||'Sans gamme'}${ht>0?' · '+ht.toFixed(3)+'€ HT':''}
+        ${g.appellation||'Sans gamme'}
       </option>`;
     }).join('');
 
