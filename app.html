@@ -4226,37 +4226,35 @@ function showEvForm(ev){
     <!-- SECTION 5: BAR -->
     <div class="card" style="padding:10px 14px">
       <div class="ctitle" style="margin-bottom:8px">Bar</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px">
-        <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:100px">
           <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Modèle</label>
           <select id="ef-bar-model-inp" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort().map(model=>`<option value="${model}">${model}</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:80px">
           <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Longueur</label>
           <select id="ef-bar-length-sel" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.lengthM))].sort((a,b)=>a-b).map(len=>`<option value="${len}">${len}m</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:80px">
           <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Couleur</label>
           <select id="ef-bar-color" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).filter(b=>b.color).map(b=>b.color))].map(color=>`<option value="${color}">${color}</option>`).join('')}
           </select>
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:16px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius);margin-top:4px">
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <span style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Prix HT</span>
-          <span style="font-size:12px;font-weight:600;color:var(--gold)" id="ef-bar-prix">—</span>
+        <div style="width:1px;height:28px;background:var(--border2);flex-shrink:0"></div>
+        <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Prix HT</label>
+          <span style="font-size:13px;font-weight:600;color:var(--gold);height:28px;display:flex;align-items:center;padding:0 4px" id="ef-bar-prix">—</span>
         </div>
-        <div style="width:1px;height:14px;background:var(--border2)"></div>
-        <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="ef-bar-summary">—</div>
       </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px" id="ef-bar-summary"></div>
       <input type="hidden" id="ef-bar-length" value="${ev.barLength||''}"/>
       <input type="hidden" id="ef-bar-price" value="${ev.barPrice||''}"/>
       <input type="hidden" id="ef-bar-type" value="${ev.barItemId||''}"/>
