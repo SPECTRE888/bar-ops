@@ -4248,13 +4248,6 @@ function showEvForm(ev){
             ${[...new Set((state.barItems||[]).filter(b=>b.color).map(b=>b.color))].map(color=>`<option value="${color}">${color}</option>`).join('')}
           </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Style</label>
-          <select id="ef-bar-style" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
-            <option value="">—</option>
-            ${[...new Set((state.barItems||[]).filter(b=>b.style).map(b=>b.style))].map(style=>`<option value="${style}">${style}</option>`).join('')}
-          </select>
-        </div>
       </div>
       <div style="display:flex;align-items:center;gap:16px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius);margin-top:4px">
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -4428,7 +4421,7 @@ function showEvForm(ev){
   const barLenSel=document.getElementById('ef-bar-length-sel');
   if(barLenSel&&ev.barLength)barLenSel.value=ev.barLength;
   // Restore color & style from matched bar if available
-  if(ev.barItemId){const b=(state.barItems||[]).find(x=>x.id===ev.barItemId);if(b){if(document.getElementById('ef-bar-color'))document.getElementById('ef-bar-color').value=b.color||'';if(document.getElementById('ef-bar-style'))document.getElementById('ef-bar-style').value=b.style||'';}}
+  if(ev.barItemId){const b=(state.barItems||[]).find(x=>x.id===ev.barItemId);if(b){if(document.getElementById('ef-bar-color'))document.getElementById('ef-bar-color').value=b.color||'';}}
   // Restore notes
   if(ev.notes){const notesEl=document.getElementById('ef-notes');if(notesEl)notesEl.value=ev.notes;}
   // Restore custom billing amount
@@ -4664,17 +4657,6 @@ function updBarOptions(){
     if(availColors.includes(curVal))colSel.value=curVal;
   }
 
-  // Filter styles: show only styles available for model+length+color
-  let availStyles=bars.filter(b=>b.style).map(b=>b.style);
-  if(model||length>0||color)availStyles=bars.filter(b=>(model?b.name===model:true)&&(length>0?b.lengthM===length:true)&&(color?b.color===color:true)&&b.style).map(b=>b.style);
-  availStyles=[...new Set(availStyles)];
-  const styleSel=document.getElementById('ef-bar-style');
-  if(styleSel){
-    const curVal=styleSel.value;
-    styleSel.innerHTML='<option value="">—</option>'+availStyles.map(s=>`<option value="${s}">${s}</option>`).join('');
-    if(availStyles.includes(curVal))styleSel.value=curVal;
-  }
-
   updBarSelection();
 }
 
@@ -4682,17 +4664,11 @@ function updBarSelection(){
   const model=document.getElementById('ef-bar-model-inp')?.value||'';
   const length=parseFloat(document.getElementById('ef-bar-length-sel')?.value||0);
   const color=document.getElementById('ef-bar-color')?.value||'';
-  const style=document.getElementById('ef-bar-style')?.value||'';
 
-  // Require ALL criteria filled: model + length + color + style
+  // Match on model + length + color (no style)
   let match=null;
-  if(model&&length>0&&color&&style){
-    match=state.barItems?.find(b=>
-      b.name===model&&
-      b.lengthM===length&&
-      b.color===color&&
-      b.style===style
-    );
+  if(model&&length>0&&color){
+    match=state.barItems?.find(b=>b.name===model&&b.lengthM===length&&b.color===color);
   }
 
   if(match){
@@ -4702,12 +4678,9 @@ function updBarSelection(){
     document.getElementById('ef-bar-price').value=match.priceHT||0;
     document.getElementById('ef-bar-model').value=match.name||'';
     document.getElementById('ef-bar-color-val').value=match.color||'';
-    document.getElementById('ef-bar-style-val').value=match.style||'';
     document.getElementById('ef-bar-prix').textContent=match.priceHT+'€';
-    // Update summary display
-    const summary=`${match.name} • ${match.lengthM}m • ${match.color} • ${match.style}`;
     const sumEl=document.getElementById('ef-bar-summary');
-    if(sumEl)sumEl.textContent=summary;
+    if(sumEl)sumEl.textContent=`${match.name} • ${match.lengthM}m • ${match.color}`;
   }else{
     document.getElementById('ef-bar-type').value='';
     document.getElementById('ef-bar-name').value='';
@@ -4715,7 +4688,6 @@ function updBarSelection(){
     document.getElementById('ef-bar-price').value='';
     document.getElementById('ef-bar-model').value='';
     document.getElementById('ef-bar-color-val').value='';
-    document.getElementById('ef-bar-style-val').value='';
     document.getElementById('ef-bar-prix').textContent='—';
     const sumEl=document.getElementById('ef-bar-summary');
     if(sumEl)sumEl.textContent='—';
@@ -4805,11 +4777,13 @@ function renderStaffList(evId){
       <select onchange="updStaffAssignment(${evId},${s.id},'arrivalTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.arrivalTime)}</select>
       <select onchange="updStaffAssignment(${evId},${s.id},'departureTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.departureTime)}</select>
       <span style="color:var(--gold);font-weight:600;text-align:center">${hours.toFixed(1)}h</span>
-      <div style="display:flex;flex-direction:column;gap:2px">
-        <input type="number" value="${s.costHT||''}" placeholder="0" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <input type="number" value="${s.costHT||''}" placeholder="€/h" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
+        ${hours>0&&cost>0?`<span style="font-size:8px;color:var(--text3);text-align:right">×${hours.toFixed(1)}h=${cost.toFixed(0)}€</span>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:2px">
-        <input type="number" value="${s.billHT||''}" placeholder="0" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <input type="number" value="${s.billHT||''}" placeholder="€/h" step="0.01" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
+        ${hours>0&&bill>0?`<span style="font-size:8px;color:var(--text3);text-align:right">×${hours.toFixed(1)}h=${bill.toFixed(0)}€</span>`:''}
       </div>
       <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
       <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
@@ -5032,8 +5006,11 @@ function _renderExtraProds(){
         <input id="ep-search-${i}" value="${(p.productType||'').replace(/"/g,'&quot;')}" placeholder="Vodka, Champagne..." style="width:100%;font-size:11px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 8px;color:var(--text);box-sizing:border-box" oninput="epSearch(${i},this.value)"/>
         <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>
       </div>
-      <!-- Marque -->
-      <input id="ep-brand-${i}" value="${(p.brand||'').replace(/"/g,'&quot;')}" placeholder="Marque..." style="width:100%;font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text2);box-sizing:border-box" oninput="updExtraProd(${i},'brand',this.value)"/>
+      <!-- Marque (autocomplete par type) -->
+      <div style="position:relative;min-width:0">
+        <input id="ep-brand-${i}" value="${(p.brand||'').replace(/"/g,'&quot;')}" placeholder="Marque..." style="width:100%;font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text2);box-sizing:border-box" oninput="updExtraProd(${i},'brand',this.value);epBrandSearch(${i},this.value)" onfocus="epBrandSearch(${i},this.value)"/>
+        <div id="ep-brand-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>
+      </div>
       <!-- Format -->
       <div style="background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text3);text-align:center;font-weight:500">${vol||'—'}</div>
       <!-- Achat HT -->
@@ -5069,27 +5046,49 @@ function epSearch(i,val){
   const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
   if(!val.trim()){sugg.style.display='none';return;}
   const q=val.toLowerCase();
-  const matches=state.products.filter(p=>
-    (p.productType||'').toLowerCase().includes(q)||(p.brand||'').toLowerCase().includes(q)
-  ).slice(0,8);
+  const seen=new Set();
+  const types=[];
+  state.products.filter(p=>(p.productType||'').toLowerCase().includes(q)).forEach(p=>{
+    if(!seen.has(p.productType)){seen.add(p.productType);types.push(p.productType);}
+  });
+  if(!types.length){sugg.style.display='none';return;}
+  sugg.style.display='block';
+  sugg.innerHTML=types.slice(0,8).map(type=>
+    `<div onmousedown="epSelectType(${i},'${type.replace(/'/g,"\\'")}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${type}</strong></div>`
+  ).join('');
+}
+
+function epSelectType(i,type){
+  const sugg=document.getElementById('ep-sugg-'+i);if(sugg)sugg.style.display='none';
+  updExtraProd(i,'productType',type);
+  updExtraProd(i,'brand','');
+  updExtraProd(i,'costHT',0);
+  updExtraProd(i,'volume','');
+  const inp=document.getElementById('ep-search-'+i);if(inp)inp.value=type;
+  const brandInp=document.getElementById('ep-brand-'+i);if(brandInp){brandInp.value='';brandInp.focus();}
+  epBrandSearch(i,'');
+}
+
+function epBrandSearch(i,val){
+  const p=window._evExtraProducts?.[i];if(!p)return;
+  const type=p.productType||'';
+  const sugg=document.getElementById('ep-brand-sugg-'+i);if(!sugg)return;
+  const matches=state.products.filter(pr=>pr.productType===type&&(!val||(pr.brand||'').toLowerCase().includes(val.toLowerCase())));
   if(!matches.length){sugg.style.display='none';return;}
   sugg.style.display='block';
-  sugg.innerHTML=matches.map(p=>{
-    const costPerUnit=p.priceHT||0;
-    const qty=p.qty||0;
-    const unit=p.unit||'pc';
-    return`<div onmousedown="epSelect(${i},'${(p.productType||'').replace(/'/g,"\\'")}','${(p.brand||'').replace(/'/g,"\\'")}','${unit}',${costPerUnit.toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <strong>${p.productType}</strong> <span style="color:var(--text3);font-size:10px">(${p.brand||'?'}) [${qty}${unit}]</span>
+  sugg.innerHTML=matches.slice(0,8).map(pr=>{
+    const unit=pr.unit||'pc';const qty=pr.qty||0;
+    return`<div onmousedown="epSelectBrand(${i},'${(pr.brand||'').replace(/'/g,"\\'")}','${unit}',${(pr.priceHT||0).toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <strong>${pr.brand||'—'}</strong><span style="color:var(--text3);font-size:10px;margin-left:6px">${qty}${unit}</span>
     </div>`;
   }).join('');
 }
 
-function epSelect(i,productType,brand,unit,costPerUnit,qty){
+function epSelectBrand(i,brand,unit,costPerUnit,qty){
   if(!window._evExtraProducts[i])return;
-  const sugg=document.getElementById('ep-sugg-'+i);
-  if(sugg)sugg.style.display='none';
+  const sugg=document.getElementById('ep-brand-sugg-'+i);if(sugg)sugg.style.display='none';
   const volume=qty?qty+unit:unit;
-  Object.assign(window._evExtraProducts[i],{productType,brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1});
+  Object.assign(window._evExtraProducts[i],{brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1});
   _renderExtraProds();
   epAutoPrice(i);
   setTimeout(()=>{const m=document.getElementById('ep-mult-'+i);if(m){m.focus();m.select();}},50);
@@ -9370,7 +9369,6 @@ function renderBarItems(){
         <th>${t('cat_bar_length')}</th>
         <th>${t('cat_bar_price')}</th>
         <th>${t('cat_bar_color')}</th>
-        <th>${t('cat_bar_style')}</th>
         <th>${t('cat_bar_transport')}</th>
         <th>${t('cat_bar_setup')}</th>
         <th>${t('cat_bar_custom')}</th>
@@ -9394,7 +9392,6 @@ function renderBarItems(){
         <td><input type="number" value="${b.lengthM||''}" step="0.5" min="0" placeholder="3" onchange="updBarItem(${b.id},'lengthM',parseFloat(this.value)||0)" style="width:65px"/></td>
         <td><input type="number" value="${b.priceHT||''}" step="10" min="0" placeholder="0" onchange="updBarItem(${b.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
         <td><div id="bar-color-${b.id}" style="min-width:80px"></div></td>
-        <td><div id="bar-style-${b.id}" style="min-width:100px"></div></td>
         <td><div id="bar-transport-${b.id}" style="min-width:90px"></div></td>
         <td><div id="bar-setup-${b.id}" style="min-width:80px"></div></td>
         <td><input type="checkbox" ${b.customizable?'checked':''} onchange="updBarItem(${b.id},'customizable',this.checked)" title="Personnalisable" style="width:auto;accent-color:var(--gold)"/></td>
@@ -9412,7 +9409,6 @@ function renderBarItems(){
   items.forEach(b=>{
     mkSS('bar-name-'+b.id, names, 'Modèle...', (v)=>updBarItem(b.id,'name',v), b.name||'');
     mkSS('bar-color-'+b.id, colors, 'Couleur...', (v)=>updBarItem(b.id,'color',v), b.color||'');
-    mkSS('bar-style-'+b.id, styles, 'Style...', (v)=>updBarItem(b.id,'style',v), b.style||'');
     mkSS('bar-transport-'+b.id, transports, 'Transport...', (v)=>updBarItem(b.id,'transport',v), b.transport||'');
     mkSS('bar-setup-'+b.id, setups, 'Setup...', (v)=>updBarItem(b.id,'setup',v), b.setup||'');
   });
