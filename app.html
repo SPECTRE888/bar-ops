@@ -4119,6 +4119,8 @@ function showEvForm(ev){
   <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
     <div style="min-width:0">
 
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
+
     <!-- SECTION 1: CLIENT & CONTACT -->
     <div class="card">
       <div class="ctitle">Client & Contact</div>
@@ -4191,6 +4193,7 @@ function showEvForm(ev){
     <!-- SECTION 2: BASE EVENT -->
     <div class="card">
       <div class="ctitle">Événement</div>
+
       <div class="g3" style="margin-bottom:6px">
         <div class="field"><label>${t('ev_name')}</label>
           <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
@@ -4211,6 +4214,8 @@ function showEvForm(ev){
         </div>
       </div>
     </div>
+
+    </div><!-- end client+event grid -->
 
     <!-- SECTION 2: HORAIRES & SETUP -->
     <div class="card" style="padding:10px 14px">
