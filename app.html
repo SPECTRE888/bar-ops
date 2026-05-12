@@ -6122,40 +6122,71 @@ async function sendBriefWA(evId,sid){
 
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
-    let detail='═══════════════════════════════════\n';
-    detail+=c.name.toUpperCase()+' (x'+cfg.qty+')\n';
-    detail+='═══════════════════════════════════\n\n';
-    detail+='VERRE: '+(c.glass||'—')+'\n';
-    const iceType=c.iceTypeId?state.iceTypes.find(x=>x.id===c.iceTypeId)?.name:'Glaçons standard';
-    detail+='GLACONS: '+iceType+(c.serviceIce?(' ('+{rocks:'on rocks',full:'plein',none:'sans'}[c.serviceIce]+')'):'')+'  \n';
-    detail+='TECHNIQUE: '+{stirred:'Mélangé',shaken:'Shaké',blended:'Blendé',none:'Direct'}[c.technique||'none']+'\n';
+    let detail='╔═══════════════════════════════════╗\n';
+    detail+='║ '+c.name.toUpperCase().padEnd(33)+'║\n';
+    detail+='║ Quantite: '+('x'+cfg.qty).padEnd(23)+'║\n';
+    detail+='╚═══════════════════════════════════╝\n\n';
+    detail+='🥃 VERRE: '+(c.glass||'—')+'\n';
+    const iceType=c.iceTypeId?state.iceTypes.find(x=>x.id===c.iceTypeId)?.name:'Glacons standard';
+    detail+='🧊 GLACONS: '+iceType+(c.serviceIce?(' ('+{rocks:'on rocks',full:'plein',none:'sans'}[c.serviceIce]+')'):'')+'  \n';
+    detail+='⚙️ TECHNIQUE: '+{stirred:'Melange',shaken:'Shake',blended:'Blende',none:'Direct'}[c.technique||'none']+'\n';
     const ings=(c.ingredients||[]).map(i=>i.qty?i.qty+(i.unit||'ml')+' '+i.name:i.name).filter(Boolean);
-    if(ings.length) detail+='\nINGREDIENTS:\n'+ings.map(i=>'  • '+i).join('\n')+'\n';
+    if(ings.length) detail+='\n🍹 INGREDIENTS:\n'+ings.map(i=>'  • '+i).join('\n')+'\n';
     const conso=(c.consumables||[]).map(i=>i.qty?i.qty+' '+i.name:i.name).filter(Boolean);
-    if(conso.length) detail+='\nGARNISH & DECO:\n'+conso.map(i=>'  • '+i).join('\n')+'\n';
-    if(c.recipe) detail+='\nRECETTE:\n'+c.recipe+'\n';
-    if(c.methodology) detail+='\nMETHODOLOGIE:\n'+c.methodology+'\n';
+    if(conso.length) detail+='\n🎀 GARNI & DECO:\n'+conso.map(i=>'  • '+i).join('\n')+'\n';
+    if(c.recipe) detail+='\n📝 RECETTE:\n'+c.recipe+'\n';
+    if(c.methodology) detail+='\n📋 METHODOLOGIE:\n'+c.methodology+'\n';
     return detail;
   }).filter(Boolean).join('\n')||'—';
 
+  const client=state.clients.find(x=>x.id===ev.clientId);
+  const clientName=client?.name||ev.clientName||'Client';
+  const contact=ev.contact||client?.contact||'—';
+
   const lines=[
-    'BRIEF - '+ev.name,
+    '╔══════════════════════════════════════╗',
+    '║         🍸 BRIEF PRESTATION 🍸      ║',
+    '╚══════════════════════════════════════╝',
     '',
-    'Bonjour '+s.name+',',
+    '*'+ev.name+'*',
     '',
-    'Date: '+fmtDate,
-    'Lieu: '+(ev.address||'?')+(ev.access?' | Acces: '+ev.access:''),
-    'Horaires: '+arr+' - '+dep,
-    'Pax: '+(ev.pax||'?'),
-    'Poste: '+role,
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '📋 CLIENT & CONTACT',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '👤 Client: '+clientName,
+    '📱 Contact: '+contact,
+    '',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '📅 INFOS PRESTATION',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '📆 Date: '+fmtDate,
+    '📍 Lieu: '+(ev.address||'?')+(ev.access?' | Code: '+ev.access:''),
+    '👥 Pax: '+(ev.pax||'?'),
+    '',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '⏰ HORAIRES',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '🏁 Setup: '+(ev.setup||'?'),
+    '🍷 Bar Ouvert: '+(ev.start||'?')+' - '+(ev.end||'?'),
+    '👤 Ton horaire ('+role+'): '+arr+' - '+dep,
+    '🔚 Fin prestation: '+(ev.breakdown||'?'),
+    '',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '👕 DRESS CODE',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     'Tenue: '+tenue,
     '',
-    'COCKTAILS A PREPARER:',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '🍸 COCKTAILS A PREPARER',
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     '',
     cktDetails,
-    (ev.notes?'\n\nNotes: '+ev.notes:''),
+    (ev.notes?'\n📝 NOTES:\n'+ev.notes:''),
     '',
-    'Bonne prestation !'
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    '✨ Bonne prestation ! ✨',
+    '',
+    '_Envoyé via BAR OPS_'
   ];
   const msg=lines.filter(l=>l!==undefined).join('\n');
   if(!ev.briefsSent) ev.briefsSent={};
