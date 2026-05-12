@@ -53,6 +53,19 @@ fetch('/.netlify/functions/config')
     const isActive=subs&&new Date(subs.expires_at)>new Date();
     if(!isActive){window.location.href='paying.html';return;}
 
+    // Session limit: max 3 active devices per account
+    let deviceId=localStorage.getItem('_bar_ops_device');
+    if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem('_bar_ops_device',deviceId);}
+    const cutoff=new Date(Date.now()-30*60*1000).toISOString();
+    const{data:activeSessions}=await sb.from('user_sessions').select('device_id').eq('user_id',session.user.id).gte('last_seen',cutoff);
+    const activeDevices=activeSessions?.map(s=>s.device_id)||[];
+    const isKnownDevice=activeDevices.includes(deviceId);
+    if(!isKnownDevice&&activeDevices.length>=3){
+      document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Ce compte a atteint la limite de 3 connexions simultanées.</p><p style="font-size:12px;color:#585450">Déconnectez un autre appareil ou contactez le titulaire du compte.</p></div></div>`;
+      return;
+    }
+    await sb.from('user_sessions').upsert({user_id:session.user.id,device_id:deviceId,last_seen:new Date().toISOString()},{onConflict:'user_id,device_id'});
+
     window.cloudUser={access_token:session.access_token,refresh_token:session.refresh_token,user:session.user};
     window._userEmail=session.user.email;
     window._userPlan=subs?.plan||'pro';
@@ -60,7 +73,14 @@ fetch('/.netlify/functions/config')
     window._subExpiresAt=subs?.expires_at||null;
     window._isDemo=false;
     window._userId=session.user.id;
+    window._deviceId=deviceId;
     window._paywallDone=true;
+    // Refresh session heartbeat every 15 minutes
+    setInterval(()=>{
+      if(window._userId&&window._deviceId){
+        sb.from('user_sessions').upsert({user_id:window._userId,device_id:window._deviceId,last_seen:new Date().toISOString()},{onConflict:'user_id,device_id'});
+      }
+    },15*60*1000);
 
   }catch(e){console.error('Paywall error:',e);}
 })();
