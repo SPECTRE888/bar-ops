@@ -10,7 +10,7 @@ exports.handler = async (event) => {
     const stripe = require('stripe')(key);
     const { createClient } = require('@supabase/supabase-js');
     const crypto = require('crypto');
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
     const { plan, period, userId, priceInCents, userEmail } = JSON.parse(event.body);
 
     // Normalize email to catch Gmail dots/aliases (j.erome+test@gmail.com → jerome@gmail.com)

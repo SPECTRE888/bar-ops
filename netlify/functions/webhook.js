@@ -9,7 +9,7 @@ function normalizeEmail(email) {
   return `${local.split('+')[0].replace(/\./g, '')}@${domain}`;
 }
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
 async function sendConfirmationEmail(email, plan, period) {
   if (!process.env.SENDGRID_API_KEY || !email) return;
