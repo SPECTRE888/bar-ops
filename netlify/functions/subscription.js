@@ -8,9 +8,19 @@ exports.handler = async (event) => {
 
   try {
     const stripe = require('stripe')(key);
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
     const { plan, period, userId, priceInCents } = JSON.parse(event.body);
 
-    const session = await stripe.checkout.sessions.create({
+    // Only give trial to first-time subscribers
+    const { data: pastSubs } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+    const isFirstTime = !pastSubs || pastSubs.length === 0;
+
+    const sessionParams = {
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
@@ -22,7 +32,11 @@ exports.handler = async (event) => {
         quantity: 1,
       }],
       mode: 'subscription',
-      subscription_data: { trial_period_days: 14 },
+    };
+    if (isFirstTime) sessionParams.subscription_data = { trial_period_days: 14 };
+
+    const session = await stripe.checkout.sessions.create({
+      ...sessionParams,
       success_url: `https://bar-opsv2public.netlify.app/app.html`,
       cancel_url: `https://bar-opsv2public.netlify.app/paying.html`,
       metadata: { user_id: userId, plan, period },
