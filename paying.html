@@ -177,35 +177,6 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 </div>
 
 <script>
-// Check if already subscribed on load
-(async()=>{
-  let i=0;
-  while(!sb&&i<50){await new Promise(r=>setTimeout(r,100));i++;}
-  if(!sb)return;
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session)return;
-  const{data:rows}=await sb.from('subscriptions').select('status,plan,expires_at,stripe_subscription_id').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
-  const sub=rows?.[0];
-  if(sub&&sub.status==='active'&&new Date(sub.expires_at)>new Date()){
-    document.getElementById('pricing-content').style.display='none';
-    document.getElementById('already-subscribed').style.display='flex';
-    const label=document.getElementById('sub-plan-label');
-    const expiry=new Date(sub.expires_at).getFullYear()>2090?'Licence à vie':('expire le '+new Date(sub.expires_at).toLocaleDateString('fr-FR'));
-    if(label)label.textContent=(sub.plan||'').toUpperCase()+' — '+expiry;
-    if(!sub.stripe_subscription_id)document.getElementById('btn-portal').style.display='none';
-  }
-})();
-
-async function openPortal(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session)return;
-  const res=await fetch('/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:session.user.id})});
-  const{url,error}=await res.json();
-  if(url)window.location.href=url;
-}
-</script>
-
-<script>
 // Clés API chargées dynamiquement depuis le serveur
 let SUPA_URL='', SUPA_KEY='', STRIPE_KEY='';
 let sb=null;
@@ -287,8 +258,35 @@ async function goPay(plan){
     const{sessionId,error}=await res.json();
     if(error){alert('Erreur: '+error);return;}
     if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
-  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='Souscrire';}}
+  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='14 jours gratuits';}}
 }
+
+async function openPortal(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  const res=await fetch('/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:session.user.id})});
+  const{url,error}=await res.json();
+  if(url)window.location.href=url;
+}
+
+// Check if already subscribed on load
+(async()=>{
+  let i=0;
+  while(!sb&&i<50){await new Promise(r=>setTimeout(r,100));i++;}
+  if(!sb)return;
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  const{data:rows}=await sb.from('subscriptions').select('status,plan,expires_at,stripe_subscription_id').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+  const sub=rows?.[0];
+  if(sub&&sub.status==='active'&&new Date(sub.expires_at)>new Date()){
+    document.getElementById('pricing-content').style.display='none';
+    document.getElementById('already-subscribed').style.display='flex';
+    const label=document.getElementById('sub-plan-label');
+    const expiry=new Date(sub.expires_at).getFullYear()>2090?'Licence à vie':'expire le '+new Date(sub.expires_at).toLocaleDateString('fr-FR');
+    if(label)label.textContent=(sub.plan||'').toUpperCase()+' — '+expiry;
+    if(!sub.stripe_subscription_id)document.getElementById('btn-portal').style.display='none';
+  }
+})();
 </script>
 </body>
 </html>
