@@ -9820,9 +9820,11 @@ updateCloudStatus();
     document.addEventListener('keydown',e=>{
       if((e.ctrlKey||e.metaKey)&&['p','s','c','a'].includes(e.key.toLowerCase()))e.preventDefault();
     });
-    // Disable all buttons/inputs/forms except nav
+    // Disable all buttons/inputs/forms except nav and onboarding
     document.addEventListener('DOMContentLoaded',()=>{
       document.querySelectorAll('button:not(.nav-item),input,textarea,select,form').forEach(el=>{
+        // Skip if element is inside onboarding modal
+        if(el.closest('#onboarding-overlay')) return;
         el.disabled=true;
         el.style.pointerEvents='none';
         el.style.opacity='0.5';
@@ -9881,6 +9883,870 @@ updateCloudStatus();
 
 })();
 </script>
+
+<!-- ═══════════════ ONBOARDING INTEGRATION HOOKS ═══════════════ -->
+<script>
+// Fonctions globales pour injecter les données d'onboarding dans l'app
+window.addProductFromOnboarding = function(product) {
+  if (!state.products) state.products = [];
+  // Créer le produit avec les bonnes valeurs
+  const prod = {
+    id: product.id,
+    name: product.name,
+    unit: product.unit || 'cl',
+    costHT: product.price || 0,
+    billingPriceHT: product.price || 0,
+    category: product.category || 'Alcool',
+    brand: '',
+    stock: 0
+  };
+  state.products.push(prod);
+  save();
+  renderCatalogue();
+  showToast(`✓ Produit "${prod.name}" ajouté`);
+};
+
+window.addEventFromOnboarding = function(event) {
+  if (!state.events) state.events = [];
+  // Créer l'événement avec les bonnes valeurs
+  const evt = {
+    id: event.id,
+    name: event.name,
+    date: event.date || new Date().toISOString().split('T')[0],
+    nGuests: event.guests || 0,
+    cocktails: [],
+    assignedStaff: [],
+    status: 'planning',
+    deliveryCostHT: 0,
+    deliveryBillHT: 0
+  };
+  state.events.push(evt);
+  save();
+  showToast(`✓ Événement "${evt.name}" créé`);
+};
+
+window.addStaffFromOnboarding = function(staff) {
+  if (!state.staff) state.staff = [];
+  // Mapping des rôles
+  const roleMap = {
+    'Barman / Barmaid': 'Bartender',
+    'Serveur / Serveuse': 'Serveur',
+    'Chef de bar': 'Bar Manager',
+    'Preparateur': 'Manutentionnaire'
+  };
+
+  const staffMember = {
+    id: staff.id,
+    name: staff.name,
+    type: roleMap[staff.role] || staff.role,
+    rateHT: staff.rate || 0,
+    billHT: staff.rate || 0,
+    per: 'per hour',
+    phone: staff.phone || ''
+  };
+  state.staff.push(staffMember);
+  save();
+  renderStaff();
+  showToast(`✓ Member "${staffMember.name}" ajouté`);
+};
+
+window.addSupplierFromOnboarding = function(supplier) {
+  if (!state.suppliers) state.suppliers = [];
+  // Créer le fournisseur
+  const sup = {
+    id: supplier.id,
+    name: supplier.name,
+    phone: supplier.phone || '',
+    email: supplier.email || '',
+    categories: [supplier.category] || [],
+    contact: '',
+    address: '',
+    notes: ''
+  };
+  state.suppliers.push(sup);
+  save();
+  renderSuppliers();
+  showToast(`✓ Fournisseur "${sup.name}" enregistré`);
+};
+</script>
+
+<!-- ONBOARDING MODAL HTML -->
+<div id="onboarding-overlay" style="display:none">
+  <div id="onboarding-modal">
+
+    <!-- Progress bar -->
+    <div id="ob-progress-track">
+      <div id="ob-progress-bar"></div>
+    </div>
+
+    <!-- Step indicators -->
+    <div id="ob-steps-indicator">
+      <div class="ob-step-dot active" data-step="1"></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step-dot" data-step="2"></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step-dot" data-step="3"></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step-dot" data-step="4"></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step-dot" data-step="5"></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step-dot" data-step="6"></div>
+    </div>
+
+    <!-- STEP 1 : Bienvenue -->
+    <div class="ob-step" id="ob-step-1">
+      <div class="ob-icon">*</div>
+      <h2 class="ob-title">Bienvenue dans BAR OPS</h2>
+      <p class="ob-subtitle">Votre outil de gestion evenementielle professionnelle.<br>En 6 etapes, on va tout configurer.</p>
+
+      <div class="ob-field">
+        <label class="ob-label">Votre prenom</label>
+        <input type="text" id="ob-firstname" class="ob-input" placeholder="Ex : Alexandre" autocomplete="off"/>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Nom de votre structure / entreprise</label>
+        <input type="text" id="ob-company" class="ob-input" placeholder="Ex : Alexandre Bartending" autocomplete="off"/>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Votre activite principale</label>
+        <select id="ob-activity" class="ob-input">
+          <option value="">- Selectionnez -</option>
+          <option>Barman independant evenementiel</option>
+          <option>Agence evenementielle</option>
+          <option>Bar / Restaurant</option>
+          <option>Traiteur</option>
+          <option>Autre</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 2 : Premier produit -->
+    <div class="ob-step" id="ob-step-2" style="display:none">
+      <div class="ob-icon">#</div>
+      <h2 class="ob-title">Ajoutez votre 1er produit</h2>
+      <p class="ob-subtitle">Un alcool, un sirop, n'importe quoi.<br>Ca prend 30 secondes - et vous verrez immediatement la valeur.</p>
+
+      <div class="ob-field">
+        <label class="ob-label">Nom du produit</label>
+        <input type="text" id="ob-prod-name" class="ob-input" placeholder="Ex : Rhum Diplomatico" autocomplete="off"/>
+      </div>
+      <div class="ob-row2">
+        <div class="ob-field">
+          <label class="ob-label">Prix d'achat HT (EUR)</label>
+          <input type="number" id="ob-prod-price" class="ob-input" placeholder="Ex : 22.50" step="0.01" min="0"/>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Contenance (cl)</label>
+          <input type="number" id="ob-prod-volume" class="ob-input" placeholder="Ex : 70" step="1" min="0"/>
+        </div>
+      </div>
+      <div id="ob-prod-calc" class="ob-calc" style="display:none">
+        <span class="ob-calc-label">Coût au cl</span>
+        <span id="ob-prod-calc-val" class="ob-calc-val">—</span>
+      </div>
+      <p class="ob-hint">Vous pourrez en ajouter autant que vous voulez dans le Catalogue</p>
+    </div>
+
+    <!-- STEP 3 : Premier événement -->
+    <div class="ob-step" id="ob-step-3" style="display:none">
+      <div class="ob-icon">+</div>
+      <h2 class="ob-title">Votre prochain evenement</h2>
+      <p class="ob-subtitle">Creez votre premiere prestation en quelques secondes.</p>
+
+      <div class="ob-field">
+        <label class="ob-label">Nom de l'evenement</label>
+        <input type="text" id="ob-event-name" class="ob-input" placeholder="Ex : Mariage Dupont - 14 juin" autocomplete="off"/>
+      </div>
+      <div class="ob-row2">
+        <div class="ob-field">
+          <label class="ob-label">Date</label>
+          <input type="date" id="ob-event-date" class="ob-input"/>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Nombre de convives</label>
+          <input type="number" id="ob-event-guests" class="ob-input" placeholder="Ex : 120" min="1"/>
+        </div>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Budget client HT (EUR) - optionnel</label>
+        <input type="number" id="ob-event-budget" class="ob-input" placeholder="Ex : 2400" step="100" min="0"/>
+      </div>
+      <p class="ob-hint">Vous pouvez passer cette etape et creer vos events depuis le menu</p>
+    </div>
+
+    <!-- STEP 4 : Staff -->
+    <div class="ob-step" id="ob-step-4" style="display:none">
+      <div class="ob-icon">=</div>
+      <h2 class="ob-title">Ton equipe</h2>
+      <p class="ob-subtitle">Ajoute tes 1ers barmen / serveuses avec leurs tarifs horaires.</p>
+
+      <div class="ob-field">
+        <label class="ob-label">Prenom & Nom</label>
+        <input type="text" id="ob-staff-name" class="ob-input" placeholder="Ex : Marie Dupont" autocomplete="off"/>
+      </div>
+      <div class="ob-row2">
+        <div class="ob-field">
+          <label class="ob-label">Role</label>
+          <select id="ob-staff-role" class="ob-input">
+            <option value="">- Selectionnez -</option>
+            <option>Barman / Barmaid</option>
+            <option>Serveur / Serveuse</option>
+            <option>Chef de bar</option>
+            <option>Preparateur</option>
+          </select>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Tarif HT / heure (EUR)</label>
+          <input type="number" id="ob-staff-rate" class="ob-input" placeholder="Ex : 15.00" step="0.50" min="0"/>
+        </div>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Telephone (optionnel)</label>
+        <input type="text" id="ob-staff-phone" class="ob-input" placeholder="06 XX XX XX XX" autocomplete="off"/>
+      </div>
+      <p class="ob-hint">Vous pouvez ajouter d'autres membres depuis l'app</p>
+    </div>
+
+    <!-- STEP 5 : Fournisseurs -->
+    <div class="ob-step" id="ob-step-5" style="display:none">
+      <div class="ob-icon">></div>
+      <h2 class="ob-title">Tes fournisseurs</h2>
+      <p class="ob-subtitle">Enregistre tes contact fournisseurs pour les retrouver facilement.</p>
+
+      <div class="ob-field">
+        <label class="ob-label">Nom du fournisseur</label>
+        <input type="text" id="ob-supplier-name" class="ob-input" placeholder="Ex : Les Spiritueux de Marseille" autocomplete="off"/>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Specialite / Categorie</label>
+        <select id="ob-supplier-category" class="ob-input">
+          <option value="">- Selectionnez -</option>
+          <option>Alcools & Spirits</option>
+          <option>Vins & Champagnes</option>
+          <option>Biere</option>
+          <option>Sirops & Amers</option>
+          <option>Glacons & Glacage</option>
+          <option>Verres & Barware</option>
+          <option>Fruits & Jus</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="ob-row2">
+        <div class="ob-field">
+          <label class="ob-label">Telephone</label>
+          <input type="text" id="ob-supplier-phone" class="ob-input" placeholder="06 XX XX XX XX" autocomplete="off"/>
+        </div>
+        <div class="ob-field">
+          <label class="ob-label">Email (optionnel)</label>
+          <input type="email" id="ob-supplier-email" class="ob-input" placeholder="contact@..." autocomplete="off"/>
+        </div>
+      </div>
+      <p class="ob-hint">Vous en ajouterez d'autres au fur et a mesure</p>
+    </div>
+
+    <!-- STEP 6 : Final -->
+    <div class="ob-step" id="ob-step-6" style="display:none">
+      <div class="ob-icon">v</div>
+      <h2 class="ob-title">Pret a decoller!</h2>
+      <p class="ob-subtitle">Vous avez configure les 5 piliers de BAR OPS.</p>
+
+      <div class="ob-checklist">
+        <div class="ob-check-item">
+          <span class="ob-check-icon">*</span>
+          <div>
+            <div class="ob-check-title">Profile & Structure</div>
+            <div class="ob-check-desc">Nom, activite et infos de base</div>
+          </div>
+        </div>
+        <div class="ob-check-item">
+          <span class="ob-check-icon">#</span>
+          <div>
+            <div class="ob-check-title">Catalogue</div>
+            <div class="ob-check-desc">Vos produits et leurs couts</div>
+          </div>
+        </div>
+        <div class="ob-check-item">
+          <span class="ob-check-icon">+</span>
+          <div>
+            <div class="ob-check-title">Evenements</div>
+            <div class="ob-check-desc">Vos prestations & budgets</div>
+          </div>
+        </div>
+        <div class="ob-check-item">
+          <span class="ob-check-icon">=</span>
+          <div>
+            <div class="ob-check-title">Equipe</div>
+            <div class="ob-check-desc">Vos barmen/serveuses & tarifs</div>
+          </div>
+        </div>
+        <div class="ob-check-item">
+          <span class="ob-check-icon">></span>
+          <div>
+            <div class="ob-check-title">Fournisseurs</div>
+            <div class="ob-check-desc">Vos contacts & partenaires</div>
+          </div>
+        </div>
+      </div>
+
+      <p style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);text-align:center">
+        Vous pouvez maintenant creer vos cocktails, <br/>
+        gerer vos events en temps reel et exporter vos devis PDF !
+      </p>
+    </div>
+
+    <!-- ── FOOTER NAVIGATION ── -->
+    <div id="ob-footer">
+      <button id="ob-btn-skip" onclick="obSkip()">Passer</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button id="ob-btn-back" onclick="obBack()" style="display:none">← Retour</button>
+        <button id="ob-btn-next" onclick="obNext()">Continuer →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ═══════════════ END MODAL HTML ═══════════════ -->
+
+
+<!-- ONBOARDING CSS -->
+<style>
+/* Overlay */
+#onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: obFadeIn .3s ease;
+}
+@keyframes obFadeIn { from { opacity:0 } to { opacity:1 } }
+
+/* Modal */
+#onboarding-modal {
+  background: var(--surface, #0f0f0f);
+  border: 1px solid var(--gold-border, rgba(196,164,107,0.2));
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 36px 32px 28px;
+  position: relative;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(196,164,107,0.05);
+  animation: obSlideIn .35s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes obSlideIn {
+  from { opacity:0; transform: translateY(24px) scale(0.97) }
+  to   { opacity:1; transform: translateY(0) scale(1) }
+}
+
+/* Progress bar */
+#ob-progress-track {
+  height: 1px;
+  background: var(--border, #222);
+  border-radius: 1px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+#ob-progress-bar {
+  height: 100%;
+  background: var(--gold, #c4a46b);
+  border-radius: 1px;
+  width: 25%;
+  transition: width .4s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Step dots */
+#ob-steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 28px;
+}
+.ob-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border2, #2a2a2a);
+  background: var(--surface2, #141414);
+  transition: all .3s;
+  flex-shrink: 0;
+}
+.ob-step-dot.active {
+  background: var(--gold, #c4a46b);
+  border-color: var(--gold, #c4a46b);
+  box-shadow: 0 0 8px rgba(196,164,107,0.4);
+}
+.ob-step-dot.done {
+  background: var(--green, #6aaa88);
+  border-color: var(--green, #6aaa88);
+}
+.ob-step-line {
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: var(--border, #222);
+  transition: background .3s;
+}
+.ob-step-line.done { background: var(--green, #6aaa88); }
+
+/* Step content */
+.ob-icon {
+  font-size: 28px;
+  color: var(--gold, #c4a46b);
+  margin-bottom: 12px;
+  display: block;
+  animation: obIconPop .4s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes obIconPop {
+  from { transform: scale(0.5); opacity:0 }
+  to   { transform: scale(1);   opacity:1 }
+}
+.ob-title {
+  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--text, #ede8e0);
+  letter-spacing: .04em;
+  margin-bottom: 8px;
+}
+.ob-subtitle {
+  font-size: 13px;
+  color: var(--text2, #a09890);
+  font-weight: 300;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  letter-spacing: .02em;
+}
+
+/* Fields */
+.ob-field { margin-bottom: 14px; }
+.ob-label {
+  display: block;
+  font-size: 9px;
+  color: var(--text3, #585450);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+.ob-input {
+  width: 100%;
+  padding: 10px 13px;
+  font-size: 13px;
+  background: var(--surface2, #141414);
+  border: 1px solid var(--border2, #2a2a2a);
+  border-radius: 5px;
+  color: var(--text, #ede8e0);
+  font-family: var(--font-body, 'Jost', sans-serif);
+  font-weight: 300;
+  outline: none;
+  transition: border-color .2s, background .2s;
+  letter-spacing: .02em;
+  box-sizing: border-box;
+}
+.ob-input:focus {
+  border-color: var(--gold, #c4a46b);
+  background: var(--surface3, #1c1c1c);
+}
+.ob-input::placeholder { color: var(--text3, #585450); }
+select.ob-input { color-scheme: dark; cursor: pointer; }
+
+.ob-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Calc pill */
+.ob-calc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--green-bg, rgba(106,170,136,0.08));
+  border: 1px solid rgba(90,144,112,0.2);
+  border-radius: 5px;
+  margin-top: 6px;
+  animation: obFadeIn .3s ease;
+}
+.ob-calc-label { font-size: 10px; color: var(--text2); letter-spacing: .08em; text-transform: uppercase; }
+.ob-calc-val { font-size: 14px; color: var(--green, #6aaa88); font-weight: 500; letter-spacing: .04em; }
+
+.ob-hint {
+  font-size: 11px;
+  color: var(--text3, #585450);
+  margin-top: 8px;
+  font-weight: 300;
+  letter-spacing: .02em;
+}
+
+/* Checklist step 6 */
+.ob-checklist { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.ob-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface2, #141414);
+  border: 1px solid var(--border, #222);
+  border-radius: 6px;
+  transition: border-color .2s;
+  animation: obCheckIn .4s cubic-bezier(0.16,1,0.3,1) both;
+}
+.ob-check-item:nth-child(1) { animation-delay: .05s }
+.ob-check-item:nth-child(2) { animation-delay: .12s }
+.ob-check-item:nth-child(3) { animation-delay: .19s }
+.ob-check-item:nth-child(4) { animation-delay: .26s }
+@keyframes obCheckIn {
+  from { opacity:0; transform: translateX(-10px) }
+  to   { opacity:1; transform: translateX(0) }
+}
+.ob-check-item:hover { border-color: var(--gold-border); }
+.ob-check-icon {
+  font-size: 14px;
+  color: var(--gold, #c4a46b);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ob-check-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text, #ede8e0);
+  letter-spacing: .04em;
+  margin-bottom: 3px;
+}
+.ob-check-desc {
+  font-size: 11px;
+  color: var(--text2, #a09890);
+  font-weight: 300;
+  letter-spacing: .02em;
+}
+
+/* Footer */
+#ob-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border, #222);
+}
+#ob-btn-skip {
+  font-size: 10px;
+  color: var(--text3, #585450);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body, 'Jost', sans-serif);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 6px 0;
+  transition: color .2s;
+}
+#ob-btn-skip:hover { color: var(--text2); }
+#ob-btn-back {
+  font-size: 10px;
+  color: var(--text2, #a09890);
+  background: none;
+  border: 1px solid var(--border2, #2a2a2a);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-body, 'Jost', sans-serif);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  transition: all .2s;
+}
+#ob-btn-back:hover { border-color: var(--text3); color: var(--text); }
+#ob-btn-next {
+  font-size: 11px;
+  font-weight: 600;
+  color: #080808;
+  background: var(--gold, #c4a46b);
+  border: 1px solid var(--gold, #c4a46b);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-body, 'Jost', sans-serif);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  transition: all .25s;
+}
+#ob-btn-next:hover {
+  background: var(--gold2, #d4b47a);
+  border-color: var(--gold2);
+  box-shadow: 0 4px 16px rgba(196,164,107,.3);
+}
+#ob-btn-next.ob-finish {
+  background: var(--green, #6aaa88);
+  border-color: var(--green);
+  color: #080808;
+}
+#ob-btn-next.ob-finish:hover {
+  background: #7abc94;
+  border-color: #7abc94;
+}
+
+/* Light theme compat */
+[data-theme="light"] .ob-input { color-scheme: light; }
+[data-theme="light"] select.ob-input option { background: #fff; color: #1a1814; }
+</style>
+<!-- END CSS -->
+
+
+<!-- ONBOARDING JS -->
+<script>
+(function() {
+  const OB_KEY = 'barops_onboarding_done';
+  let obCurrentStep = 1;
+  const OB_TOTAL = 6;
+
+  // ── Lance l'onboarding si pas encore fait ──
+  function obInit() {
+    // Vérif localStorage
+    if (localStorage.getItem(OB_KEY) === '1') return;
+
+    // Attend que le paywall soit résolu (max 3s)
+    let tries = 0;
+    const interval = setInterval(() => {
+      tries++;
+      // Si demo ou user connecté → show
+      if (window._isDemo === true || window._paywallDone === true) {
+        clearInterval(interval);
+        obShow();
+      }
+      // Timeout fallback
+      if (tries > 30) { clearInterval(interval); obShow(); }
+    }, 100);
+  }
+
+  function obShow() {
+    const overlay = document.getElementById('onboarding-overlay');
+    if (overlay) overlay.style.display = 'flex';
+    obRender(1);
+
+    // Pré-remplir le prénom si on a l'email
+    setTimeout(() => {
+      if (window._userEmail) {
+        const firstnameEl = document.getElementById('ob-firstname');
+        // on ne pré-remplit pas l'email pour la sécurité, mais on focus
+        if (firstnameEl) firstnameEl.focus();
+      }
+    }, 400);
+  }
+
+  function obRender(step) {
+    obCurrentStep = step;
+
+    // Progress bar
+    document.getElementById('ob-progress-bar').style.width = (step / OB_TOTAL * 100) + '%';
+
+    // Dots
+    document.querySelectorAll('.ob-step-dot').forEach((dot, i) => {
+      dot.classList.remove('active', 'done');
+      if (i + 1 === step) dot.classList.add('active');
+      if (i + 1 < step)  dot.classList.add('done');
+    });
+    document.querySelectorAll('.ob-step-line').forEach((line, i) => {
+      line.classList.toggle('done', i + 1 < step);
+    });
+
+    // Steps visibility
+    for (let i = 1; i <= OB_TOTAL; i++) {
+      const el = document.getElementById('ob-step-' + i);
+      if (el) el.style.display = i === step ? 'block' : 'none';
+    }
+
+    // Boutons
+    const btnBack = document.getElementById('ob-btn-back');
+    const btnNext = document.getElementById('ob-btn-next');
+    const btnSkip = document.getElementById('ob-btn-skip');
+
+    btnBack.style.display = step > 1 ? 'inline-flex' : 'none';
+    btnSkip.style.display = step < OB_TOTAL ? 'block' : 'none';
+
+    if (step === OB_TOTAL) {
+      btnNext.textContent = 'Acceder a BAR OPS v';
+      btnNext.classList.add('ob-finish');
+    } else {
+      btnNext.textContent = 'Continuer →';
+      btnNext.classList.remove('ob-finish');
+    }
+  }
+
+  window.obNext = function() {
+    if (obCurrentStep === 1) {
+      // Validation step 1
+      const firstname = document.getElementById('ob-firstname').value.trim();
+      if (!firstname) {
+        document.getElementById('ob-firstname').focus();
+        obShake('ob-firstname');
+        return;
+      }
+      // Sauvegarde nom dans localStorage pour usage futur
+      localStorage.setItem('barops_user_firstname', firstname);
+      const company = document.getElementById('ob-company').value.trim();
+      if (company) localStorage.setItem('barops_user_company', company);
+    }
+
+    if (obCurrentStep === 2) {
+      // Sauvegarde produit dans localStorage (l'app peut le lire au démarrage)
+      const name  = document.getElementById('ob-prod-name').value.trim();
+      const price = parseFloat(document.getElementById('ob-prod-price').value) || 0;
+      const vol   = parseFloat(document.getElementById('ob-prod-volume').value) || 0;
+      if (name && price > 0 && vol > 0) {
+        // Tente d'injecter dans le catalogue via la fonction globale si elle existe
+        const product = { id: 'ob_' + Date.now(), name, price, volume: vol, unit: 'cl', category: 'Alcool' };
+        try {
+          if (typeof window.addProductFromOnboarding === 'function') {
+            window.addProductFromOnboarding(product);
+          } else {
+            // Fallback : stocke en localStorage, l'app peut l'importer
+            const existing = JSON.parse(localStorage.getItem('barops_ob_product') || 'null');
+            if (!existing) localStorage.setItem('barops_ob_product', JSON.stringify(product));
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (obCurrentStep === 3) {
+      // Sauvegarde event
+      const eName   = document.getElementById('ob-event-name').value.trim();
+      const eDate   = document.getElementById('ob-event-date').value;
+      const eGuests = parseInt(document.getElementById('ob-event-guests').value) || 0;
+      const eBudget = parseFloat(document.getElementById('ob-event-budget').value) || 0;
+      if (eName) {
+        const event = { id: 'ob_' + Date.now(), name: eName, date: eDate, guests: eGuests, budget: eBudget };
+        try {
+          if (typeof window.addEventFromOnboarding === 'function') {
+            window.addEventFromOnboarding(event);
+          } else {
+            localStorage.setItem('barops_ob_event', JSON.stringify(event));
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (obCurrentStep === 4) {
+      // Sauvegarde staff
+      const sName   = document.getElementById('ob-staff-name').value.trim();
+      const sRole   = document.getElementById('ob-staff-role').value.trim();
+      const sRate   = parseFloat(document.getElementById('ob-staff-rate').value) || 0;
+      const sPhone  = document.getElementById('ob-staff-phone').value.trim();
+      if (sName && sRole && sRate > 0) {
+        const staff = { id: 'ob_' + Date.now(), name: sName, role: sRole, rate: sRate, phone: sPhone };
+        try {
+          if (typeof window.addStaffFromOnboarding === 'function') {
+            window.addStaffFromOnboarding(staff);
+          } else {
+            localStorage.setItem('barops_ob_staff', JSON.stringify(staff));
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (obCurrentStep === 5) {
+      // Sauvegarde supplier
+      const suName = document.getElementById('ob-supplier-name').value.trim();
+      const suCat  = document.getElementById('ob-supplier-category').value.trim();
+      const suPhone = document.getElementById('ob-supplier-phone').value.trim();
+      const suEmail = document.getElementById('ob-supplier-email').value.trim();
+      if (suName && suCat) {
+        const supplier = { id: 'ob_' + Date.now(), name: suName, category: suCat, phone: suPhone, email: suEmail };
+        try {
+          if (typeof window.addSupplierFromOnboarding === 'function') {
+            window.addSupplierFromOnboarding(supplier);
+          } else {
+            localStorage.setItem('barops_ob_supplier', JSON.stringify(supplier));
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (obCurrentStep === OB_TOTAL) {
+      obFinish();
+      return;
+    }
+
+    obRender(obCurrentStep + 1);
+  };
+
+  window.obBack = function() {
+    if (obCurrentStep > 1) obRender(obCurrentStep - 1);
+  };
+
+  window.obSkip = function() {
+    obFinish();
+  };
+
+  function obFinish() {
+    localStorage.setItem(OB_KEY, '1');
+    const overlay = document.getElementById('onboarding-overlay');
+    if (!overlay) return;
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity .3s ease';
+    setTimeout(() => { overlay.style.display = 'none'; overlay.style.opacity = ''; }, 300);
+
+    // Si on a sauvé un prénom, on peut l'afficher dans l'UI
+    const firstname = localStorage.getItem('barops_user_firstname');
+    if (firstname) {
+      const logoP = document.querySelector('.logo p');
+      if (logoP) logoP.textContent = 'Bonjour ' + firstname + ' · Pro';
+    }
+  }
+
+  // Shake animation pour validation
+  function obShake(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.animation = 'none';
+    el.style.borderColor = 'var(--red)';
+    setTimeout(() => { el.style.borderColor = ''; }, 1200);
+  }
+
+  // Calcul temps réel step 2
+  function obCalcProduct() {
+    const price = parseFloat(document.getElementById('ob-prod-price')?.value) || 0;
+    const vol   = parseFloat(document.getElementById('ob-prod-volume')?.value) || 0;
+    const calcEl  = document.getElementById('ob-prod-calc');
+    const calcVal = document.getElementById('ob-prod-calc-val');
+    if (price > 0 && vol > 0 && calcEl && calcVal) {
+      calcEl.style.display = 'flex';
+      calcVal.textContent  = (price / vol).toFixed(3) + ' €/cl';
+    } else if (calcEl) {
+      calcEl.style.display = 'none';
+    }
+  }
+
+  // Attach listeners après chargement DOM
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('ob-prod-price')?.addEventListener('input', obCalcProduct);
+    document.getElementById('ob-prod-volume')?.addEventListener('input', obCalcProduct);
+
+    // Enter pour avancer
+    document.getElementById('onboarding-modal')?.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.tagName !== 'SELECT') obNext();
+    });
+
+    // Init
+    obInit();
+  });
+
+  // Si DOMContentLoaded déjà passé (script en fin de body)
+  if (document.readyState !== 'loading') {
+    setTimeout(function() {
+      document.getElementById('ob-prod-price')?.addEventListener('input', obCalcProduct);
+      document.getElementById('ob-prod-volume')?.addEventListener('input', obCalcProduct);
+      document.getElementById('onboarding-modal')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'SELECT') obNext();
+      });
+      obInit();
+    }, 50);
+  }
+
+})();
+</script>
+
 </body>
 </html>
 <!-- deploy trigger Sat Apr 25 18:02:39 UTC 2026 -->
