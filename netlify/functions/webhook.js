@@ -100,6 +100,17 @@ exports.handler = async (event) => {
       .eq('stripe_subscription_id', subscription.id);
   }
 
+  if (stripeEvent.type === 'customer.subscription.updated') {
+    const subscription = stripeEvent.data.object;
+    // If cancelled during trial, expire at trial end not billing period end
+    if (subscription.cancel_at_period_end && subscription.status === 'trialing' && subscription.trial_end) {
+      await supabase
+        .from('subscriptions')
+        .update({ expires_at: new Date(subscription.trial_end * 1000).toISOString() })
+        .eq('stripe_subscription_id', subscription.id);
+    }
+  }
+
   if (stripeEvent.type === 'invoice.payment_failed') {
     const invoice = stripeEvent.data.object;
     await supabase
