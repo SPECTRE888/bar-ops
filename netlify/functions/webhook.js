@@ -56,6 +56,21 @@ exports.handler = async (event) => {
     const { user_id, plan, period } = session.metadata;
     const customerEmail = session.customer_details?.email || session.customer_email;
 
+    // Check card fingerprint to prevent trial abuse with different emails
+    let cardFingerprint = null;
+    try {
+      const stripeClient = stripe;
+      const subscription = await stripeClient.subscriptions.retrieve(session.subscription, { expand: ['default_payment_method'] });
+      cardFingerprint = subscription.default_payment_method?.card?.fingerprint || null;
+      if (cardFingerprint && subscription.status === 'trialing') {
+        const { data: existing } = await supabase.from('subscriptions').select('id').eq('card_fingerprint', cardFingerprint).limit(1);
+        if (existing && existing.length > 0) {
+          // Card already used for a trial — cancel trial immediately
+          await stripeClient.subscriptions.update(session.subscription, { trial_end: 'now' });
+        }
+      }
+    } catch(e) { console.error('Fingerprint check error:', e.message); }
+
     await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('user_id', user_id).neq('status', 'cancelled');
 
     const expiresAt = new Date();
@@ -65,6 +80,7 @@ exports.handler = async (event) => {
       user_id, plan, period, status: 'active',
       stripe_session_id: session.id,
       stripe_subscription_id: session.subscription,
+      card_fingerprint: cardFingerprint,
       expires_at: expiresAt.toISOString(),
     }]);
 
