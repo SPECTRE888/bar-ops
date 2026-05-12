@@ -6130,7 +6130,7 @@ async function sendBriefWA(evId,sid){
     detail+='  Technique: '+{stirred:'Mélangé',shaken:'Secoué',blended:'Blendé',none:'Direct'}[c.technique||'none']+'\n';
     const ings=(c.ingredients||[]).map(i=>i.qty?i.qty+(i.unit||'ml')+' - '+i.name:i.name).filter(Boolean);
     if(ings.length) {detail+='  Ingredients:\n';ings.forEach(ing=>{detail+='    * '+ing+'\n';});}
-    const conso=(c.consumables||[]).map(i=>{const label=(i.qty&&i.qty>1)?i.qty+'x '+i.name:i.name;return label;}).filter(Boolean);
+    const conso=(c.consumables||[]).map(i=>{const label=(i.qty&&i.qty>1)?i.qty+'x '+i.productType:i.productType;return label;}).filter(Boolean);
     if(conso.length) {detail+='  Garni:\n';conso.forEach(g=>{detail+='    * '+g+'\n';});}
     if(c.recipe) detail+='  Recette: '+c.recipe+'\n';
     if(c.methodology) detail+='  Methodologie: '+c.methodology+'\n';
