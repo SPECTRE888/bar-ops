@@ -1,6 +1,13 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
 const sgMail = require('@sendgrid/mail');
+const crypto = require('crypto');
+
+function normalizeEmail(email) {
+  if (!email) return '';
+  const [local, domain] = email.toLowerCase().split('@');
+  return `${local.split('+')[0].replace(/\./g, '')}@${domain}`;
+}
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
@@ -76,11 +83,16 @@ exports.handler = async (event) => {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + (period === 'yearly' ? 12 : 1));
 
+    const emailHash = customerEmail
+      ? crypto.createHash('sha256').update(normalizeEmail(customerEmail)).digest('hex')
+      : null;
+
     const { error } = await supabase.from('subscriptions').insert([{
       user_id, plan, period, status: 'active',
       stripe_session_id: session.id,
       stripe_subscription_id: session.subscription,
       card_fingerprint: cardFingerprint,
+      email_hash: emailHash,
       expires_at: expiresAt.toISOString(),
     }]);
 

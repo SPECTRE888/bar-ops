@@ -9,16 +9,34 @@ exports.handler = async (event) => {
   try {
     const stripe = require('stripe')(key);
     const { createClient } = require('@supabase/supabase-js');
+    const crypto = require('crypto');
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-    const { plan, period, userId, priceInCents } = JSON.parse(event.body);
+    const { plan, period, userId, priceInCents, userEmail } = JSON.parse(event.body);
 
-    // Only give trial to first-time subscribers
+    // Normalize email to catch Gmail dots/aliases (j.erome+test@gmail.com → jerome@gmail.com)
+    function normalizeEmail(email) {
+      if (!email) return '';
+      const [local, domain] = email.toLowerCase().split('@');
+      const cleanLocal = local.split('+')[0].replace(/\./g, '');
+      return `${cleanLocal}@${domain}`;
+    }
+    const emailHash = userEmail
+      ? crypto.createHash('sha256').update(normalizeEmail(userEmail)).digest('hex')
+      : null;
+
+    // Check by userId OR normalized email hash
     const { data: pastSubs } = await supabase
       .from('subscriptions')
       .select('id')
       .eq('user_id', userId)
       .limit(1);
-    const isFirstTime = !pastSubs || pastSubs.length === 0;
+    const { data: emailSubs } = emailHash ? await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('email_hash', emailHash)
+      .limit(1) : { data: null };
+
+    const isFirstTime = (!pastSubs || pastSubs.length === 0) && (!emailSubs || emailSubs.length === 0);
 
     const sessionParams = {
       payment_method_types: ['card'],
