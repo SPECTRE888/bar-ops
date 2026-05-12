@@ -40,6 +40,4 @@ exports.handler = async (event) => {
 
   return { statusCode: 200, body: 'OK' };
 };
-// webhook configured
-// webhook fix
-// webhook updated
+// webhook live May 2026
