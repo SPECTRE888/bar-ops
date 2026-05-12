@@ -164,12 +164,23 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 </div>
 
 <script>
-const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
-const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
+// Clés API chargées dynamiquement depuis le serveur
+let SUPA_URL='', SUPA_KEY='', STRIPE_KEY='';
+let sb=null;
+
+// Charger les clés depuis la Netlify Function
+fetch('/.netlify/functions/config')
+  .then(r=>r.json())
+  .then(cfg=>{
+    SUPA_URL=cfg.supabaseUrl;
+    SUPA_KEY=cfg.supabaseKey;
+    STRIPE_KEY=cfg.stripePublicKey;
+    if(window.supabase) sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  })
+  .catch(e=>console.error('Erreur chargement config:',e));
+
 const PRICES={early:{monthly:89,yearly:961},pro:{monthly:149,yearly:1609},ai:{monthly:299,yearly:3228}};
 let currentPeriod='monthly';
-const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
 function setPeriod(p){
   currentPeriod=p;
@@ -187,6 +198,13 @@ function setPeriod(p){
 }
 
 async function goPay(plan){
+  // Attendre que Supabase soit initialisé
+  let retries=0;
+  while(!sb&&retries<30){
+    await new Promise(r=>setTimeout(r,100));
+    retries++;
+  }
+  if(!sb){alert('Erreur: Configuration non chargée');return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
   
