@@ -6646,7 +6646,8 @@ async function sendQuoteToClient(evId,devisNum){
   const email=ev?.contactEmail||ev?.email||'';
   const contactName=ev?.contact||ev?.clientName||(ev?.clientId&&state.clients.find(x=>x.id===ev.clientId)?.name)||'';
   if(!ev||!email){await alertModal('Aucun email trouvé sur cet événement. Renseigne le dans la fiche événement.');return;}
-  if(!state.profile?.sendgridApiKey){await alertModal('Configure ta clé SendGrid dans Profil.');return;}
+  if(!state.profile?.sendgridApiKey){await alertModal('Configure ta clé SendGrid dans Profil → Email & SendGrid.');return;}
+  if(!state.profile?.senderEmail){await alertModal('Configure l\'email d\'envoi dans Profil → Email & SendGrid.');return;}
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);

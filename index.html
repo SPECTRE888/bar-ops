@@ -3,118 +3,327 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>BAR OPS</title>
+<title>BAR OPS — Pilotez votre bar comme un pro</title>
+<meta name="description" content="Gestion d'événements, devis automatiques, staff, cocktails et stocks — tout en un seul endroit. Essai gratuit 7 jours."/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://js.stripe.com/v3/"></script>
-<script>
-let SUPA_URL='', SUPA_KEY='';
-let sb=null;
-fetch('/.netlify/functions/config')
-  .then(r=>r.json())
-  .then(cfg=>{
-    SUPA_URL=cfg.supabaseUrl;
-    SUPA_KEY=cfg.supabaseKey;
-    if(window.supabase) sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-  })
-  .catch(e=>console.error('Erreur chargement config:',e));
-</script>
 <style>
-:root{--bg:#080808;--text:#ede8e0;--text2:#7a7268;--gold:#c4a46b;--gold2:#d4b47a}
+:root{--bg:#080808;--surface:#0f0f0f;--border:#1e1e1e;--text:#ede8e0;--text2:#a09890;--text3:#585450;--gold:#c4a46b;--gold2:#d4b47a;--gold-bg:rgba(196,164,107,.07)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Jost',sans-serif;background:#000;color:var(--text);display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:0}
-h1,h2,h3{font-family:'Cormorant Garamond',serif}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 48px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid transparent;transition:.3s;background:rgba(8,8,8,.85);backdrop-filter:blur(12px)}
+nav.scrolled{border-bottom-color:var(--border)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--gold);letter-spacing:.12em}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);text-decoration:none;transition:.2s}
+.nav-links a:hover{color:var(--gold)}
+.btn-nav{padding:8px 22px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
+.btn-nav:hover{background:var(--gold2)}
 
 /* HERO */
-.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
-.logo{font-size:54px;font-weight:300;letter-spacing:.1em;margin-bottom:18px;color:var(--gold)}
-.tagline{font-size:20px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:44px;max-width:600px}
-.btn-primary{padding:14px 52px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s;margin-bottom:0}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(196,164,107,.06) 0%,transparent 70%);pointer-events:none}
+.hero-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;opacity:.8}
+.hero h1{font-size:clamp(42px,7vw,80px);line-height:1.1;margin-bottom:24px;font-weight:300}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero-sub{font-size:16px;color:var(--text2);max-width:520px;line-height:1.7;margin-bottom:44px;font-weight:300}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:14px 40px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
 .btn-primary:hover{background:var(--gold2)}
+.btn-outline{padding:14px 40px;background:none;color:var(--text2);border:1px solid #2a2a2a;border-radius:3px;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.hero-note{margin-top:20px;font-size:11px;color:var(--text3)}
+
+/* MOCK UI */
+.mock-wrap{width:100%;max-width:860px;margin:72px auto 0;position:relative}
+.mock{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.6)}
+.mock-bar{background:#0a0a0a;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.mock-dot{width:8px;height:8px;border-radius:50%}
+.mock-body{padding:20px;display:grid;grid-template-columns:160px 1fr;gap:12px;min-height:200px}
+.mock-nav{display:flex;flex-direction:column;gap:4px}
+.mock-nav-item{padding:7px 10px;border-radius:4px;font-size:10px;color:var(--text3);letter-spacing:.06em}
+.mock-nav-item.active{background:var(--gold-bg);color:var(--gold);border-left:2px solid var(--gold)}
+.mock-content{display:flex;flex-direction:column;gap:10px}
+.mock-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mock-card{background:#0a0a0a;border:1px solid var(--border);border-radius:5px;padding:12px}
+.mock-card-label{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px}
+.mock-card-val{font-size:20px;font-weight:300;color:var(--gold)}
+.mock-table{background:#0a0a0a;border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.mock-th{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:7px 12px;border-bottom:1px solid var(--border)}
+.mock-th span{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.mock-tr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:7px 12px;border-bottom:1px solid #111}
+.mock-tr span{font-size:10px;color:var(--text2)}
+.mock-tr span.gold{color:var(--gold)}
+.mock-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:8px;background:rgba(92,168,92,.12);color:#5ca85c;border:1px solid rgba(92,168,92,.2)}
+
+/* SECTIONS */
+section{padding:100px 48px}
+.section-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:.8}
+.section-title{font-size:clamp(32px,4vw,48px);line-height:1.15;margin-bottom:16px}
+.section-sub{font-size:14px;color:var(--text2);max-width:480px;line-height:1.7}
+
+/* FEATURES */
+#features{background:var(--bg)}
+.features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:60px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.feature{padding:36px 40px;background:var(--surface);transition:.2s}
+.feature:hover{background:#111}
+.feature-icon{font-size:22px;margin-bottom:16px}
+.feature h3{font-size:20px;margin-bottom:10px;font-weight:400}
+.feature p{font-size:13px;color:var(--text2);line-height:1.7}
+
+/* HOW */
+#how{background:#050505}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px}
+.step{text-align:center}
+.step-num{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;color:var(--gold);opacity:.3;line-height:1;margin-bottom:16px}
+.step h3{font-size:18px;margin-bottom:10px;font-weight:400}
+.step p{font-size:13px;color:var(--text2);line-height:1.7}
+.step-divider{display:none}
+
+/* PRICING */
+#pricing{background:var(--bg)}
+.pricing-row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:720px;margin:60px auto 0}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:32px 36px}
+.price-card.featured{border-color:var(--gold);position:relative}
+.price-card.featured::before{content:'ACCÈS ANTICIPÉ';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:3px 12px;font-size:9px;font-weight:600;letter-spacing:.1em}
+.price-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;margin-bottom:6px}
+.price-val{font-size:36px;font-weight:300;color:var(--gold);margin:16px 0 4px}
+.price-period{font-size:11px;color:var(--text3);margin-bottom:20px}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.price-features li{font-size:12px;color:var(--text2);padding-left:16px;position:relative}
+.price-features li::before{content:'—';position:absolute;left:0;color:var(--gold);font-size:10px}
+.price-card .btn-primary,.price-card .btn-outline{width:100%;text-align:center;display:block}
 
 /* FOOTER */
-footer{width:100%;border-top:none;padding:0}
-.legal{text-align:center;font-size:12px;color:var(--text2);padding:12px 24px;border-top:none;line-height:1.6;opacity:1}
-.legal-link{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.legal-link:hover{color:var(--gold)}
-#legal-modal{display:none}
-#legal-modal.open{display:flex!important}
+footer{background:#050505;border-top:1px solid var(--border);padding:32px 48px;display:flex;align-items:center;justify-content:space-between}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);letter-spacing:.1em}
+.footer-legal{display:flex;gap:20px;align-items:center}
+.footer-legal a{font-size:11px;color:var(--text3);text-decoration:none;cursor:pointer}
+.footer-legal a:hover{color:var(--gold)}
+.footer-copy{font-size:11px;color:var(--text3)}
+
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  .nav-links{display:none}
+  section{padding:70px 20px}
+  .features-grid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;gap:32px}
+  .pricing-row{grid-template-columns:1fr}
+  footer{flex-direction:column;gap:16px;text-align:center}
+  .mock-body{grid-template-columns:1fr}
+  .mock-nav{display:none}
+}
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="logo">BAR OPS</div>
-  <div class="tagline">Une nouvelle manière de piloter vos événements.</div>
-  <button class="btn-primary" onclick="window.location.href='auth.html'">Accéder à la plateforme</button>
-</div>
-
-<footer>
-  <div class="legal">
-    © 2026 BAR OPS by Intelligence Spotlighted — <span class="legal-link" onclick="showLegal('cgv')">CGV</span> — <span class="legal-link" onclick="showLegal('rgpd')">Confidentialité</span> — <span class="legal-link" onclick="showLegal('mentions')">Mentions</span>
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">BAR OPS</div>
+  <div class="nav-links">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#how">Comment ça marche</a>
+    <a href="#pricing">Tarifs</a>
   </div>
+  <button class="btn-nav" onclick="window.location.href='auth.html'">Essai gratuit</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-label">Plateforme de gestion pour bars événementiels</div>
+  <h1>Pilotez votre bar<br/><em>comme un pro</em></h1>
+  <p class="hero-sub">Événements, devis automatiques, gestion du staff et des cocktails — tout ce dont vous avez besoin, en un seul endroit.</p>
+  <div class="hero-ctas">
+    <button class="btn-primary" onclick="window.location.href='auth.html'">Essai gratuit 7 jours</button>
+    <button class="btn-outline" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Voir les tarifs</button>
+  </div>
+  <div class="hero-note">Aucune carte requise pour commencer · Annulation à tout moment</div>
+
+  <!-- MOCK UI -->
+  <div class="mock-wrap">
+    <div class="mock">
+      <div class="mock-bar">
+        <div class="mock-dot" style="background:#ff5f56"></div>
+        <div class="mock-dot" style="background:#ffbd2e"></div>
+        <div class="mock-dot" style="background:#27c93f"></div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-nav">
+          <div class="mock-nav-item active">Événements</div>
+          <div class="mock-nav-item">Cocktails</div>
+          <div class="mock-nav-item">Catalogue</div>
+          <div class="mock-nav-item">Staff</div>
+          <div class="mock-nav-item">Clients</div>
+          <div class="mock-nav-item">Suivi</div>
+          <div class="mock-nav-item">Planning</div>
+        </div>
+        <div class="mock-content">
+          <div class="mock-row">
+            <div class="mock-card"><div class="mock-card-label">Ce mois</div><div class="mock-card-val">8</div></div>
+            <div class="mock-card"><div class="mock-card-label">CA estimé</div><div class="mock-card-val" style="font-size:16px">12 400€</div></div>
+            <div class="mock-card"><div class="mock-card-label">Staff actif</div><div class="mock-card-val">6</div></div>
+            <div class="mock-card"><div class="mock-card-label">Cocktails</div><div class="mock-card-val">24</div></div>
+          </div>
+          <div class="mock-table">
+            <div class="mock-th"><span>Événement</span><span>Date</span><span>Statut</span><span>Total</span></div>
+            <div class="mock-tr"><span>Soirée Rooftop Paris</span><span>14 juin</span><span><span class="mock-badge">Confirmé</span></span><span class="gold">3 200€</span></div>
+            <div class="mock-tr"><span>Cocktail Privé — LVMH</span><span>18 juin</span><span><span class="mock-badge">Confirmé</span></span><span class="gold">4 800€</span></div>
+            <div class="mock-tr"><span>Mariage — Château Vaux</span><span>22 juin</span><span><span class="mock-badge">Confirmé</span></span><span class="gold">6 100€</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div style="text-align:center;margin-bottom:0">
+    <div class="section-label">Fonctionnalités</div>
+    <h2 class="section-title">Tout ce qu'il vous faut,<br/>rien de superflu</h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="feature-icon">◈</div>
+      <h3>Gestion des événements</h3>
+      <p>Créez, planifiez et suivez chaque prestation. Assignez le staff, définissez les cocktails, suivez les stocks. Du brief au bilan, tout est centralisé.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◎</div>
+      <h3>Devis automatiques</h3>
+      <p>Générez un devis professionnel en quelques secondes à partir de votre catalogue et envoyez-le directement au client par email.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◇</div>
+      <h3>Staff & Planning</h3>
+      <p>Gérez votre équipe (bartenders, serveurs, managers), leurs tarifs horaires et leur disponibilité sur un planning mensuel clair.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">◉</div>
+      <h3>Catalogue & Stocks</h3>
+      <p>Ingrédients, recettes de cocktails, fournisseurs — tout est structuré pour calculer vos coûts, marges et besoins en approvisionnement.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div style="text-align:center">
+    <div class="section-label">Comment ça marche</div>
+    <h2 class="section-title">Opérationnel en 10 minutes</h2>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Configurez votre bar</h3>
+      <p>Renseignez vos informations, ajoutez vos ingrédients, créez vos recettes de cocktails et enregistrez votre équipe.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Créez vos événements</h3>
+      <p>Ajoutez un client, définissez les besoins (cocktails, staff, logistique) et générez le devis en un clic.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Suivez et facturez</h3>
+      <p>Validez les checklists, suivez les paiements, archivez les prestations et analysez vos performances.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" style="text-align:center">
+  <div class="section-label">Tarifs</div>
+  <h2 class="section-title">Simple et transparent</h2>
+  <p class="section-sub" style="margin:0 auto">7 jours d'essai gratuit inclus. Aucune carte requise pour commencer. Annulation à tout moment.</p>
+
+  <div class="pricing-row">
+    <div class="price-card featured">
+      <div class="price-name">Accès Anticipé</div>
+      <div style="font-size:10px;color:var(--gold);letter-spacing:.08em;margin-bottom:4px">20 PREMIERS CLIENTS · TARIF À VIE</div>
+      <div class="price-val">149€</div>
+      <div class="price-period">par mois · garanti à vie</div>
+      <ul class="price-features">
+        <li>Jusqu'à 30 événements / mois</li>
+        <li>Catalogue illimité</li>
+        <li>Devis automatiques</li>
+        <li>Staff avancé & planning</li>
+        <li>Support prioritaire</li>
+      </ul>
+      <button class="btn-primary" onclick="window.location.href='auth.html'">Commencer l'essai gratuit</button>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Pro</div>
+      <div style="font-size:10px;color:var(--text3);letter-spacing:.08em;margin-bottom:4px">ACCÈS COMPLET</div>
+      <div class="price-val">199€</div>
+      <div class="price-period">par mois</div>
+      <ul class="price-features">
+        <li>Jusqu'à 30 événements / mois</li>
+        <li>Catalogue illimité</li>
+        <li>Devis automatiques</li>
+        <li>Staff avancé & planning</li>
+        <li>Support standard</li>
+      </ul>
+      <button class="btn-outline" onclick="window.location.href='auth.html'">Commencer l'essai gratuit</button>
+    </div>
+  </div>
+
+  <p style="margin-top:20px;font-size:11px;color:var(--text3)">Remise de 10% sur les abonnements annuels · <a href="paying.html" style="color:var(--gold);text-decoration:none">Voir tous les plans →</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">BAR OPS</div>
+  <div class="footer-legal">
+    <a onclick="showLegal('cgv')">CGV</a>
+    <a onclick="showLegal('rgpd')">Confidentialité</a>
+    <a onclick="showLegal('mentions')">Mentions légales</a>
+  </div>
+  <div class="footer-copy">© 2026 Intelligence Spotlighted</div>
 </footer>
 
-<div id="legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#0a0a0a;border:1px solid #c4a46b;border-radius:6px;padding:36px 40px;max-width:580px;width:92%;position:relative;color:#ede8e0;font-size:13px;line-height:1.8">
-    <button onclick="document.getElementById('legal-modal').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:#c4a46b;font-size:22px;cursor:pointer;line-height:1">×</button>
+<!-- LEGAL MODAL -->
+<div id="legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#0a0a0a;border:1px solid var(--gold);border-radius:6px;padding:36px 40px;max-width:580px;width:92%;position:relative;color:var(--text);font-size:13px;line-height:1.8;max-height:80vh;overflow-y:auto">
+    <button onclick="document.getElementById('legal-modal').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;line-height:1">×</button>
     <div id="legal-content" style="white-space:pre-line"></div>
   </div>
 </div>
 
 <script>
-(async()=>{
-  let retries=0;
-  while(!sb&&retries<30){
-    await new Promise(r=>setTimeout(r,100));
-    retries++;
-  }
-  if(!sb||!window.supabase)return;
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session)return;
+let sb=null;
+fetch('/.netlify/functions/config').then(r=>r.json()).then(cfg=>{
+  sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
+  checkSession();
+}).catch(()=>{});
+
+async function checkSession(){
+  if(!sb)return;
   try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(!session)return;
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1).then(r=>({data:r.data?.[0]}));
     if(data?.status==='active'&&new Date(data.expires_at)>new Date())window.location.href='app.html';
   }catch(e){}
-})();
-</script>
-<script>
+}
+
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);
+});
+
 const LEGAL={
-  cgv:`Conditions Générales de Vente — BAR OPS
-
-Éditeur : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil
-Email : contact@intelligencespotlighted.com
-
-1. OBJET
-Les présentes CGV régissent l'accès et l'utilisation de la plateforme SaaS BAR OPS, outil de gestion d'événements et de bar à destination des professionnels.
-
-2. ABONNEMENTS ET TARIFS
-• Accès Anticipé : 149€/mois (limité aux 20 premiers clients, tarif garanti à vie)
-• Pro : 199€/mois
-• Annuel : remise de 10% sur le tarif mensuel
-Tous les prix sont TTC. Un essai gratuit de 7 jours est inclus à l'inscription. Le prélèvement débute automatiquement à l'issue de la période d'essai.
-
-3. RÉSILIATION
-L'abonné peut résilier à tout moment via le portail de gestion accessible depuis son profil. La résiliation prend effet à la fin de la période en cours, sans remboursement au prorata.
-
-4. DROIT DE RÉTRACTATION
-Conformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne s'applique pas aux services numériques pleinement exécutés avant la fin du délai de rétractation.
-
-5. RESPONSABILITÉ
-BAR OPS est fourni "en l'état". Intelligence Spotlighted ne saurait être tenu responsable des pertes de données ou interruptions de service indépendantes de sa volonté.
-
-6. DROIT APPLICABLE
-Les présentes CGV sont soumises au droit français. Tout litige relève de la compétence des tribunaux de Paris.`,
-  rgpd:`Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d\'un droit d\'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n\'est cédée à des tiers. Données hébergées par Netlify Inc. (USA) dans le cadre du Privacy Shield. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com`,
+  cgv:`Conditions Générales de Vente — BAR OPS\n\nÉditeur : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil\nEmail : contact@intelligencespotlighted.com\n\n1. OBJET\nLes présentes CGV régissent l'accès et l'utilisation de la plateforme SaaS BAR OPS, outil de gestion d'événements et de bar à destination des professionnels.\n\n2. ABONNEMENTS ET TARIFS\n• Accès Anticipé : 149€/mois (limité aux 20 premiers clients, tarif garanti à vie)\n• Pro : 199€/mois\n• Annuel : remise de 10% sur le tarif mensuel\nTous les prix sont TTC. Un essai gratuit de 7 jours est inclus à l'inscription. Le prélèvement débute automatiquement à l'issue de la période d'essai.\n\n3. RÉSILIATION\nL'abonné peut résilier à tout moment via le portail de gestion accessible depuis son profil. La résiliation prend effet à la fin de la période en cours, sans remboursement au prorata.\n\n4. DROIT DE RÉTRACTATION\nConformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne s'applique pas aux services numériques pleinement exécutés avant la fin du délai de rétractation.\n\n5. RESPONSABILITÉ\nBAR OPS est fourni "en l'état". Intelligence Spotlighted ne saurait être tenu responsable des pertes de données ou interruptions de service indépendantes de sa volonté.\n\n6. DROIT APPLICABLE\nLes présentes CGV sont soumises au droit français. Tout litige relève de la compétence des tribunaux de Paris.`,
+  rgpd:`Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n'est cédée à des tiers. Données hébergées par Netlify Inc. (USA) dans le cadre du Privacy Shield. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com`,
   mentions:`Mentions légales — Éditeur : Intelligence Spotlighted\n63 avenue Pasteur, 93100 Montreuil, France\nEmail : contact@intelligencespotlighted.com\nDirecteur de publication : Jérôme\nHébergement : Netlify Inc., 44 Montgomery Street, San Francisco, CA 94104, USA`
 };
 function showLegal(type){
   document.getElementById('legal-content').textContent=LEGAL[type];
   const m=document.getElementById('legal-modal');
   m.style.display='flex';
-  m.style.alignItems='center';
-  m.style.justifyContent='center';
 }
 </script>
 </body>

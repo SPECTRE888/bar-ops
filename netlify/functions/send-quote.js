@@ -4,8 +4,9 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
   try {
     const { to, subject, html, devisHTML, fromEmail, fromName, sendgridApiKey } = JSON.parse(event.body);
-    if (!to || !subject) return { statusCode: 400, headers:{'Content-Type':'application/json'}, body: JSON.stringify({ error: 'Champs manquants' }) };
+    if (!to || !subject) return { statusCode: 400, headers:{'Content-Type':'application/json'}, body: JSON.stringify({ error: 'Champs manquants (to, subject)' }) };
     if (!sendgridApiKey) return { statusCode: 400, headers:{'Content-Type':'application/json'}, body: JSON.stringify({ error: 'Clé SendGrid manquante' }) };
+    if (!fromEmail) return { statusCode: 400, headers:{'Content-Type':'application/json'}, body: JSON.stringify({ error: 'Email d\'envoi non configuré (Profil → Email & SendGrid)' }) };
     sgMail.setApiKey(sendgridApiKey);
     const msg = {
       to,
