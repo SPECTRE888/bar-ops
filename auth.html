@@ -108,15 +108,13 @@ async function redirect(userId){
   window.location.href='paying.html';
 }
 
-// Redirect after Google OAuth callback (handles both implicit and PKCE flows)
+// Redirect after Google OAuth callback
 (async()=>{
-  const fullHash=window.location.hash.substring(1);
   const params=new URLSearchParams(window.location.search);
   const action=params.get('action');
-  const hasCode=params.get('code'); // PKCE flow
-  const hasToken=fullHash.includes('access_token'); // implicit flow
 
-  if(!hasToken&&!hasCode)return;
+  // Only run when returning from Google OAuth (action param is set)
+  if(!action)return;
   
   // Set timeout fallback for private mode
   const fallbackTimeout=setTimeout(()=>{
