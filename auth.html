@@ -137,8 +137,8 @@ async function redirect(userId){
               expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()
             }]);
           }
-        }catch(e){}
-        window.location.href='paying.html';
+        }catch(e){console.error('Trial creation error:',e);}
+        window.location.href='app.html';
       }else{
         await redirect(s.user.id);
       }
