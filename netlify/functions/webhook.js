@@ -131,6 +131,28 @@ exports.handler = async (event) => {
       .eq('stripe_subscription_id', invoice.subscription);
   }
 
+  if (stripeEvent.type === 'invoice.payment_succeeded') {
+    const invoice = stripeEvent.data.object;
+    // Skip the first invoice (trial start) — checkout.session.completed handles it
+    if (invoice.billing_reason === 'subscription_create') return { statusCode: 200, body: 'OK' };
+    if (!invoice.subscription) return { statusCode: 200, body: 'OK' };
+
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('period')
+      .eq('stripe_subscription_id', invoice.subscription)
+      .single();
+
+    if (sub) {
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + (sub.period === 'yearly' ? 12 : 1));
+      await supabase
+        .from('subscriptions')
+        .update({ status: 'active', expires_at: expiresAt.toISOString() })
+        .eq('stripe_subscription_id', invoice.subscription);
+    }
+  }
+
   return { statusCode: 200, body: 'OK' };
 };
 // webhook live May 2026 — live secret
