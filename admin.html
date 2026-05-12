@@ -149,7 +149,15 @@ fetch('/.netlify/functions/config')
 
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
-  if(!session){window.location.href='auth.html';return;}
+  if(!session){
+    document.getElementById('access-denied').style.display='flex';
+    document.getElementById('access-denied').innerHTML=`
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold)">BAR OPS</div>
+      <div style="font-size:12px">Connectez-vous d'abord à la plateforme</div>
+      <a href="app.html" style="font-size:11px;color:var(--gold);margin-top:8px">→ Se connecter</a>
+    `;
+    return;
+  }
   window._userId=session.user.id;
   document.getElementById('app').style.display='block';
   loadData();
