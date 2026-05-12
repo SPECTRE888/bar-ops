@@ -30,6 +30,7 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ url: session.url }) };
   } catch (err) {
+    console.error('Portal error:', err.message);
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
