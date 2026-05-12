@@ -24,6 +24,14 @@ exports.handler = async (event) => {
       ? crypto.createHash('sha256').update(normalizeEmail(userEmail)).digest('hex')
       : null;
 
+    // Early access hard cap (20 slots)
+    if (plan === 'early') {
+      const { count } = await supabase.from('subscriptions').select('*', { count: 'exact', head: true }).eq('plan', 'early');
+      if (count >= 20) {
+        return { statusCode: 403, body: JSON.stringify({ error: 'Les 20 places Accès Anticipé sont épuisées.' }) };
+      }
+    }
+
     // Check by userId OR normalized email hash
     const { data: pastSubs } = await supabase
       .from('subscriptions')

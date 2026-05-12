@@ -8,43 +8,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-// Clés API chargées dynamiquement depuis le serveur
-let SUPA_URL='', SUPA_KEY='', STRIPE_KEY='';
+let SUPA_URL='', SUPA_KEY='';
 let sb=null;
-
-// Charger les clés depuis la Netlify Function
 fetch('/.netlify/functions/config')
   .then(r=>r.json())
   .then(cfg=>{
     SUPA_URL=cfg.supabaseUrl;
     SUPA_KEY=cfg.supabaseKey;
-    STRIPE_KEY=cfg.stripePublicKey;
     if(window.supabase) sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
   })
   .catch(e=>console.error('Erreur chargement config:',e));
-
-const PRICES={early:{monthly:149,yearly:1490},pro:{monthly:199,yearly:1990}};
-let currentPeriod='monthly';
-async function goPay(plan){
-  if(plan==='free'){window.location.href='app.html';return;}
-  let retries=0;
-  while(!sb&&retries<30){
-    await new Promise(r=>setTimeout(r,100));
-    retries++;
-  }
-  if(!sb){alert('Erreur: Configuration non chargée');return;}
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session){window.location.href='auth.html';return;}
-  const price=PRICES[plan][currentPeriod];
-  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='...';}
-  try{
-    const res=await fetch('/.netlify/functions/subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100)})});
-    if(!res.ok){const e=await res.text();alert('Erreur: '+e);return;}
-    const{sessionId,error}=await res.json();
-    if(error){alert('Erreur: '+error);return;}
-    if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
-  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='Souscrire';}}
-}
 </script>
 <style>
 :root{--bg:#080808;--text:#ede8e0;--text2:#7a7268;--gold:#c4a46b;--gold2:#d4b47a}

@@ -45,6 +45,9 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
 .back{position:absolute;top:24px;left:20px}
 .back a{color:var(--text2);text-decoration:none;font-size:12px}
 .back a:hover{color:var(--gold)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid #3a3a3a;color:var(--text);padding:12px 20px;border-radius:6px;font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:360px;text-align:center}
+.toast.show{opacity:1}
+.toast.error{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -176,7 +179,16 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
   </div>
 </div>
 
+<div id="toast" class="toast"></div>
 <script>
+function showToast(msg,isError){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(isError?' error':'');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
 // Clés API chargées dynamiquement depuis le serveur
 let SUPA_URL='', SUPA_KEY='', STRIPE_KEY='';
 let sb=null;
@@ -217,8 +229,8 @@ async function goPay(plan){
     await new Promise(r=>setTimeout(r,100));
     retries++;
   }
-  if(!sb){alert('Erreur: Connexion Supabase impossible. Vérifiez votre connexion.');return;}
-  if(!STRIPE_KEY){alert('Erreur: Clé Stripe manquante. Vérifiez STRIPE_PUBLIC_KEY dans les variables Netlify.');return;}
+  if(!sb){showToast('Connexion impossible. Vérifiez votre connexion.',true);return;}
+  if(!STRIPE_KEY){showToast('Erreur de configuration. Réessayez dans un instant.',true);return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
 
@@ -230,7 +242,7 @@ async function goPay(plan){
     try{
       const{count}=await sb.from('subscriptions').select('*',{count:'exact',head:true}).eq('plan','early');
       if(count>=20){
-        alert('Désolé ! Les 20 places d\'accès anticipé sont déjà réservées. Veuillez choisir le plan Pro.');
+        showToast('Les 20 places Accès Anticipé sont prises. Choisissez le plan Pro.',true);
         return;
       }
     }catch(e){console.error('Erreur vérif early access:',e);}
@@ -240,11 +252,11 @@ async function goPay(plan){
   if(btn){btn.disabled=true;btn.textContent='...';}
   try{
     const res=await fetch('/.netlify/functions/subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100),userEmail:session.user.email})});
-    if(!res.ok){const e=await res.text();alert('Erreur: '+e);return;}
+    if(!res.ok){const e=await res.text();showToast('Erreur: '+e,true);return;}
     const{sessionId,error}=await res.json();
-    if(error){alert('Erreur: '+error);return;}
+    if(error){showToast('Erreur: '+error,true);return;}
     if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
-  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent=btnOrigText;}}
+  }catch(e){showToast('Erreur: '+e.message,true);}finally{if(btn){btn.disabled=false;btn.textContent=btnOrigText;}}
 }
 
 async function openPortal(){
