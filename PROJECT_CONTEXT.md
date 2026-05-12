@@ -131,7 +131,7 @@ git push origin main
 
 ## Contacts & Clés
 - Email: contact@intelligencespotlighted.com
-- Supabase: https://hrpcdtkhnewigewomcvv.supabase.co
+- Supabase: [SUPABASE_URL]
 - GitHub: https://github.com/SPECTRE888/bar-ops
 - Live: https://bar-opsv2public.netlify.app
 
