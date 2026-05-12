@@ -33,7 +33,7 @@ exports.handler = async (event) => {
       }],
       mode: 'subscription',
     };
-    if (isFirstTime) sessionParams.subscription_data = { trial_period_days: 14 };
+    if (isFirstTime) sessionParams.subscription_data = { trial_period_days: 7 };
 
     const session = await stripe.checkout.sessions.create({
       ...sessionParams,

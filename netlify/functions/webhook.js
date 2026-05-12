@@ -22,7 +22,7 @@ async function sendConfirmationEmail(email, plan, period) {
           <p style="font-size:15px;margin-bottom:16px">Bonjour,</p>
           <p style="font-size:14px;color:#a09890;line-height:1.7;margin-bottom:24px">
             Votre abonnement <strong style="color:#ede8e0">${planLabel} ${periodLabel}</strong> est actif.<br>
-            Votre essai gratuit de 14 jours commence aujourd'hui — aucun prélèvement avant la fin de la période d'essai.
+            Votre essai gratuit de 7 jours commence aujourd'hui — aucun prélèvement avant la fin de la période d'essai.
           </p>
           <a href="https://bar-opsv2public.netlify.app/app.html" style="display:inline-block;background:#c4a46b;color:#080808;padding:14px 36px;border-radius:3px;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase">
             Accéder à la plateforme
