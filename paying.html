@@ -58,7 +58,19 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
   </div>
 </div>
 
-<div class="content">
+<div id="already-subscribed" style="display:none;flex:1;align-items:center;justify-content:center">
+  <div style="text-align:center;max-width:400px;padding:40px 20px">
+    <div style="font-size:36px;font-family:'Cormorant Garamond',serif;color:var(--gold);margin-bottom:12px">BAR OPS</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Abonnement actif</div>
+    <div id="sub-plan-label" style="font-size:11px;color:var(--text3);margin-bottom:32px;letter-spacing:.06em"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" onclick="window.location.href='app.html'">Accéder à la plateforme</button>
+      <button class="btn" style="background:none;border:1px solid #2a2a2a;color:var(--text2)" onclick="openPortal()">Gérer mon abonnement</button>
+    </div>
+  </div>
+</div>
+
+<div class="content" id="pricing-content">
   <div class="pricing-grid">
 
     <!-- EARLY ACCESS -->
@@ -163,6 +175,33 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
     </div>
   </div>
 </div>
+
+<script>
+// Check if already subscribed on load
+(async()=>{
+  let i=0;
+  while(!sb&&i<50){await new Promise(r=>setTimeout(r,100));i++;}
+  if(!sb)return;
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  const{data:rows}=await sb.from('subscriptions').select('status,plan,expires_at').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+  const sub=rows?.[0];
+  if(sub&&sub.status==='active'&&new Date(sub.expires_at)>new Date()){
+    document.getElementById('pricing-content').style.display='none';
+    document.getElementById('already-subscribed').style.display='flex';
+    const label=document.getElementById('sub-plan-label');
+    if(label)label.textContent=(sub.plan||'').toUpperCase()+' — expire le '+new Date(sub.expires_at).toLocaleDateString('fr-FR');
+  }
+})();
+
+async function openPortal(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  const res=await fetch('/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:session.user.id})});
+  const{url,error}=await res.json();
+  if(url)window.location.href=url;
+}
+</script>
 
 <script>
 // Clés API chargées dynamiquement depuis le serveur
