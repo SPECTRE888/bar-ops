@@ -118,9 +118,9 @@ async function redirect(userId){
   // Set timeout fallback for private mode
   const fallbackTimeout=setTimeout(()=>{
     if(action==='signup'){
-      window.location.href='paying.html';
+      window.location.href='app.html';
     }
-  },2000);
+  },4000);
   
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s){

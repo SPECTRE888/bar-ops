@@ -201,11 +201,11 @@ function setPeriod(p){
 async function goPay(plan){
   // Attendre que Supabase soit initialisé
   let retries=0;
-  while(!sb&&retries<30){
+  while((!sb||!STRIPE_KEY)&&retries<30){
     await new Promise(r=>setTimeout(r,100));
     retries++;
   }
-  if(!sb){alert('Erreur: Configuration non chargée');return;}
+  if(!sb||!STRIPE_KEY){alert('Erreur: Configuration non chargée');return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
   
