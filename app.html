@@ -43,8 +43,14 @@ fetch('/.netlify/functions/config')
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
 
-    const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
-    const subs=subsArr?.[0];
+    let{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+    let subs=subsArr?.[0];
+    // New user — auto-create 14-day trial
+    if(!subs){
+      await sb.from('subscriptions').insert([{user_id:session.user.id,status:'trial',plan:'trial',created_at:new Date().toISOString(),expires_at:new Date(Date.now()+14*24*60*60*1000).toISOString()}]);
+      const{data:fresh}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+      subs=fresh?.[0];
+    }
     const isActive=subs&&new Date(subs.expires_at)>new Date();
     if(!isActive){window.location.href='paying.html';return;}
 
