@@ -64,8 +64,8 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
     <!-- EARLY ACCESS -->
     <div class="card early-access">
       <h2>ACCÈS ANTICIPÉ</h2>
-      <div class="promo-label">20 premiers clients pendant 6 mois puis 149€</div>
-      <div class="price" id="price-early">89€</div>
+      <div class="promo-label">20 premiers clients • Tarif à vie • Valable 1ère inscription seulement</div>
+      <div class="price" id="price-early">149€</div>
       <div class="features">
         <div class="feature-group">
           <div class="feature-group-title">Événements</div>
@@ -91,13 +91,13 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
           </ul>
         </div>
       </div>
-      <button class="btn" onclick="goPay('early')">Souscrire</button>
+      <button class="btn" id="btn-early" onclick="goPay('early')">Souscrire</button>
     </div>
 
     <!-- PRO (Popular) -->
     <div class="card popular">
       <h2>PRO</h2>
-      <div class="price" id="price-pro">149€</div>
+      <div class="price" id="price-pro">199€</div>
 
       <div class="features">
         <div class="feature-group">
@@ -127,10 +127,10 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
       <button class="btn" onclick="goPay('pro')">Souscrire</button>
     </div>
 
-    <!-- INTELLIGENCE (Coming Soon) -->
+    <!-- BUSINESS (Coming Soon) -->
     <div class="card disabled">
-      <h2>INTELLIGENCE</h2>
-      <div class="price" id="price-ai">299€</div>
+      <h2>BUSINESS</h2>
+      <div class="price" id="price-business">299€</div>
 
       <div class="features">
         <div class="feature-group">
@@ -179,7 +179,7 @@ fetch('/.netlify/functions/config')
   })
   .catch(e=>console.error('Erreur chargement config:',e));
 
-const PRICES={early:{monthly:89,yearly:961},pro:{monthly:149,yearly:1609},ai:{monthly:299,yearly:3228}};
+const PRICES={early:{monthly:149,yearly:1490},pro:{monthly:199,yearly:1990},business:{monthly:299,yearly:2990}};
 let currentPeriod='monthly';
 
 function setPeriod(p){
@@ -187,13 +187,13 @@ function setPeriod(p){
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
   if(p==='monthly'){
-    document.getElementById('price-early').textContent='89€';
-    document.getElementById('price-pro').textContent='149€';
-    document.getElementById('price-ai').textContent='299€';
+    document.getElementById('price-early').textContent='149€';
+    document.getElementById('price-pro').textContent='199€';
+    document.getElementById('price-business').textContent='299€';
   }else{
-    document.getElementById('price-early').textContent='961€';
-    document.getElementById('price-pro').textContent='1609€';
-    document.getElementById('price-ai').textContent='3228€';
+    document.getElementById('price-early').textContent='1490€';
+    document.getElementById('price-pro').textContent='1990€';
+    document.getElementById('price-business').textContent='2990€';
   }
 }
 
@@ -208,6 +208,18 @@ async function goPay(plan){
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
   
+  // Vérifier limite early access (20 clients max)
+  if(plan==='early'){
+    try{
+      const{count}=await sb.from('subscriptions').select('*',{count:'exact',head:true}).eq('plan','early');
+      if(count>=20){
+        alert('Désolé ! Les 20 places d\'accès anticipé sont déjà réservées. Veuillez choisir le plan Pro.');
+        if(btn){btn.disabled=false;btn.textContent='Souscrire';}
+        return;
+      }
+    }catch(e){console.error('Erreur vérif early access:',e);}
+  }
+
   if(plan==='demo'){
     try{
       // Delete existing demo subscription first, then insert fresh
