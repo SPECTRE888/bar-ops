@@ -19,7 +19,6 @@ exports.handler = async (event) => {
     const session = stripeEvent.data.object;
     const { user_id, plan, period } = session.metadata;
 
-    // Cancel all old active subscriptions for this user
     await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('user_id', user_id).eq('status', 'active');
 
     const expiresAt = new Date();
@@ -36,6 +35,22 @@ exports.handler = async (event) => {
       console.error('DB error:', error);
       return { statusCode: 500, body: 'DB error' };
     }
+  }
+
+  if (stripeEvent.type === 'customer.subscription.deleted') {
+    const subscription = stripeEvent.data.object;
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'cancelled', expires_at: new Date().toISOString() })
+      .eq('stripe_subscription_id', subscription.id);
+  }
+
+  if (stripeEvent.type === 'invoice.payment_failed') {
+    const invoice = stripeEvent.data.object;
+    await supabase
+      .from('subscriptions')
+      .update({ status: 'past_due' })
+      .eq('stripe_subscription_id', invoice.subscription);
   }
 
   return { statusCode: 200, body: 'OK' };
