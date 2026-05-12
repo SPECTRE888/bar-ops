@@ -45,15 +45,28 @@ fetch('/.netlify/functions/config')
 
     const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
     const subs=subsArr?.[0];
-    const isActive=subs?.status==='active'&&new Date(subs.expires_at)>new Date();
+    const isActive=subs&&new Date(subs.expires_at)>new Date();
     if(!isActive){window.location.href='paying.html';return;}
 
     window.cloudUser={access_token:session.access_token,refresh_token:session.refresh_token,user:session.user};
     window._userEmail=session.user.email;
     window._userPlan=subs?.plan||'pro';
+    window._subStatus=subs?.status||'';
+    window._subExpiresAt=subs?.expires_at||null;
     window._isDemo=false;
     window._userId=session.user.id;
     window._paywallDone=true;
+
+    // Show trial banner if in trial
+    if(subs?.status==='trial'&&subs?.expires_at){
+      const expiresDate=new Date(subs.expires_at);
+      const now=new Date();
+      const daysLeft=Math.ceil((expiresDate-now)/(1000*60*60*24));
+      if(daysLeft>0){
+        document.getElementById('trial-banner').style.display='block';
+        document.getElementById('trial-days').textContent=daysLeft;
+      }
+    }
   }catch(e){console.error('Paywall error:',e);}
 })();
 </script>
@@ -378,6 +391,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 
 <!-- MAIN -->
 <div class="main">
+
+<!-- Trial Banner -->
+<div id="trial-banner" style="display:none;background:linear-gradient(135deg,#c4a46b 0%,#d4b47a 100%);color:#080808;padding:12px 24px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.08em;border-bottom:1px solid #b59560">
+  <span id="trial-days"></span> jours restants • <button onclick="window.location.href='paying.html'" style="background:none;border:none;color:#080808;cursor:pointer;text-decoration:underline;font-weight:600;font-size:12px">Passer à Pro</button>
+</div>
 
 <!-- ═══ DASHBOARD ═══ -->
 <div id="page-dashboard" class="page active">

@@ -100,7 +100,7 @@ async function googleAuthSignup(){
 async function redirect(userId){
   try{
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
-    if(data?.status==='active'&&new Date(data.expires_at)>new Date()){
+    if(data&&new Date(data.expires_at)>new Date()){
       window.location.href='app.html';
       return;
     }
