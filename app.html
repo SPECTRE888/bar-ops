@@ -63,8 +63,13 @@ fetch('/.netlify/functions/config')
       const now=new Date();
       const daysLeft=Math.ceil((expiresDate-now)/(1000*60*60*24));
       if(daysLeft>0){
-        document.getElementById('trial-banner').style.display='block';
-        document.getElementById('trial-days').textContent=daysLeft;
+        const showBanner=()=>{
+          const banner=document.getElementById('trial-banner');
+          const daysEl=document.getElementById('trial-days');
+          if(banner&&daysEl){banner.style.display='block';daysEl.textContent=daysLeft;}
+        };
+        if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',showBanner);}
+        else{showBanner();}
       }
     }
   }catch(e){console.error('Paywall error:',e);}

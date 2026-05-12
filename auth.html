@@ -130,8 +130,9 @@ async function redirect(userId){
       clearTimeout(fallbackTimeout);
       if(action==='signup'){
         try{
-          const{data:existing}=await sb.from('subscriptions').select('id').eq('user_id',s.user.id).single();
-          if(!existing){
+          const{data:rows}=await sb.from('subscriptions').select('id,status,expires_at').eq('user_id',s.user.id);
+          const hasValid=rows&&rows.some(r=>new Date(r.expires_at)>new Date());
+          if(!hasValid){
             await sb.from('subscriptions').insert([{
               user_id:s.user.id,
               status:'trial',
