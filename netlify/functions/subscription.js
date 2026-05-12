@@ -33,4 +33,4 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
-// force redeploy Sat Apr 25 08:15:02 UTC 2026
+// force redeploy Tue May 12 2026
