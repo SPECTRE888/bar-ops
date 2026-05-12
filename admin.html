@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin — BAR OPS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#080808;--surface:#0f0f0f;--surface2:#141414;--border:#222;--text:#ede8e0;--text2:#a09890;--text3:#585450;--gold:#c4a46b;--gold-bg:rgba(196,164,107,.08);--red:#e05555;--green:#5ca85c}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--gold);letter-spacing:.1em}
+.admin-badge{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);border:1px solid var(--border);padding:3px 8px;border-radius:3px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{padding:7px 16px;border-radius:4px;font-size:11px;font-family:'Jost',sans-serif;letter-spacing:.08em;font-weight:500;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text2);transition:.15s}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{background:var(--gold);color:#000;border-color:var(--gold)}
+.btn-gold:hover{background:#d4b47a;color:#000}
+.content{padding:28px}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px 20px}
+.stat-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:300;color:var(--text);line-height:1}
+.stat-value.gold{color:var(--gold)}
+.stat-value.green{color:var(--green)}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:4px}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:12px}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{border-bottom:1px solid var(--border);background:var(--surface2)}
+th{padding:10px 16px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:500}
+td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+td.email{color:var(--text);font-size:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.badge-active{background:rgba(92,168,92,.12);color:var(--green);border:1px solid rgba(92,168,92,.25)}
+.badge-cancelled{background:rgba(88,84,80,.15);color:var(--text3);border:1px solid var(--border)}
+.badge-past_due{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.25)}
+.badge-demo{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(196,164,107,.2)}
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.filter-btn{padding:5px 14px;border-radius:4px;font-size:10px;font-family:'Jost',sans-serif;letter-spacing:.08em;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text3);transition:.15s}
+.filter-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+.filter-btn:hover{border-color:var(--gold);color:var(--gold)}
+.search{padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;font-family:'Jost',sans-serif;outline:none;width:200px;margin-left:auto}
+.search:focus{border-color:var(--gold)}
+.search::placeholder{color:var(--text3)}
+#access-denied{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px;color:var(--text3)}
+#loading{display:flex;align-items:center;justify-content:center;height:60vh;color:var(--text3);font-size:12px;letter-spacing:.1em}
+</style>
+</head>
+<body>
+
+<div id="access-denied">
+  <div style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold)">BAR OPS</div>
+  <div style="font-size:12px">Accès réservé</div>
+  <a href="index.html" style="font-size:11px;color:var(--gold);margin-top:8px">← Retour</a>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">BAR OPS</div>
+      <div class="admin-badge">Admin</div>
+    </div>
+    <div class="topbar-right">
+      <span id="last-refresh" style="font-size:10px;color:var(--text3)"></span>
+      <button class="btn" onclick="loadData()">Actualiser</button>
+      <button class="btn" onclick="window.location.href='app.html'">← Plateforme</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="loading">Chargement...</div>
+
+    <div id="dashboard" style="display:none">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Abonnés actifs</div>
+          <div class="stat-value green" id="s-active">—</div>
+          <div class="stat-sub" id="s-new-month"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">MRR estimé</div>
+          <div class="stat-value gold" id="s-mrr">—</div>
+          <div class="stat-sub">revenus mensuels</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ARR estimé</div>
+          <div class="stat-value" id="s-arr">—</div>
+          <div class="stat-sub">revenus annuels</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">En retard</div>
+          <div class="stat-value" id="s-pastdue">—</div>
+          <div class="stat-sub">paiement échoué</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Annulés</div>
+          <div class="stat-value" id="s-cancelled">—</div>
+          <div class="stat-sub" id="s-total"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Abonnés</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all',this)">Tous</button>
+        <button class="filter-btn" onclick="setFilter('active',this)">Actifs</button>
+        <button class="filter-btn" onclick="setFilter('cancelled',this)">Annulés</button>
+        <button class="filter-btn" onclick="setFilter('past_due',this)">En retard</button>
+        <input class="search" id="search" type="text" placeholder="Rechercher email..." oninput="renderTable()"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Période</th>
+              <th>Statut</th>
+              <th>Inscrit le</th>
+              <th>Expire le</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let SUPA_URL='', SUPA_KEY='';
+let sb=null;
+let allSubs=[];
+let currentFilter='all';
+
+fetch('/.netlify/functions/config')
+  .then(r=>r.json())
+  .then(cfg=>{
+    SUPA_URL=cfg.supabaseUrl;
+    SUPA_KEY=cfg.supabaseKey;
+    sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    init();
+  });
+
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='auth.html';return;}
+  window._userId=session.user.id;
+  document.getElementById('app').style.display='block';
+  loadData();
+}
+
+async function loadData(){
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+
+  const res=await fetch('/.netlify/functions/admin',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({userId:window._userId})
+  });
+
+  if(res.status===403){
+    document.getElementById('app').style.display='none';
+    document.getElementById('access-denied').style.display='flex';
+    return;
+  }
+
+  const{stats,subscribers}=await res.json();
+  allSubs=subscribers||[];
+
+  document.getElementById('s-active').textContent=stats.active;
+  document.getElementById('s-mrr').textContent=stats.mrr+'€';
+  document.getElementById('s-arr').textContent=Math.round(stats.mrr*12)+'€';
+  document.getElementById('s-pastdue').textContent=stats.pastDue;
+  document.getElementById('s-cancelled').textContent=stats.cancelled;
+  document.getElementById('s-new-month').textContent='+'+stats.newThisMonth+' ce mois';
+  document.getElementById('s-total').textContent=stats.total+' total';
+  document.getElementById('last-refresh').textContent='Actualisé à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+  renderTable();
+  document.getElementById('loading').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+}
+
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderTable();
+}
+
+function renderTable(){
+  const q=(document.getElementById('search')?.value||'').toLowerCase();
+  const now=new Date();
+  let rows=allSubs.filter(s=>{
+    if(currentFilter!=='all'&&s.status!==currentFilter)return false;
+    if(q&&!s.email.toLowerCase().includes(q))return false;
+    return true;
+  });
+
+  const statusLabel={active:'active',cancelled:'cancelled',past_due:'past_due',demo:'demo'};
+  const fmt=d=>d?new Date(d).toLocaleDateString('fr-FR'):'—';
+  const planLabel=p=>p?p.charAt(0).toUpperCase()+p.slice(1):'—';
+  const periodLabel=p=>p==='yearly'?'Annuel':p==='monthly'?'Mensuel':'—';
+
+  document.getElementById('tbody').innerHTML=rows.map(s=>`
+    <tr>
+      <td class="email">${s.email}</td>
+      <td>${planLabel(s.plan)}</td>
+      <td>${periodLabel(s.period)}</td>
+      <td><span class="badge badge-${s.status||'demo'}">${s.status||'demo'}</span></td>
+      <td>${fmt(s.created_at)}</td>
+      <td style="color:${s.expires_at&&new Date(s.expires_at)<now?'var(--red)':'var(--text2)'}">${fmt(s.expires_at)}</td>
+    </tr>
+  `).join('')||'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Aucun résultat</td></tr>';
+}
+</script>
+</body>
+</html>
