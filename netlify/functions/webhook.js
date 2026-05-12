@@ -4,19 +4,16 @@ const sgMail = require('@sendgrid/mail');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-async function sendConfirmationEmail(userId, plan, period) {
-  if (!process.env.SENDGRID_API_KEY) return;
+async function sendConfirmationEmail(email, plan, period) {
+  if (!process.env.SENDGRID_API_KEY || !email) return;
   try {
-    const { data: { users } } = await supabase.auth.admin.listUsers();
-    const user = users?.find(u => u.id === userId);
-    if (!user?.email) return;
 
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     const planLabel = plan === 'early' ? 'Accès Anticipé' : plan.charAt(0).toUpperCase() + plan.slice(1);
     const periodLabel = period === 'yearly' ? 'annuel' : 'mensuel';
 
     await sgMail.send({
-      to: user.email,
+      to: email,
       from: { email: 'contact@intelligencespotlighted.com', name: 'BAR OPS' },
       subject: 'Bienvenue sur BAR OPS — Votre abonnement est actif',
       html: `
@@ -57,8 +54,9 @@ exports.handler = async (event) => {
   if (stripeEvent.type === 'checkout.session.completed') {
     const session = stripeEvent.data.object;
     const { user_id, plan, period } = session.metadata;
+    const customerEmail = session.customer_details?.email || session.customer_email;
 
-    await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('user_id', user_id).eq('status', 'active');
+    await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('user_id', user_id).neq('status', 'cancelled');
 
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + (period === 'yearly' ? 12 : 1));
@@ -75,7 +73,7 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: 'DB error' };
     }
 
-    await sendConfirmationEmail(user_id, plan, period);
+    await sendConfirmationEmail(customerEmail, plan, period);
   }
 
   if (stripeEvent.type === 'customer.subscription.deleted') {
