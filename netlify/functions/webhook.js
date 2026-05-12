@@ -96,4 +96,4 @@ exports.handler = async (event) => {
 
   return { statusCode: 200, body: 'OK' };
 };
-// webhook live May 2026
+// webhook live May 2026 — email confirmation
