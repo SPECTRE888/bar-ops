@@ -8500,7 +8500,7 @@ function renderProfile(){
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Compte connecte au cloud</div>
             <div style="font-size:12px;color:var(--gold);font-weight:500">Oui</div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="openBillingPortal()" style="width:100%;margin-top:4px">Gérer mon abonnement</button>
+          ${window._userPlan!=='lifetime'?`<button class="btn btn-ghost btn-sm" onclick="openBillingPortal()" style="width:100%;margin-top:4px">Gérer mon abonnement</button>`:''}
         `:`
           <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Compte connecte au cloud</div>

@@ -65,7 +65,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
     <div id="sub-plan-label" style="font-size:11px;color:var(--text3);margin-bottom:32px;letter-spacing:.06em"></div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <button class="btn" onclick="window.location.href='app.html'">Accéder à la plateforme</button>
-      <button class="btn" style="background:none;border:1px solid #2a2a2a;color:var(--text2)" onclick="openPortal()">Gérer mon abonnement</button>
+      <button id="btn-portal" class="btn" style="background:none;border:1px solid #2a2a2a;color:var(--text2)" onclick="openPortal()">Gérer mon abonnement</button>
     </div>
   </div>
 </div>
@@ -184,13 +184,15 @@ h1{font-family:'Cormorant Garamond',serif;font-size:36px;margin-bottom:16px;font
   if(!sb)return;
   const{data:{session}}=await sb.auth.getSession();
   if(!session)return;
-  const{data:rows}=await sb.from('subscriptions').select('status,plan,expires_at').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+  const{data:rows}=await sb.from('subscriptions').select('status,plan,expires_at,stripe_subscription_id').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
   const sub=rows?.[0];
   if(sub&&sub.status==='active'&&new Date(sub.expires_at)>new Date()){
     document.getElementById('pricing-content').style.display='none';
     document.getElementById('already-subscribed').style.display='flex';
     const label=document.getElementById('sub-plan-label');
-    if(label)label.textContent=(sub.plan||'').toUpperCase()+' — expire le '+new Date(sub.expires_at).toLocaleDateString('fr-FR');
+    const expiry=new Date(sub.expires_at).getFullYear()>2090?'Licence à vie':('expire le '+new Date(sub.expires_at).toLocaleDateString('fr-FR'));
+    if(label)label.textContent=(sub.plan||'').toUpperCase()+' — '+expiry;
+    if(!sub.stripe_subscription_id)document.getElementById('btn-portal').style.display='none';
   }
 })();
 
