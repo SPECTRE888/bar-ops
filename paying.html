@@ -201,11 +201,12 @@ function setPeriod(p){
 async function goPay(plan){
   // Attendre que Supabase soit initialisé
   let retries=0;
-  while((!sb||!STRIPE_KEY)&&retries<30){
+  while((!sb||!STRIPE_KEY)&&retries<100){
     await new Promise(r=>setTimeout(r,100));
     retries++;
   }
-  if(!sb||!STRIPE_KEY){alert('Erreur: Configuration non chargée');return;}
+  if(!sb){alert('Erreur: Connexion Supabase impossible. Vérifiez votre connexion.');return;}
+  if(!STRIPE_KEY){alert('Erreur: Clé Stripe manquante. Vérifiez STRIPE_PUBLIC_KEY dans les variables Netlify.');return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
   
