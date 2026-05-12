@@ -8,10 +8,21 @@
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>window.STRIPE_PUBLIC_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
+<script>
+// Clés API chargées dynamiquement depuis le serveur pour la sécurité
+let SUPA_URL='', SUPA_KEY='';
+window.STRIPE_PUBLIC_KEY='';
 
-const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
+// Charger les clés depuis la Netlify Function
+fetch('/.netlify/functions/config')
+  .then(r=>r.json())
+  .then(cfg=>{
+    SUPA_URL=cfg.supabaseUrl;
+    SUPA_KEY=cfg.supabaseKey;
+    window.STRIPE_PUBLIC_KEY=cfg.stripePublicKey;
+  })
+  .catch(e=>console.error('Erreur chargement config:',e));
+
 
 (async()=>{
   if(new URLSearchParams(window.location.search).get('demo')==='1'){
@@ -20,6 +31,13 @@ const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
   }
   try{
     if(!window.supabase)return;
+    // Attendre que les clés soient chargées
+    let retries=0;
+    while((!SUPA_URL||!SUPA_KEY)&&retries<30){
+      await new Promise(r=>setTimeout(r,100));
+      retries++;
+    }
+    if(!SUPA_URL||!SUPA_KEY){console.error('Clés de configuration non chargées');return;}
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
     window._sb=sb;
     const{data:{session}}=await sb.auth.getSession();
