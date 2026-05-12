@@ -6603,11 +6603,17 @@ function buildDevisHTML(ev,devisNum){
   const deliveryBill=ev.deliveryBillHT||0;
   const extraBill=ev.extraBillHT||0;
   let staffTotalHT=0;
+  // Count assigned staff by role
+  const assignedByRole={Bartender:0,Serveur:0,'Bar Manager':0,Manutentionnaire:0};
+  (ev.assignedStaff||[]).forEach(staffId=>{
+    const staff=state.staffItems.find(x=>x.id===staffId);
+    if(staff&&assignedByRole.hasOwnProperty(staff.type)){assignedByRole[staff.type]++;}
+  });
   const staffRoles=[
-    {label:'Bartender',n:ev.nBartenders||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender']},
-    {label:'Serveur',n:ev.nWaiters||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',types:['Serveur']},
-    {label:'Bar Manager',n:ev.nManagers||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',types:['Bar Manager']},
-    {label:'Manutentionnaire',n:ev.nManutentionnaires||0,arr:ev.arrMan||'',dep:ev.depMan||'',types:['Manutentionnaire']},
+    {label:'Bartender',n:ev.nBartenders||assignedByRole.Bartender||0,arr:ev.arrBrt||'',dep:ev.depBrt||'',types:['Bartender']},
+    {label:'Serveur',n:ev.nWaiters||assignedByRole.Serveur||0,arr:ev.arrWtr||'',dep:ev.depWtr||'',types:['Serveur']},
+    {label:'Bar Manager',n:ev.nManagers||assignedByRole['Bar Manager']||0,arr:ev.arrMgr||'',dep:ev.depMgr||'',types:['Bar Manager']},
+    {label:'Manutentionnaire',n:ev.nManutentionnaires||assignedByRole.Manutentionnaire||0,arr:ev.arrMan||'',dep:ev.depMan||'',types:['Manutentionnaire']},
   ];
   staffRoles.forEach(r=>{
     if(!r.n)return;
