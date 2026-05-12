@@ -1,5 +1,5 @@
 exports.handler = async (event, context) => {
-  // Retourner uniquement les clés publiques/nécessaires au client
+  // Public config served to client — keys loaded from Netlify environment
   return {
     statusCode: 200,
     headers: {
