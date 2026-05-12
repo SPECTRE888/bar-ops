@@ -657,6 +657,29 @@ let saveStatusTimeout=null; // Track timeout for hiding save status
 function showCloudModal(){} // Stub - real impl below
 function deleteAccountModal(){} // Stub
 
+async function loadSessionsList(){
+  const el=document.getElementById('sessions-list');
+  if(!el||!window._userId)return;
+  const sb=window._sb;if(!sb)return;
+  const cutoff=new Date(Date.now()-30*60*1000).toISOString();
+  const{data:sessions}=await sb.from('user_sessions').select('device_id,last_seen').eq('user_id',window._userId).gte('last_seen',cutoff).order('last_seen',{ascending:false});
+  if(!sessions||sessions.length===0){el.textContent='Aucun appareil actif';return;}
+  el.innerHTML=sessions.map(s=>{
+    const isCurrent=s.device_id===window._deviceId;
+    const mins=Math.round((Date.now()-new Date(s.last_seen))/60000);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)">
+      <span style="color:${isCurrent?'var(--gold)':'var(--text2)'}">${isCurrent?'Cet appareil':'Autre appareil'} <span style="color:var(--text3);font-size:10px">il y a ${mins}min</span></span>
+      ${!isCurrent?`<button onclick="revokeSession('${s.device_id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:10px;font-family:var(--font-body)">Révoquer</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function revokeSession(deviceId){
+  const sb=window._sb;if(!sb)return;
+  await sb.from('user_sessions').delete().eq('user_id',window._userId).eq('device_id',deviceId);
+  loadSessionsList();
+}
+
 async function openBillingPortal(){
   try{
     const res=await fetch('/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:window._userId})});
@@ -8526,6 +8549,10 @@ function renderProfile(){
             <div style="font-size:12px;color:var(--gold);font-weight:500">Oui</div>
           </div>
           ${window._userPlan!=='lifetime'?`<button class="btn btn-ghost btn-sm" onclick="openBillingPortal()" style="width:100%;margin-top:4px">Gérer mon abonnement</button>`:''}
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Appareils connectés</div>
+            <div id="sessions-list" style="font-size:11px;color:var(--text2)">Chargement...</div>
+          </div>
         `:`
           <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Compte connecte au cloud</div>
@@ -8722,6 +8749,7 @@ function renderProfile(){
     </div>
 
   </div>`;
+  loadSessionsList();
 }
 
 function updProfile(k,v){
