@@ -22,8 +22,9 @@ exports.handler = async (event) => {
         quantity: 1,
       }],
       mode: 'subscription',
-      success_url: `${process.env.URL || 'https://melodic-cupcake-725483.netlify.app'}/index.html?mode=check`,
-      cancel_url: `${process.env.URL || 'https://melodic-cupcake-725483.netlify.app'}/index.html?mode=pricing`,
+      subscription_data: { trial_period_days: 14 },
+      success_url: `https://bar-opsv2public.netlify.app/app.html`,
+      cancel_url: `https://bar-opsv2public.netlify.app/paying.html`,
       metadata: { user_id: userId, plan, period },
     });
 
