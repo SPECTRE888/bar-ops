@@ -221,44 +221,30 @@ async function goPay(plan){
   if(!STRIPE_KEY){alert('Erreur: Clé Stripe manquante. Vérifiez STRIPE_PUBLIC_KEY dans les variables Netlify.');return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
-  
+
+  const btn=event?.target;
+  const btnOrigText='7 jours gratuits';
+
   // Vérifier limite early access (20 clients max)
   if(plan==='early'){
     try{
       const{count}=await sb.from('subscriptions').select('*',{count:'exact',head:true}).eq('plan','early');
       if(count>=20){
         alert('Désolé ! Les 20 places d\'accès anticipé sont déjà réservées. Veuillez choisir le plan Pro.');
-        if(btn){btn.disabled=false;btn.textContent='Souscrire';}
         return;
       }
     }catch(e){console.error('Erreur vérif early access:',e);}
   }
 
-  if(plan==='demo'){
-    try{
-      // Delete existing demo subscription first, then insert fresh
-      await sb.from('subscriptions').delete().eq('user_id',session.user.id).eq('plan','demo');
-      await sb.from('subscriptions').insert([{
-        user_id:session.user.id,
-        status:'demo',
-        plan:'demo',
-        created_at:new Date().toISOString(),
-        expires_at:new Date(Date.now()+30*60*1000).toISOString()
-      }]);
-      window.location.href='app.html';
-    }catch(e){alert('Erreur: '+e.message);}
-    return;
-  }
-  
   const price=PRICES[plan][currentPeriod];
-  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='...';}
+  if(btn){btn.disabled=true;btn.textContent='...';}
   try{
     const res=await fetch('/.netlify/functions/subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,period:currentPeriod,userId:session.user.id,priceInCents:Math.round(price*100),userEmail:session.user.email})});
     if(!res.ok){const e=await res.text();alert('Erreur: '+e);return;}
     const{sessionId,error}=await res.json();
     if(error){alert('Erreur: '+error);return;}
     if(sessionId)Stripe(STRIPE_KEY).redirectToCheckout({sessionId});
-  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent='14 jours gratuits';}}
+  }catch(e){alert('Erreur: '+e.message);}finally{if(btn){btn.disabled=false;btn.textContent=btnOrigText;}}
 }
 
 async function openPortal(){
