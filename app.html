@@ -43,8 +43,13 @@ fetch('/.netlify/functions/config')
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
 
-    const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
-    const subs=subsArr?.[0];
+    let subs=null;
+    for(let i=0;i<8;i++){
+      const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+      subs=subsArr?.[0];
+      if(subs&&new Date(subs.expires_at)>new Date())break;
+      await new Promise(r=>setTimeout(r,1500));
+    }
     const isActive=subs&&new Date(subs.expires_at)>new Date();
     if(!isActive){window.location.href='paying.html';return;}
 
