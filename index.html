@@ -8,14 +8,31 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
-const STRIPE_KEY='pk_test_51TPeHTH4J8tDqadYwAj8UGwokwOJ5VdiBxLbpghuEJkEcPO1p45mTQ5vU59j6bg0Mc8nIJ2AnEZI10prSLtDvNSH00xgi4X5IZ';
-const PRICES={early:{monthly:89,yearly:801},pro:{monthly:149,yearly:1341}};
+// Clés API chargées dynamiquement depuis le serveur
+let SUPA_URL='', SUPA_KEY='', STRIPE_KEY='';
+let sb=null;
+
+// Charger les clés depuis la Netlify Function
+fetch('/.netlify/functions/config')
+  .then(r=>r.json())
+  .then(cfg=>{
+    SUPA_URL=cfg.supabaseUrl;
+    SUPA_KEY=cfg.supabaseKey;
+    STRIPE_KEY=cfg.stripePublicKey;
+    if(window.supabase) sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  })
+  .catch(e=>console.error('Erreur chargement config:',e));
+
+const PRICES={early:{monthly:149,yearly:1490},pro:{monthly:199,yearly:1990}};
 let currentPeriod='monthly';
-const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 async function goPay(plan){
   if(plan==='free'){window.location.href='app.html';return;}
+  let retries=0;
+  while(!sb&&retries<30){
+    await new Promise(r=>setTimeout(r,100));
+    retries++;
+  }
+  if(!sb){alert('Erreur: Configuration non chargée');return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
   const price=PRICES[plan][currentPeriod];
@@ -75,26 +92,14 @@ footer{width:100%;border-top:none;padding:0}
 
 <script>
 (async()=>{
-  const mode=new URLSearchParams(window.location.search).get('mode');
-  if(mode==='pricing'){
-    document.querySelector('.hero').style.display='none';
-    // Show pricing section
-    showPricing();
-    return;
+  let retries=0;
+  while(!sb&&retries<30){
+    await new Promise(r=>setTimeout(r,100));
+    retries++;
   }
-  if(mode==='check'){
-    const{data:{session}}=await sb.auth.getSession();
-    if(!session)return;
-    for(let i=0;i<5;i++){
-      const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1).then(r=>({data:r.data?.[0]}));
-      if(data?.status==='active'&&new Date(data.expires_at)>new Date()){window.location.href='app.html';return;}
-      await new Promise(r=>setTimeout(r,1000));
-    }
-  }
-  if(!window.supabase)return;
+  if(!sb||!window.supabase)return;
   const{data:{session}}=await sb.auth.getSession();
   if(!session)return;
-  if(mode==='pricing')return;
   try{
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',session.user.id).eq('status','active').order('expires_at',{ascending:false}).limit(1).then(r=>({data:r.data?.[0]}));
     if(data?.status==='active'&&new Date(data.expires_at)>new Date())window.location.href='app.html';
