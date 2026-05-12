@@ -53,11 +53,13 @@ h1{font-family:'Cormorant Garamond',serif;font-size:54px;font-weight:300;margin-
 </div>
 
 <script>
-const SUPA_URL='https://hrpcdtkhnewigewomcvv.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c';
-const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{
-  auth:{detectSessionInUrl:true,persistSession:true}
-});
+let sb=null;
+fetch('/.netlify/functions/config')
+  .then(r=>r.json())
+  .then(cfg=>{
+    if(window.supabase) sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{detectSessionInUrl:true,persistSession:true}});
+  })
+  .catch(e=>console.error('Config error:',e));
 
 function show(v){
   document.getElementById('view-signup').style.display=v==='signup'?'block':'none';
@@ -72,38 +74,30 @@ function msg(t,type){
   el.className='msg '+(type==='ok'?'ok':'err');
 }
 
+async function waitForSb(){
+  let i=0;
+  while(!sb&&i<50){await new Promise(r=>setTimeout(r,100));i++;}
+  return sb;
+}
+
 async function googleAuthLogin(){
-  await sb.auth.signOut();
-  const{error}=await sb.auth.signInWithOAuth({
-    provider:'google',
-    options:{
-      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=login',
-      queryParams:{prompt:'select_account'}
-    }
-  });
+  const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
+  await s.auth.signOut();
+  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=login',queryParams:{prompt:'select_account'}}});
   if(error)msg(error.message,'err');
 }
 
 async function googleAuthSignup(){
-  await sb.auth.signOut();
-  const{error}=await sb.auth.signInWithOAuth({
-    provider:'google',
-    options:{
-      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=signup',
-      queryParams:{prompt:'select_account'}
-    }
-  });
+  const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
+  await s.auth.signOut();
+  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=signup',queryParams:{prompt:'select_account'}}});
   if(error)msg(error.message,'err');
 }
-
 
 async function redirect(userId){
   try{
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
-    if(data&&new Date(data.expires_at)>new Date()){
-      window.location.href='app.html';
-      return;
-    }
+    if(data&&new Date(data.expires_at)>new Date()){window.location.href='app.html';return;}
   }catch(e){}
   window.location.href='paying.html';
 }
@@ -113,6 +107,8 @@ async function redirect(userId){
   const params=new URLSearchParams(window.location.search);
   const action=params.get('action');
   if(!action)return;
+
+  await waitForSb();
 
   // PKCE: session may already be established by the time JS runs
   const{data:{session}}=await sb.auth.getSession();
