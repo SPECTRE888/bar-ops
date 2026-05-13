@@ -4,121 +4,145 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>BAR OPS — Plans & Tarifs</title>
-<meta name="description" content="Gestion d'événements, devis automatiques, staff, cocktails et stocks — tout en un seul endroit. Essai gratuit 7 jours."/>
+<meta name="description" content="La gestion d'événements bar pour ceux qui n'improvisent pas. Essai gratuit 7 jours."/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
-:root{--bg:#080808;--surface:#0f0f0f;--border:#1e1e1e;--text:#ede8e0;--text2:#a09890;--text3:#585450;--gold:#c4a46b;--gold2:#d4b47a;--gold-bg:rgba(196,164,107,.07)}
+:root{--bg:#080808;--surface:#0d0d0d;--surface2:#111;--border:#1c1c1c;--border2:#252525;--text:#ede8e0;--text2:#a09890;--text3:#4a4642;--gold:#c4a46b;--gold2:#d4b47a;--gold-bg:rgba(196,164,107,.06);--gold-border:rgba(196,164,107,.2)}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
-h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:400}
 
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.85);backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:.3s}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.9);backdrop-filter:blur(16px);border-bottom:1px solid transparent;transition:border-color .3s}
 nav.scrolled{border-bottom-color:var(--border)}
-.nav-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--gold);letter-spacing:.12em;cursor:pointer}
-.nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);text-decoration:none;transition:.2s;cursor:pointer}
-.nav-links a:hover{color:var(--gold)}
-.btn-nav{padding:8px 22px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
-.btn-nav:hover{background:var(--gold2)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:300;color:var(--gold);letter-spacing:.14em;cursor:pointer}
+.nav-right{display:flex;align-items:center;gap:10px}
+.btn-ghost{padding:7px 18px;background:none;border:1px solid var(--border2);color:var(--text2);border-radius:3px;font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{padding:8px 22px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
+.btn-gold:hover{background:var(--gold2)}
 
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(196,164,107,.06) 0%,transparent 70%);pointer-events:none}
-.hero-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;opacity:.8}
-.hero h1{font-size:clamp(42px,7vw,80px);line-height:1.1;margin-bottom:24px}
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:110px 24px 60px;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 35%,rgba(196,164,107,.05) 0%,transparent 65%);pointer-events:none}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:28px;opacity:.7}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,6vw,68px);font-weight:300;line-height:1.12;margin-bottom:22px;max-width:720px}
 .hero h1 em{font-style:italic;color:var(--gold)}
-.hero-sub{font-size:16px;color:var(--text2);max-width:520px;line-height:1.7;margin-bottom:44px;font-weight:300}
-.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.btn-primary{padding:14px 40px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
-.btn-primary:hover{background:var(--gold2)}
-.btn-outline{padding:14px 40px;background:none;color:var(--text2);border:1px solid #2a2a2a;border-radius:3px;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
-.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
-.hero-note{margin-top:20px;font-size:11px;color:var(--text3)}
+.hero-sub{font-size:15px;color:var(--text2);max-width:460px;line-height:1.75;margin-bottom:40px;font-weight:300}
+.cta-row{display:flex;gap:12px;justify-content:center}
+.hero-note{margin-top:16px;font-size:10px;color:var(--text3);letter-spacing:.04em}
 
-.mock-wrap{width:100%;max-width:860px;margin:72px auto 0;position:relative}
-.mock{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.6)}
-.mock-bar{background:#0a0a0a;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
-.mock-dot{width:8px;height:8px;border-radius:50%}
-.mock-body{padding:20px;display:grid;grid-template-columns:160px 1fr;gap:12px;min-height:200px}
-.mock-nav{display:flex;flex-direction:column;gap:4px}
-.mock-nav-item{padding:7px 10px;border-radius:4px;font-size:10px;color:var(--text3);letter-spacing:.06em}
-.mock-nav-item.active{background:var(--gold-bg);color:var(--gold);border-left:2px solid var(--gold)}
-.mock-content{display:flex;flex-direction:column;gap:10px}
-.mock-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.mock-card{background:#0a0a0a;border:1px solid var(--border);border-radius:5px;padding:12px}
-.mock-card-label{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:6px}
-.mock-card-val{font-size:20px;font-weight:300;color:var(--gold)}
-.mock-table{background:#0a0a0a;border:1px solid var(--border);border-radius:5px;overflow:hidden}
-.mock-th{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:7px 12px;border-bottom:1px solid var(--border)}
-.mock-th span{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
-.mock-tr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:7px 12px;border-bottom:1px solid #111}
-.mock-tr span{font-size:10px;color:var(--text2)}
-.mock-tr span.gold{color:var(--gold)}
-.mock-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:8px;background:rgba(92,168,92,.12);color:#5ca85c;border:1px solid rgba(92,168,92,.2)}
+/* MOCK */
+.mock-wrap{width:100%;max-width:820px;margin:64px auto 0;position:relative}
+.mock-wrap::before{content:'';position:absolute;inset:-1px;background:linear-gradient(180deg,var(--gold-border) 0%,transparent 60%);border-radius:11px;z-index:0;pointer-events:none}
+.mock{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 48px 100px rgba(0,0,0,.7);position:relative;z-index:1}
+.mock-topbar{background:#0a0a0a;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.mock-dots{display:flex;gap:6px}
+.mock-dot{width:7px;height:7px;border-radius:50%}
+.mock-tabs{display:flex;gap:0}
+.mock-tab{padding:5px 14px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:1px solid transparent;transition:.15s;font-family:'Jost',sans-serif}
+.mock-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.mock-tab:hover{color:var(--text2)}
+.mock-body{display:grid;grid-template-columns:148px 1fr;min-height:210px}
+.mock-sidebar{background:#090909;border-right:1px solid var(--border);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+.mock-nav-item{padding:6px 10px;border-radius:3px;font-size:9px;color:var(--text3);letter-spacing:.06em;cursor:default}
+.mock-nav-item.active{background:var(--gold-bg);color:var(--gold);border-left:1px solid var(--gold)}
+.mock-screen{padding:16px;display:none;flex-direction:column;gap:10px;animation:fadeIn .2s ease}
+.mock-screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.mock-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mock-stat{background:#090909;border:1px solid var(--border);border-radius:4px;padding:10px}
+.mock-stat-l{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:5px}
+.mock-stat-v{font-size:18px;font-weight:300;color:var(--gold)}
+.mock-table{background:#090909;border:1px solid var(--border);border-radius:4px;overflow:hidden;font-size:10px}
+.mock-thead{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:6px 10px;border-bottom:1px solid var(--border)}
+.mock-thead span{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.mock-trow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:6px 10px;border-bottom:1px solid #0e0e0e}
+.mock-trow:last-child{border-bottom:none}
+.mock-trow span{color:var(--text2)}
+.mock-trow span.g{color:var(--gold)}
+.mbadge{display:inline-block;padding:1px 5px;border-radius:2px;font-size:7px;background:rgba(92,168,92,.1);color:#5ca85c;border:1px solid rgba(92,168,92,.15)}
+.mock-devis{background:#090909;border:1px solid var(--border);border-radius:4px;padding:14px}
+.mock-devis-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.mock-devis-title{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold)}
+.mock-devis-num{font-size:9px;color:var(--text3)}
+.mock-devis-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #0e0e0e;font-size:10px}
+.mock-devis-row:last-child{border-bottom:none}
+.mock-devis-row span{color:var(--text2)}
+.mock-devis-row span.g{color:var(--gold)}
+.mock-devis-total{display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid var(--gold-border);font-size:11px}
+.mock-planning{background:#090909;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.mock-plan-head{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+.mock-plan-head span{padding:5px 0;text-align:center;font-size:7px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)}
+.mock-plan-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.mock-plan-day{padding:5px 4px;text-align:center;font-size:9px;color:var(--text3);min-height:28px;position:relative;border-right:1px solid #0e0e0e;border-bottom:1px solid #0e0e0e}
+.mock-plan-day.has-event{color:var(--text)}
+.mock-plan-day .ev-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);margin:2px auto 0;opacity:.8}
+.mock-plan-day.today{color:var(--gold);font-weight:500}
 
-section{padding:100px 48px}
-.section-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:.8}
-.section-title{font-size:clamp(32px,4vw,48px);line-height:1.15;margin-bottom:16px}
-
-.features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:60px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.feature{padding:36px 40px;background:var(--surface);transition:.2s}
-.feature:hover{background:#111}
-.feature-icon{font-size:22px;margin-bottom:16px}
-.feature h3{font-size:20px;margin-bottom:10px}
-.feature p{font-size:13px;color:var(--text2);line-height:1.7}
-
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px}
-.step{text-align:center}
-.step-num{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;color:var(--gold);opacity:.3;line-height:1;margin-bottom:16px}
-.step h3{font-size:18px;margin-bottom:10px}
-.step p{font-size:13px;color:var(--text2);line-height:1.7}
+/* FEATURES ROW */
+.features-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:80px auto 0;max-width:900px}
+.feat{background:var(--surface);padding:28px 32px;transition:.2s}
+.feat:hover{background:var(--surface2)}
+.feat-icon{font-size:18px;color:var(--gold);margin-bottom:12px;opacity:.8}
+.feat h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;margin-bottom:6px}
+.feat p{font-size:12px;color:var(--text2);line-height:1.7}
 
 /* PRICING */
-.period-selector{display:flex;gap:10px;justify-content:center;margin-bottom:40px}
-.period-btn{padding:8px 24px;background:none;border:1px solid #2a2a2a;color:var(--text2);border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;transition:.2s}
-.period-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.1)}
-.period-btn:hover{border-color:var(--gold);color:var(--gold)}
-.discount{font-size:10px;color:var(--gold);margin-left:6px}
-.pricing-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:900px;margin:0 auto}
-.price-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:32px;display:flex;flex-direction:column}
-.price-card.featured{border-color:var(--gold);position:relative}
-.price-card.featured::before{content:'ACCÈS ANTICIPÉ';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#080808;padding:3px 12px;font-size:9px;font-weight:600;letter-spacing:.1em;white-space:nowrap}
-.price-card.disabled{opacity:.6;pointer-events:none}
-.price-name{font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:4px}
-.price-promo{font-size:9px;color:var(--gold);letter-spacing:.08em;margin-bottom:4px}
-.price-val{font-size:34px;font-weight:300;color:var(--gold);margin:14px 0 4px}
-.price-period{font-size:11px;color:var(--text3);margin-bottom:18px}
-.price-features{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:24px;flex:1}
-.price-features li{font-size:11px;color:var(--text2);padding-left:14px;position:relative}
-.price-features li::before{content:'✓';position:absolute;left:0;color:var(--gold);font-size:10px;font-weight:600}
-.price-card .btn-primary,.price-card .btn-outline{width:100%;text-align:center}
-.coming-soon-label{font-size:11px;color:var(--text3);text-align:center;padding:10px;border:1px solid var(--border);border-radius:3px;letter-spacing:.08em}
+.pricing-section{padding:100px 48px;text-align:center}
+.pricing-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;opacity:.7}
+.pricing-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,44px);font-weight:300;margin-bottom:36px}
+.period-toggle{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px;gap:3px;margin-bottom:40px}
+.period-btn{padding:7px 20px;border:none;background:none;color:var(--text3);font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:.15s}
+.period-btn.active{background:var(--gold);color:#080808;font-weight:600}
+.discount-tag{font-size:9px;color:var(--gold);margin-left:5px;opacity:.8}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:680px;margin:0 auto}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 32px;display:flex;flex-direction:column;text-align:left;transition:.2s}
+.pcard:hover{border-color:var(--border2)}
+.pcard.highlight{border-color:var(--gold-border);background:linear-gradient(135deg,var(--surface) 0%,rgba(196,164,107,.03) 100%);position:relative}
+.pcard.highlight::before{content:'ACCÈS ANTICIPÉ';position:absolute;top:-9px;left:24px;background:var(--gold);color:#080808;padding:2px 10px;font-size:8px;font-weight:700;letter-spacing:.12em;border-radius:2px}
+.pcard-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;margin-bottom:4px}
+.pcard-tag{font-size:9px;color:var(--text3);letter-spacing:.06em;margin-bottom:14px}
+.pcard-price{font-size:32px;font-weight:300;color:var(--gold);line-height:1;margin-bottom:4px}
+.pcard-period{font-size:10px;color:var(--text3);margin-bottom:20px}
+.pcard-feats{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:24px;flex:1}
+.pcard-feats li{font-size:11px;color:var(--text2);display:flex;align-items:baseline;gap:8px}
+.pcard-feats li::before{content:'—';color:var(--gold);font-size:10px;flex-shrink:0}
+.pcard .cta{width:100%;padding:11px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;cursor:pointer;transition:.2s}
+.pcard.highlight .cta{background:var(--gold);color:#080808;border:none}
+.pcard.highlight .cta:hover{background:var(--gold2)}
+.pcard:not(.highlight) .cta{background:none;color:var(--text2);border:1px solid var(--border2)}
+.pcard:not(.highlight) .cta:hover{border-color:var(--gold);color:var(--gold)}
+.pricing-note{margin-top:18px;font-size:10px;color:var(--text3)}
+.pricing-note a{color:var(--gold);text-decoration:none}
 
-footer{background:#050505;border-top:1px solid var(--border);padding:32px 48px;display:flex;align-items:center;justify-content:space-between}
-.footer-logo{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);letter-spacing:.1em}
-.footer-legal{display:flex;gap:20px}
-.footer-legal a{font-size:11px;color:var(--text3);text-decoration:none;cursor:pointer}
-.footer-legal a:hover{color:var(--gold)}
-.footer-copy{font-size:11px;color:var(--text3)}
+/* FOOTER */
+footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold);letter-spacing:.12em}
+.footer-links{display:flex;gap:18px}
+.footer-links a{font-size:10px;color:var(--text3);text-decoration:none;cursor:pointer;letter-spacing:.04em;transition:.2s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:10px;color:var(--text3)}
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid #3a3a3a;color:var(--text);padding:12px 20px;border-radius:6px;font-size:12px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:360px;text-align:center}
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#161616;border:1px solid var(--border2);color:var(--text);padding:11px 20px;border-radius:4px;font-size:11px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;max-width:340px;text-align:center;letter-spacing:.02em}
 .toast.show{opacity:1}
-.toast.error{border-color:var(--gold);color:var(--gold)}
+.toast.error{border-color:var(--gold-border);color:var(--gold)}
 
+/* ALREADY SUBSCRIBED */
 #already-subscribed{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;align-items:center;justify-content:center}
 
 @media(max-width:768px){
-  nav{padding:16px 20px}
-  .nav-links{display:none}
-  section{padding:70px 20px}
-  .features-grid{grid-template-columns:1fr}
-  .steps{grid-template-columns:1fr;gap:32px}
-  .pricing-row{grid-template-columns:1fr}
-  footer{flex-direction:column;gap:16px;text-align:center}
+  nav{padding:14px 20px}
+  .hero{padding:90px 20px 50px}
+  .features-row{grid-template-columns:1fr;margin:60px 20px 0}
+  .pricing-section{padding:70px 20px}
+  .cards{grid-template-columns:1fr;max-width:400px}
+  footer{padding:20px;flex-direction:column;gap:14px;text-align:center}
   .mock-body{grid-template-columns:1fr}
-  .mock-nav{display:none}
+  .mock-sidebar{display:none}
 }
 </style>
 </head>
@@ -126,15 +150,15 @@ footer{background:#050505;border-top:1px solid var(--border);padding:32px 48px;d
 
 <div id="toast" class="toast"></div>
 
-<!-- ALREADY SUBSCRIBED -->
+<!-- ALREADY SUBSCRIBED OVERLAY -->
 <div id="already-subscribed">
-  <div style="text-align:center;max-width:400px;padding:40px 20px">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--gold);margin-bottom:12px">BAR OPS</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Abonnement actif</div>
-    <div id="sub-plan-label" style="font-size:11px;color:var(--text3);margin-bottom:32px;letter-spacing:.06em"></div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn-primary" style="width:100%" onclick="window.location.href='app.html'">Accéder à la plateforme</button>
-      <button id="btn-portal" class="btn-outline" style="width:100%" onclick="openPortal()">Gérer mon abonnement</button>
+  <div style="text-align:center;max-width:380px;padding:40px 20px">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);margin-bottom:10px;letter-spacing:.1em">BAR OPS</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Abonnement actif</div>
+    <div id="sub-plan-label" style="font-size:10px;color:var(--text3);margin-bottom:28px;letter-spacing:.08em"></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-gold" style="width:100%;padding:12px" onclick="window.location.href='app.html'">Accéder à la plateforme</button>
+      <button id="btn-portal" class="btn-ghost" style="width:100%;padding:12px" onclick="openPortal()">Gérer mon abonnement</button>
     </div>
   </div>
 </div>
@@ -142,53 +166,95 @@ footer{background:#050505;border-top:1px solid var(--border);padding:32px 48px;d
 <!-- NAV -->
 <nav id="nav">
   <div class="nav-logo" onclick="window.location.href='index.html'">BAR OPS</div>
-  <div class="nav-links">
-    <a onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Fonctionnalités</a>
-    <a onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">Comment ça marche</a>
-    <a onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Tarifs</a>
+  <div class="nav-right">
+    <button class="btn-ghost" onclick="window.location.href='auth.html'">Connexion</button>
+    <button class="btn-gold" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit</button>
   </div>
-  <button class="btn-nav" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit</button>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-label">Plateforme de gestion pour bars événementiels</div>
-  <h1>Pilotez votre bar<br/><em>comme un pro</em></h1>
-  <p class="hero-sub">Événements, devis automatiques, gestion du staff et des cocktails — tout ce dont vous avez besoin, en un seul endroit.</p>
-  <div class="hero-ctas">
-    <button class="btn-primary" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit 7 jours</button>
-    <button class="btn-outline" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Découvrir →</button>
+  <div class="eyebrow">Plateforme de gestion événementielle</div>
+  <h1>La gestion d'événements bar<br/>pour ceux qui <em>n'improvisent pas.</em></h1>
+  <p class="hero-sub">Catalogue, staff, devis et suivi des stocks — centralisés. Chaque prestation exécutée avec précision, sans friction.</p>
+  <div class="cta-row">
+    <button class="btn-gold" style="padding:13px 36px;font-size:11px" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit 7 jours</button>
+    <button class="btn-ghost" style="padding:13px 36px;font-size:11px" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Voir la plateforme</button>
   </div>
-  <div class="hero-note">Aucune carte requise pour commencer · Annulation à tout moment</div>
+  <div class="hero-note">Aucune carte requise · Annulation à tout moment</div>
+
+  <!-- INTERACTIVE MOCK -->
   <div class="mock-wrap">
     <div class="mock">
-      <div class="mock-bar">
-        <div class="mock-dot" style="background:#ff5f56"></div>
-        <div class="mock-dot" style="background:#ffbd2e"></div>
-        <div class="mock-dot" style="background:#27c93f"></div>
+      <div class="mock-topbar">
+        <div class="mock-dots">
+          <div class="mock-dot" style="background:#ff5f56"></div>
+          <div class="mock-dot" style="background:#ffbd2e"></div>
+          <div class="mock-dot" style="background:#27c93f"></div>
+        </div>
+        <div class="mock-tabs">
+          <div class="mock-tab active" onclick="switchTab('events',this)">Événements</div>
+          <div class="mock-tab" onclick="switchTab('devis',this)">Devis</div>
+          <div class="mock-tab" onclick="switchTab('planning',this)">Planning</div>
+        </div>
+        <div style="width:60px"></div>
       </div>
       <div class="mock-body">
-        <div class="mock-nav">
-          <div class="mock-nav-item active">Événements</div>
-          <div class="mock-nav-item">Cocktails</div>
-          <div class="mock-nav-item">Catalogue</div>
-          <div class="mock-nav-item">Staff</div>
-          <div class="mock-nav-item">Clients</div>
-          <div class="mock-nav-item">Suivi</div>
-          <div class="mock-nav-item">Planning</div>
+        <div class="mock-sidebar">
+          <div class="mock-nav-item active" id="snav-events">Événements</div>
+          <div class="mock-nav-item" id="snav-cocktails">Cocktails</div>
+          <div class="mock-nav-item" id="snav-catalogue">Catalogue</div>
+          <div class="mock-nav-item" id="snav-staff">Staff</div>
+          <div class="mock-nav-item" id="snav-clients">Clients</div>
+          <div class="mock-nav-item" id="snav-planning">Planning</div>
         </div>
-        <div class="mock-content">
-          <div class="mock-row">
-            <div class="mock-card"><div class="mock-card-label">Ce mois</div><div class="mock-card-val">8</div></div>
-            <div class="mock-card"><div class="mock-card-label">CA estimé</div><div class="mock-card-val" style="font-size:16px">12 400€</div></div>
-            <div class="mock-card"><div class="mock-card-label">Staff actif</div><div class="mock-card-val">6</div></div>
-            <div class="mock-card"><div class="mock-card-label">Cocktails</div><div class="mock-card-val">24</div></div>
+
+        <!-- SCREEN: EVENTS -->
+        <div class="mock-screen active" id="screen-events">
+          <div class="mock-stats">
+            <div class="mock-stat"><div class="mock-stat-l">Ce mois</div><div class="mock-stat-v">8</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">CA estimé</div><div class="mock-stat-v" style="font-size:15px">12 400€</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">Staff actif</div><div class="mock-stat-v">6</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">Cocktails</div><div class="mock-stat-v">24</div></div>
           </div>
           <div class="mock-table">
-            <div class="mock-th"><span>Événement</span><span>Date</span><span>Statut</span><span>Total</span></div>
-            <div class="mock-tr"><span>Soirée Rooftop Paris</span><span>14 juin</span><span><span class="mock-badge">Confirmé</span></span><span class="gold">3 200€</span></div>
-            <div class="mock-tr"><span>Cocktail Privé — LVMH</span><span>18 juin</span><span><span class="mock-badge">Confirmé</span></span><span class="gold">4 800€</span></div>
-            <div class="mock-tr"><span>Mariage — Château Vaux</span><span>22 juin</span><span><span class="mock-badge">Confirmé</span></span><span class="gold">6 100€</span></div>
+            <div class="mock-thead"><span>Événement</span><span>Date</span><span>Statut</span><span>Total TTC</span></div>
+            <div class="mock-trow"><span>Soirée Rooftop — Paris 8e</span><span>14 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">3 200€</span></div>
+            <div class="mock-trow"><span>Cocktail Privé — LVMH</span><span>18 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">4 800€</span></div>
+            <div class="mock-trow"><span>Mariage — Château de Vaux</span><span>22 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">6 100€</span></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: DEVIS -->
+        <div class="mock-screen" id="screen-devis">
+          <div class="mock-devis">
+            <div class="mock-devis-head">
+              <div>
+                <div class="mock-devis-title">Devis — Soirée Rooftop</div>
+                <div class="mock-devis-num">N° BAR-2024-014 · Client : Maison Brun</div>
+              </div>
+              <div style="font-size:9px;color:var(--gold);border:1px solid var(--gold-border);padding:3px 8px;border-radius:2px">PDF</div>
+            </div>
+            <div class="mock-devis-row"><span>Cocktails × 120 personnes</span><span class="g">1 440€</span></div>
+            <div class="mock-devis-row"><span>Staff — 2 bartenders × 6h</span><span class="g">720€</span></div>
+            <div class="mock-devis-row"><span>Staff — 1 serveur × 5h</span><span class="g">200€</span></div>
+            <div class="mock-devis-row"><span>Livraison & installation</span><span class="g">280€</span></div>
+            <div class="mock-devis-total"><span style="color:var(--text)">Total TTC</span><span class="g" style="font-size:14px">2 640€</span></div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <div style="flex:1;background:#090909;border:1px solid var(--gold-border);border-radius:3px;padding:7px;text-align:center;font-size:9px;color:var(--gold);letter-spacing:.08em">✉ Envoyer au client</div>
+            <div style="background:#090909;border:1px solid var(--border);border-radius:3px;padding:7px 12px;font-size:9px;color:var(--text3)">Modifier</div>
+          </div>
+        </div>
+
+        <!-- SCREEN: PLANNING -->
+        <div class="mock-screen" id="screen-planning">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.08em;margin-bottom:8px;text-align:left">JUIN 2025</div>
+          <div class="mock-planning">
+            <div class="mock-plan-head">
+              <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+            </div>
+            <div class="mock-plan-grid" id="plan-grid"></div>
           </div>
         </div>
       </div>
@@ -197,121 +263,73 @@ footer{background:#050505;border-top:1px solid var(--border);padding:32px 48px;d
 </section>
 
 <!-- FEATURES -->
-<section id="features" style="background:var(--bg)">
-  <div style="text-align:center">
-    <div class="section-label">Fonctionnalités</div>
-    <h2 class="section-title">Tout ce qu'il vous faut,<br/>rien de superflu</h2>
-  </div>
-  <div class="features-grid">
-    <div class="feature">
-      <div class="feature-icon">◈</div>
-      <h3>Gestion des événements</h3>
-      <p>Créez, planifiez et suivez chaque prestation. Assignez le staff, définissez les cocktails, suivez les stocks. Du brief au bilan, tout est centralisé.</p>
+<section id="features" style="padding:0 48px 80px">
+  <div class="features-row">
+    <div class="feat">
+      <div class="feat-icon">◈</div>
+      <h3>Événements & Suivi</h3>
+      <p>Créez, planifiez et archivez chaque prestation. Checklist de suivi, acomptes, statuts — rien ne passe entre les mailles.</p>
     </div>
-    <div class="feature">
-      <div class="feature-icon">◎</div>
-      <h3>Devis automatiques</h3>
-      <p>Générez un devis professionnel en quelques secondes à partir de votre catalogue et envoyez-le directement au client par email.</p>
+    <div class="feat">
+      <div class="feat-icon">◎</div>
+      <h3>Devis en 2 clics</h3>
+      <p>Calculé depuis votre catalogue en temps réel, exportable en PDF, envoyé directement au client par email.</p>
     </div>
-    <div class="feature">
-      <div class="feature-icon">◇</div>
-      <h3>Staff & Planning</h3>
-      <p>Gérez votre équipe (bartenders, serveurs, managers), leurs tarifs horaires et leur disponibilité sur un planning mensuel clair.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">◉</div>
-      <h3>Catalogue & Stocks</h3>
-      <p>Ingrédients, recettes de cocktails, fournisseurs — tout est structuré pour calculer vos coûts, marges et besoins en approvisionnement.</p>
-    </div>
-  </div>
-</section>
-
-<!-- HOW -->
-<section id="how" style="background:#050505">
-  <div style="text-align:center">
-    <div class="section-label">Comment ça marche</div>
-    <h2 class="section-title">Opérationnel en 10 minutes</h2>
-  </div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">01</div>
-      <h3>Configurez votre bar</h3>
-      <p>Renseignez vos informations, ajoutez vos ingrédients, créez vos recettes de cocktails et enregistrez votre équipe.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <h3>Créez vos événements</h3>
-      <p>Ajoutez un client, définissez les besoins (cocktails, staff, logistique) et générez le devis en un clic.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <h3>Suivez et facturez</h3>
-      <p>Validez les checklists, suivez les paiements, archivez les prestations et analysez vos performances.</p>
+    <div class="feat">
+      <div class="feat-icon">◇</div>
+      <h3>Staff, stocks & catalogue</h3>
+      <p>Ingrédients, recettes, équipe et fournisseurs — tout est structuré pour piloter vos coûts sans improviser.</p>
     </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section id="pricing" style="text-align:center;background:var(--bg)">
-  <div class="section-label">Tarifs</div>
-  <h2 class="section-title">Simple et transparent</h2>
-  <p style="font-size:14px;color:var(--text2);max-width:480px;margin:0 auto 36px;line-height:1.7">7 jours d'essai gratuit inclus. Aucune carte requise pour commencer. Annulation à tout moment.</p>
+<section id="pricing" class="pricing-section">
+  <div class="pricing-eyebrow">Tarifs</div>
+  <h2 class="pricing-title">Démarrez sans risque</h2>
 
-  <div class="period-selector">
+  <div class="period-toggle">
     <button class="period-btn active" onclick="setPeriod('monthly',this)">Mensuel</button>
-    <button class="period-btn" onclick="setPeriod('yearly',this)">Annuel <span class="discount">−10%</span></button>
+    <button class="period-btn" onclick="setPeriod('yearly',this)">Annuel <span class="discount-tag">−10%</span></button>
   </div>
 
-  <div class="pricing-row">
-    <div class="price-card featured">
-      <div class="price-name">Accès Anticipé</div>
-      <div class="price-promo">20 PREMIERS CLIENTS · TARIF À VIE</div>
-      <div class="price-val" id="price-early">149€</div>
-      <div class="price-period" id="period-early">par mois · garanti à vie</div>
-      <ul class="price-features">
+  <div class="cards">
+    <div class="pcard highlight">
+      <div class="pcard-name">Accès Anticipé</div>
+      <div class="pcard-tag">20 PLACES · TARIF GARANTI À VIE</div>
+      <div class="pcard-price" id="price-early">149€</div>
+      <div class="pcard-period" id="period-early">par mois</div>
+      <ul class="pcard-feats">
         <li>Jusqu'à 30 événements / mois</li>
-        <li>Catalogue illimité</li>
         <li>Devis automatiques</li>
+        <li>Catalogue & stocks illimités</li>
         <li>Staff avancé & planning</li>
         <li>Support prioritaire</li>
       </ul>
-      <button class="btn-primary" onclick="goPay('early')">Commencer l'essai gratuit</button>
+      <button class="cta" onclick="goPay('early')">Commencer l'essai gratuit</button>
     </div>
-    <div class="price-card">
-      <div class="price-name">Pro</div>
-      <div class="price-promo" style="color:var(--text3)">ACCÈS COMPLET</div>
-      <div class="price-val" id="price-pro">199€</div>
-      <div class="price-period" id="period-pro">par mois</div>
-      <ul class="price-features">
+    <div class="pcard">
+      <div class="pcard-name">Pro</div>
+      <div class="pcard-tag">ACCÈS COMPLET</div>
+      <div class="pcard-price" id="price-pro">199€</div>
+      <div class="pcard-period" id="period-pro">par mois</div>
+      <ul class="pcard-feats">
         <li>Jusqu'à 30 événements / mois</li>
-        <li>Catalogue illimité</li>
         <li>Devis automatiques</li>
+        <li>Catalogue & stocks illimités</li>
         <li>Staff avancé & planning</li>
         <li>Support standard</li>
       </ul>
-      <button class="btn-outline" onclick="goPay('pro')">Commencer l'essai gratuit</button>
-    </div>
-    <div class="price-card disabled">
-      <div class="price-name">Business</div>
-      <div class="price-promo" style="color:var(--text3)">BIENTÔT DISPONIBLE</div>
-      <div class="price-val">299€</div>
-      <div class="price-period">par mois</div>
-      <ul class="price-features">
-        <li>Événements illimités</li>
-        <li>Catalogue illimité</li>
-        <li>Approvisionnement IA</li>
-        <li>API & Webhooks</li>
-        <li>Support 24/7</li>
-      </ul>
-      <div class="coming-soon-label">À venir</div>
+      <button class="cta" onclick="goPay('pro')">Commencer l'essai gratuit</button>
     </div>
   </div>
+  <div class="pricing-note">7 jours d'essai gratuit inclus · Aucune carte requise · <a href="#" onclick="showLegal('cgv');return false">CGV</a></div>
 </section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">BAR OPS</div>
-  <div class="footer-legal">
+  <div class="footer-links">
     <a onclick="showLegal('cgv')">CGV</a>
     <a onclick="showLegal('rgpd')">Confidentialité</a>
     <a onclick="showLegal('mentions')">Mentions légales</a>
@@ -319,8 +337,9 @@ footer{background:#050505;border-top:1px solid var(--border);padding:32px 48px;d
   <div class="footer-copy">© 2026 Intelligence Spotlighted</div>
 </footer>
 
-<div id="legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#0a0a0a;border:1px solid var(--gold);border-radius:6px;padding:36px 40px;max-width:580px;width:92%;position:relative;color:var(--text);font-size:13px;line-height:1.8;max-height:80vh;overflow-y:auto">
+<!-- LEGAL MODAL -->
+<div id="legal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#0a0a0a;border:1px solid var(--gold-border);border-radius:6px;padding:36px 40px;max-width:560px;width:92%;position:relative;color:var(--text);font-size:13px;line-height:1.85;max-height:80vh;overflow-y:auto">
     <button onclick="document.getElementById('legal-modal').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;color:var(--gold);font-size:22px;cursor:pointer;line-height:1">×</button>
     <div id="legal-content" style="white-space:pre-line"></div>
   </div>
@@ -338,10 +357,36 @@ fetch('/.netlify/functions/config').then(r=>r.json()).then(cfg=>{
   checkSubscription();
 }).catch(e=>console.error('Config error:',e));
 
-window.addEventListener('scroll',()=>{
-  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);
-});
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40));
 
+// Mock tabs
+function switchTab(tab,el){
+  document.querySelectorAll('.mock-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mock-screen').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('screen-'+tab).classList.add('active');
+  // Sync sidebar
+  const map={events:'events',devis:'events',planning:'planning'};
+  document.querySelectorAll('.mock-nav-item').forEach(i=>i.classList.remove('active'));
+  const sid=document.getElementById('snav-'+(map[tab]||tab));
+  if(sid)sid.classList.add('active');
+}
+
+// Build planning grid
+(function(){
+  const grid=document.getElementById('plan-grid');if(!grid)return;
+  const events=[14,18,22,28];
+  const firstDay=6; // June 2025 starts on Sunday → shift 6
+  let html='';
+  for(let i=0;i<firstDay;i++)html+=`<div class="mock-plan-day"></div>`;
+  for(let d=1;d<=30;d++){
+    const hasEv=events.includes(d);
+    html+=`<div class="mock-plan-day${hasEv?' has-event':''}${d===13?' today':''}">${d}${hasEv?'<div class="ev-dot"></div>':''}</div>`;
+  }
+  grid.innerHTML=html;
+})();
+
+// Period toggle
 function setPeriod(p,el){
   currentPeriod=p;
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
@@ -349,22 +394,20 @@ function setPeriod(p,el){
   if(p==='monthly'){
     document.getElementById('price-early').textContent='149€';
     document.getElementById('price-pro').textContent='199€';
-    document.getElementById('period-early').textContent='par mois · garanti à vie';
+    document.getElementById('period-early').textContent='par mois';
     document.getElementById('period-pro').textContent='par mois';
   }else{
     document.getElementById('price-early').textContent='1490€';
     document.getElementById('price-pro').textContent='1990€';
-    document.getElementById('period-early').textContent='par an · garanti à vie';
+    document.getElementById('period-early').textContent='par an';
     document.getElementById('period-pro').textContent='par an';
   }
 }
 
 function showToast(msg,isError){
   const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show'+(isError?' error':'');
-  clearTimeout(t._t);
-  t._t=setTimeout(()=>t.classList.remove('show'),3500);
+  t.textContent=msg;t.className='toast show'+(isError?' error':'');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3500);
 }
 
 async function goPay(plan){
@@ -374,17 +417,14 @@ async function goPay(plan){
   if(!STRIPE_KEY){showToast('Erreur de configuration. Réessayez dans un instant.',true);return;}
   const{data:{session}}=await sb.auth.getSession();
   if(!session){window.location.href='auth.html';return;}
-
   const btn=event?.target;
   const btnOrigText=btn?.textContent||'';
-
   if(plan==='early'){
     try{
       const{count}=await sb.from('subscriptions').select('*',{count:'exact',head:true}).eq('plan','early');
       if(count>=20){showToast('Les 20 places Accès Anticipé sont prises. Choisissez le plan Pro.',true);return;}
-    }catch(e){console.error('Erreur vérif early access:',e);}
+    }catch(e){}
   }
-
   const price=PRICES[plan][currentPeriod];
   if(btn){btn.disabled=true;btn.textContent='...';}
   try{
@@ -398,24 +438,19 @@ async function goPay(plan){
 }
 
 async function openPortal(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session)return;
+  const{data:{session}}=await sb.auth.getSession();if(!session)return;
   const res=await fetch('/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:session.user.id})});
-  const{url}=await res.json();
-  if(url)window.location.href=url;
+  const{url}=await res.json();if(url)window.location.href=url;
 }
 
 async function checkSubscription(){
-  let i=0;
-  while(!sb&&i<50){await new Promise(r=>setTimeout(r,100));i++;}
+  let i=0;while(!sb&&i<50){await new Promise(r=>setTimeout(r,100));i++;}
   if(!sb)return;
-  const{data:{session}}=await sb.auth.getSession();
-  if(!session)return;
+  const{data:{session}}=await sb.auth.getSession();if(!session)return;
   const{data:rows}=await sb.from('subscriptions').select('status,plan,expires_at,stripe_subscription_id').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
   const sub=rows?.[0];
   if(sub&&sub.status==='active'&&new Date(sub.expires_at)>new Date()){
-    const el=document.getElementById('already-subscribed');
-    el.style.display='flex';
+    document.getElementById('already-subscribed').style.display='flex';
     const label=document.getElementById('sub-plan-label');
     const expiry=new Date(sub.expires_at).getFullYear()>2090?'Licence à vie':'expire le '+new Date(sub.expires_at).toLocaleDateString('fr-FR');
     if(label)label.textContent=(sub.plan||'').toUpperCase()+' — '+expiry;
@@ -430,8 +465,7 @@ const LEGAL={
 };
 function showLegal(type){
   document.getElementById('legal-content').textContent=LEGAL[type];
-  const m=document.getElementById('legal-modal');
-  m.style.display='flex';
+  document.getElementById('legal-modal').style.display='flex';
 }
 </script>
 </body>
