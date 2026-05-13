@@ -61,10 +61,14 @@ nav.scrolled{border-bottom-color:var(--border)}
 .mock-table{background:#090909;border:1px solid var(--border);border-radius:4px;overflow:hidden;font-size:10px}
 .mock-thead{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:6px 10px;border-bottom:1px solid var(--border)}
 .mock-thead span{font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
-.mock-trow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:6px 10px;border-bottom:1px solid #0e0e0e}
+.mock-trow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:6px 10px;border-bottom:1px solid #0e0e0e;transition:background .15s}
 .mock-trow:last-child{border-bottom:none}
 .mock-trow span{color:var(--text2)}
 .mock-trow span.g{color:var(--gold)}
+.mock-trow.clickable{cursor:pointer}
+.mock-trow.clickable:hover{background:rgba(196,164,107,.05)}
+.mock-progress{height:2px;background:var(--border);overflow:hidden}
+.mock-progress-fill{height:100%;width:0%;background:var(--gold);opacity:.5}
 .mbadge{display:inline-block;padding:1px 5px;border-radius:2px;font-size:7px;background:rgba(92,168,92,.1);color:#5ca85c;border:1px solid rgba(92,168,92,.15)}
 .mock-devis{background:#090909;border:1px solid var(--border);border-radius:4px;padding:14px}
 .mock-devis-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
@@ -203,6 +207,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
         </div>
         <div style="width:60px"></div>
       </div>
+      <div class="mock-progress"><div class="mock-progress-fill" id="mock-pfill"></div></div>
       <div class="mock-body">
         <div class="mock-sidebar">
           <div class="mock-nav-item active" id="snav-events">Événements</div>
@@ -216,16 +221,16 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
         <!-- SCREEN: EVENTS -->
         <div class="mock-screen active" id="screen-events">
           <div class="mock-stats">
-            <div class="mock-stat"><div class="mock-stat-l">Ce mois</div><div class="mock-stat-v">8</div></div>
-            <div class="mock-stat"><div class="mock-stat-l">CA estimé</div><div class="mock-stat-v" style="font-size:15px">12 400€</div></div>
-            <div class="mock-stat"><div class="mock-stat-l">Staff actif</div><div class="mock-stat-v">6</div></div>
-            <div class="mock-stat"><div class="mock-stat-l">Cocktails</div><div class="mock-stat-v">24</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">Ce mois</div><div class="mock-stat-v" id="stat-month">8</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">CA estimé</div><div class="mock-stat-v" id="stat-ca" style="font-size:15px">12 400€</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">Staff actif</div><div class="mock-stat-v" id="stat-staff">6</div></div>
+            <div class="mock-stat"><div class="mock-stat-l">Cocktails</div><div class="mock-stat-v" id="stat-cocktails">24</div></div>
           </div>
           <div class="mock-table">
             <div class="mock-thead"><span>Événement</span><span>Date</span><span>Statut</span><span>Total TTC</span></div>
-            <div class="mock-trow"><span>Soirée Rooftop — Paris 8e</span><span>14 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">3 200€</span></div>
-            <div class="mock-trow"><span>Cocktail Privé — LVMH</span><span>18 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">4 800€</span></div>
-            <div class="mock-trow"><span>Mariage — Château de Vaux</span><span>22 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">6 100€</span></div>
+            <div class="mock-trow clickable" onclick="showDevisFor('rooftop')"><span>Soirée Rooftop — Paris 8e</span><span>14 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">3 200€</span></div>
+            <div class="mock-trow clickable" onclick="showDevisFor('lvmh')"><span>Cocktail Privé — LVMH</span><span>18 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">4 800€</span></div>
+            <div class="mock-trow clickable" onclick="showDevisFor('mariage')"><span>Mariage — Château de Vaux</span><span>22 juin</span><span><span class="mbadge">Confirmé</span></span><span class="g">6 100€</span></div>
           </div>
         </div>
 
@@ -234,16 +239,18 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
           <div class="mock-devis">
             <div class="mock-devis-head">
               <div>
-                <div class="mock-devis-title">Devis — Soirée Rooftop</div>
-                <div class="mock-devis-num">N° BAR-2024-014 · Client : Maison Brun</div>
+                <div class="mock-devis-title" id="devis-title">Devis — Soirée Rooftop</div>
+                <div class="mock-devis-num" id="devis-num">N° BAR-2024-014 · Client : Maison Brun</div>
               </div>
               <div style="font-size:9px;color:var(--gold);border:1px solid var(--gold-border);padding:3px 8px;border-radius:2px">PDF</div>
             </div>
-            <div class="mock-devis-row"><span>Cocktails × 120 personnes</span><span class="g">1 440€</span></div>
-            <div class="mock-devis-row"><span>Staff — 2 bartenders × 6h</span><span class="g">720€</span></div>
-            <div class="mock-devis-row"><span>Staff — 1 serveur × 5h</span><span class="g">200€</span></div>
-            <div class="mock-devis-row"><span>Livraison & installation</span><span class="g">280€</span></div>
-            <div class="mock-devis-total"><span style="color:var(--text)">Total TTC</span><span class="g" style="font-size:14px">2 640€</span></div>
+            <div id="devis-rows">
+              <div class="mock-devis-row"><span>Cocktails × 120 personnes</span><span class="g">1 440€</span></div>
+              <div class="mock-devis-row"><span>Staff — 2 bartenders × 6h</span><span class="g">720€</span></div>
+              <div class="mock-devis-row"><span>Staff — 1 serveur × 5h</span><span class="g">200€</span></div>
+              <div class="mock-devis-row"><span>Livraison & installation</span><span class="g">280€</span></div>
+            </div>
+            <div class="mock-devis-total"><span style="color:var(--text)">Total TTC</span><span class="g" id="devis-total-v" style="font-size:14px">2 640€</span></div>
           </div>
           <div style="display:flex;gap:6px">
             <div style="flex:1;background:#090909;border:1px solid var(--gold-border);border-radius:3px;padding:7px;text-align:center;font-size:9px;color:var(--gold);letter-spacing:.08em">✉ Envoyer au client</div>
@@ -374,24 +381,107 @@ fetch('/.netlify/functions/config').then(r=>r.json()).then(cfg=>{
 
 window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40));
 
-// Mock tabs
+// ── MOCK ────────────────────────────────────────────────────
+
 function switchTab(tab,el){
   document.querySelectorAll('.mock-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.mock-screen').forEach(s=>s.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('screen-'+tab).classList.add('active');
-  // Sync sidebar
   const map={events:'events',devis:'events',planning:'planning'};
   document.querySelectorAll('.mock-nav-item').forEach(i=>i.classList.remove('active'));
   const sid=document.getElementById('snav-'+(map[tab]||tab));
   if(sid)sid.classList.add('active');
 }
 
+// Auto-rotate with progress bar
+const TABS_ORDER=['events','devis','planning'];
+let tabIdx=0, progressAnim=null;
+
+function stopAutoRotate(){
+  cancelAnimationFrame(progressAnim);
+  progressAnim=null;
+  const pf=document.getElementById('mock-pfill');
+  if(pf)pf.style.width='0%';
+}
+
+function startAutoRotate(){
+  stopAutoRotate();
+  const pf=document.getElementById('mock-pfill');
+  const dur=3000;
+  let startTs=null;
+  function tick(ts){
+    if(!startTs)startTs=ts;
+    const p=Math.min((ts-startTs)/dur,1);
+    if(pf)pf.style.width=(p*100)+'%';
+    if(p<1){progressAnim=requestAnimationFrame(tick);}
+    else{
+      tabIdx=(tabIdx+1)%TABS_ORDER.length;
+      const tab=TABS_ORDER[tabIdx];
+      switchTab(tab,document.querySelectorAll('.mock-tab')[tabIdx]);
+      if(tab==='events')animateCounters();
+      if(pf)pf.style.width='0%';
+      startTs=null;
+      progressAnim=requestAnimationFrame(tick);
+    }
+  }
+  progressAnim=requestAnimationFrame(tick);
+}
+
+const mockEl=document.querySelector('.mock');
+if(mockEl){
+  mockEl.addEventListener('mouseenter',stopAutoRotate);
+  mockEl.addEventListener('mouseleave',startAutoRotate);
+}
+startAutoRotate();
+setTimeout(animateCounters,200);
+
+// Animated counters on stats
+function animateCounters(){
+  const targets=[
+    {id:'stat-month',to:8,final:'8'},
+    {id:'stat-ca',to:12400,final:'12 400€'},
+    {id:'stat-staff',to:6,final:'6'},
+    {id:'stat-cocktails',to:24,final:'24'},
+  ];
+  targets.forEach(({id,to,final})=>{
+    const el=document.getElementById(id);if(!el)return;
+    const dur=900;let startTs=null;
+    function step(ts){
+      if(!startTs)startTs=ts;
+      const p=Math.min((ts-startTs)/dur,1);
+      const ease=1-Math.pow(1-p,3);
+      const v=Math.round(ease*to);
+      el.textContent=id==='stat-ca'?v.toLocaleString('fr-FR')+'€':v;
+      if(p<1)requestAnimationFrame(step);else el.textContent=final;
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+// Devis per event
+const DEVIS_DATA={
+  rooftop:{title:'Devis — Soirée Rooftop',num:'N° BAR-2024-014 · Client : Maison Brun',lines:[['Cocktails × 120 personnes','1 440€'],['Staff — 2 bartenders × 6h','720€'],['Staff — 1 serveur × 5h','200€'],['Livraison & installation','280€']],total:'2 640€'},
+  lvmh:{title:'Devis — Cocktail Privé LVMH',num:'N° BAR-2024-015 · Client : LVMH Events',lines:[['Cocktails × 200 personnes','2 800€'],['Staff — 3 bartenders × 5h','900€'],['Staff — 2 serveurs × 5h','400€'],['Livraison & installation','350€']],total:'4 450€'},
+  mariage:{title:'Devis — Mariage Château de Vaux',num:'N° BAR-2024-016 · Client : Famille Lebrun',lines:[['Cocktails × 280 personnes','3 360€'],['Staff — 4 bartenders × 7h','1 680€'],['Staff — 3 serveurs × 7h','840€'],['Livraison & installation','480€']],total:'6 360€'},
+};
+
+function showDevisFor(key){
+  const d=DEVIS_DATA[key];
+  document.getElementById('devis-title').textContent=d.title;
+  document.getElementById('devis-num').textContent=d.num;
+  document.getElementById('devis-rows').innerHTML=d.lines.map(([l,r])=>`<div class="mock-devis-row"><span>${l}</span><span class="g">${r}</span></div>`).join('');
+  document.getElementById('devis-total-v').textContent=d.total;
+  stopAutoRotate();
+  tabIdx=1;
+  switchTab('devis',document.querySelectorAll('.mock-tab')[1]);
+}
+
 // Build planning grid
 (function(){
   const grid=document.getElementById('plan-grid');if(!grid)return;
   const events=[14,18,22,28];
-  const firstDay=6; // June 2025 starts on Sunday → shift 6
+  const firstDay=6;
   let html='';
   for(let i=0;i<firstDay;i++)html+=`<div class="mock-plan-day"></div>`;
   for(let d=1;d<=30;d++){
@@ -400,6 +490,8 @@ function switchTab(tab,el){
   }
   grid.innerHTML=html;
 })();
+
+// ── PRICING ─────────────────────────────────────────────────
 
 // Period toggle
 function setPeriod(p,el){
