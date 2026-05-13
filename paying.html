@@ -83,7 +83,7 @@ nav.scrolled{border-bottom-color:var(--border)}
 .mock-plan-day.today{color:var(--gold);font-weight:500}
 
 /* FEATURES ROW */
-.features-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:80px auto 0;max-width:900px}
+.features-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:900px;width:100%}
 .feat{background:var(--surface);padding:28px 32px;transition:.2s}
 .feat:hover{background:var(--surface2)}
 .feat-icon{font-size:18px;color:var(--gold);margin-bottom:12px;opacity:.8}
@@ -98,7 +98,7 @@ nav.scrolled{border-bottom-color:var(--border)}
 .period-btn{padding:7px 20px;border:none;background:none;color:var(--text3);font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:.15s}
 .period-btn.active{background:var(--gold);color:#080808;font-weight:600}
 .discount-tag{font-size:9px;color:var(--gold);margin-left:5px;opacity:.8}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:680px;margin:0 auto}
+.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:960px;margin:0 auto}
 .pcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 32px;display:flex;flex-direction:column;text-align:left;transition:.2s}
 .pcard:hover{border-color:var(--border2)}
 .pcard.highlight{border-color:var(--gold-border);background:linear-gradient(135deg,var(--surface) 0%,rgba(196,164,107,.03) 100%);position:relative}
@@ -140,6 +140,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
   .features-row{grid-template-columns:1fr;margin:60px 20px 0}
   .pricing-section{padding:70px 20px}
   .cards{grid-template-columns:1fr;max-width:400px}
+  .features-row{grid-template-columns:1fr}
   footer{padding:20px;flex-direction:column;gap:14px;text-align:center}
   .mock-body{grid-template-columns:1fr}
   .mock-sidebar{display:none}
@@ -175,7 +176,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 <!-- HERO -->
 <section class="hero">
   <div class="eyebrow">Plateforme de gestion événementielle</div>
-  <h1>La gestion d'événements bar<br/>pour ceux qui <em>n'improvisent pas.</em></h1>
+  <h1>Pour ceux qui <em>n'improvisent pas.</em></h1>
   <p class="hero-sub">Catalogue, staff, devis et suivi des stocks — centralisés. Chaque prestation exécutée avec précision, sans friction.</p>
   <div class="cta-row">
     <button class="btn-gold" style="padding:13px 36px;font-size:11px" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit 7 jours</button>
@@ -263,7 +264,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 </section>
 
 <!-- FEATURES -->
-<section id="features" style="padding:0 48px 80px">
+<section id="features" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 48px;background:#050505">
   <div class="features-row">
     <div class="feat">
       <div class="feat-icon">◈</div>
@@ -284,7 +285,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 </section>
 
 <!-- PRICING -->
-<section id="pricing" class="pricing-section">
+<section id="pricing" class="pricing-section" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center">
   <div class="pricing-eyebrow">Tarifs</div>
   <h2 class="pricing-title">Démarrez sans risque</h2>
 
@@ -321,6 +322,20 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
         <li>Support standard</li>
       </ul>
       <button class="cta" onclick="goPay('pro')">Commencer l'essai gratuit</button>
+    </div>
+    <div class="pcard" style="opacity:.55;pointer-events:none">
+      <div class="pcard-name">Business</div>
+      <div class="pcard-tag">BIENTÔT DISPONIBLE</div>
+      <div class="pcard-price" id="price-business">299€</div>
+      <div class="pcard-period" id="period-business">par mois</div>
+      <ul class="pcard-feats">
+        <li>Événements illimités</li>
+        <li>Catalogue illimité</li>
+        <li>Approvisionnement IA</li>
+        <li>API & Webhooks</li>
+        <li>Support 24/7</li>
+      </ul>
+      <button class="cta" disabled style="opacity:.4;cursor:not-allowed">À venir</button>
     </div>
   </div>
   <div class="pricing-note">7 jours d'essai gratuit inclus · Aucune carte requise · <a href="#" onclick="showLegal('cgv');return false">CGV</a></div>
