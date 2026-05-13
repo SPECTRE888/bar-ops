@@ -35,9 +35,9 @@ nav.scrolled{border-bottom-color:var(--border)}
 .cta-row{display:flex;gap:10px;justify-content:center}
 .hero-note{margin-top:12px;font-size:10px;color:var(--text3);letter-spacing:.04em}
 
-/* MOCK */
-.hero-right{width:100%;max-width:800px;margin-top:32px;flex:1;min-height:0;display:flex;align-items:flex-end}
-.mock-wrap{width:100%;position:relative}
+/* MILIEU */
+.milieu{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 48px;gap:28px;background:#050505}
+.mock-wrap{width:100%;max-width:920px;position:relative}
 .mock-wrap::before{content:'';position:absolute;inset:-1px;background:linear-gradient(180deg,var(--gold-border) 0%,transparent 60%);border-radius:11px;z-index:0;pointer-events:none}
 .mock{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 48px 100px rgba(0,0,0,.7);position:relative;z-index:1}
 .mock-topbar{background:#0a0a0a;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
@@ -47,7 +47,7 @@ nav.scrolled{border-bottom-color:var(--border)}
 .mock-tab{padding:5px 14px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:1px solid transparent;transition:.15s;font-family:'Jost',sans-serif}
 .mock-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 .mock-tab:hover{color:var(--text2)}
-.mock-body{display:grid;grid-template-columns:140px 1fr;min-height:0;height:180px;overflow:hidden}
+.mock-body{display:grid;grid-template-columns:140px 1fr;min-height:0;height:220px;overflow:hidden}
 .mock-sidebar{background:#090909;border-right:1px solid var(--border);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
 .mock-nav-item{padding:6px 10px;border-radius:3px;font-size:9px;color:var(--text3);letter-spacing:.06em;cursor:default}
 .mock-nav-item.active{background:var(--gold-bg);color:var(--gold);border-left:1px solid var(--gold)}
@@ -139,9 +139,10 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 @media(max-width:768px){
   nav{padding:14px 20px}
   .hero{height:auto;padding:90px 20px 40px}
-  .hero-right{display:none}
+  .milieu{height:auto;padding:60px 20px}
+  .mock-wrap{display:none}
   .features-row{grid-template-columns:1fr}
-  .pricing-section{padding:70px 20px}
+  .pricing-section{height:auto;padding:70px 20px}
   .cards{grid-template-columns:1fr;max-width:400px}
   footer{padding:20px;flex-direction:column;gap:14px;text-align:center}
 }
@@ -183,9 +184,10 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
     <button class="btn-ghost" style="padding:13px 32px;font-size:11px" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Voir la plateforme</button>
   </div>
   <div class="hero-note">Aucune carte requise · Annulation à tout moment</div>
+</section>
 
-  <div class="hero-right">
-  <!-- INTERACTIVE MOCK -->
+<!-- MILIEU -->
+<section class="milieu" id="features">
   <div class="mock-wrap">
     <div class="mock">
       <div class="mock-topbar">
@@ -262,11 +264,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
       </div>
     </div>
   </div>
-  </div><!-- end hero-right -->
-</section>
 
-<!-- FEATURES -->
-<section id="features" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 48px;background:#050505">
   <div class="features-row">
     <div class="feat">
       <div class="feat-icon">◈</div>
@@ -287,7 +285,7 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 </section>
 
 <!-- PRICING -->
-<section id="pricing" class="pricing-section" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center">
+<section id="pricing" class="pricing-section" style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center">
   <div class="pricing-eyebrow">Tarifs</div>
   <h2 class="pricing-title">Démarrez sans risque</h2>
 
