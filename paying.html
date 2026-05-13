@@ -25,18 +25,18 @@ nav.scrolled{border-bottom-color:var(--border)}
 .btn-gold:hover{background:var(--gold2)}
 
 /* HERO */
-.hero{height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:80px 60px 40px;gap:60px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 20% 50%,rgba(196,164,107,.05) 0%,transparent 65%);pointer-events:none}
-.hero-left{display:flex;flex-direction:column;align-items:flex-start;text-align:left}
-.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;opacity:.7}
-.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4vw,56px);font-weight:300;line-height:1.1;margin-bottom:20px}
+.hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 24px;position:relative;overflow:hidden;gap:0}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 35%,rgba(196,164,107,.05) 0%,transparent 65%);pointer-events:none}
+.hero-left{display:contents}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;opacity:.7}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,60px);font-weight:300;line-height:1.1;margin-bottom:16px}
 .hero h1 em{font-style:italic;color:var(--gold)}
-.hero-sub{font-size:14px;color:var(--text2);max-width:400px;line-height:1.75;margin-bottom:32px;font-weight:300}
-.cta-row{display:flex;gap:10px}
-.hero-note{margin-top:14px;font-size:10px;color:var(--text3);letter-spacing:.04em}
+.hero-sub{font-size:14px;color:var(--text2);max-width:460px;line-height:1.7;margin-bottom:28px;font-weight:300}
+.cta-row{display:flex;gap:10px;justify-content:center}
+.hero-note{margin-top:12px;font-size:10px;color:var(--text3);letter-spacing:.04em}
 
 /* MOCK */
-.hero-right{position:relative;height:100%;display:flex;align-items:center}
+.hero-right{width:100%;max-width:800px;margin-top:32px;flex:1;min-height:0;display:flex;align-items:flex-end}
 .mock-wrap{width:100%;position:relative}
 .mock-wrap::before{content:'';position:absolute;inset:-1px;background:linear-gradient(180deg,var(--gold-border) 0%,transparent 60%);border-radius:11px;z-index:0;pointer-events:none}
 .mock{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 48px 100px rgba(0,0,0,.7);position:relative;z-index:1}
@@ -47,7 +47,7 @@ nav.scrolled{border-bottom-color:var(--border)}
 .mock-tab{padding:5px 14px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:1px solid transparent;transition:.15s;font-family:'Jost',sans-serif}
 .mock-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 .mock-tab:hover{color:var(--text2)}
-.mock-body{display:grid;grid-template-columns:148px 1fr;min-height:210px}
+.mock-body{display:grid;grid-template-columns:140px 1fr;min-height:0;height:180px;overflow:hidden}
 .mock-sidebar{background:#090909;border-right:1px solid var(--border);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
 .mock-nav-item{padding:6px 10px;border-radius:3px;font-size:9px;color:var(--text3);letter-spacing:.06em;cursor:default}
 .mock-nav-item.active{background:var(--gold-bg);color:var(--gold);border-left:1px solid var(--gold)}
@@ -136,12 +136,10 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 /* ALREADY SUBSCRIBED */
 #already-subscribed{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;align-items:center;justify-content:center}
 
-@media(max-width:900px){
+@media(max-width:768px){
   nav{padding:14px 20px}
-  .hero{height:auto;grid-template-columns:1fr;padding:100px 20px 60px;text-align:center}
-  .hero-left{align-items:center}
+  .hero{height:auto;padding:90px 20px 40px}
   .hero-right{display:none}
-  .hero-sub{max-width:100%}
   .features-row{grid-template-columns:1fr}
   .pricing-section{padding:70px 20px}
   .cards{grid-template-columns:1fr;max-width:400px}
@@ -177,16 +175,14 @@ footer{padding:24px 48px;border-top:1px solid var(--border);display:flex;align-i
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-left">
-    <div class="eyebrow">Plateforme de gestion événementielle</div>
-    <h1>Pour ceux qui <em>n'improvisent pas.</em></h1>
-    <p class="hero-sub">Catalogue, staff, devis et suivi des stocks — centralisés. Chaque prestation exécutée avec précision, sans friction.</p>
-    <div class="cta-row">
-      <button class="btn-gold" style="padding:13px 32px;font-size:11px" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit 7 jours</button>
-      <button class="btn-ghost" style="padding:13px 32px;font-size:11px" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Voir la plateforme</button>
-    </div>
-    <div class="hero-note">Aucune carte requise · Annulation à tout moment</div>
+  <div class="eyebrow">Plateforme de gestion événementielle</div>
+  <h1>Pour ceux qui <em>n'improvisent pas.</em></h1>
+  <p class="hero-sub">Catalogue, staff, devis et suivi des stocks — centralisés. Chaque prestation exécutée avec précision, sans friction.</p>
+  <div class="cta-row">
+    <button class="btn-gold" style="padding:13px 32px;font-size:11px" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Essai gratuit 7 jours</button>
+    <button class="btn-ghost" style="padding:13px 32px;font-size:11px" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Voir la plateforme</button>
   </div>
+  <div class="hero-note">Aucune carte requise · Annulation à tout moment</div>
 
   <div class="hero-right">
   <!-- INTERACTIVE MOCK -->
