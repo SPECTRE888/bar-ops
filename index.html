@@ -9,10 +9,25 @@
 <style>
 :root{--bg:#080808;--text:#ede8e0;--text2:#7a7268;--gold:#c4a46b;--gold2:#d4b47a}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Jost',sans-serif;background:#000;color:var(--text);display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:0}
+html,body{height:100%;overflow-x:hidden;overflow-y:auto}
+body{font-family:'Jost',sans-serif;background:#000;color:var(--text);display:flex;flex-direction:column;align-items:center;padding:0}
 h1,h2,h3{font-family:'Cormorant Garamond',serif}
-.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
+.install-section{width:100%;max-width:660px;padding:64px 24px 80px;text-align:center}
+.install-section h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);margin-bottom:12px;letter-spacing:.06em}
+.install-section p{font-size:14px;color:var(--text2);line-height:1.75;margin-bottom:36px}
+.steps{display:flex;flex-direction:column;gap:20px;margin-bottom:36px;text-align:left}
+.step{display:flex;align-items:flex-start;gap:16px}
+.step-num{min-width:28px;height:28px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:2px;flex-shrink:0}
+.step-text{font-size:14px;color:var(--text);line-height:1.65}
+.step-text strong{color:var(--gold);font-weight:500}
+.code-block{background:#0d0d0d;border:1px solid #2a2520;border-radius:4px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:36px;text-align:left}
+.code-block code{font-family:'Courier New',monospace;font-size:12px;color:#c4a46b;word-break:break-all;line-height:1.6}
+.copy-btn{background:none;border:1px solid #2a2520;border-radius:3px;padding:6px 14px;color:var(--text2);font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Jost',sans-serif;letter-spacing:.08em;transition:.2s;flex-shrink:0}
+.copy-btn:hover{border-color:var(--gold);color:var(--gold)}
+.dl-btn{display:inline-block;padding:13px 44px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s;text-decoration:none}
+.dl-btn:hover{background:var(--gold);color:#080808}
+.divider{width:60px;height:1px;background:linear-gradient(to right,transparent,#2a2520,transparent);margin:0 auto 48px}
 .logo{font-size:54px;font-weight:300;letter-spacing:.1em;margin-bottom:18px;color:var(--gold)}
 .tagline{font-size:20px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:44px;max-width:600px}
 .btn-primary{padding:14px 52px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s}
@@ -30,6 +45,30 @@ footer{width:100%;padding:0}
   <div class="tagline">Une nouvelle manière de piloter vos événements.</div>
   <button class="btn-primary" onclick="window.location.href='auth.html'">Accéder à la plateforme</button>
 </div>
+
+<section class="install-section">
+  <div class="divider"></div>
+  <h2>Installer Bar Ops sur Mac</h2>
+  <p>Télécharge l'application de bureau et installe-la en quelques secondes.<br>Toutes les mises à jour se feront ensuite automatiquement.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Télécharge <strong>BarOps.zip</strong> et déplace-le dans ton dossier <strong>Téléchargements</strong>.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Ouvre le <strong>Terminal</strong> (Spotlight → Terminal) et colle la commande ci-dessous :</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <code id="install-cmd">APP=$(find ~/Downloads -name "Bar Ops.app" -maxdepth 4 | head -1) && xattr -cr "$APP" && rm -rf "/Applications/Bar Ops.app" && cp -r "$APP" "/Applications/Bar Ops.app" && open "/Applications/Bar Ops.app"</code>
+    <button class="copy-btn" onclick="copyCmd()">Copier</button>
+  </div>
+
+  <a class="dl-btn" href="https://github.com/SPECTRE888/bar-ops/releases/latest" target="_blank">Télécharger Bar Ops</a>
+</section>
 
 <footer>
   <div class="legal">
@@ -66,6 +105,16 @@ const LEGAL={
   rgpd:`Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n'est cédée à des tiers. Données hébergées par Netlify Inc. (USA) dans le cadre du Privacy Shield. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com`,
   mentions:`Mentions légales — Éditeur : Intelligence Spotlighted\n63 avenue Pasteur, 93100 Montreuil, France\nEmail : contact@intelligencespotlighted.com\nDirecteur de publication : Jérôme\nHébergement : Netlify Inc., 44 Montgomery Street, San Francisco, CA 94104, USA`
 };
+function copyCmd(){
+  const cmd=document.getElementById('install-cmd').textContent;
+  navigator.clipboard.writeText(cmd).then(()=>{
+    const btn=document.querySelector('.copy-btn');
+    btn.textContent='Copié !';
+    btn.style.color='var(--gold)';
+    btn.style.borderColor='var(--gold)';
+    setTimeout(()=>{btn.textContent='Copier';btn.style.color='';btn.style.borderColor='';},2000);
+  });
+}
 function showLegal(type){
   document.getElementById('legal-content').textContent=LEGAL[type];
   const m=document.getElementById('legal-modal');
