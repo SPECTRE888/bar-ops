@@ -6,6 +6,7 @@
   "scripts": {
     "electron": "electron .",
     "build:mac": "electron-builder --mac",
+    "build:ci": "electron-builder --mac -c.mac.target=zip",
     "build:win": "electron-builder --win",
     "build:all": "electron-builder --mac --win"
   },
