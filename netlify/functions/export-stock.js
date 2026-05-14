@@ -1,7 +1,16 @@
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
   try {
-    const { products, glasses, ices } = JSON.parse(event.body);
+    let data;
+    if (event.headers['content-type']?.includes('application/x-www-form-urlencoded')) {
+      // Parse form data
+      const params = new URLSearchParams(event.body);
+      data = JSON.parse(params.get('data'));
+    } else {
+      // Parse JSON
+      data = JSON.parse(event.body);
+    }
+    const { products, glasses, ices } = data;
 
     if (!products || !glasses || !ices) {
       return {

@@ -8040,26 +8040,19 @@ async function exportStockEuro(){
 
   if(!confirmed) return;
 
-  // Call Netlify function to generate and download CSV
-  try{
-    const response=await fetch('/.netlify/functions/export-stock',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({products,glasses,ices})
-    });
-    if(!response.ok) throw new Error('Erreur serveur');
-    const blob=await response.blob();
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement('a');
-    link.href=url;
-    link.download=`inventaire-stock-${new Date().toISOString().slice(0,10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }catch(e){
-    showToastModal('Erreur lors du téléchargement');
-  }
+  // Submit hidden form to trigger server-side download (avoids Safari prompt)
+  const form=document.createElement('form');
+  form.method='POST';
+  form.action='/.netlify/functions/export-stock';
+  form.style.display='none';
+  const input=document.createElement('input');
+  input.type='hidden';
+  input.name='data';
+  input.value=JSON.stringify({products,glasses,ices});
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
 }
 
 function buildEventSummaryHTML(ev){
