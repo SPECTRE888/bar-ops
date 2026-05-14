@@ -12,23 +12,19 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4.2.0
 
-    - name: Install Node.js 18
-      run: |
-        brew install node@18
-        export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        node --version && npm --version
+    - name: Setup Node.js
+      uses: actions/setup-node@v4.0.2
+      with:
+        node-version: '22'
+        cache: 'npm'
 
     - name: Install dependencies
-      run: |
-        export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        npm ci
+      run: npm ci
 
     - name: Build
-      run: |
-        export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        npm run build:mac
+      run: npm run build:mac
 
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.4
