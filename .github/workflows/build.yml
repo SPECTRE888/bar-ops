@@ -35,10 +35,10 @@ jobs:
         cat > /tmp/installer.applescript << 'EOF'
         set foundApp to do shell script "find ~/Downloads -name 'Bar Ops.app' -maxdepth 4 | head -1"
         if foundApp is "" then
-          display dialog "Bar Ops.app introuvable dans Téléchargements. Vérifie que tu as bien extrait le ZIP." buttons {"OK"} default button "OK" with icon stop
+          display dialog "Bar Ops.app introuvable dans Téléchargements. Vérifie que tu as bien extrait BarOps.zip." buttons {"OK"} default button "OK" with icon stop
         else
-          do shell script "xattr -cr " & quoted form of foundApp
-          do shell script "open " & quoted form of foundApp
+          do shell script "xattr -cr " & quoted form of foundApp & " && rm -rf '/Applications/Bar Ops.app' && cp -r " & quoted form of foundApp & " '/Applications/Bar Ops.app' && xattr -cr '/Applications/Bar Ops.app'"
+          do shell script "open '/Applications/Bar Ops.app'"
         end if
         EOF
 
