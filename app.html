@@ -37,7 +37,10 @@ fetch('/.netlify/functions/config')
       await new Promise(r=>setTimeout(r,100));
       retries++;
     }
-    if(!SUPA_URL||!SUPA_KEY){console.error('Clés de configuration non chargées');return;}
+    if(!SUPA_URL||!SUPA_KEY){
+      document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">Impossible de joindre le serveur de configuration.</p><button onclick="location.reload()" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
+      return;
+    }
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
     window._sb=sb;
     const{data:{session}}=await sb.auth.getSession();
@@ -48,6 +51,10 @@ fetch('/.netlify/functions/config')
       const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
       subs=subsArr?.[0];
       if(subs&&new Date(subs.expires_at)>new Date())break;
+      if(i===0){
+        // Show loading indicator only after first failed check (webhook may still be processing)
+        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Vérification de votre abonnement…</p><p style="font-size:12px;color:#585450">Cela peut prendre quelques secondes après le paiement.</p></div></div>`;
+      }
       await new Promise(r=>setTimeout(r,1500));
     }
     const isActive=subs&&new Date(subs.expires_at)>new Date();
@@ -55,7 +62,17 @@ fetch('/.netlify/functions/config')
 
     // Session limit: max 3 active devices per account
     let deviceId=localStorage.getItem('_bar_ops_device');
-    if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem('_bar_ops_device',deviceId);}
+    if(!deviceId){
+      // Build a stable fingerprint from browser/device characteristics
+      try{
+        const fp=[navigator.userAgent,screen.width+'x'+screen.height,
+          Intl.DateTimeFormat().resolvedOptions().timeZone,
+          navigator.language,navigator.hardwareConcurrency||0].join('|');
+        const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(fp));
+        deviceId=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,36);
+      }catch(e){deviceId=crypto.randomUUID();}
+      localStorage.setItem('_bar_ops_device',deviceId);
+    }
     const cutoff=new Date(Date.now()-30*60*1000).toISOString();
     const{data:activeSessions}=await sb.from('user_sessions').select('device_id').eq('user_id',session.user.id).gte('last_seen',cutoff);
     const activeDevices=activeSessions?.map(s=>s.device_id)||[];
@@ -1093,84 +1110,63 @@ let _initDone=false;
 // Sync immédiat vers le cloud
 async function doSyncNow(){
   if(!_initDone||isSyncing) return;
-
   isSyncing=true;
+  let shouldRetry=false;
+  try{
+    if(!cloudUser) return;
 
-  if(!cloudUser) {
-    isSyncing=false;
-    return;
-  }
-
-  // Ensure token is valid before pushing
-  let token=extractToken(cloudUser);
-  if(!token){
-    const refreshed=await cloudRefreshSession();
-    if(!refreshed){
-      isSyncing=false;
-      updateCloudStatus();
-      console.warn('doSyncNow: token refresh failed');
-      return;
-    }
-    token=extractToken(cloudUser);
-  }
-
-  // Push data to cloud
-  const success=await cloudPush();
-  updateCloudStatus();
-
-  const statusEl=document.getElementById('save-status');
-
-  if(success){
-    // ✓ Synchronisation réussie
-    pendingSyncChanges=false;
-    if(statusEl){
-      // Clear any existing timeout to reset the timer
-      if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
-
-      statusEl.style.display='flex';
-      statusEl.style.background='#86efac';
-      statusEl.style.color='#1f2937';
-      const timeEl=document.getElementById('save-time');
-      if(timeEl){
-        const now=new Date();
-        const date=now.toLocaleDateString('fr-FR');
-        const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        timeEl.textContent=date+' '+time;
+    // Ensure token is valid before pushing
+    let token=extractToken(cloudUser);
+    if(!token){
+      const refreshed=await cloudRefreshSession();
+      if(!refreshed){
+        updateCloudStatus();
+        console.warn('doSyncNow: token refresh failed');
+        return;
       }
+      token=extractToken(cloudUser);
+    }
 
-      // Auto-hide after 3 seconds
-      saveStatusTimeout=setTimeout(()=>{
-        statusEl.style.display='none';
-        saveStatusTimeout=null;
-      },3000);
-    }
-    console.log('✓ Cloud sync successful');
+    // Push data to cloud
+    const success=await cloudPush();
+    updateCloudStatus();
+    const statusEl=document.getElementById('save-status');
 
-    // Si d'autres changements sont arrivés pendant le sync, refaire un sync
-    if(pendingSyncChanges){
-      isSyncing=false;
-      doSyncNow();
-      return;
+    if(success){
+      pendingSyncChanges=false;
+      if(statusEl){
+        if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
+        statusEl.style.display='flex';
+        statusEl.style.background='#86efac';
+        statusEl.style.color='#1f2937';
+        const timeEl=document.getElementById('save-time');
+        if(timeEl){
+          const now=new Date();
+          const date=now.toLocaleDateString('fr-FR');
+          const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+          timeEl.textContent=date+' '+time;
+        }
+        saveStatusTimeout=setTimeout(()=>{statusEl.style.display='none';saveStatusTimeout=null;},3000);
+      }
+      console.log('✓ Cloud sync successful');
+      if(pendingSyncChanges) shouldRetry=true;
+    } else {
+      if(statusEl){
+        statusEl.style.background='rgba(252,165,165,0.2)';
+        statusEl.style.color='#991b1b';
+        statusEl.innerHTML='<span id="save-time">Erreur sync — Retry...</span>';
+      }
+      console.error('doSyncNow: cloudPush failed - will retry');
+      await new Promise(r=>setTimeout(r,3000));
+      if(cloudUser) shouldRetry=true;
     }
-  } else {
-    // ✗ Erreur de synchronisation - les données restent en pending
-    if(statusEl){
-      statusEl.style.background='rgba(252,165,165,0.2)';
-      statusEl.style.color='#991b1b';
-      statusEl.innerHTML='⚠️ <span id="save-time">Erreur — Retry...</span>';
-    }
-    console.error('doSyncNow: cloudPush failed - will retry');
-
-    // Retry après 3 secondes
-    await new Promise(r=>setTimeout(r,3000));
-    if(cloudUser) {
-      isSyncing=false;
-      doSyncNow();
-      return;
-    }
+  } catch(e){
+    console.error('doSyncNow: unexpected error',e);
+  } finally {
+    // Always reset — prevents permanent lock even on unexpected exception
+    isSyncing=false;
   }
-
-  isSyncing=false;
+  if(shouldRetry) doSyncNow();
 }
 
 function schedulePush(){
@@ -3502,7 +3498,7 @@ function showSingleEventSuivi(eventId){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div style="min-width:0;flex:1">
         <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
-        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
         <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
       </div>
       <div style="text-align:right;flex-shrink:0;margin-left:12px">
@@ -3823,11 +3819,11 @@ function renderDashboard(){
 
       html+=`<div class="card" style="padding:10px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between;${borderStyle}" onclick="goToEventSuivi(${ev.id})">
         <div>
-          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} • ${days}j</div>
-          ${cl?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${cl.name}</div>`:''}
+          ${cl?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${escHtml(cl.name)}</div>`:''}
           <div style="font-size:9px;color:var(--text3);margin-top:4px;display:flex;gap:12px">
-            ${ev.location?`<span>📍 ${ev.location}</span>`:''}
+            ${ev.location?`<span>📍 ${escHtml(ev.location)}</span>`:''}
             <span>👥 ${assigned}</span>
           </div>
           <div style="font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
@@ -4088,7 +4084,7 @@ function showEvList(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div class="cat" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}</div>
-          <h3 style="font-size:18px;font-weight:600;margin:0">${ev.name||t('no_name')}</h3>
+          <h3 style="font-size:18px;font-weight:600;margin:0">${escHtml(ev.name||t('no_name'))}</h3>
         </div>
         <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
       </div>
@@ -4127,7 +4123,7 @@ function filterEvList(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div class="cat" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}</div>
-          <h3 style="font-size:18px;font-weight:600;margin:0">${ev.name||t('no_name')}</h3>
+          <h3 style="font-size:18px;font-weight:600;margin:0">${escHtml(ev.name||t('no_name'))}</h3>
         </div>
         <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
       </div>
@@ -5618,7 +5614,7 @@ async function shareShoppingWA(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:520px;width:92%;max-height:85vh;overflow-y:auto">
     <div style="font-size:15px;font-weight:500;margin-bottom:4px"> Envoyer la liste de courses</div>
-    <div class="txs tm" style="margin-bottom:14px">${ev.name}</div>
+    <div class="txs tm" style="margin-bottom:14px">${escHtml(ev.name)}</div>
 
     ${staffWithPhone.length?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Envoyer à un membre de l'équipe</div>
     <div style="margin-bottom:14px">${staffBtns}</div>`:''}
@@ -5896,7 +5892,7 @@ function renderShopping(){
   });
   const totalCost=items.reduce((s,i)=>s+i.costTotal,0);
   let html=`<div class="card flex-b mb1" style="padding:14px 18px">
-    <div><div style="font-size:16px;font-family:'DM Serif Display',serif">${ev.name}</div>
+    <div><div style="font-size:16px;font-family:'DM Serif Display',serif">${escHtml(ev.name)}</div>
     <div class="ts tm">${ev.date||''} · ${ev.pax||'?'} guests · ${total} cocktails</div></div>
     <button class="btn no-print" onclick="window.print()"> Print</button></div>
     <table class="shop-table" style="width:100%;border-collapse:collapse;font-size:12px">
@@ -7133,7 +7129,7 @@ async function sharePrestation(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:580px;width:92%;max-height:88vh;overflow-y:auto">
     <div style="font-size:15px;font-weight:500;margin-bottom:4px;color:var(--text)">Envoyer la fiche prestation</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">${ev.name}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">${escHtml(ev.name)}</div>
 
     <!-- CONTACTS DIRECTS -->
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Sélectionner contacts</div>
@@ -7231,7 +7227,7 @@ function renderPlanning(){
 
     html+=`<div style="min-height:64px;padding:5px;border-radius:var(--radius);border:1px solid ${hasEvents?'var(--gold)':isToday?'var(--border2)':'var(--border)'};background:${hasEvents?'var(--gold-bg)':isToday?'var(--surface2)':'transparent'};cursor:${hasEvents?'pointer':'default'}" ${hasEvents?`onclick="${dayEvents.length===1?`editEv(${dayEvents[0].id});goPage('events')`:`scrollToPlanEvent('${dateStr}')` }"`:''}>
       <div style="font-size:11px;font-weight:${isToday?'500':'400'};color:${isToday?'var(--gold)':hasEvents?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
-      ${dayEvents.map(ev=>`<div style="font-size:9px;background:var(--gold);color:#0d0d0d;border-radius:3px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>`).join('')}
+      ${dayEvents.map(ev=>`<div style="font-size:9px;background:var(--gold);color:#0d0d0d;border-radius:3px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>`).join('')}
     </div>`;
   }
 
@@ -7291,12 +7287,12 @@ function renderClients(){
   el.innerHTML=state.clients.map(c=>{
     const evCount=state.events.filter(ev=>ev.clientId===c.id).length;
     const isOpen=c._open===true;
-    const subtitle=[c.company,c.phone,c.email].filter(Boolean).join(' · ');
+    const subtitle=[c.company,c.phone,c.email].filter(Boolean).map(escHtml).join(' · ');
     return`<div class="card client-card" style="margin-bottom:8px;padding:0;overflow:hidden">
       <!-- Header — always visible -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:${isOpen?'var(--surface2)':'var(--surface)'}" onclick="toggleClient(${c.id})">
         <div style="min-width:0">
-          <div style="font-size:14px;font-weight:500">${c.name||'Sans nom'}</div>
+          <div style="font-size:14px;font-weight:500">${escHtml(c.name||'Sans nom')}</div>
           ${subtitle?`<div class="txs tm" style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtitle}</div>`:''}
           <div class="txs tm" style="margin-top:2px">${evCount} ${evCount!==1?t('client_events_pl'):t('client_events')}</div>
         </div>
@@ -7309,25 +7305,25 @@ function renderClients(){
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border)">
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Nom / Prénom</label>
-            <input value="${(c.name||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/>
+            <input value="${escHtml(c.name||'')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/>
           </div>
           <div class="field"><label>Société</label>
-            <input value="${(c.company||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/>
+            <input value="${escHtml(c.company||'')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/>
           </div>
         </div>
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Email</label>
-            <input type="email" value="${(c.email||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/>
+            <input type="email" value="${escHtml(c.email||'')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/>
           </div>
           <div class="field"><label>Téléphone</label>
-            <input value="${(c.phone||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/>
+            <input value="${escHtml(c.phone||'')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/>
           </div>
         </div>
         <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label>
-          <input value="${(c.address||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/>
+          <input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/>
         </div>
         <div class="field" style="margin-bottom:6px"><label>Notes</label>
-          <input value="${(c.notes||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/>
+          <input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/>
         </div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">Supprimer</button>
@@ -7685,15 +7681,15 @@ function renderSuppliers(){
     return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600;letter-spacing:.02em">${s.name}</div>
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.join(' · ')}</div>`:''}\n        </div>
+          <div style="font-size:15px;font-weight:600;letter-spacing:.02em">${escHtml(s.name)}</div>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.map(escHtml).join(' · ')}</div>`:''}\n        </div>
         <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
-        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${s.phone||'—'}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${s.email||'—'}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${s.address}</span></div>`:''}\n      </div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${escHtml(s.phone||'—')}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${escHtml(s.email||'—')}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${escHtml(s.address)}</span></div>`:''}\n      </div>
       <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
         <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})">Modifier</button>
-        <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">
+        <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder(${JSON.stringify(s.name)})">
           Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px\">${orderCount}</span>`:''}\n        </button>
       </div>
     </div>`;
@@ -7737,13 +7733,13 @@ function editSupplier(id){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px">
     <div style="font-size:16px;font-weight:600">Modifier fournisseur</div>
-    <div class="field"><label>Nom *</label><input id="sp-name" value="${s.name||''}" /></div>
+    <div class="field"><label>Nom *</label><input id="sp-name" value="${escHtml(s.name||'')}" /></div>
     <div class="g2">
-      <div class="field"><label>Téléphone</label><input id="sp-phone" value="${s.phone||''}" type="tel"/></div>
-      <div class="field"><label>Email</label><input id="sp-email" value="${s.email||''}" type="email"/></div>
+      <div class="field"><label>Téléphone</label><input id="sp-phone" value="${escHtml(s.phone||'')}" type="tel"/></div>
+      <div class="field"><label>Email</label><input id="sp-email" value="${escHtml(s.email||'')}" type="email"/></div>
     </div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${s.contact||''}" placeholder="Jean Martin" /></div>
-    <div class="field"><label>Adresse</label><input id="sp-address" value="${s.address||''}"/></div>
+    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jean Martin" /></div>
+    <div class="field"><label>Adresse</label><input id="sp-address" value="${escHtml(s.address||'')}"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
         ${cats.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" value="${c}" class="sp-cat-chk" style="width:auto" ${(s.categories||[]).includes(c)?'checked':''}/> ${c}</label>`).join('')}
@@ -8165,7 +8161,7 @@ function buildEventSummaryHTML(ev){
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>${ev.name} - Récapitulatif</title>
+  <title>${escHtml(ev.name)} - Récapitulatif</title>
   <style>
     body{font-family:Arial,sans-serif;background:#f5f3ef;margin:0;padding:20px}
     .container{background:white;max-width:800px;margin:0 auto;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
@@ -8190,7 +8186,7 @@ function buildEventSummaryHTML(ev){
 </head>
 <body>
   <div class="container">
-    <h1>${ev.name}</h1>
+    <h1>${escHtml(ev.name)}</h1>
     
     <div class="header">
       <div class="header-item">
@@ -8387,7 +8383,7 @@ function renderHistorique(){
       const cktCount=evTot(ev);
       html+=`<div class="card" style="padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
         <div style="flex:1;cursor:pointer" onclick="goToEventSuivi(${ev.id})">
-          <div style="font-size:13px;font-weight:500">${ev.name}</div>
+          <div style="font-size:13px;font-weight:500">${escHtml(ev.name)}</div>
           <div class="txs tm">${fmtDate}${ev.pax?' · '+ev.pax+' pax':''}${cktCount?' · '+cktCount+' cocktails':''}</div>
         </div>
         <div style="text-align:right;margin-right:12px">
@@ -9264,7 +9260,7 @@ function renderSuivi(){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="min-width:0;flex:1">
           <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
-          <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+          <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
           <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
         </div>
         <div style="text-align:right;flex-shrink:0;margin-left:12px">
