@@ -436,6 +436,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <button id="toggle-low-stock" class="btn btn-ghost" onclick="toggleLowStock()" style="color:var(--text2)">Stock faible <span class="nb" id="nb-low-stock" style="color:var(--red)">0</span></button>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
+      <button class="btn btn-ghost" onclick="exportStockEuro()" title="Exporter inventaire valorisé">Exporter stock €</button>
       <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">CSV</button>
       <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)"/>
       <button class="btn btn-ghost" onclick="document.getElementById('json-import-input').click()" title="Importer JSON">JSON</button>
@@ -7966,6 +7967,88 @@ function exportEventHTML(evId){
   const opt={margin:10,filename:`fiche-${ev.name}.pdf`,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}};
   if(window.html2pdf) window.html2pdf().set(opt).from(element).save();
   else{const blob=new Blob([html],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);window.open(url);}
+}
+
+function exportStockEuro(){
+  // Filter products and glassware that have stock defined
+  const products=state.products.filter(p=>p.stock!=null&&p.stock!=='').map(p=>{
+    const valueTotalHT=(p.stock||0)*(p.priceHT||0);
+    return {
+      category:p.category||'',
+      type:p.productType||'',
+      brand:p.brand||'',
+      priceHT:p.priceHT||0,
+      stock:p.stock||0,
+      valueTotalHT:valueTotalHT.toFixed(2),
+      supplier:p.supplier||'',
+      unit:p.unit||''
+    };
+  });
+
+  const glasses=state.glasses.filter(g=>g.stock!=null&&g.stock!=='').map(g=>{
+    const valueTotalHT=(g.stock||0)*(g.priceHT||0);
+    return {
+      category:'Verrerie',
+      type:g.name||'',
+      brand:g.appellation||'',
+      priceHT:g.priceHT||0,
+      stock:g.stock||0,
+      valueTotalHT:valueTotalHT.toFixed(2),
+      supplier:g.supplier||'',
+      unit:'pc'
+    };
+  });
+
+  const ices=state.iceTypes.filter(i=>i.stock!=null&&i.stock!=='').map(i=>{
+    const valueTotalHT=(i.stock||0)*(i.priceHT||0);
+    return {
+      category:'Glace',
+      type:i.name||'',
+      brand:'',
+      priceHT:i.priceHT||0,
+      stock:i.stock||0,
+      valueTotalHT:valueTotalHT.toFixed(2),
+      supplier:i.supplier||'',
+      unit:i.unit||'kg'
+    };
+  });
+
+  const allItems=[...products,...glasses,...ices].sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.type||'').localeCompare(b.type||''));
+
+  // Calculate totals
+  const totalValueHT=allItems.reduce((s,item)=>s+parseFloat(item.valueTotalHT),0);
+
+  // Generate CSV
+  const headers=['Catégorie','Type','Marque','Prix HT','Stock','Unité','Valeur totale HT (€)','Fournisseur'];
+  const rows=allItems.map(item=>[
+    item.category,
+    item.type,
+    item.brand,
+    item.priceHT.toFixed(2),
+    item.stock.toString(),
+    item.unit,
+    item.valueTotalHT,
+    item.supplier
+  ]);
+
+  // Add summary row
+  rows.push(['','','','','','','=================','']);
+  rows.push(['','','TOTAL VALEUR STOCK','','',' ',totalValueHT.toFixed(2),'€']);
+
+  const csv=[
+    headers.join(','),
+    ...rows.map(row=>row.map(cell=>`"${(cell||'').toString().replace(/"/g,'""')}"`).join(','))
+  ].join('\n');
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const link=document.createElement('a');
+  const url=URL.createObjectURL(blob);
+  link.setAttribute('href',url);
+  link.setAttribute('download',`inventaire-stock-${new Date().toISOString().slice(0,10)}.csv`);
+  link.style.visibility='hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function buildEventSummaryHTML(ev){
