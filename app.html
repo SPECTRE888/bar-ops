@@ -437,10 +437,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-gold" id="cat-add-btn" onclick="catAdd()">+ Ajouter</button>
       <button class="btn btn-ghost" onclick="exportStockEuro()" title="Exporter inventaire valorisé">Exporter stock €</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()" title="Importer CSV">CSV</button>
-      <input type="file" id="csv-import-input" accept=".csv" style="display:none" onchange="importCSV(this)"/>
-      <button class="btn btn-ghost" onclick="document.getElementById('json-import-input').click()" title="Importer JSON">JSON</button>
-      <input type="file" id="json-import-input" accept=".json" style="display:none" onchange="importJSON(this)"/>
+      <button class="btn btn-ghost" onclick="document.getElementById('import-file-input').click()" title="Importer CSV ou JSON">Importer</button>
+      <input type="file" id="import-file-input" accept=".csv,.json" style="display:none" onchange="importFile(this)"/>
     </div>
   </div>
   <div class="content" id="catalogue-content"></div>
@@ -8406,8 +8404,19 @@ function mkImportModal(title, subtitle){
 }
 
 // ── CSV IMPORT ─────────────────────────────────────────
-function importCSV(input){
-  const file=input.files[0];if(!file)return;
+function importFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  input.value='';
+  if(ext==='csv') importCSV(input,file);
+  else if(ext==='json') importJSON(input,file);
+  else showToastModal('Format non supporté. Utilisez CSV ou JSON.');
+}
+
+function importCSV(input,file){
+  if(!file) file=input.files[0];
+  if(!file)return;
   input.value='';
   const cat=document.getElementById('cat-filter')?.value||'Spirit';
   const reader=new FileReader();
@@ -8508,8 +8517,9 @@ function confirmCSVImport(rows,cat){
 }
 
 // ── JSON IMPORT ────────────────────────────────────────
-function importJSON(input){
-  const file=input.files[0];if(!file)return;
+function importJSON(input,file){
+  if(!file) file=input.files[0];
+  if(!file)return;
   input.value='';
   const reader=new FileReader();
   reader.onload=e=>{
