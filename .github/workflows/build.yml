@@ -30,15 +30,37 @@ jobs:
     - name: Build
       run: npm run build:ci -- --publish=never
 
-    - name: Package app
+    - name: Create Installer app
+      run: |
+        cat > /tmp/installer.applescript << 'EOF'
+        set foundApp to do shell script "find ~/Downloads -name 'Bar Ops.app' -maxdepth 4 | head -1"
+        if foundApp is "" then
+          display dialog "Bar Ops.app introuvable dans Téléchargements. Vérifie que tu as bien extrait le ZIP." buttons {"OK"} default button "OK" with icon stop
+        else
+          do shell script "xattr -cr " & quoted form of foundApp
+          do shell script "open " & quoted form of foundApp
+        end if
+        EOF
+
+        osacompile -o "dist/Installer Bar Ops.app" /tmp/installer.applescript
+
+        # Remplacer l'icône par défaut par l'icône Bar Ops
+        cp electron/assets/icon.icns "dist/Installer Bar Ops.app/Contents/Resources/applet.icns"
+
+        codesign --force --deep --sign - "dist/Installer Bar Ops.app"
+
+    - name: Package
       run: |
         cd dist/mac-arm64
         zip -r "../BarOps.zip" "Bar Ops.app"
+        cd ..
+        zip -r "Installer Bar Ops.zip" "Installer Bar Ops.app"
 
     - name: Publish Release
       run: |
         gh release create ${{ github.ref_name }} \
           "dist/BarOps.zip" \
+          "dist/Installer Bar Ops.zip" \
           --title "Bar Ops ${{ github.ref_name }}" \
           --notes "## Installation\n\n1. Télécharge **BarOps.zip** dans Téléchargements\n2. Extrais le ZIP\n3. Ouvre Terminal et colle :\n\`\`\`\nAPP=\$(find ~/Downloads -name \"Bar Ops.app\" -maxdepth 3 | head -1) && xattr -cr \"\$APP\" && open \"\$APP\"\n\`\`\`"
       env:
