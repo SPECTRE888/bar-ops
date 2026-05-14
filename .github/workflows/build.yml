@@ -1,9 +1,9 @@
-name: Build Electron App
+name: Release Build
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -13,30 +13,28 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4.1.7
 
-    - name: Setup Node.js 18
+    - name: Install Node.js 18
       run: |
         brew install node@18
         export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        node --version
-        npm --version
+        node --version && npm --version
 
     - name: Install dependencies
       run: |
         export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
         npm ci
 
-    - name: Build macOS app
+    - name: Build
       run: |
         export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
         npm run build:mac
 
-    - name: List build artifacts
-      run: ls -lh dist/*.dmg || echo "No DMG files found"
-
-    - name: Upload artifacts to release
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        export PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        gh release upload ${GITHUB_REF#refs/tags/} dist/*.dmg
+    - name: Create Release
+      uses: softprops/action-gh-release@v2.0.4
+      with:
+        files: |
+          dist/*.dmg
+          dist/*.dmg.blockmap
+          dist/latest-mac.yml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
