@@ -1,34 +1,39 @@
 #!/bin/bash
+# Bar Ops — Script d'installation
+# Usage: bash ~/Downloads/install.sh
+
+set -e
 
 echo ""
-echo "╔════════════════════════════════════╗"
-echo "║      Installation de Bar Ops       ║"
-echo "╚════════════════════════════════════╝"
+echo "╔══════════════════════════════════════╗"
+echo "║      Installation de BAR OPS         ║"
+echo "╚══════════════════════════════════════╝"
 echo ""
 
-APP_NAME="Bar Ops.app"
-INSTALL_DIR="/Applications"
+# Trouver le ZIP de Bar Ops dans Downloads
+ZIP=$(find ~/Downloads -name "Bar Ops-arm64*.zip" -maxdepth 2 | head -1)
 
-# Trouver le .app dans le même dossier que ce script
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_PATH="$SCRIPT_DIR/$APP_NAME"
-
-if [ ! -d "$APP_PATH" ]; then
-  echo "❌ Impossible de trouver '$APP_NAME' à côté de ce script."
-  echo "   Assure-toi d'avoir extrait le ZIP et de lancer install.sh depuis le même dossier."
-  echo ""
-  read -p "Appuie sur Entrée pour quitter..."
+if [ -z "$ZIP" ]; then
+  echo "❌ Fichier Bar Ops-arm64.zip introuvable dans ~/Downloads"
+  echo "   Télécharge-le depuis https://github.com/SPECTRE888/bar-ops/releases"
   exit 1
 fi
 
-echo "📦 Copie de Bar Ops dans Applications..."
-cp -r "$APP_PATH" "$INSTALL_DIR/"
+echo "📦 Extraction de $ZIP..."
+TMPDIR=$(mktemp -d)
+unzip -q "$ZIP" -d "$TMPDIR"
 
-echo "🔓 Suppression de la quarantaine macOS..."
-xattr -cr "$INSTALL_DIR/$APP_NAME"
+echo "🔓 Autorisation macOS..."
+xattr -cr "$TMPDIR/Bar Ops.app"
+
+echo "📂 Installation dans Applications..."
+rm -rf "/Applications/Bar Ops.app"
+cp -r "$TMPDIR/Bar Ops.app" "/Applications/"
+
+rm -rf "$TMPDIR"
 
 echo ""
 echo "✅ Bar Ops est installé !"
 echo ""
-read -p "Appuie sur Entrée pour lancer l'app..."
-open "$INSTALL_DIR/$APP_NAME"
+sleep 1
+open "/Applications/Bar Ops.app"

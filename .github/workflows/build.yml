@@ -27,32 +27,20 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build (arm64 only, zip format)
+    - name: Build
       run: npm run build:ci -- --publish=never
 
-    - name: Sign app (ad-hoc)
-      run: codesign --force --deep --sign - "dist/mac-arm64/Bar Ops.app"
-
-    - name: Create launcher app (AppleScript)
-      run: |
-        cat > /tmp/launcher.applescript << 'EOF'
-        set appPath to (POSIX path of (path to me)) & "../Bar Ops.app"
-        do shell script "xattr -cr " & quoted form of appPath
-        do shell script "open " & quoted form of appPath
-        EOF
-        osacompile -o "dist/mac-arm64/Lancer Bar Ops.app" /tmp/launcher.applescript
-        codesign --force --deep --sign - "dist/mac-arm64/Lancer Bar Ops.app"
-
-    - name: Package
+    - name: Package app
       run: |
         cd dist/mac-arm64
-        zip -r "../Bar Ops-arm64.zip" "Bar Ops.app" "Lancer Bar Ops.app"
+        zip -r "../Bar Ops-arm64.zip" "Bar Ops.app"
 
     - name: Publish Release
       run: |
         gh release create ${{ github.ref_name }} \
           "dist/Bar Ops-arm64.zip" \
+          install.sh \
           --title "Bar Ops ${{ github.ref_name }}" \
-          --notes "1. Télécharge et extrais Bar Ops-arm64.zip\n2. Double-clique sur 'Lancer Bar Ops' (une seule fois)\n3. Clique 'Ouvrir quand même' si demandé\n4. L'app s'installe ✅"
+          --notes "## Installation\n\n1. Télécharge **Bar Ops-arm64.zip** et **install.sh**\n2. Ouvre Terminal\n3. Tape : \`bash ~/Downloads/install.sh\`\n4. L'app s'installe et se lance ✅"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
