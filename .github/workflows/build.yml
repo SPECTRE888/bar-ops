@@ -33,15 +33,18 @@ jobs:
     - name: Sign app (ad-hoc)
       run: codesign --force --deep --sign - "dist/mac-arm64/Bar Ops.app"
 
-    - name: Package signed app
-      run: cd dist/mac-arm64 && zip -r "../Bar Ops-arm64-signed.zip" "Bar Ops.app"
+    - name: Package signed app with installer
+      run: |
+        chmod +x "Installer Bar Ops.command"
+        cd dist/mac-arm64
+        cp "../../Installer Bar Ops.command" .
+        zip -r "../Bar Ops-arm64.zip" "Bar Ops.app" "Installer Bar Ops.command"
 
     - name: Publish Release
       run: |
         gh release create ${{ github.ref_name }} \
-          "dist/Bar Ops-arm64-signed.zip" \
-          install.sh \
+          "dist/Bar Ops-arm64.zip" \
           --title "Bar Ops ${{ github.ref_name }}" \
-          --notes "Télécharge le ZIP, extrais et lance Bar Ops.app — aucune manipulation requise."
+          --notes "1. Télécharge Bar Ops-arm64.zip\n2. Extrais le ZIP\n3. Double-clique sur 'Installer Bar Ops.command'\n4. L'app s'installe et se lance ✅"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
