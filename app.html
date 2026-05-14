@@ -7968,8 +7968,18 @@ function exportEventHTML(evId){
 }
 
 async function exportStockEuro(){
-  // Filter products and glassware that have stock defined
-  const products=state.products.filter(p=>p.stock!=null&&p.stock!=='').map(p=>{
+  // Helper: get display unit (bottle for cl products, actual unit otherwise)
+  const getDisplayUnit=(product)=>{
+    if(product.unit==='cl') return 'btl';
+    if(product.unit==='L') return 'btl';
+    if(product.unit==='g') return 'g';
+    if(product.unit==='ml') return 'ml';
+    if(product.unit==='pc') return 'pc';
+    return product.unit||'';
+  };
+
+  // Filter products that have stock defined (exclude consumables - they'll be in separate category)
+  const products=state.products.filter(p=>p.category!=='Consumable'&&p.stock!=null&&p.stock!=='').map(p=>{
     const valueTotalHT=(p.stock||0)*(p.priceHT||0);
     return {
       category:p.category||'',
@@ -7979,7 +7989,7 @@ async function exportStockEuro(){
       stock:p.stock||0,
       valueTotalHT:valueTotalHT.toFixed(2),
       supplier:p.supplier||'',
-      unit:p.unit||''
+      unit:getDisplayUnit(p)
     };
   });
 
@@ -7997,21 +8007,35 @@ async function exportStockEuro(){
     };
   });
 
-  const ices=state.iceTypes.filter(i=>i.stock!=null&&i.stock!=='').map(i=>{
-    const valueTotalHT=(i.stock||0)*(i.priceHT||0);
+  const consommables=state.products.filter(p=>p.category==='Consumable'&&p.stock!=null&&p.stock!=='').map(p=>{
+    const valueTotalHT=(p.stock||0)*(p.priceHT||0);
     return {
-      category:'Glace',
-      type:i.name||'',
-      brand:'',
-      priceHT:i.priceHT||0,
-      stock:i.stock||0,
+      category:'Consommables',
+      type:p.productType||'',
+      brand:p.brand||'',
+      priceHT:p.priceHT||0,
+      stock:p.stock||0,
       valueTotalHT:valueTotalHT.toFixed(2),
-      supplier:i.supplier||'',
-      unit:i.unit||'kg'
+      supplier:p.supplier||'',
+      unit:getDisplayUnit(p)
     };
   });
 
-  const allItems=[...products,...glasses,...ices].sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.type||'').localeCompare(b.type||''));
+  const barItems=(state.barItems||[]).filter(b=>b.stock!=null&&b.stock!=='').map(b=>{
+    const valueTotalHT=(b.stock||0)*(b.priceHT||0);
+    return {
+      category:'Bar & Matériel',
+      type:b.name||'',
+      brand:'',
+      priceHT:b.priceHT||0,
+      stock:b.stock||0,
+      valueTotalHT:valueTotalHT.toFixed(2),
+      supplier:b.supplier||'',
+      unit:b.unit||'pc'
+    };
+  });
+
+  const allItems=[...products,...glasses,...consommables,...barItems].filter(Boolean).sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.type||'').localeCompare(b.type||''));
   const totalValueHT=allItems.reduce((s,item)=>s+parseFloat(item.valueTotalHT),0);
 
   // Show modal with total value before download
