@@ -20,60 +20,57 @@ exports.handler = async (event) => {
       };
     }
 
-    // Build CSV rows
-    const headers = ['Catégorie', 'Type', 'Marque', 'Prix HT', 'Stock', 'Unité', 'Valeur totale HT (€)', 'Fournisseur'];
-    const rows = [
-      ...products.map(p => [
-        p.category || '',
-        p.type || '',
-        p.brand || '',
-        (p.priceHT || 0).toFixed(2),
-        (p.stock || 0).toString(),
-        p.unit || '',
-        (p.valueTotalHT || 0).toString(),
-        p.supplier || ''
-      ]),
-      ...glasses.map(g => [
-        'Verrerie',
-        g.type || '',
-        g.brand || '',
-        (g.priceHT || 0).toFixed(2),
-        (g.stock || 0).toString(),
-        'pc',
-        (g.valueTotalHT || 0).toString(),
-        g.supplier || ''
-      ]),
-      ...(consommables || []).map(c => [
-        'Consommables',
-        c.type || '',
-        c.brand || '',
-        (c.priceHT || 0).toFixed(2),
-        (c.stock || 0).toString(),
-        c.unit || '',
-        (c.valueTotalHT || 0).toString(),
-        c.supplier || ''
-      ]),
-      ...(barItems || []).map(b => [
-        'Bar & Matériel',
-        b.type || '',
-        b.brand || '',
-        (b.priceHT || 0).toFixed(2),
-        (b.stock || 0).toString(),
-        b.unit || 'pc',
-        (b.valueTotalHT || 0).toString(),
-        b.supplier || ''
-      ])
+    // Build CSV with separate tables by category
+    const headers = ['Type', 'Marque', 'Prix HT', 'Stock', 'Unité', 'Valeur totale HT (€)', 'Fournisseur'];
+    const csvSections = [];
+
+    // Helper to build category table
+    const buildCategoryTable = (categoryName, items) => {
+      if (!items || items.length === 0) return [];
+      const categoryTotal = items.reduce((s, item) => s + parseFloat(item.valueTotalHT || 0), 0);
+      const section = [
+        ['', '', '', '', '', '', ''],
+        [categoryName.toUpperCase(), '', '', '', '', '', ''],
+        headers.map(h => h),
+        ...items.map(item => [
+          item.type || '',
+          item.brand || '',
+          (item.priceHT || 0).toFixed(2),
+          (item.stock || 0).toString(),
+          item.unit || '',
+          (item.valueTotalHT || 0).toString(),
+          item.supplier || ''
+        ]),
+        ['', '', '', '', '', '─────────────────', ''],
+        ['SOUS-TOTAL ' + categoryName.toUpperCase(), '', '', '', '', categoryTotal.toFixed(2), '€']
+      ];
+      return section;
+    };
+
+    // Build each category table
+    const categoryTables = [
+      buildCategoryTable('Spiritueux & Alcools', products.filter(p => ['Spirit', 'Juice', 'Mixer', 'Syrup'].includes(p.category))),
+      buildCategoryTable('Garnitures', products.filter(p => ['Garnish', 'Spice'].includes(p.category))),
+      buildCategoryTable('Verrerie', glasses),
+      buildCategoryTable('Consommables', consommables),
+      buildCategoryTable('Bar & Matériel', barItems)
     ];
+
+    // Flatten and filter empty sections
+    const rows = categoryTables.flat().filter(section => section && section.length > 0);
 
     // Calculate total value
     const totalValue = [...products, ...glasses, ...(consommables || []), ...(barItems || [])].reduce((s, item) => s + parseFloat(item.valueTotalHT || 0), 0);
 
-    // Add summary rows
-    rows.push(['', '', '', '', '', '', '=================', '']);
-    rows.push(['', '', 'TOTAL VALEUR STOCK', '', '', ' ', totalValue.toFixed(2), '€']);
+    // Add grand total at the end
+    rows.push(['', '', '', '', '', '', '']);
+    rows.push(['', '', '', '', '', '═════════════════', '']);
+    rows.push(['TOTAL VALEUR STOCK', '', '', '', '', totalValue.toFixed(2), '€']);
 
     // Generate CSV
     const csv = [
+      'INVENTAIRE DE STOCK - ' + new Date().toLocaleDateString('fr-FR'),
+      '',
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
     ].join('\n');
