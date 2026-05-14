@@ -10,8 +10,8 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - name: Checkout code
-      run: git clone https://github.com/${{ github.repository }} .
+    - name: Checkout
+      uses: actions/checkout@v4.1.7
 
     - name: Setup Node.js 18
       run: |
