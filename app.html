@@ -9358,7 +9358,19 @@ function renderSuivi(){
               }).join('')}
             </div>
           `:''}
-          <button class="btn btn-sm btn-ghost" style="margin-bottom:8px;width:100%;text-align:left" onclick="addStockRetourCustom(${ev.id})">+ Ajouter un produit</button>
+          <div id="stock-retour-add-form-${ev.id}" style="display:none;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:8px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              <div style="flex:1;min-width:150px" id="src-ss-${ev.id}"></div>
+              <input id="src-product-${ev.id}" type="hidden"/>
+              <input id="src-brand-${ev.id}" type="text" placeholder="Marque" style="flex:1;min-width:120px;padding:6px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="src-qty-${ev.id}" type="number" step="0.1" min="0.1" placeholder="Qté" value="1" style="width:60px;padding:6px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-ghost" style="flex:1" onclick="toggleAddStockRetour(${ev.id})">Annuler</button>
+              <button class="btn btn-sm btn-gold" style="flex:1" onclick="addStockRetourCustom(${ev.id})">Ajouter</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-ghost" style="width:100%;text-align:left" onclick="toggleAddStockRetour(${ev.id})">+ Ajouter un produit</button>
           <button class="btn btn-sm btn-gold" onclick="injectStockRetour(${ev.id})" ${alreadyDone?'style="opacity:.5"':''}>
             ${alreadyDone?'Réinjecter à nouveau':'Réinjecter en stock'}
           </button>
@@ -9458,107 +9470,60 @@ function injectStockRetour(evId){
 }
 
 // ── MANUAL STOCK RETURN FUNCTIONS ──
-function addStockRetourCustom(evId){
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  if(!window._evStockRetourCustom) window._evStockRetourCustom={};
-  if(!window._evStockRetourCustom[evId]) window._evStockRetourCustom[evId]=[];
+function toggleAddStockRetour(evId){
+  const el=document.getElementById('stock-retour-add-form-'+evId);
+  if(!el) return;
+  if(el.style.display==='none'){
+    el.style.display='block';
+    setTimeout(()=>{
+      initStockRetourProductSearch(evId);
+      document.getElementById('src-product-'+evId)?.focus();
+    },0);
+  }else{
+    el.style.display='none';
+  }
+}
 
-  // Get all product types from catalog (products + glasses + ices)
-  const allTypes=new Set([
+function initStockRetourProductSearch(evId){
+  const ssWrap=document.getElementById('src-ss-'+evId);
+  if(!ssWrap||ssWrap.dataset.initialized) return;
+  ssWrap.dataset.initialized='true';
+
+  const allProducts=[
     ...state.products.map(p=>p.productType).filter(Boolean),
     ...state.glasses.map(g=>g.name).filter(Boolean),
     ...state.iceTypes.map(i=>i.name).filter(Boolean)
-  ].sort());
+  ];
+  const uniqueProducts=[...new Set(allProducts)].sort();
 
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
-  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
-    <div style="font-size:15px;color:var(--text);margin-bottom:20px;font-weight:500">Ajouter un produit au stock retour</div>
-    <div class="field" style="margin-bottom:16px">
-      <label style="display:block;font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Produit</label>
-      <input id="src-type-input" type="text" placeholder="Chercher un produit..." class="input-md" style="width:100%;margin-bottom:8px"/>
-      <div id="src-type-select" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto"></div>
-    </div>
-    <div class="field" style="margin-bottom:16px">
-      <label style="display:block;font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Marque</label>
-      <div id="src-brand-select" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto"></div>
-    </div>
-    <div class="field" style="margin-bottom:20px">
-      <label style="display:block;font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Quantité à retourner</label>
-      <input id="src-qty-input" type="number" step="0.1" min="0" placeholder="0.5" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:3px;background:var(--surface2);color:var(--text)"/>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)">Annuler</button>
-      <button id="src-submit" style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body);opacity:.5;cursor:not-allowed">Ajouter</button>
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
+  mkSS('src-ss-'+evId,uniqueProducts,'Produit...', v=>{
+    document.getElementById('src-product-'+evId).value=v;
+  },'',true);
+}
 
-  let selectedType='',selectedBrand='',selectedCategory='';
-  const typeInput=modal.querySelector('#src-type-input');
-  const typeSelect=modal.querySelector('#src-type-select');
-  const brandSelect=modal.querySelector('#src-brand-select');
-  const qtyInput=modal.querySelector('#src-qty-input');
-  const submitBtn=modal.querySelector('#src-submit');
-  const cancelBtn=modal.querySelector('button:first-of-type');
+function addStockRetourCustom(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const productInput=document.getElementById('src-product-'+evId);
+  const brandInput=document.getElementById('src-brand-'+evId);
+  const qtyInput=document.getElementById('src-qty-'+evId);
 
-  // Type search
-  typeInput.addEventListener('input',(e)=>{
-    const q=e.target.value.toLowerCase();
-    const filtered=Array.from(allTypes).filter(t=>t.toLowerCase().includes(q));
-    typeSelect.innerHTML=filtered.map(type=>`
-      <button style="text-align:left;padding:8px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:11px;color:var(--text2);transition:.15s" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--gold)'" onmouseout="this.style.background='transparent';this.style.borderColor='var(--border)'">${type}</button>
-    `).join('');
-    typeSelect.querySelectorAll('button').forEach(btn=>{
-      btn.onclick=()=>selectType(btn.textContent.trim());
-    });
-  });
+  const productType=(productInput?.value||'').trim();
+  const brand=(brandInput?.value||'').trim();
+  const qty=parseFloat(qtyInput?.value)||0;
 
-  const selectType=(type)=>{
-    selectedType=type;
-    typeInput.value=type;
-    typeSelect.innerHTML='';
+  if(!productType||qty<=0){
+    toast('Veuillez remplir le produit et la quantité','var(--red)');
+    return;
+  }
 
-    // Get brands for this type
-    const brands=new Set();
-    state.products.filter(p=>p.productType===type).forEach(p=>{if(p.brand)brands.add(p.brand);});
-    state.glasses.filter(g=>g.name===type).forEach(g=>{if(g.appellation)brands.add(g.appellation);});
-    state.iceTypes.filter(i=>i.name===type).forEach(i=>{if(i.supplier)brands.add(i.supplier);});
+  const category=state.products.find(p=>p.productType===productType)?.category||'Produit';
+  saveStockRetourCustom(evId,brand,productType,qty,category);
 
-    selectedCategory=state.products.find(p=>p.productType===type)?.category||'Glassware';
-
-    if(brands.size===0){
-      brandSelect.innerHTML='<div style="color:var(--text3);font-size:11px;padding:8px">Aucune marque trouvée</div>';
-      return;
-    }
-
-    brandSelect.innerHTML=Array.from(brands).sort().map(brand=>`
-      <button style="text-align:left;padding:8px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:11px;color:var(--text2);transition:.15s" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--gold)'" onmouseout="this.style.background='transparent';this.style.borderColor='var(--border)'">${brand}</button>
-    `).join('');
-    brandSelect.querySelectorAll('button').forEach(btn=>{
-      btn.onclick=()=>selectBrand(btn.textContent.trim());
-    });
-  };
-
-  const selectBrand=(brand)=>{
-    selectedBrand=brand;
-    brandSelect.innerHTML=`<div style="color:var(--gold);font-size:11px;padding:8px">✓ ${brand}</div>`;
-    submitBtn.style.opacity='1';
-    submitBtn.style.cursor='pointer';
-  };
-
-  cancelBtn.onclick=()=>modal.remove();
-  submitBtn.onclick=()=>{
-    const qty=parseFloat(qtyInput.value)||0;
-    if(!selectedType||!selectedBrand||qty<=0){
-      toast('Veuillez remplir tous les champs','var(--red)');
-      return;
-    }
-    modal.remove();
-    saveStockRetourCustom(evId,selectedBrand,selectedType,qty,selectedCategory);
-  };
-
-  typeInput.focus();
+  // Reset form
+  productInput.value='';
+  brandInput.value='';
+  qtyInput.value='';
+  document.getElementById('stock-retour-add-form-'+evId).style.display='none';
 }
 
 function saveStockRetourCustom(evId,brand,productType,qty,category){
