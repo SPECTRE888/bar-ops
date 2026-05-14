@@ -23,7 +23,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "VOTRE_GITHUB_USER",
+      "owner": "SPECTRE888",
       "repo": "bar-ops"
     },
     "protocols": {
