@@ -127,6 +127,15 @@ function setupUpdater() {
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
+  // Remove macOS quarantine on first launch
+  if (process.platform === 'darwin' && app.isPackaged) {
+    try {
+      const { execSync } = require('child_process')
+      const appPath = process.execPath.split('.app/Contents/')[0] + '.app'
+      execSync(`xattr -cr "${appPath}"`)
+    } catch(e) {}
+  }
+
   startAuthServer()
   createWindow()
   if (app.isPackaged) setupUpdater()
