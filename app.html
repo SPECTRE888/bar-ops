@@ -8040,15 +8040,36 @@ function exportStockEuro(){
     ...rows.map(row=>row.map(cell=>`"${(cell||'').toString().replace(/"/g,'""')}"`).join(','))
   ].join('\n');
 
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const link=document.createElement('a');
-  const url=URL.createObjectURL(blob);
-  link.setAttribute('href',url);
-  link.setAttribute('download',`inventaire-stock-${new Date().toISOString().slice(0,10)}.csv`);
-  link.style.visibility='hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Show modal with total value before download
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="font-size:15px;color:var(--text);margin-bottom:24px;line-height:1.5;font-weight:400">Télécharger l'inventaire valorisé ?</div>
+    <div style="background:var(--surface2);border:1px solid var(--gold-border);border-radius:5px;padding:16px;margin-bottom:24px;text-align:center">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Valeur totale du stock</div>
+      <div style="font-size:32px;font-family:'DM Serif Display',serif;color:var(--gold);font-weight:600">${totalValueHT.toFixed(2)}€</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">Annuler</button>
+      <button style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">Télécharger</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const btnCancel=modal.querySelector('button:first-of-type');
+  const btnDownload=modal.querySelector('button:last-of-type');
+  btnCancel.onclick=()=>{modal.remove();};
+  btnDownload.onclick=()=>{
+    modal.remove();
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const link=document.createElement('a');
+    const url=URL.createObjectURL(blob);
+    link.setAttribute('href',url);
+    link.setAttribute('download',`inventaire-stock-${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility='hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 }
 
 function buildEventSummaryHTML(ev){
