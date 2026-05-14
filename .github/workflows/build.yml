@@ -27,32 +27,21 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build
+    - name: Build (arm64 only, zip format)
       run: npm run build:ci -- --publish=never
 
-    - name: Sign app (ad-hoc, no Apple certificate needed)
-      run: |
-        codesign --force --deep --sign - "dist/mac-arm64/Bar Ops.app" 2>/dev/null || true
-        codesign --force --deep --sign - "dist/mac/Bar Ops.app" 2>/dev/null || true
+    - name: Sign app (ad-hoc)
+      run: codesign --force --deep --sign - "dist/mac-arm64/Bar Ops.app"
 
     - name: Package signed app
-      run: |
-        cd dist/mac-arm64 && zip -r "../Bar Ops-arm64-signed.zip" "Bar Ops.app"
-        cd dist/mac && zip -r "../Bar Ops-x64-signed.zip" "Bar Ops.app"
+      run: cd dist/mac-arm64 && zip -r "../Bar Ops-arm64-signed.zip" "Bar Ops.app"
 
     - name: Publish Release
       run: |
         gh release create ${{ github.ref_name }} \
           "dist/Bar Ops-arm64-signed.zip" \
-          "dist/Bar Ops-x64-signed.zip" \
           install.sh \
           --title "Bar Ops ${{ github.ref_name }}" \
-          --notes "Installation : télécharge le ZIP pour ton Mac (arm64 = M1/M2/M3, x64 = Intel), extrais et lance Bar Ops.app"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Add install script to release
-      if: startsWith(github.ref, 'refs/tags/')
-      run: gh release upload ${{ github.ref_name }} install.sh
+          --notes "Télécharge le ZIP, extrais et lance Bar Ops.app — aucune manipulation requise."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
