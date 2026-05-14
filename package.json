@@ -1,7 +1,76 @@
 {
+  "name": "bar-ops",
+  "version": "1.0.1",
+  "description": "Bar Ops — gestion d'événements bar",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.barops.app",
+    "productName": "Bar Ops",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/main.js",
+      "electron/app/**/*",
+      "electron/assets/icon.*"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "VOTRE_GITHUB_USER",
+      "repo": "bar-ops"
+    },
+    "protocols": {
+      "name": "Bar Ops",
+      "schemes": ["barops"]
+    },
+    "mac": {
+      "icon": "electron/assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.business"
+    },
+    "win": {
+      "icon": "electron/assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Bar Ops"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
     "@supabase/supabase-js": "^2.104.1",
+    "electron-updater": "^6.8.3",
     "stripe": "^22.1.0"
+  },
+  "devDependencies": {
+    "electron": "^35.7.5",
+    "electron-builder": "^25.1.8",
+    "puppeteer": "^24.43.1",
+    "sharp": "^0.34.5"
   }
 }
