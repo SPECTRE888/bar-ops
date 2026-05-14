@@ -10,9 +10,9 @@ exports.handler = async (event) => {
       // Parse JSON
       data = JSON.parse(event.body);
     }
-    const { products, glasses, ices } = data;
+    const { products, glasses, consommables, barItems } = data;
 
-    if (!products || !glasses || !ices) {
+    if (!products || !glasses) {
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -43,20 +43,30 @@ exports.handler = async (event) => {
         (g.valueTotalHT || 0).toString(),
         g.supplier || ''
       ]),
-      ...ices.map(i => [
-        'Glace',
-        i.type || '',
-        '',
-        (i.priceHT || 0).toFixed(2),
-        (i.stock || 0).toString(),
-        i.unit || 'kg',
-        (i.valueTotalHT || 0).toString(),
-        i.supplier || ''
+      ...(consommables || []).map(c => [
+        'Consommables',
+        c.type || '',
+        c.brand || '',
+        (c.priceHT || 0).toFixed(2),
+        (c.stock || 0).toString(),
+        c.unit || '',
+        (c.valueTotalHT || 0).toString(),
+        c.supplier || ''
+      ]),
+      ...(barItems || []).map(b => [
+        'Bar & Matériel',
+        b.type || '',
+        b.brand || '',
+        (b.priceHT || 0).toFixed(2),
+        (b.stock || 0).toString(),
+        b.unit || 'pc',
+        (b.valueTotalHT || 0).toString(),
+        b.supplier || ''
       ])
     ];
 
     // Calculate total value
-    const totalValue = [...products, ...glasses, ...ices].reduce((s, item) => s + parseFloat(item.valueTotalHT || 0), 0);
+    const totalValue = [...products, ...glasses, ...(consommables || []), ...(barItems || [])].reduce((s, item) => s + parseFloat(item.valueTotalHT || 0), 0);
 
     // Add summary rows
     rows.push(['', '', '', '', '', '', '=================', '']);

@@ -8070,7 +8070,7 @@ async function exportStockEuro(){
   const input=document.createElement('input');
   input.type='hidden';
   input.name='data';
-  input.value=JSON.stringify({products,glasses,ices});
+  input.value=JSON.stringify({products,glasses,consommables,barItems});
   form.appendChild(input);
   document.body.appendChild(form);
   form.submit();
