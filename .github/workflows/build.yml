@@ -33,14 +33,13 @@ jobs:
     - name: Package app
       run: |
         cd dist/mac-arm64
-        zip -r "../Bar Ops-arm64.zip" "Bar Ops.app"
+        zip -r "../BarOps.zip" "Bar Ops.app"
 
     - name: Publish Release
       run: |
         gh release create ${{ github.ref_name }} \
-          "dist/Bar Ops-arm64.zip" \
-          install.sh \
+          "dist/BarOps.zip" \
           --title "Bar Ops ${{ github.ref_name }}" \
-          --notes "## Installation\n\n1. Télécharge **Bar Ops-arm64.zip** et **install.sh**\n2. Ouvre Terminal\n3. Tape : \`bash ~/Downloads/install.sh\`\n4. L'app s'installe et se lance ✅"
+          --notes "## Installation\n\n1. Télécharge **BarOps.zip** dans Téléchargements\n2. Extrais le ZIP\n3. Ouvre Terminal et colle :\n\`\`\`\nAPP=\$(find ~/Downloads -name \"Bar Ops.app\" -maxdepth 3 | head -1) && xattr -cr \"\$APP\" && open \"\$APP\"\n\`\`\`"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
