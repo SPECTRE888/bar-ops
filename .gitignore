@@ -8,3 +8,4 @@
 index.html.save
 node_modules/
 .github/
+!.github/workflows/
