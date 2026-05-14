@@ -9323,6 +9323,7 @@ function renderSuivi(){
         const rows=Object.entries(ingredients);
         if(!rows.length) return '';
         const alreadyDone=ev.stockRetourDone||false;
+        const manualProducts=window._evStockRetourCustom?.[ev.id]||[];
         return`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Stock retour</div>
@@ -9342,6 +9343,22 @@ function renderSuivi(){
               </div>`;
             }).join('')}
           </div>
+          ${manualProducts.length>0?`
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:12px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Produits ajoutés manuellement</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              ${manualProducts.map(mp=>{
+                const key=(mp.brand||'')+'||'+mp.productType;
+                return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                  <span style="flex:1;color:var(--text2)">${mp.brand?mp.brand+' — ':''}${mp.productType}</span>
+                  <input type="number" min="0" step="0.1" value="${(ev.stockRetour||{})[key]||mp.qty}"
+                    style="width:90px;padding:3px 6px;font-size:11px"
+                    onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
+                  <button class="btn" style="font-size:8px;padding:2px 6px;white-space:nowrap" onclick="removeStockRetourCustom(${ev.id},'${key}')">✕</button>
+                </div>`;
+              }).join('')}
+            </div>
+          `:''}
+          <button class="btn btn-sm btn-ghost" style="margin-bottom:8px;width:100%;text-align:left" onclick="addStockRetourCustom(${ev.id})">+ Ajouter un produit</button>
           <button class="btn btn-sm btn-gold" onclick="injectStockRetour(${ev.id})" ${alreadyDone?'style="opacity:.5"':''}>
             ${alreadyDone?'Réinjecter à nouveau':'Réinjecter en stock'}
           </button>
@@ -9438,6 +9455,139 @@ function injectStockRetour(evId){
   toast(`${count} produit(s) réinjecté(s) en stock`);
   renderSuivi();
   renderDashboard();
+}
+
+// ── MANUAL STOCK RETURN FUNCTIONS ──
+function addStockRetourCustom(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(!window._evStockRetourCustom) window._evStockRetourCustom={};
+  if(!window._evStockRetourCustom[evId]) window._evStockRetourCustom[evId]=[];
+
+  // Get all product types from catalog (products + glasses + ices)
+  const allTypes=new Set([
+    ...state.products.map(p=>p.productType).filter(Boolean),
+    ...state.glasses.map(g=>g.name).filter(Boolean),
+    ...state.iceTypes.map(i=>i.name).filter(Boolean)
+  ].sort());
+
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="font-size:15px;color:var(--text);margin-bottom:20px;font-weight:500">Ajouter un produit au stock retour</div>
+    <div class="field" style="margin-bottom:16px">
+      <label style="display:block;font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Produit</label>
+      <input id="src-type-input" type="text" placeholder="Chercher un produit..." class="input-md" style="width:100%;margin-bottom:8px"/>
+      <div id="src-type-select" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto"></div>
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label style="display:block;font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Marque</label>
+      <div id="src-brand-select" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto"></div>
+    </div>
+    <div class="field" style="margin-bottom:20px">
+      <label style="display:block;font-size:9px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Quantité à retourner</label>
+      <input id="src-qty-input" type="number" step="0.1" min="0" placeholder="0.5" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:3px;background:var(--surface2);color:var(--text)"/>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)">Annuler</button>
+      <button id="src-submit" style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body);opacity:.5;cursor:not-allowed">Ajouter</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+
+  let selectedType='',selectedBrand='',selectedCategory='';
+  const typeInput=modal.querySelector('#src-type-input');
+  const typeSelect=modal.querySelector('#src-type-select');
+  const brandSelect=modal.querySelector('#src-brand-select');
+  const qtyInput=modal.querySelector('#src-qty-input');
+  const submitBtn=modal.querySelector('#src-submit');
+  const cancelBtn=modal.querySelector('button:first-of-type');
+
+  // Type search
+  typeInput.addEventListener('input',(e)=>{
+    const q=e.target.value.toLowerCase();
+    const filtered=Array.from(allTypes).filter(t=>t.toLowerCase().includes(q));
+    typeSelect.innerHTML=filtered.map(type=>`
+      <button style="text-align:left;padding:8px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:11px;color:var(--text2);transition:.15s" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--gold)'" onmouseout="this.style.background='transparent';this.style.borderColor='var(--border)'">${type}</button>
+    `).join('');
+    typeSelect.querySelectorAll('button').forEach(btn=>{
+      btn.onclick=()=>selectType(btn.textContent.trim());
+    });
+  });
+
+  const selectType=(type)=>{
+    selectedType=type;
+    typeInput.value=type;
+    typeSelect.innerHTML='';
+
+    // Get brands for this type
+    const brands=new Set();
+    state.products.filter(p=>p.productType===type).forEach(p=>{if(p.brand)brands.add(p.brand);});
+    state.glasses.filter(g=>g.name===type).forEach(g=>{if(g.appellation)brands.add(g.appellation);});
+    state.iceTypes.filter(i=>i.name===type).forEach(i=>{if(i.supplier)brands.add(i.supplier);});
+
+    selectedCategory=state.products.find(p=>p.productType===type)?.category||'Glassware';
+
+    if(brands.size===0){
+      brandSelect.innerHTML='<div style="color:var(--text3);font-size:11px;padding:8px">Aucune marque trouvée</div>';
+      return;
+    }
+
+    brandSelect.innerHTML=Array.from(brands).sort().map(brand=>`
+      <button style="text-align:left;padding:8px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;cursor:pointer;font-size:11px;color:var(--text2);transition:.15s" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--gold)'" onmouseout="this.style.background='transparent';this.style.borderColor='var(--border)'">${brand}</button>
+    `).join('');
+    brandSelect.querySelectorAll('button').forEach(btn=>{
+      btn.onclick=()=>selectBrand(btn.textContent.trim());
+    });
+  };
+
+  const selectBrand=(brand)=>{
+    selectedBrand=brand;
+    brandSelect.innerHTML=`<div style="color:var(--gold);font-size:11px;padding:8px">✓ ${brand}</div>`;
+    submitBtn.style.opacity='1';
+    submitBtn.style.cursor='pointer';
+  };
+
+  cancelBtn.onclick=()=>modal.remove();
+  submitBtn.onclick=()=>{
+    const qty=parseFloat(qtyInput.value)||0;
+    if(!selectedType||!selectedBrand||qty<=0){
+      toast('Veuillez remplir tous les champs','var(--red)');
+      return;
+    }
+    modal.remove();
+    saveStockRetourCustom(evId,selectedBrand,selectedType,qty,selectedCategory);
+  };
+
+  typeInput.focus();
+}
+
+function saveStockRetourCustom(evId,brand,productType,qty,category){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(!ev.stockRetour) ev.stockRetour={};
+
+  const key=(brand||'')+'||'+productType;
+  ev.stockRetour[key]=(ev.stockRetour[key]||0)+qty;
+
+  if(!window._evStockRetourCustom) window._evStockRetourCustom={};
+  if(!window._evStockRetourCustom[evId]) window._evStockRetourCustom[evId]=[];
+  window._evStockRetourCustom[evId].push({brand,productType,qty,category});
+
+  save();
+  toast(`${brand?brand+' ':''}${productType} ajouté au retour`);
+  renderSuivi();
+}
+
+function removeStockRetourCustom(evId,key){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(ev.stockRetour) ev.stockRetour[key]=0;
+
+  if(window._evStockRetourCustom&&window._evStockRetourCustom[evId]){
+    const [brand,productType]=key.split('||');
+    window._evStockRetourCustom[evId]=window._evStockRetourCustom[evId].filter(p=>!(p.brand===brand&&p.productType===productType));
+  }
+
+  save();
+  renderSuivi();
 }
 
 function updEvField(evId, key, value){
