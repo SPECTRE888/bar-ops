@@ -10,13 +10,23 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405 };
 
   try {
-    const { userId } = JSON.parse(event.body);
-
-    if (!process.env.ADMIN_USER_ID || userId !== process.env.ADMIN_USER_ID) {
-      return { statusCode: 403, body: JSON.stringify({ error: 'Accès refusé' }) };
+    // Verify user from Bearer token — never trust userId from client body
+    const authHeader = event.headers['authorization'] || event.headers['Authorization'] || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    if (!token) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Authentification requise' }) };
     }
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Token invalide ou expiré' }) };
+    }
+
+    // Check admin privilege from verified token — not from client body
+    if (!process.env.ADMIN_USER_ID || user.id !== process.env.ADMIN_USER_ID) {
+      return { statusCode: 403, body: JSON.stringify({ error: 'Accès refusé' }) };
+    }
 
     const { data: subs, error } = await supabase
       .from('subscriptions')

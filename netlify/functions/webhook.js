@@ -11,7 +11,7 @@ function normalizeEmail(email) {
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
-async function sendConfirmationEmail(email, plan, period) {
+async function sendConfirmationEmail(email, plan, period, appUrl) {
   if (!process.env.SENDGRID_API_KEY || !email) return;
   try {
 
@@ -31,7 +31,7 @@ async function sendConfirmationEmail(email, plan, period) {
             Votre abonnement <strong style="color:#ede8e0">${planLabel} ${periodLabel}</strong> est actif.<br>
             Votre essai gratuit de 7 jours commence aujourd'hui — aucun prélèvement avant la fin de la période d'essai.
           </p>
-          <a href="https://bar-opsv2public.netlify.app/app.html" style="display:inline-block;background:#c4a46b;color:#080808;padding:14px 36px;border-radius:3px;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase">
+          <a href="${appUrl}/app.html" style="display:inline-block;background:#c4a46b;color:#080808;padding:14px 36px;border-radius:3px;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase">
             Accéder à la plateforme
           </a>
           <p style="font-size:11px;color:#585450;margin-top:40px;line-height:1.6">
@@ -101,7 +101,8 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: 'DB error' };
     }
 
-    await sendConfirmationEmail(customerEmail, plan, period);
+    const APP_URL = process.env.APP_URL || 'https://bar-opsv2public.netlify.app';
+    await sendConfirmationEmail(customerEmail, plan, period, APP_URL);
   }
 
   if (stripeEvent.type === 'customer.subscription.deleted') {

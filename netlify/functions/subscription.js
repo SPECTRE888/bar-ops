@@ -61,10 +61,11 @@ exports.handler = async (event) => {
     };
     if (isFirstTime) sessionParams.subscription_data = { trial_period_days: 7 };
 
+    const APP_URL = process.env.APP_URL || 'https://bar-opsv2public.netlify.app';
     const session = await stripe.checkout.sessions.create({
       ...sessionParams,
-      success_url: `https://bar-opsv2public.netlify.app/app.html`,
-      cancel_url: `https://bar-opsv2public.netlify.app/paying.html`,
+      success_url: `${APP_URL}/app.html`,
+      cancel_url: `${APP_URL}/paying.html`,
       metadata: { user_id: userId, plan, period },
     });
 

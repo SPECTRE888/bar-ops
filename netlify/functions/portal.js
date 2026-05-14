@@ -23,9 +23,10 @@ exports.handler = async (event) => {
 
     const subscription = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
 
+    const APP_URL = process.env.APP_URL || 'https://bar-opsv2public.netlify.app';
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.customer,
-      return_url: 'https://bar-opsv2public.netlify.app/app.html',
+      return_url: `${APP_URL}/app.html`,
     });
 
     return { statusCode: 200, body: JSON.stringify({ url: session.url }) };

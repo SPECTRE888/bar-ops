@@ -181,6 +181,7 @@ async function init(){
   const{data:{session}}=await sb.auth.getSession();
   if(!session){document.getElementById('access-denied').style.display='flex';return;}
   window._userId=session.user.id;
+  window._token=session.access_token;
   document.getElementById('app').style.display='block';
   loadData();
 }
@@ -188,7 +189,7 @@ async function init(){
 async function loadData(){
   document.getElementById('loading').style.display='flex';
   document.getElementById('dashboard').style.display='none';
-  const res=await fetch('/.netlify/functions/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:window._userId})});
+  const res=await fetch('/.netlify/functions/admin',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+window._token}});
   if(res.status===403){document.getElementById('app').style.display='none';document.getElementById('access-denied').style.display='flex';return;}
   const{stats,subscribers}=await res.json();
   allSubs=subscribers||[];

@@ -6660,7 +6660,10 @@ async function sendQuoteToClient(evId,devisNum){
   try{
     const r=await fetch('/.netlify/functions/send-quote',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+(window.cloudUser?.access_token||'')
+      },
       body:JSON.stringify({
         to:email,
         subject:'Devis '+devisNum+' — '+ev.name,
