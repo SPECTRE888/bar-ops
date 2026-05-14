@@ -25,7 +25,7 @@ jobs:
       run: npm run build:mac
 
     - name: Upload DMG artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dmg-artifacts
         path: dist/*.dmg
