@@ -6,19 +6,21 @@ on:
       - 'v*'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4.2.0
+      uses: actions/checkout@v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4.0.2
+      uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
 
     - name: Install dependencies
       run: npm ci
@@ -27,8 +29,9 @@ jobs:
       run: npm run build:mac
 
     - name: Create Release
-      uses: softprops/action-gh-release@v2.0.4
+      uses: softprops/action-gh-release@v2
       with:
+        tag_name: ${{ github.ref_name || 'v1.0.2' }}
         files: |
           dist/*.dmg
           dist/*.dmg.blockmap
