@@ -49,7 +49,10 @@ exports.handler = async (event) => {
 
     // Build each category table
     const categoryTables = [
-      buildCategoryTable('Spiritueux & Alcools', products.filter(p => ['Spirit', 'Juice', 'Mixer', 'Syrup'].includes(p.category))),
+      buildCategoryTable('Spiritueux', products.filter(p => p.category === 'Spirit')),
+      buildCategoryTable('Jus & Purées', products.filter(p => p.category === 'Juice')),
+      buildCategoryTable('Mixers & Sodas', products.filter(p => p.category === 'Mixer')),
+      buildCategoryTable('Sirops', products.filter(p => p.category === 'Syrup')),
       buildCategoryTable('Garnitures', products.filter(p => ['Garnish', 'Spice'].includes(p.category))),
       buildCategoryTable('Verrerie', glasses),
       buildCategoryTable('Consommables', consommables),
