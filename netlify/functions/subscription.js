@@ -11,7 +11,21 @@ exports.handler = async (event) => {
     const { createClient } = require('@supabase/supabase-js');
     const crypto = require('crypto');
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-    const { plan, period, userId, priceInCents, userEmail } = JSON.parse(event.body);
+
+    // Verify identity from Bearer token — never trust userId from client body
+    const authHeader = event.headers['authorization'] || event.headers['Authorization'] || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    if (!token) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Authentification requise' }) };
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Token invalide ou expiré' }) };
+    }
+
+    const { plan, period, priceInCents } = JSON.parse(event.body);
+    const userId = user.id;
+    const userEmail = user.email;
 
     // Normalize email to catch Gmail dots/aliases (j.erome+test@gmail.com → jerome@gmail.com)
     function normalizeEmail(email) {
@@ -75,4 +89,3 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
-// force redeploy Tue May 12 2026

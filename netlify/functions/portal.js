@@ -7,12 +7,22 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405 };
 
   try {
-    const { userId } = JSON.parse(event.body);
+    // Verify identity from Bearer token — never trust userId from client body
+    const authHeader = event.headers['authorization'] || event.headers['Authorization'] || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    if (!token) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Authentification requise' }) };
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Token invalide ou expiré' }) };
+    }
 
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('stripe_subscription_id')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
