@@ -25,16 +25,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build
-      run: npm run build:mac
-
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ github.ref_name || 'v1.0.2' }}
-        files: |
-          dist/*.dmg
-          dist/*.dmg.blockmap
-          dist/latest-mac.yml
+    - name: Build & Publish
+      run: npm run build:mac -- --publish=onTag
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
