@@ -31,3 +31,9 @@ jobs:
       run: npm run build:ci -- --publish=onTag
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Add install script to release
+      if: startsWith(github.ref, 'refs/tags/')
+      run: gh release upload ${{ github.ref_name }} install.sh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
