@@ -3732,7 +3732,7 @@ function renderDashboard(){
   
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    <div class="card" style="padding:16px;text-align:center" ${typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.can('canViewRevenue')?'data-perm="canViewRevenue" style="display:none"':''}>
+    <div class="card" data-perm="canViewRevenue" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA <span style="font-size:9px;color:var(--text3)">(HT)</span></div>
       <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${fmt(caPayees)}€</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
