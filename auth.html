@@ -157,17 +157,21 @@ async function redirect(session){
 
   await waitForSb();
 
-  // PKCE: session may already be established by the time JS runs
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){
-    await redirect(session);
-    return;
+  let redirected=false;
+  async function tryRedirect(s){
+    if(redirected||!s)return;
+    redirected=true;
+    await redirect(s);
   }
 
-  // Fallback: listen for sign-in event
+  // Écouter en premier — capte INITIAL_SESSION + SIGNED_IN
   sb.auth.onAuthStateChange(async(e,s)=>{
-    if(e==='SIGNED_IN'&&s) await redirect(s);
+    if((e==='SIGNED_IN'||e==='INITIAL_SESSION')&&s) await tryRedirect(s);
   });
+
+  // Vérifier aussi la session déjà établie (cas PKCE rapide)
+  const{data:{session}}=await sb.auth.getSession();
+  if(session) await tryRedirect(session);
 })();
 </script>
 </body>
