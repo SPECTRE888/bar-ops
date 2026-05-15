@@ -98,7 +98,7 @@ async function redirect(session){
   const userId=session.user.id;
   const token=session.access_token;
 
-  // 1. Check for pending invite-accept flow
+  // 1. Flow invitation
   const params=new URLSearchParams(window.location.search);
   const inviteToken=params.get('token');
   if(params.get('action')==='accept-invite'&&inviteToken){
@@ -111,37 +111,23 @@ async function redirect(session){
       });
       const d=await r.json();
       if(!r.ok){msg(d.error||'Erreur','err');return;}
-      // Store role/permissions for the app to pick up
       try{localStorage.setItem('barops_profile',JSON.stringify(d.profile));}catch(e){}
       window.location.href='app.html';
     }catch(e){msg(e.message,'err');}
     return;
   }
 
-  // 2. Load profile (role + permissions) and cache it
-  // Use Authorization header explicitly to bypass any session-timing issue
-  try{
-    const{data:profile}=await sb.from('profiles')
-      .select('id,role,permissions,status,company_id,companies(name,plan,max_agents)')
-      .eq('id',userId)
-      .limit(1)
-      .maybeSingle();
-    if(profile){
-      try{localStorage.setItem('barops_profile',JSON.stringify(profile));}catch(e){}
-      if(profile.status==='suspended'){
-        msg('Votre accès a été suspendu. Contactez votre administrateur.','err');
-        await sb.auth.signOut();
-        return;
-      }
-    }
-  }catch(e){console.warn('Profile load:',e.message);}
-
-  // 3. Check subscription
+  // 2. Vérifier abonnement — seule condition pour accéder à l'app
   try{
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
     if(data&&new Date(data.expires_at)>new Date()){
-      // Honour ?next= param for deep-link redirects
-      const next=new URLSearchParams(window.location.search).get('next');
+      // Charger le profil en arrière-plan (non bloquant)
+      sb.from('profiles')
+        .select('id,role,permissions,status,company_id,companies(name,plan,max_agents)')
+        .eq('id',userId).maybeSingle()
+        .then(({data:p})=>{ if(p) try{localStorage.setItem('barops_profile',JSON.stringify(p));}catch(e){} })
+        .catch(()=>{});
+      const next=params.get('next');
       window.location.href=next||'app.html';
       return;
     }
