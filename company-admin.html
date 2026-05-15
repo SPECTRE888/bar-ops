@@ -133,8 +133,8 @@ input:checked + .slider:before{transform:translateX(16px)}
     <div class="card-title">➕ Inviter un collaborateur</div>
     <div class="invite-form">
       <div class="field grow">
-        <label>Email</label>
-        <input type="email" id="invEmail" placeholder="agent@exemple.com">
+        <label>Email <span style="font-weight:400;color:#94a3b8">(adresse Gmail uniquement)</span></label>
+        <input type="email" id="invEmail" placeholder="collaborateur@gmail.com">
       </div>
       <div class="field">
         <label>Rôle</label>
@@ -402,7 +402,12 @@ async function sendInvite() {
   if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
 
   document.getElementById('invEmail').value = '';
-  toast('Invitation envoyée à ' + email);
+  if (res.data.emailSent) {
+    toast('Invitation envoyée à ' + email);
+  } else {
+    toast('Invitation créée mais email non envoyé : ' + (res.data.emailError || 'erreur inconnue') + '. Copiez le lien manuellement.', true);
+    prompt('Lien d\'invitation à copier :', res.data.inviteUrl);
+  }
   loadData();
 }
 

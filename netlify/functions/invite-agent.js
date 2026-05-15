@@ -104,6 +104,8 @@ exports.handler = async (event) => {
 
   const sgKey = sendgridApiKey || process.env.SENDGRID_API_KEY;
   const sender = fromEmail || process.env.FROM_EMAIL;
+  let emailSent = false;
+  let emailError = null;
   if (sgKey && sender) {
     try {
       sgMail.setApiKey(sgKey);
@@ -113,9 +115,13 @@ exports.handler = async (event) => {
         subject: `Invitation à rejoindre ${company.name} sur Bar Ops`,
         html: buildInviteEmail(company.name, user.email, inviteUrl, role),
       });
+      emailSent = true;
     } catch (e) {
-      console.error('SendGrid error:', e.message);
+      console.error('SendGrid error:', e.message, e.response?.body);
+      emailError = e.message;
     }
+  } else {
+    emailError = !sgKey ? 'Clé SendGrid manquante' : 'Adresse expéditeur manquante (Profil → Email & SendGrid)';
   }
 
   // Audit log
@@ -132,6 +138,8 @@ exports.handler = async (event) => {
       success:    true,
       inviteUrl,
       expires_at: invitation.expires_at,
+      emailSent,
+      emailError,
     }),
   };
 };
