@@ -57,8 +57,8 @@ let sb=null;
 // Config hardcodée pour l'app desktop
 (function(){
   const cfg={
-    supabaseUrl:'https://hrpcdtkhnewigewomcvv.supabase.co',
-    supabaseKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c',
+    supabaseUrl:'__SUPABASE_URL__',
+    supabaseKey:'__SUPABASE_ANON_KEY__',
   };
   if(window.supabase) sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true}});
 })();
