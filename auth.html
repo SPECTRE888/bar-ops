@@ -137,9 +137,20 @@ async function handleInvite(session){
   await waitForSb();
 
   const{data:{session}}=await sb.auth.getSession();
+
+  // Pour une invitation, forcer la reconnexion avec le bon compte Google
+  if(action==='accept-invite'){
+    if(session) await sb.auth.signOut();
+    msg('Connectez-vous avec le compte Gmail invité…','ok');
+    await sb.auth.signInWithOAuth({provider:'google',options:{
+      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=accept-invite&token='+new URLSearchParams(window.location.search).get('token'),
+      queryParams:{prompt:'select_account'}
+    }});
+    return;
+  }
+
   if(session){
-    if(action==='accept-invite')await handleInvite(session);
-    else await redirect(session.user.id);
+    await redirect(session.user.id);
     return;
   }
   sb.auth.onAuthStateChange(async(e,s)=>{
