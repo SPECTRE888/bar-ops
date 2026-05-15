@@ -49,7 +49,7 @@ exports.handler = async (event) => {
     return err(403, 'Réservé aux administrateurs');
   }
 
-  const { email, role = 'AGENT', permissions } = JSON.parse(event.body || '{}');
+  const { email, role = 'AGENT', permissions, fromEmail, fromName, sendgridApiKey } = JSON.parse(event.body || '{}');
   if (!email || !email.includes('@')) return err(400, 'Email invalide');
   if (!['AGENT', 'COMPANY_ADMIN'].includes(role)) return err(400, 'Rôle invalide');
 
@@ -102,17 +102,20 @@ exports.handler = async (event) => {
   const appUrl = process.env.APP_URL || 'https://bar-ops.netlify.app';
   const inviteUrl = `${appUrl}/auth.html?action=accept-invite&token=${invitation.token}`;
 
-  try {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    await sgMail.send({
-      to: email,
-      from: { email: 'noreply@bar-ops.app', name: 'Bar Ops' },
-      subject: `Invitation à rejoindre ${company.name} sur Bar Ops`,
-      html: buildInviteEmail(company.name, user.email, inviteUrl, role),
-    });
-  } catch (e) {
-    console.error('SendGrid error:', e.message);
-    // Don't fail the whole request — invitation is created, email can be resent
+  const sgKey = sendgridApiKey || process.env.SENDGRID_API_KEY;
+  const sender = fromEmail || process.env.FROM_EMAIL;
+  if (sgKey && sender) {
+    try {
+      sgMail.setApiKey(sgKey);
+      await sgMail.send({
+        to: email,
+        from: { email: sender, name: fromName || company.name },
+        subject: `Invitation à rejoindre ${company.name} sur Bar Ops`,
+        html: buildInviteEmail(company.name, user.email, inviteUrl, role),
+      });
+    } catch (e) {
+      console.error('SendGrid error:', e.message);
+    }
   }
 
   // Audit log
