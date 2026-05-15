@@ -95,14 +95,28 @@ async function googleAuthSignup(){
 }
 
 async function redirect(userId){
+  // Charger le profil pour connaître le rôle et le company owner
+  let profile=null;
   try{
-    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
+    const{data}=await sb.from('profiles')
+      .select('id,role,permissions,status,company_id,companies(owner_id,name,plan,max_agents)')
+      .eq('id',userId).maybeSingle();
+    profile=data;
+    if(profile) try{localStorage.setItem('barops_profile',JSON.stringify(profile));}catch(e){}
+    if(profile?.status==='suspended'){
+      msg('Votre accès a été suspendu. Contactez votre administrateur.','err');
+      await sb.auth.signOut(); return;
+    }
+  }catch(e){}
+
+  // ID à vérifier : le user lui-même, ou l'owner de sa company s'il est agent
+  const subUserId = (profile?.role==='AGENT' && profile?.companies?.owner_id)
+    ? profile.companies.owner_id
+    : userId;
+
+  try{
+    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',subUserId).single();
     if(data&&new Date(data.expires_at)>new Date()){
-      // Profil en arrière-plan (non bloquant) pour les permissions
-      sb.from('profiles').select('id,role,permissions,status,company_id,companies(name,plan,max_agents)')
-        .eq('id',userId).maybeSingle()
-        .then(({data:p})=>{if(p)try{localStorage.setItem('barops_profile',JSON.stringify(p));}catch(e){}})
-        .catch(()=>{});
       window.location.href='app.html';
       return;
     }
