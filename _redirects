@@ -1,1 +1,6 @@
-/*    /index.html   200
+/auth.html        /auth.html        200
+/app.html         /app.html         200
+/paying.html      /paying.html      200
+/company-admin.html /company-admin.html 200
+/admin.html       /admin.html       200
+/*                /index.html       200
