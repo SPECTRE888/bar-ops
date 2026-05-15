@@ -138,12 +138,23 @@ async function handleInvite(session){
 
   const{data:{session}}=await sb.auth.getSession();
 
-  // Pour une invitation, forcer la reconnexion avec le bon compte Google
+  // Pour une invitation : si on revient du OAuth (session fraîche), traiter l'invite
+  // Sinon, forcer la sélection du bon compte Google
   if(action==='accept-invite'){
+    const invToken=new URLSearchParams(window.location.search).get('token');
+    const justLoggedIn=sessionStorage.getItem('invite_oauth_done');
+    if(session&&justLoggedIn){
+      // Retour OAuth — traiter l'invitation
+      sessionStorage.removeItem('invite_oauth_done');
+      await handleInvite(session);
+      return;
+    }
+    // Premier passage — déconnecter et forcer sélection compte Google
     if(session) await sb.auth.signOut();
+    sessionStorage.setItem('invite_oauth_done','1');
     msg('Connectez-vous avec le compte Gmail invité…','ok');
     await sb.auth.signInWithOAuth({provider:'google',options:{
-      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=accept-invite&token='+new URLSearchParams(window.location.search).get('token'),
+      redirectTo:'https://bar-opsv2public.netlify.app/auth.html?action=accept-invite&token='+invToken,
       queryParams:{prompt:'select_account'}
     }});
     return;
