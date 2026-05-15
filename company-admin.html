@@ -388,8 +388,9 @@ async function sendInvite() {
   // Récupérer fromEmail et sendgridApiKey depuis le state local de l'app
   let fromEmail = '', fromName = '', sendgridApiKey = '';
   try {
-    const sk = Object.keys(localStorage).find(k => k.startsWith('bcp_') && !k.includes('session') && !k.includes('cloud'));
-    const appState = sk ? JSON.parse(localStorage.getItem(sk)) : null;
+    const uid = _session.user.id;
+    const sk  = `barcraft_v3_${uid}`;
+    const appState = JSON.parse(localStorage.getItem(sk) || 'null');
     fromEmail     = appState?.profile?.senderEmail || '';
     fromName      = appState?.profile?.barName || '';
     sendgridApiKey= appState?.profile?.sendgridApiKey || '';
