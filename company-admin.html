@@ -220,7 +220,7 @@ async function boot() {
   // Load Supabase client from config endpoint
   const cfg = await fetch('/.netlify/functions/config').then(r => r.json()).catch(() => ({}));
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseKey || cfg.supabaseAnonKey);
 
   const { data: { session } } = await _supabase.auth.getSession();
   if (!session) { window.location = '/auth.html?next=/company-admin.html'; return; }
