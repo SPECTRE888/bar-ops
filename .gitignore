@@ -1,6 +1,9 @@
 # Local Netlify folder
 .netlify
 
+# Config Electron local (clés API — ne jamais commiter)
+electron/config.js
+
 # Environment variables
 .env.local
 .env

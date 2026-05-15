@@ -119,13 +119,15 @@ async function redirect(session){
   }
 
   // 2. Load profile (role + permissions) and cache it
+  // Use Authorization header explicitly to bypass any session-timing issue
   try{
     const{data:profile}=await sb.from('profiles')
       .select('id,role,permissions,status,company_id,companies(name,plan,max_agents)')
-      .eq('id',userId).single();
+      .eq('id',userId)
+      .limit(1)
+      .maybeSingle();
     if(profile){
       try{localStorage.setItem('barops_profile',JSON.stringify(profile));}catch(e){}
-      // Suspended agents are blocked
       if(profile.status==='suspended'){
         msg('Votre accès a été suspendu. Contactez votre administrateur.','err');
         await sb.auth.signOut();

@@ -14,9 +14,10 @@ let SUPA_URL='', SUPA_KEY='';
 window.STRIPE_PUBLIC_KEY='';
 
 // Config hardcodée pour l'app desktop
-SUPA_URL='__SUPABASE_URL__';
-SUPA_KEY='__SUPABASE_ANON_KEY__';
-window.STRIPE_PUBLIC_KEY='__STRIPE_PUBLIC_KEY__';
+// Config injectée par Electron via preload.js (window.electronConfig)
+SUPA_URL=(window.electronConfig||{}).supabaseUrl||'';
+SUPA_KEY=(window.electronConfig||{}).supabaseAnonKey||'';
+window.STRIPE_PUBLIC_KEY=(window.electronConfig||{}).stripePublicKey||'';
 
 
 (async()=>{
