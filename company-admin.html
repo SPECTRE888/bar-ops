@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bar Ops — Gestion de l'équipe</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+
+/* NAV */
+nav{background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px}
+nav .logo{font-weight:700;font-size:18px;color:#60a5fa}
+nav .links{display:flex;gap:16px;align-items:center}
+nav a{color:#94a3b8;text-decoration:none;font-size:14px;transition:color .15s}
+nav a:hover{color:#fff}
+nav a.active{color:#fff}
+.avatar{width:32px;height:32px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer}
+
+/* LAYOUT */
+.page{max-width:900px;margin:0 auto;padding:32px 16px}
+h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.subtitle{color:#64748b;font-size:14px;margin-bottom:28px}
+
+/* CARDS */
+.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.badge-admin{background:#dbeafe;color:#1d4ed8}
+.badge-agent{background:#f0fdf4;color:#15803d}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-suspended{background:#fee2e2;color:#991b1b}
+
+/* INVITE FORM */
+.invite-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.invite-form label{font-size:13px;font-weight:500;display:block;margin-bottom:6px;color:#374151}
+.invite-form input, .invite-form select{
+  padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;
+  outline:none;transition:border-color .15s
+}
+.invite-form input:focus, .invite-form select:focus{border-color:#2563eb}
+.invite-form .field{display:flex;flex-direction:column}
+.invite-form .field.grow{flex:1;min-width:200px}
+
+/* BUTTONS */
+.btn{padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:background .15s}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-primary:disabled{background:#93c5fd;cursor:not-allowed}
+.btn-ghost{background:transparent;color:#64748b;border:1.5px solid #e2e8f0}
+.btn-ghost:hover{background:#f1f5f9}
+.btn-danger{background:#fee2e2;color:#b91c1c}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* AGENT LIST */
+.agent-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.agent-row:last-child{border-bottom:none}
+.agent-avatar{width:38px;height:38px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.agent-info{flex:1;min-width:0}
+.agent-email{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-meta{font-size:12px;color:#94a3b8;margin-top:2px}
+.agent-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* PERMISSIONS GRID */
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
+.perm-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:13px}
+.perm-label{color:#374151}
+.toggle{position:relative;display:inline-block;width:38px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#cbd5e1;border-radius:22px;transition:.2s;cursor:pointer}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked + .slider{background:#2563eb}
+input:checked + .slider:before{transform:translateX(16px)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:20px}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;z-index:200;opacity:0;transform:translateY(8px);transition:.25s;max-width:320px}
+.toast.show{opacity:1;transform:none}
+.toast.error{background:#dc2626}
+
+/* STATS */
+.stats{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.stat{background:#fff;border-radius:10px;padding:16px 20px;flex:1;min-width:120px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.stat-val{font-size:26px;font-weight:700;color:#1e293b}
+.stat-lbl{font-size:12px;color:#94a3b8;margin-top:2px}
+
+/* EMPTY */
+.empty{text-align:center;padding:32px;color:#94a3b8;font-size:14px}
+
+/* AUDIT */
+.audit-row{font-size:13px;padding:8px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:10px;align-items:flex-start}
+.audit-row:last-child{border-bottom:none}
+.audit-time{color:#94a3b8;white-space:nowrap;min-width:130px}
+.audit-action{color:#374151}
+
+@media(max-width:600px){
+  .invite-form{flex-direction:column}
+  .invite-form .field.grow{min-width:0}
+  .stats{gap:10px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">Bar Ops</span>
+  <div class="links">
+    <a href="/app.html">← Application</a>
+    <a href="/company-admin.html" class="active">Équipe</a>
+    <div class="avatar" id="navAvatar">?</div>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Gestion de l'équipe</h1>
+  <p class="subtitle" id="companySubtitle">Chargement…</p>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="statAgents">–</div><div class="stat-lbl">Agents actifs</div></div>
+    <div class="stat"><div class="stat-val" id="statMax">–</div><div class="stat-lbl">Max autorisés</div></div>
+    <div class="stat"><div class="stat-val" id="statPending">–</div><div class="stat-lbl">Invitations en attente</div></div>
+  </div>
+
+  <!-- INVITE FORM -->
+  <div class="card">
+    <div class="card-title">➕ Inviter un collaborateur</div>
+    <div class="invite-form">
+      <div class="field grow">
+        <label>Email</label>
+        <input type="email" id="invEmail" placeholder="agent@exemple.com">
+      </div>
+      <div class="field">
+        <label>Rôle</label>
+        <select id="invRole">
+          <option value="AGENT">Agent</option>
+          <option value="COMPANY_ADMIN">Administrateur</option>
+        </select>
+      </div>
+      <div class="field">
+        <button class="btn btn-primary" id="btnInvite" onclick="sendInvite()">Envoyer l'invitation</button>
+      </div>
+    </div>
+    <div id="invitePermissions" style="margin-top:16px;display:none">
+      <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Permissions initiales</div>
+      <div class="perm-grid" id="invitePermGrid"></div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="btn btn-ghost btn-sm" onclick="toggleInvitePerms()">⚙ Personnaliser les permissions</button>
+    </div>
+  </div>
+
+  <!-- AGENTS LIST -->
+  <div class="card">
+    <div class="card-title">👥 Collaborateurs <span id="agentCount" class="badge badge-agent">0</span></div>
+    <div id="agentList"><div class="empty">Chargement…</div></div>
+  </div>
+
+  <!-- INVITATIONS EN ATTENTE -->
+  <div class="card" id="pendingCard" style="display:none">
+    <div class="card-title">📨 Invitations en attente</div>
+    <div id="invList"></div>
+  </div>
+
+  <!-- AUDIT LOG -->
+  <div class="card">
+    <div class="card-title">📋 Journal d'activité</div>
+    <div id="auditList"><div class="empty">Chargement…</div></div>
+  </div>
+</div>
+
+<!-- MODAL PERMISSIONS -->
+<div class="overlay" id="permModal" style="display:none" onclick="if(event.target===this)closePermModal()">
+  <div class="modal">
+    <div class="modal-title">Modifier les permissions</div>
+    <div id="permModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePermModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="savePermissions()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────────
+let _supabase, _session, _profile, _currentTargetId;
+
+const PERM_LABELS = {
+  canViewRevenue:     'Voir le chiffre d\'affaires',
+  canViewAnalytics:   'Voir les analyses',
+  canManageClients:   'Gérer les clients',
+  canEditProjects:    'Modifier les projets',
+  canManageStaff:     'Gérer le staff',
+  canManageSuppliers: 'Gérer les fournisseurs',
+  canViewCosts:       'Voir les coûts',
+  canExportData:      'Exporter les données',
+};
+
+const DEFAULT_AGENT_PERMS = {
+  canViewRevenue:     false,
+  canViewAnalytics:   false,
+  canManageClients:   true,
+  canEditProjects:    true,
+  canManageStaff:     false,
+  canManageSuppliers: false,
+  canViewCosts:       false,
+  canExportData:      false,
+};
+
+// ─── BOOT ────────────────────────────────────────────────────
+async function boot() {
+  // Load Supabase client from config endpoint
+  const cfg = await fetch('/.netlify/functions/config').then(r => r.json()).catch(() => ({}));
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session) { window.location = '/auth.html?next=/company-admin.html'; return; }
+  _session = session;
+
+  // Load profile
+  const { data: profile } = await _supabase
+    .from('profiles')
+    .select('*, companies(name, plan, max_agents)')
+    .eq('id', session.user.id)
+    .single();
+
+  _profile = profile;
+
+  if (!profile || !['COMPANY_ADMIN', 'SUPER_ADMIN'].includes(profile.role)) {
+    document.querySelector('.page').innerHTML = '<div style="padding:48px;text-align:center;color:#dc2626">Accès réservé aux administrateurs.</div>';
+    return;
+  }
+
+  // UI init
+  document.getElementById('navAvatar').textContent = (session.user.email || '?')[0].toUpperCase();
+  document.getElementById('companySubtitle').textContent =
+    `${profile.companies?.name || 'Votre entreprise'} — Plan ${(profile.companies?.plan || '?').toUpperCase()}`;
+
+  buildInvitePermGrid();
+  await loadData();
+}
+
+// ─── DATA ────────────────────────────────────────────────────
+async function loadData() {
+  const token = _session.access_token;
+  const res = await apiFetch('manage-agent', { action: 'list' }, token);
+  if (!res.ok) { toast('Erreur lors du chargement', true); return; }
+  const { agents, invitations } = res.data;
+
+  renderStats(agents, invitations);
+  renderAgents(agents);
+  renderInvitations(invitations);
+  loadAuditLog();
+}
+
+function renderStats(agents, invitations) {
+  const active = (agents || []).filter(a => a.status === 'active').length;
+  const max = _profile.companies?.max_agents ?? 0;
+  document.getElementById('statAgents').textContent = active;
+  document.getElementById('statMax').textContent = max === 0 ? '∞' : max;
+  document.getElementById('statPending').textContent = (invitations || []).length;
+  document.getElementById('agentCount').textContent = (agents || []).length;
+}
+
+function renderAgents(agents) {
+  const el = document.getElementById('agentList');
+  if (!agents?.length) { el.innerHTML = '<div class="empty">Aucun collaborateur pour l\'instant.</div>'; return; }
+
+  el.innerHTML = agents.map(a => `
+    <div class="agent-row">
+      <div class="agent-avatar">${(a.email||'?')[0].toUpperCase()}</div>
+      <div class="agent-info">
+        <div class="agent-email">${a.email || a.id}</div>
+        <div class="agent-meta">
+          <span class="badge badge-${a.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}">${a.role === 'COMPANY_ADMIN' ? 'Admin' : 'Agent'}</span>
+          ${a.status === 'suspended' ? '<span class="badge badge-suspended" style="margin-left:4px">Suspendu</span>' : ''}
+        </div>
+      </div>
+      <div class="agent-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openPermModal('${a.id}',${JSON.stringify(a.permissions).replace(/"/g,'&quot;')})">Permissions</button>
+        ${a.status === 'suspended'
+          ? `<button class="btn btn-ghost btn-sm" onclick="agentAction('reactivate','${a.id}')">Réactiver</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="agentAction('suspend','${a.id}')">Suspendre</button>`}
+        <button class="btn btn-danger btn-sm" onclick="agentAction('remove','${a.id}')">Retirer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderInvitations(invitations) {
+  const card = document.getElementById('pendingCard');
+  if (!invitations?.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  document.getElementById('invList').innerHTML = invitations.map(inv => `
+    <div class="agent-row">
+      <div class="agent-avatar" style="background:#fef3c7;color:#92400e">✉</div>
+      <div class="agent-info">
+        <div class="agent-email">${inv.email}</div>
+        <div class="agent-meta">
+          <span class="badge badge-pending">En attente</span>
+          <span class="badge badge-${inv.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}" style="margin-left:4px">${inv.role === 'COMPANY_ADMIN' ? 'Admin' : 'Agent'}</span>
+          &nbsp;· expire ${new Date(inv.expires_at).toLocaleDateString('fr-FR')}
+        </div>
+      </div>
+      <div class="agent-actions">
+        <button class="btn btn-ghost btn-sm" onclick="invAction('resend_invite','${inv.id}')">Renvoyer</button>
+        <button class="btn btn-danger btn-sm" onclick="invAction('cancel_invite','${inv.id}')">Annuler</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadAuditLog() {
+  const { data: logs } = await _supabase
+    .from('audit_logs')
+    .select('*')
+    .eq('company_id', _profile.company_id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  const el = document.getElementById('auditList');
+  if (!logs?.length) { el.innerHTML = '<div class="empty">Aucune activité enregistrée.</div>'; return; }
+
+  const ACTION_LABELS = {
+    invite_sent:       '📨 Invitation envoyée',
+    invite_cancelled:  '❌ Invitation annulée',
+    invite_accepted:   '✅ Invitation acceptée',
+    permission_updated:'⚙ Permissions modifiées',
+    role_updated:      '🔄 Rôle modifié',
+    agent_suspended:   '🚫 Agent suspendu',
+    agent_reactivated: '✅ Agent réactivé',
+    agent_removed:     '🗑 Agent retiré',
+  };
+
+  el.innerHTML = logs.map(l => `
+    <div class="audit-row">
+      <span class="audit-time">${new Date(l.created_at).toLocaleString('fr-FR')}</span>
+      <span class="audit-action">${ACTION_LABELS[l.action] || l.action}
+        ${l.metadata?.email ? `— <em>${l.metadata.email}</em>` : ''}
+      </span>
+    </div>
+  `).join('');
+}
+
+// ─── INVITE ──────────────────────────────────────────────────
+function buildInvitePermGrid() {
+  const perms = { ...DEFAULT_AGENT_PERMS };
+  document.getElementById('invitePermGrid').innerHTML = Object.entries(PERM_LABELS).map(([k, label]) => `
+    <div class="perm-item">
+      <span class="perm-label">${label}</span>
+      <label class="toggle">
+        <input type="checkbox" id="invPerm_${k}" ${perms[k] ? 'checked' : ''}>
+        <span class="slider"></span>
+      </label>
+    </div>
+  `).join('');
+}
+
+function toggleInvitePerms() {
+  const el = document.getElementById('invitePermissions');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function sendInvite() {
+  const email = document.getElementById('invEmail').value.trim();
+  const role = document.getElementById('invRole').value;
+  if (!email) { toast('Veuillez saisir un email', true); return; }
+
+  const permissions = {};
+  Object.keys(DEFAULT_AGENT_PERMS).forEach(k => {
+    const el = document.getElementById('invPerm_' + k);
+    if (el) permissions[k] = el.checked;
+  });
+
+  const btn = document.getElementById('btnInvite');
+  btn.disabled = true; btn.textContent = 'Envoi…';
+
+  const res = await apiFetch('invite-agent', { email, role, permissions }, _session.access_token);
+  btn.disabled = false; btn.textContent = 'Envoyer l\'invitation';
+
+  if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
+
+  document.getElementById('invEmail').value = '';
+  toast('Invitation envoyée à ' + email);
+  loadData();
+}
+
+// ─── AGENT ACTIONS ───────────────────────────────────────────
+async function agentAction(action, targetUserId) {
+  const labels = { suspend: 'suspendre', remove: 'retirer', reactivate: 'réactiver' };
+  if (!confirm(`Voulez-vous vraiment ${labels[action] || action} cet agent ?`)) return;
+  const res = await apiFetch('manage-agent', { action, targetUserId }, _session.access_token);
+  if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
+  toast('Action effectuée');
+  loadData();
+}
+
+async function invAction(action, invitationId) {
+  const res = await apiFetch('manage-agent', { action, invitationId }, _session.access_token);
+  if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
+  toast('Invitation mise à jour');
+  loadData();
+}
+
+// ─── PERMISSIONS MODAL ──────────────────────────────────────
+function openPermModal(userId, currentPerms) {
+  _currentTargetId = userId;
+  const perms = { ...DEFAULT_AGENT_PERMS, ...currentPerms };
+
+  document.getElementById('permModalBody').innerHTML = `<div class="perm-grid">` +
+    Object.entries(PERM_LABELS).map(([k, label]) => `
+      <div class="perm-item">
+        <span class="perm-label">${label}</span>
+        <label class="toggle">
+          <input type="checkbox" id="modPerm_${k}" ${perms[k] ? 'checked' : ''}>
+          <span class="slider"></span>
+        </label>
+      </div>
+    `).join('') + '</div>';
+
+  document.getElementById('permModal').style.display = 'flex';
+}
+
+function closePermModal() {
+  document.getElementById('permModal').style.display = 'none';
+  _currentTargetId = null;
+}
+
+async function savePermissions() {
+  const permissions = {};
+  Object.keys(DEFAULT_AGENT_PERMS).forEach(k => {
+    const el = document.getElementById('modPerm_' + k);
+    if (el) permissions[k] = el.checked;
+  });
+  const res = await apiFetch('manage-agent',
+    { action: 'update_permissions', targetUserId: _currentTargetId, permissions },
+    _session.access_token
+  );
+  if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
+  closePermModal();
+  toast('Permissions enregistrées');
+  loadData();
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────
+async function apiFetch(fn, body, token) {
+  try {
+    const r = await fetch(`/.netlify/functions/${fn}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    return { ok: r.ok, data };
+  } catch (e) {
+    return { ok: false, data: { error: e.message } };
+  }
+}
+
+let _toastTimer;
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+boot();
+</script>
+</body>
+</html>
