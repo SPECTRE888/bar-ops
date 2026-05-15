@@ -66,8 +66,9 @@ exports.handler = async (event) => {
     .eq('company_id', profile.company_id)
     .eq('role', 'AGENT');
 
-  if (company.max_agents > 0 && agentCount >= company.max_agents) {
-    return err(403, `Limite d'agents atteinte (${company.max_agents} max). Mettez à niveau votre abonnement.`);
+  const maxAgents = company.max_agents ?? 2;
+  if (agentCount >= maxAgents) {
+    return err(403, `Limite atteinte : votre plan inclut ${maxAgents} agent(s) maximum. Contactez-nous pour passer à un plan supérieur.`);
   }
 
   // Check for duplicate pending invitation

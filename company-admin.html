@@ -124,7 +124,7 @@ input:checked + .slider:before{transform:translateX(16px)}
   <!-- STATS -->
   <div class="stats">
     <div class="stat"><div class="stat-val" id="statAgents">–</div><div class="stat-lbl">Agents actifs</div></div>
-    <div class="stat"><div class="stat-val" id="statMax">–</div><div class="stat-lbl">Max autorisés</div></div>
+    <div class="stat"><div class="stat-val" id="statMax">–</div><div class="stat-lbl">Membres max (plan actuel)</div></div>
     <div class="stat"><div class="stat-val" id="statPending">–</div><div class="stat-lbl">Invitations en attente</div></div>
   </div>
 
@@ -264,9 +264,9 @@ async function loadData() {
 
 function renderStats(agents, invitations) {
   const active = (agents || []).filter(a => a.status === 'active').length;
-  const max = _profile.companies?.max_agents ?? 0;
+  const maxAgents = _profile.companies?.max_agents ?? 2;
   document.getElementById('statAgents').textContent = active;
-  document.getElementById('statMax').textContent = max === 0 ? '∞' : max;
+  document.getElementById('statMax').textContent = maxAgents + 1; // agents + admin
   document.getElementById('statPending').textContent = (invitations || []).length;
   document.getElementById('agentCount').textContent = (agents || []).length;
 }
