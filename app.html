@@ -97,6 +97,9 @@ fetch('/.netlify/functions/config')
     window._userId=session.user.id;
     window._deviceId=deviceId;
     window._paywallDone=true;
+    // Pour les agents : pointer sur le workspace de l'owner (données partagées)
+    window._workspaceUid=access?.ownerId||session.user.id;
+    window._userRole=access?.role||'COMPANY_ADMIN';
     // Refresh session heartbeat every 15 minutes
     setInterval(()=>{
       if(window._userId&&window._deviceId){
@@ -821,8 +824,9 @@ async function cloudSignUp(email,password){
 
 async function ensureWorkspace(){
   if(!cloudUser) return false;
+  if(window._userRole==='AGENT') return true; // agents partagent le workspace de l'owner
   const{url,key}=getSupabase();if(!url) return false;
-  const uid=extractUid(cloudUser);
+  const uid=window._workspaceUid||extractUid(cloudUser);
   const token=extractToken(cloudUser);
   if(!uid||!token) return false;
   try{
@@ -1024,8 +1028,9 @@ async function cloudRefreshSession(){
 // ── SYNC ──────────────────────────────────────────────
 async function cloudPush(retries=0){
   if(!cloudUser) return false;
+  if(window._userRole==='AGENT') return false; // agents en lecture seule
   const{url,key}=getSupabase();if(!url||!key) return false;
-  const uid=extractUid(cloudUser);
+  const uid=window._workspaceUid||extractUid(cloudUser);
   let token=extractToken(cloudUser);
   if(!uid||!token){console.warn('cloudPush: missing uid or token');return false;}
 
@@ -1095,10 +1100,33 @@ async function cloudPush(retries=0){
 
 async function cloudPull(){
   if(!cloudUser) return false;
+  const token=extractToken(cloudUser);
+  if(!token) return false;
+
+  // Les agents passent par la function (service key, pas de RLS)
+  if(window._userRole==='AGENT'){
+    try{
+      const r=await fetch('/.netlify/functions/workspace-pull',{
+        headers:{'Authorization':'Bearer '+token}
+      });
+      if(!r.ok){console.warn('cloudPull agent HTTP error:',r.status);return false;}
+      const d=await r.json();
+      if(d?.data){
+        const parsed=typeof d.data==='string'?JSON.parse(d.data):d.data;
+        const fresh=freshState();
+        Object.keys(fresh).forEach(k=>{if(parsed[k]!==undefined)fresh[k]=parsed[k];});
+        state=fresh;
+        localStorage.setItem(SK,JSON.stringify(state));
+        return true;
+      }
+      state=freshState();
+      return true;
+    }catch(e){console.warn('cloudPull agent error:',e);return false;}
+  }
+
   const{url,key}=getSupabase();if(!url) return false;
   const uid=extractUid(cloudUser);
-  const token=extractToken(cloudUser);
-  if(!uid||!token){console.warn('cloudPull: missing uid or token');return false;}
+  if(!uid){console.warn('cloudPull: missing uid');return false;}
   try{
     const r=await fetch(`${url}/rest/v1/workspaces?user_id=eq.${uid}&select=data`,{
       headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+token}

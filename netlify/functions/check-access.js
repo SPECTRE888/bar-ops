@@ -70,6 +70,7 @@ exports.handler = async (event) => {
     role,
     plan: subs.plan || 'pro',
     companyName: profile?.companies?.name || '',
+    ownerId: ownerId,
   });
 };
 
