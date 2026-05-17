@@ -27,18 +27,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Build
-      run: npx electron-builder --mac dmg --arm64 --publish=never
-
-    - name: Find DMG
-      run: ls dist/
-
-    - name: Publish Release
-      run: |
-        DMG=$(find dist -name "*.dmg" | head -1)
-        gh release create ${{ github.ref_name }} \
-          "$DMG" \
-          --title "Bar Ops ${{ github.ref_name }}" \
-          --notes "## Installation\n\n1. Télécharge **Bar Ops.dmg**\n2. Ouvre le fichier DMG\n3. Glisse **Bar Ops** dans le dossier Applications\n4. Ouvre le Terminal et colle :\n\`\`\`\nxattr -cr \"/Applications/Bar Ops.app\" && open \"/Applications/Bar Ops.app\"\n\`\`\`"
+    - name: Build & Publish
+      run: npx electron-builder --mac dmg --arm64 --publish=always
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
