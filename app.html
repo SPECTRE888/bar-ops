@@ -63,7 +63,10 @@ fetch('/.netlify/functions/config')
       }
       await new Promise(r=>setTimeout(r,1500));
     }
-    if(!access?.allowed){window.location.href='paying.html';return;}
+    if(!access?.allowed){
+      document.body.innerHTML=`<div style="font-family:monospace;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:20px;color:#c4a46b;margin-bottom:24px">DEBUG — accès refusé</div><pre style="text-align:left;background:#111;padding:16px;border-radius:6px;font-size:13px;color:#f87171;max-width:600px;overflow:auto">${JSON.stringify(access,null,2)}</pre><button onclick="window.location.href='paying.html'" style="margin-top:20px;background:#c4a46b;color:#080808;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:13px">Continuer vers paywall</button></div></div>`;
+      return;
+    }
     const subs={plan:access.plan||'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
 
     // Session limit: max 3 active devices per account
