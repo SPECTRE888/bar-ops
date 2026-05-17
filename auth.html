@@ -110,27 +110,17 @@ async function redirect(userId){
     }
   }catch(e){console.error('[auth] profile fetch error:', e);}
 
-  // ID à vérifier : le user lui-même, ou l'owner de sa company s'il est agent
-  const subUserId = (profile?.role==='AGENT' && profile?.companies?.owner_id)
-    ? profile.companies.owner_id
-    : userId;
-  console.log('[auth] role:', profile?.role, '| subUserId:', subUserId, '| userId:', userId);
+  // Les agents passent directement — app.html vérifie l'abo de l'owner via check-access (service key)
+  if(profile?.role==='AGENT'){
+    window.location.href='app.html';
+    return;
+  }
 
   try{
-    const{data,error}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',subUserId).maybeSingle();
-    console.log('[auth] subscription:', data, 'error:', error);
-    if(error){
-      // Erreur RLS ou réseau → laisser passer, app.html vérifiera
-      console.warn('[auth] subscription query failed, letting through:', error.message);
-      window.location.href='app.html';
-      return;
-    }
-    if(data&&new Date(data.expires_at)>new Date()){
-      window.location.href='app.html';
-      return;
-    }
+    const{data,error}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).maybeSingle();
+    if(error){window.location.href='app.html';return;}
+    if(data&&new Date(data.expires_at)>new Date()){window.location.href='app.html';return;}
   }catch(e){
-    console.error('[auth] subscription exception:', e);
     window.location.href='app.html';
     return;
   }
