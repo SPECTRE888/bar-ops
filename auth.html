@@ -117,12 +117,23 @@ async function redirect(userId){
   console.log('[auth] role:', profile?.role, '| subUserId:', subUserId, '| userId:', userId);
 
   try{
-    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',subUserId).single();
+    const{data,error}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',subUserId).maybeSingle();
+    console.log('[auth] subscription:', data, 'error:', error);
+    if(error){
+      // Erreur RLS ou réseau → laisser passer, app.html vérifiera
+      console.warn('[auth] subscription query failed, letting through:', error.message);
+      window.location.href='app.html';
+      return;
+    }
     if(data&&new Date(data.expires_at)>new Date()){
       window.location.href='app.html';
       return;
     }
-  }catch(e){}
+  }catch(e){
+    console.error('[auth] subscription exception:', e);
+    window.location.href='app.html';
+    return;
+  }
   window.location.href='paying.html';
 }
 
