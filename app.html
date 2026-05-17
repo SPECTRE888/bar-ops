@@ -4427,7 +4427,7 @@ function showEvForm(ev){
     <!-- SECTION 3: STAFF -->
     <div class="card" style="padding:10px 14px">
       <div class="ctitle" style="margin-bottom:8px">${t('ev_staff_section')}</div>
-      <div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px ${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'80px 100px 70px':''}28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
+      <div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px ${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'80px 100px 70px ':' '}28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
         <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold);text-align:center">Heures</span>${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'<span style="color:var(--red);text-align:right">Coût HT</span><span style="color:var(--green);text-align:right">Facturation HT</span><span style="text-align:right">Marge</span>':''}<span></span>
       </div>
       <div id="ev-staff-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
