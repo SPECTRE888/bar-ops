@@ -47,9 +47,18 @@ fetch('/.netlify/functions/config')
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
 
+    // Charger le profil pour savoir si c'est un agent (subscription vérifiée sur l'owner)
+    const{data:profile}=await sb.from('profiles')
+      .select('role,company_id,status,companies(owner_id)')
+      .eq('id',session.user.id).maybeSingle();
+    if(profile?.status==='suspended'){window.location.href='paying.html';return;}
+    const subUserId=(profile?.role==='AGENT'&&profile?.companies?.owner_id)
+      ?profile.companies.owner_id
+      :session.user.id;
+
     let subs=null;
     for(let i=0;i<8;i++){
-      const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
+      const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',subUserId).order('created_at',{ascending:false}).limit(1);
       subs=subsArr?.[0];
       if(subs&&new Date(subs.expires_at)>new Date())break;
       if(i===0){
