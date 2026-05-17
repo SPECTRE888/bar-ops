@@ -8533,7 +8533,6 @@ function renderHistorique(){
     html+=`<div class="ctitle" style="margin:16px 0 8px">${monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)} — <span style="color:var(--gold)">${data.rev.toFixed(0)}€</span> <span class="txs tm">marge ${mg.toFixed(0)}€</span></div>`;
     filteredEvents.forEach(ev=>{
       const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
-      const hasRealCost=ev.stockRetour&&Object.keys(ev.stockRetour).length>0;
       const fmtDate=new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       const cktCount=evTot(ev);
       html+=`<div class="card" style="padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
@@ -8543,7 +8542,7 @@ function renderHistorique(){
         </div>
         <div style="text-align:right;margin-right:12px">
           <div style="font-size:14px;font-weight:500;color:var(--gold)">${rev.toFixed(0)}€ HT</div>
-          <div class="txs" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>=0?'+':''}${mg.toFixed(0)}€ marge${hasRealCost?' <span style="color:var(--text3);font-size:9px">(réelle)</span>':''}</div>
+          <div class="txs" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>=0?'+':''}${mg.toFixed(0)}€ marge</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
           <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
