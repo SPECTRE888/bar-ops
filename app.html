@@ -6719,24 +6719,60 @@ async function copyPortalLink(evId){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   if(!ev){await alertModal('Événement introuvable.');return;}
 
+  // Theme picker modal
+  const theme=await new Promise(resolve=>{
+    const themes=[
+      {key:'elegant',label:'Élégant',desc:'Fond sombre, touches dorées'},
+      {key:'moderne',label:'Moderne',desc:'Bleu professionnel, épuré'},
+      {key:'minimaliste',label:'Minimaliste',desc:'Blanc, typographie fine'},
+      {key:'premium',label:'Premium',desc:'Noir profond, or chaud'},
+    ];
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;max-width:420px;width:100%">
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Choisir le thème du devis client</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:20px">Ce style sera appliqué sur la page que verra votre client.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        ${themes.map(t=>`<button onclick="this.closest('.portal-theme-pick').dataset.v='${t.key}';this.closest('.portal-theme-pick').querySelectorAll('button[data-th]').forEach(b=>b.style.borderColor=b.dataset.th==='${t.key}'?'var(--gold)':'var(--border)')" data-th="${t.key}" style="border:2px solid var(--border);border-radius:7px;padding:12px;background:var(--surface2);cursor:pointer;text-align:left;transition:.15s">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">${t.label}</div>
+          <div style="font-size:11px;color:var(--text2)">${t.desc}</div>
+        </button>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="this.closest('[data-modal]').dataset.cancel='1'" style="flex:1;padding:10px;border:1px solid var(--border);background:none;color:var(--text2);border-radius:5px;cursor:pointer;font-family:inherit">Annuler</button>
+        <button onclick="this.closest('[data-modal]').dataset.ok='1'" style="flex:1;padding:10px;background:var(--gold);color:#080808;border:none;border-radius:5px;cursor:pointer;font-weight:600;font-family:inherit">Générer le lien</button>
+      </div>
+    </div>`;
+    const inner=overlay.querySelector('div');
+    inner.classList.add('portal-theme-pick');
+    inner.dataset.v='elegant';
+    inner.setAttribute('data-modal','1');
+    document.body.appendChild(overlay);
+    const obs=new MutationObserver(()=>{
+      if(inner.dataset.cancel){document.body.removeChild(overlay);resolve(null);}
+      else if(inner.dataset.ok){const v=inner.dataset.v;document.body.removeChild(overlay);resolve(v);}
+    });
+    obs.observe(inner,{attributes:true});
+  });
+  if(!theme)return;
+
   try{
     const token=window.cloudUser?.access_token;
     if(!token){await alertModal('Session expirée. Reconnectez-vous.');return;}
 
-    // Sync workspace to Supabase before generating the link
     await cloudPush();
 
     const r=await fetch('/.netlify/functions/portal-token',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({evId:ev.id}),
+      body:JSON.stringify({evId:ev.id,theme}),
     });
     const data=await r.json();
     if(!r.ok){await alertModal('Erreur serveur ('+r.status+'): '+(data?.error||'inconnue'));return;}
     const portalToken=data.token;
     const url=location.origin+'/portal.html?token='+encodeURIComponent(portalToken);
     await navigator.clipboard.writeText(url).catch(()=>{});
-    await alertModal('✓ Lien copié !\n\n'+url+'\n\nPartagez ce lien avec votre client pour qu\'il puisse consulter et signer le devis en ligne.');
+    await alertModal('✓ Lien copié !\n\nPartagez ce lien avec votre client pour qu\'il puisse consulter et signer le devis en ligne.');
   }catch(e){
     await alertModal('Erreur: '+e.message);
   }

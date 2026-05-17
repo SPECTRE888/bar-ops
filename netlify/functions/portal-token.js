@@ -29,11 +29,11 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return err(400, 'invalid_json', headers); }
 
-  const { evId } = body;
+  const { evId, theme } = body;
   if (!evId) return err(400, 'missing_evId', headers);
 
   const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-  const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: String(evId) }));
+  const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: String(evId), theme: theme || 'elegant' }));
   const sig = hmac(secret, user.id, String(evId));
 
   return { statusCode: 200, headers, body: JSON.stringify({ token: `${payload}.${sig}` }) };

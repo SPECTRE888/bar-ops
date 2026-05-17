@@ -123,6 +123,8 @@ async function load() {
     const r = await fetch('/.netlify/functions/portal-data?token=' + encodeURIComponent(TOKEN));
     if (!r.ok) { const e = await r.json(); showError('Erreur', e.error || 'Une erreur est survenue.'); return; }
     DATA = await r.json();
+    // Apply theme chosen by the bar owner
+    if (DATA.theme && THEMES.includes(DATA.theme)) currentTheme = DATA.theme;
     render();
   } catch(e) {
     showError('Erreur réseau', 'Impossible de charger le devis. Vérifiez votre connexion.');
@@ -152,9 +154,7 @@ function render() {
   const t = calcTotals(ev, profile);
   const isSigned = !!ev.portalSignedAt;
 
-  const themeBar = `<div class="theme-bar">
-    ${THEMES.map(th => `<button class="theme-btn${th===currentTheme?' active':''}" data-t="${th}" onclick="setTheme('${th}')">${{elegant:'Élégant',moderne:'Moderne',minimaliste:'Minimaliste',premium:'Premium'}[th]}</button>`).join('')}
-  </div>`;
+  const themeBar = '';
 
   const header = `
   <div class="portal-header">
