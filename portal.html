@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Votre devis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#c4a46b;--dark:#080808;--surface:#111;--border:#2a2520;--text:#ede8e0;--text2:#a09890;--text3:#585450;--green:#4caf72;--red:#e05252}
+
+/* ── THEMES ── */
+body.theme-elegant{--bg:#080808;--card:#111111;--card2:#1a1614;--accent:#c4a46b;--accent2:#a08050;--head-bg:#080808;--head-text:#ede8e0;--body-text:#ede8e0;--muted:#a09890;--line:#2a2520;--btn:#c4a46b;--btn-text:#080808;--pill:#1a1614;font-family:'DM Sans',sans-serif}
+body.theme-moderne{--bg:#f4f6fa;--card:#ffffff;--card2:#f0f4f8;--accent:#2563eb;--accent2:#1d4ed8;--head-bg:#1e293b;--head-text:#f8fafc;--body-text:#1e293b;--muted:#64748b;--line:#e2e8f0;--btn:#2563eb;--btn-text:#ffffff;--pill:#e0e7ff;font-family:'DM Sans',sans-serif}
+body.theme-minimaliste{--bg:#fafafa;--card:#ffffff;--card2:#f5f5f5;--accent:#1a1a1a;--accent2:#444;--head-bg:#ffffff;--head-text:#1a1a1a;--body-text:#1a1a1a;--muted:#888;--line:#e5e5e5;--btn:#1a1a1a;--btn-text:#fff;--pill:#f0f0f0;font-family:'DM Sans',sans-serif}
+body.theme-premium{--bg:#0d0d0d;--card:#161616;--card2:#1c1a18;--accent:#e8c87a;--accent2:#c9a84c;--head-bg:#161616;--head-text:#f5efe0;--body-text:#f0ead8;--muted:#9a8f7a;--line:#2c2820;--btn:#e8c87a;--btn-text:#0d0d0d;--pill:#1c1a18;font-family:'Playfair Display','DM Sans',sans-serif}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:var(--bg)}
+body{color:var(--body-text);line-height:1.6}
+
+.wrap{max-width:780px;margin:0 auto;padding:0 16px 60px}
+
+/* HEADER */
+.portal-header{background:var(--head-bg);padding:32px 40px;margin-bottom:0}
+.portal-header-inner{max-width:780px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.logo-area{display:flex;align-items:center;gap:14px}
+.logo-area img{max-height:56px;max-width:120px;object-fit:contain}
+.company-name{font-size:22px;font-weight:600;color:var(--head-text);letter-spacing:.03em}
+.company-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.devis-badge{text-align:right;flex-shrink:0}
+.devis-badge .num{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:.05em}
+.devis-badge .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);display:block;margin-bottom:3px}
+
+/* THEME SWITCHER */
+.theme-bar{display:flex;justify-content:center;gap:8px;padding:14px 16px;background:var(--card2);border-bottom:1px solid var(--line)}
+.theme-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--line);background:var(--pill);color:var(--muted);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.theme-btn.active,.theme-btn:hover{background:var(--accent);color:var(--btn-text);border-color:var(--accent)}
+
+/* STATUS BANNER */
+.signed-banner{background:var(--green);color:#fff;text-align:center;padding:10px 20px;font-size:13px;font-weight:500}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:24px;margin-top:20px}
+.card-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:14px;font-weight:500}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin:20px 0 10px}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:3px}
+.info-item .val{font-size:14px;font-weight:500;color:var(--body-text)}
+@media(max-width:480px){.info-grid{grid-template-columns:1fr}}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);font-weight:500}
+td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--body-text)}
+td:last-child,th:last-child{text-align:right}
+tr:last-child td{border-bottom:none}
+
+/* TOTALS */
+.totals-box{margin-top:16px;padding:16px;background:var(--card2);border-radius:6px}
+.total-line{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--muted)}
+.total-line.main{font-size:16px;font-weight:600;color:var(--body-text);border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+.total-line .accent{color:var(--accent)}
+
+/* SIGNATURE */
+.sig-zone{border:1px dashed var(--line);border-radius:6px;padding:20px;text-align:center;min-height:100px;position:relative;margin:16px 0;background:var(--card2)}
+.sig-canvas{width:100%;height:120px;cursor:crosshair;touch-action:none;display:block;border-radius:4px}
+.form-input{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:5px;padding:10px 14px;font-size:13px;color:var(--body-text);font-family:inherit;margin-top:8px;outline:none}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--muted)}
+
+.btn-primary{display:block;width:100%;background:var(--btn);color:var(--btn-text);border:none;border-radius:5px;padding:14px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:.04em;margin-top:12px;transition:opacity .2s}
+.btn-primary:hover{opacity:.9}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:5px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .2s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+
+.chip{display:inline-block;background:var(--pill);border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:2px 10px;font-size:10px;margin-right:4px;margin-bottom:4px}
+.chip.filled{background:var(--accent);color:var(--btn-text);border-color:var(--accent)}
+
+.loading{text-align:center;padding:80px 20px;color:var(--muted);font-size:14px}
+.error-box{text-align:center;padding:80px 20px;color:var(--muted)}
+.error-box h2{font-size:20px;margin-bottom:8px;color:var(--body-text)}
+.error-box p{font-size:13px}
+
+.footer-legal{font-size:10px;color:var(--muted);margin-top:32px;text-align:center;line-height:1.7}
+</style>
+</head>
+<body class="theme-elegant">
+
+<div id="root"><div class="loading">Chargement du devis…</div></div>
+
+<script>
+const TOKEN = new URLSearchParams(location.search).get('token') || '';
+let DATA = null;
+let signatureDataUrl = null;
+let sigCanvas, sigCtx, drawing = false, lastX, lastY;
+const THEMES = ['elegant','moderne','minimaliste','premium'];
+let currentTheme = localStorage.getItem('portalTheme') || 'elegant';
+
+function setTheme(t) {
+  currentTheme = t;
+  localStorage.setItem('portalTheme', t);
+  document.body.className = 'theme-' + t;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmt(n) { return (n||0).toFixed(2).replace('.',',') + ' €'; }
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+}
+
+async function load() {
+  if (!TOKEN) { showError('Lien invalide', 'Ce lien de devis est invalide ou expiré.'); return; }
+  try {
+    const r = await fetch('/.netlify/functions/portal-data?token=' + encodeURIComponent(TOKEN));
+    if (!r.ok) { const e = await r.json(); showError('Erreur', e.error || 'Une erreur est survenue.'); return; }
+    DATA = await r.json();
+    render();
+  } catch(e) {
+    showError('Erreur réseau', 'Impossible de charger le devis. Vérifiez votre connexion.');
+  }
+}
+
+function showError(title, msg) {
+  document.getElementById('root').innerHTML = `<div class="error-box"><h2>${esc(title)}</h2><p>${esc(msg)}</p></div>`;
+}
+
+function calcTotals(ev, profile) {
+  const cocktailRev = (ev.cocktails||[]).reduce((s,c) => s + c.qty * (c.priceHT||0), 0);
+  const delivery = ev.deliveryBillHT || 0;
+  const gross = cocktailRev + delivery;
+  const remise = ev.remiseHT > 0 ? ev.remiseHT : (ev.remisePct > 0 ? gross * ev.remisePct / 100 : 0);
+  const total = gross - remise;
+  const acompteDefault = profile.acomptePercent ? total * profile.acomptePercent / 100 : 0;
+  const acompte = ev.acompte > 0 ? ev.acompte : acompteDefault;
+  const reste = Math.max(0, total - acompte);
+  const tva = total * 0.2;
+  const totalTTC = total + tva;
+  return { cocktailRev, delivery, gross, remise, total, acompte, reste, tva, totalTTC };
+}
+
+function render() {
+  const { event: ev, client, profile } = DATA;
+  const t = calcTotals(ev, profile);
+  const isSigned = !!ev.portalSignedAt;
+
+  const themeBar = `<div class="theme-bar">
+    ${THEMES.map(th => `<button class="theme-btn${th===currentTheme?' active':''}" data-t="${th}" onclick="setTheme('${th}')">${{elegant:'Élégant',moderne:'Moderne',minimaliste:'Minimaliste',premium:'Premium'}[th]}</button>`).join('')}
+  </div>`;
+
+  const header = `
+  <div class="portal-header">
+    <div class="portal-header-inner">
+      <div class="logo-area">
+        ${profile.logo ? `<img src="${esc(profile.logo)}" alt="logo"/>` : ''}
+        <div>
+          <div class="company-name">${esc(profile.barName || 'BAR OPS')}</div>
+          <div class="company-sub">${esc(profile.city || '')}${profile.city && profile.siret ? ' · ' : ''}${profile.siret ? 'SIRET ' + esc(profile.siret) : ''}</div>
+        </div>
+      </div>
+      <div class="devis-badge">
+        <span class="lbl">Devis n°</span>
+        <div class="num">${esc(ev.devisNum || '—')}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">${fmtDate(ev.date)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  const signedBanner = isSigned ? `<div class="signed-banner">✓ Devis accepté par ${esc(ev.portalSignedName)} le ${new Date(ev.portalSignedAt).toLocaleDateString('fr-FR')}</div>` : '';
+
+  const clientSection = `
+  <div class="card">
+    <div class="card-title">Informations</div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="lbl">Client</div>
+        <div class="val">${esc(client?.name || '—')}</div>
+        ${client?.email ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${esc(client.email)}</div>` : ''}
+      </div>
+      <div class="info-item">
+        <div class="lbl">Prestation</div>
+        <div class="val">${esc(ev.name)}</div>
+      </div>
+      <div class="info-item">
+        <div class="lbl">Date</div>
+        <div class="val">${fmtDate(ev.date)}</div>
+      </div>
+      <div class="info-item">
+        <div class="lbl">Lieu</div>
+        <div class="val">${esc(ev.location || '—')}</div>
+      </div>
+      ${ev.pax ? `<div class="info-item"><div class="lbl">Convives</div><div class="val">${ev.pax}</div></div>` : ''}
+    </div>
+  </div>`;
+
+  const cocktailRows = (ev.cocktails||[]).map(c =>
+    `<tr><td>${esc(c.name)}</td><td style="text-align:center">${c.qty}</td><td>${fmt(c.priceHT)}</td><td>${fmt(c.qty * c.priceHT)}</td></tr>`
+  ).join('');
+
+  const cocktailTable = ev.cocktails.length > 0 ? `
+  <div class="card">
+    <div class="card-title">Cocktails & Prestations</div>
+    <table>
+      <thead><tr><th>Cocktail</th><th style="text-align:center">Qté</th><th>PU HT</th><th>Total HT</th></tr></thead>
+      <tbody>
+        ${cocktailRows}
+        ${ev.deliveryBillHT > 0 ? `<tr><td>Livraison / Transport</td><td style="text-align:center">1</td><td>${fmt(ev.deliveryBillHT)}</td><td>${fmt(ev.deliveryBillHT)}</td></tr>` : ''}
+      </tbody>
+    </table>
+
+    <div class="totals-box">
+      <div class="total-line"><span>Sous-total HT</span><span>${fmt(t.gross)}</span></div>
+      ${t.remise > 0 ? `<div class="total-line"><span>Remise</span><span style="color:var(--accent)">− ${fmt(t.remise)}</span></div>` : ''}
+      <div class="total-line"><span>Total HT</span><span>${fmt(t.total)}</span></div>
+      <div class="total-line"><span>TVA 20%</span><span>${fmt(t.tva)}</span></div>
+      <div class="total-line main"><span>Total TTC</span><span class="accent">${fmt(t.totalTTC)}</span></div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="padding:10px;background:var(--card);border-radius:5px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Acompte</div>
+          <div style="font-size:15px;font-weight:600;color:var(--accent)">${fmt(t.acompte)}</div>
+        </div>
+        <div style="padding:10px;background:var(--card);border-radius:5px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Solde à régler</div>
+          <div style="font-size:15px;font-weight:600">${fmt(t.reste)}</div>
+        </div>
+      </div>
+    </div>
+  </div>` : '';
+
+  const paymentInfo = (profile.iban || profile.banque) ? `
+  <div class="card">
+    <div class="card-title">Modalités de paiement</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">L'acompte est à régler à la signature du présent devis.</p>
+    ${profile.iban ? `<div class="info-item" style="margin-bottom:8px"><div class="lbl">IBAN</div><div class="val" style="font-size:13px;letter-spacing:.04em">${esc(profile.iban)}</div></div>` : ''}
+    ${profile.banque ? `<div class="info-item"><div class="lbl">Banque</div><div class="val">${esc(profile.banque)}</div></div>` : ''}
+  </div>` : '';
+
+  const signatureSection = isSigned
+    ? `<div class="card"><div style="text-align:center;padding:16px;color:var(--green);font-size:14px;font-weight:500">✓ Devis accepté et signé électroniquement le ${new Date(ev.portalSignedAt).toLocaleDateString('fr-FR')}<br><span style="font-size:12px;color:var(--muted)">${esc(ev.portalSignedName)}</span></div></div>`
+    : `<div class="card" id="sig-section">
+    <div class="card-title">Signature électronique</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">En signant ce devis, vous acceptez les prestations et conditions décrites ci-dessus.</p>
+    <input class="form-input" id="sig-name" placeholder="Votre nom complet *" autocomplete="name"/>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted);margin-bottom:6px">Signature (dessinez ci-dessous)</div>
+    <div class="sig-zone">
+      <canvas id="sig-canvas" class="sig-canvas" width="700" height="120"></canvas>
+    </div>
+    <button class="btn-ghost" onclick="clearSig()" style="font-size:11px;padding:4px 12px;margin-top:0">Effacer</button>
+    <button class="btn-primary" id="sig-btn" onclick="submitSign()">Accepter et signer le devis</button>
+    <div id="sig-msg" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center"></div>
+  </div>`;
+
+  const legal = `<div class="footer-legal">
+    ${esc(profile.barName || '')} ${profile.siret ? '· SIRET ' + esc(profile.siret) : ''}<br>
+    ${profile.senderEmail ? `Contact : <a href="mailto:${esc(profile.senderEmail)}" style="color:var(--accent)">${esc(profile.senderEmail)}</a>` : ''}
+  </div>`;
+
+  document.getElementById('root').innerHTML = `
+    ${header}
+    ${themeBar}
+    ${signedBanner}
+    <div class="wrap">
+      ${clientSection}
+      ${cocktailTable}
+      ${paymentInfo}
+      ${signatureSection}
+      ${legal}
+    </div>`;
+
+  setTheme(currentTheme);
+
+  if (!isSigned) {
+    initCanvas();
+  }
+}
+
+function initCanvas() {
+  sigCanvas = document.getElementById('sig-canvas');
+  if (!sigCanvas) return;
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--body-text').trim() || '#111';
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+
+  const pos = (e) => {
+    const r = sigCanvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * (sigCanvas.width / r.width), y: (src.clientY - r.top) * (sigCanvas.height / r.height) };
+  };
+  sigCanvas.addEventListener('mousedown', e => { drawing = true; const p = pos(e); lastX = p.x; lastY = p.y; });
+  sigCanvas.addEventListener('mousemove', e => {
+    if (!drawing) return;
+    const p = pos(e);
+    sigCtx.beginPath(); sigCtx.moveTo(lastX, lastY); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+    lastX = p.x; lastY = p.y;
+  });
+  sigCanvas.addEventListener('mouseup', () => { drawing = false; sigCanvas && (signatureDataUrl = sigCanvas.toDataURL()); });
+  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = pos(e); lastX = p.x; lastY = p.y; }, { passive: false });
+  sigCanvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!drawing) return;
+    const p = pos(e);
+    sigCtx.beginPath(); sigCtx.moveTo(lastX, lastY); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+    lastX = p.x; lastY = p.y;
+    signatureDataUrl = sigCanvas.toDataURL();
+  }, { passive: false });
+  sigCanvas.addEventListener('touchend', () => { drawing = false; });
+}
+
+function clearSig() {
+  if (!sigCtx || !sigCanvas) return;
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  signatureDataUrl = null;
+}
+
+async function submitSign() {
+  const name = document.getElementById('sig-name')?.value?.trim() || '';
+  if (!name) { document.getElementById('sig-msg').textContent = 'Veuillez entrer votre nom complet.'; return; }
+  const isEmpty = !signatureDataUrl || isCanvasEmpty(sigCanvas);
+  if (isEmpty) { document.getElementById('sig-msg').textContent = 'Veuillez signer dans la zone de signature.'; return; }
+
+  const btn = document.getElementById('sig-btn');
+  btn.disabled = true; btn.textContent = 'Signature en cours…';
+  document.getElementById('sig-msg').textContent = '';
+
+  try {
+    const r = await fetch('/.netlify/functions/portal-sign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: TOKEN, name }),
+    });
+    const data = await r.json();
+    if (data.ok) {
+      DATA.event.portalSignedAt = new Date().toISOString();
+      DATA.event.portalSignedName = name;
+      render();
+    } else {
+      btn.disabled = false; btn.textContent = 'Accepter et signer le devis';
+      document.getElementById('sig-msg').textContent = data.error || 'Erreur lors de la signature.';
+    }
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Accepter et signer le devis';
+    document.getElementById('sig-msg').textContent = 'Erreur réseau. Veuillez réessayer.';
+  }
+}
+
+function isCanvasEmpty(canvas) {
+  const ctx = canvas.getContext('2d');
+  const pxData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  return !pxData.some(v => v !== 0);
+}
+
+load();
+</script>
+</body>
+</html>
