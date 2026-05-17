@@ -48,7 +48,11 @@ exports.handler = async (event) => {
 
   if (!ws?.data) return err(404, 'workspace_not_found', headers);
 
-  const workspaceData = ws.data;
+  // data may be stored as a JSON string (double-encoded) or as an object
+  let workspaceData = ws.data;
+  if (typeof workspaceData === 'string') {
+    try { workspaceData = JSON.parse(workspaceData); } catch { return err(500, 'invalid_workspace_data', headers); }
+  }
   const ev = (workspaceData.events || []).find(e => String(e.id) === String(evId));
   if (!ev) return err(404, 'event_not_found', headers);
 
