@@ -6726,13 +6726,14 @@ async function copyPortalLink(evId){
     const token=window.cloudUser?.access_token;
     if(!token){await alertModal('Session expirée. Reconnectez-vous.');return;}
     const r=await fetch('/.netlify/functions/portal-token?evId='+encodeURIComponent(evId),{headers:{Authorization:'Bearer '+token}});
-    if(!r.ok){throw new Error('server');}
-    const {token:portalToken}=await r.json();
+    const data=await r.json();
+    if(!r.ok){await alertModal('Erreur serveur ('+r.status+'): '+(data?.error||'inconnue'));return;}
+    const portalToken=data.token;
     const url=location.origin+'/portal.html?token='+encodeURIComponent(portalToken);
     await navigator.clipboard.writeText(url).catch(()=>{});
     await alertModal('✓ Lien copié !\n\n'+url+'\n\nPartagez ce lien avec votre client pour qu\'il puisse consulter et signer le devis en ligne.');
   }catch(e){
-    await alertModal('Erreur lors de la génération du lien. Veuillez réessayer.');
+    await alertModal('Erreur: '+e.message);
   }
 }
 
