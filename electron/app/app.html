@@ -1274,7 +1274,8 @@ async function doCloudLogin(){
     updateCloudStatus();
     renderDashboard();
     updateBadges();
-    toast('Connecté' + (pulled?' — données synchronisées':' — bienvenue !'));
+    const _v = (window.electronConfig||{}).version ? ` · v${window.electronConfig.version}` : '';
+    toast('Connecté' + (pulled?' — données synchronisées':' — bienvenue !') + _v);
   } else {
     if(errEl)errEl.textContent=res.error||'Identifiants incorrects';
     if(btn){btn.textContent='Connexion';btn.disabled=false;}
@@ -4077,7 +4078,7 @@ function showEvList(){
     .sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
   el.innerHTML='<div class="c-grid">'+sorted.map(ev=>{
     const tot=evTot(ev);
-    const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):t('no_date');
+    const fmtDate=fmtEvDates(ev);
     const confirmed=(ev.staffConfirmed||[]).length;
     const assigned=(ev.assignedStaff||[]).length;
     return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
@@ -4146,6 +4147,27 @@ function goEvTab(evId, tab){
   } else if(tab==='shopping'){
     goPage('shopping', evId);
   }
+}
+
+function _addEvDate(){
+  const list=document.getElementById('ef-dates-list');if(!list)return;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:4px;align-items:center';
+  div.innerHTML=`<input type="date" class="ef-date-item" style="flex:1"/><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
+  list.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function evDatesCount(ev){return(ev.dates&&ev.dates.length>1)?ev.dates.length:1;}
+
+function fmtEvDates(ev){
+  const dates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
+  if(!dates.length)return'—';
+  if(dates.length===1)return new Date(dates[0]).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+  const sorted=[...dates].sort();
+  const months=[...new Set(sorted.map(d=>new Date(d).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})))];
+  const days=sorted.map(d=>new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}));
+  return days.join(' · ')+` (${dates.length}j)`;
 }
 
 function evTot(ev){
@@ -4271,8 +4293,16 @@ function showEvForm(ev){
         <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div class="field"><label>${t('ev_date')}</label>
-          <input type="date" id="ef-date" value="${ev.date||''}"/>
+        <div class="field">
+          <label>Date(s) de prestation</label>
+          <div id="ef-dates-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px">
+            ${(ev.dates&&ev.dates.length?ev.dates:[ev.date||'']).map((d,i)=>`
+              <div style="display:flex;gap:4px;align-items:center">
+                <input type="date" class="ef-date-item" value="${d}" style="flex:1"/>
+                ${i>0?`<button type="button" onclick="this.parentElement.remove();_syncEvDates()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`:'<span style="width:20px"></span>'}
+              </div>`).join('')}
+          </div>
+          <button type="button" onclick="_addEvDate()" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;text-align:left">+ Ajouter une date</button>
         </div>
         <div class="field"><label>${t('ev_pax')}</label>
           <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
@@ -5230,7 +5260,8 @@ async function saveEv(){
   const remisePct=parseFloat(document.getElementById('ef-remise-pct')?.value)||0;
   const remiseHT=parseFloat(document.getElementById('ef-remise-ht')?.value)||0;
   const remiseMontant=remiseHT>0?remiseHT:(remisePct>0?revenueBeforeRemise*remisePct/100:0);
-  const totalRevHT=revenueBeforeRemise-remiseMontant;
+  const _nbDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean).length||1;
+  const totalRevHT=(revenueBeforeRemise-remiseMontant)*_nbDates;
 
   // Calc TTC (same logic as buildDevisHTML)
   const cocktailTotalTTC=(sel&&Object.entries(sel)||[]).reduce((s,[cid,cfg])=>{const c=state.cocktails.find(x=>x.id==cid);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||20)/100):0);},0);
@@ -5240,7 +5271,8 @@ async function saveEv(){
     id:editEvId||Date.now(),name,
     clientId:_clientId,
     clientName:(state.clients.find(x=>x.id===_clientId)||{}).name||existingEv?.clientName||document.getElementById('ef-client-search')?.value||'',
-    date:document.getElementById('ef-date')?.value||'',
+    dates:(()=>{const ds=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);return ds.length?ds:[];})(),
+    date:(()=>{const ds=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);return ds[0]||'';})(),
     address:document.getElementById('ef-addr')?.value||'',
     access:document.getElementById('ef-access')?.value||'',
     email:document.getElementById('ef-email')?.value||'',
@@ -5372,7 +5404,7 @@ async function openMenu(evId){
 function buildTmpEv(){
   const sel=document.getElementById('ev-content')?._sel||{};
   return{name:document.getElementById('ef-name')?.value||'Preview',
-    date:document.getElementById('ef-date')?.value||'',address:document.getElementById('ef-addr')?.value||'',
+    date:(()=>{const ds=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);return ds[0]||'';})(),address:document.getElementById('ef-addr')?.value||'',
     access:document.getElementById('ef-access')?.value||'',setup:document.getElementById('ef-setup')?.value||'',
     start:document.getElementById('ef-start')?.value||'',end:document.getElementById('ef-end')?.value||'',
     contact:document.getElementById('ef-contact')?.value||'',notes:document.getElementById('ef-notes')?.value||'',
@@ -7830,7 +7862,7 @@ function showDresscodeModal(evId){
 
 async function showAvailabilityModal(evId){
   const ev=state.events.find(x=>x.id===evId)||{};
-  const date=ev.date||document.getElementById('ef-date')?.value||'';
+  const date=ev.date||(()=>{const ds=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);return ds[0]||'';})();
   if(!date){await alertModal('Définis d\'abord la date de l\'événement.');return;}
   const fmtDate=new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'});
 
@@ -8348,6 +8380,50 @@ function buildEventSummaryHTML(ev){
       </div>`:''}
     </div>
 
+    <h3 style="margin-top:30px;margin-bottom:15px;padding-top:20px;border-top:2px solid #e0e0e0">Récapitulatif financier</h3>
+    ${(()=>{
+      const cktRev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*(c.priceHT||0):0);},0);
+      const delivery=ev.deliveryBillHT||0;
+      const extra=ev.extraBillHT||0;
+      const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?(cktRev+delivery+extra)*ev.remisePct/100:0);
+      const totalRev=cktRev+delivery+extra-remise;
+      const tva=totalRev*0.2;
+      const totalTTC=totalRev+tva;
+      // Coût ingrédients réel (retour déduit)
+      const ingredCost=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c&&cfg.qty?cfg.qty*c.totalCost:0);},0);
+      let retourVal=0;
+      if(ev.stockRetour){Object.entries(ev.stockRetour).forEach(([key,qty])=>{if(!qty)return;const [brand,productType]=key.split('||');const prod=state.products.find(p=>p.productType===productType&&(p.brand||'')===(brand||''))||state.products.find(p=>p.productType===productType);if(prod?.costHT)retourVal+=qty*(prod.costHT||0);});}
+      const realIngCost=Math.max(0,ingredCost-retourVal);
+      const staffCost=(ev.staffAssignments||[]).reduce((s,a)=>{const h=calcStaffHours(a.arrivalTime,a.departureTime);return s+(a.costHT||0)*h;},0)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0);
+      const totalCost=realIngCost+staffCost;
+      const margin=totalRev-totalCost;
+      const marginPct=totalRev>0?(margin/totalRev*100).toFixed(1):0;
+      const acompte=ev.acompte||0;
+      const reste=Math.max(0,totalTTC-acompte);
+      const cocktailRows=(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return'';return`<tr><td>${c.name}</td><td style="text-align:center">${cfg.qty}</td><td style="text-align:right">${(c.priceHT||0).toFixed(2)}€</td><td style="text-align:right">${(cfg.qty*(c.priceHT||0)).toFixed(2)}€</td><td style="text-align:right;color:#c00">${(cfg.qty*c.totalCost).toFixed(2)}€</td></tr>`;}).join('');
+      const staffRows=(ev.staffAssignments||[]).map(a=>{const h=calcStaffHours(a.arrivalTime,a.departureTime);return`<tr><td>${a.name||'—'} (${a.role||'—'})</td><td style="text-align:center">${h.toFixed(1)}h</td><td style="text-align:right">${(a.billHT||0).toFixed(2)}€/h</td><td style="text-align:right">${((a.billHT||0)*h).toFixed(2)}€</td><td style="text-align:right;color:#c00">${((a.costHT||0)*h).toFixed(2)}€</td></tr>`;}).join('');
+      return`
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px">
+        <thead><tr style="background:#f0f0f0"><th>Cocktail</th><th style="text-align:center">Qté</th><th style="text-align:right">PU HT</th><th style="text-align:right">Facturation HT</th><th style="text-align:right">Coût HT</th></tr></thead>
+        <tbody>${cocktailRows}
+          ${delivery>0?`<tr><td>Livraison</td><td style="text-align:center">1</td><td style="text-align:right">${delivery.toFixed(2)}€</td><td style="text-align:right">${delivery.toFixed(2)}€</td><td style="text-align:right;color:#c00">${(ev.deliveryCostHT||0).toFixed(2)}€</td></tr>`:''}
+          ${remise>0?`<tr style="color:#e07000"><td colspan="3">Remise</td><td style="text-align:right">−${remise.toFixed(2)}€</td><td></td></tr>`:''}
+          ${retourVal>0?`<tr style="color:#5a9b6f"><td colspan="4">Retour bouteilles déduit du coût</td><td style="text-align:right;color:#5a9b6f">−${retourVal.toFixed(2)}€</td></tr>`:''}
+        </tbody>
+      </table>
+      ${staffRows?`<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px">
+        <thead><tr style="background:#f0f0f0"><th>Staff</th><th style="text-align:center">Heures</th><th style="text-align:right">Tarif</th><th style="text-align:right">Facturation HT</th><th style="text-align:right">Coût HT</th></tr></thead>
+        <tbody>${staffRows}</tbody>
+      </table>`:''}
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:16px;background:#f9f9f9;border-radius:6px;text-align:center;font-size:11px">
+        <div><div style="color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">CA HT</div><div style="font-size:20px;font-weight:700;color:#d4a574">${totalRev.toFixed(0)}€</div></div>
+        <div><div style="color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">TVA 20%</div><div style="font-size:20px;font-weight:700">${tva.toFixed(0)}€</div></div>
+        <div><div style="color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Total TTC</div><div style="font-size:20px;font-weight:700">${totalTTC.toFixed(0)}€</div></div>
+        <div><div style="color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Marge réelle</div><div style="font-size:20px;font-weight:700;color:${margin>=0?'#5a9b6f':'#c00'}">${margin>=0?'+':''}${margin.toFixed(0)}€</div><div style="font-size:10px;color:#999">${marginPct}%</div></div>
+        <div><div style="color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Acompte reçu</div><div style="font-size:20px;font-weight:700;color:#5a9b6f">${acompte.toFixed(0)}€</div>${acompte>0?`<div style="font-size:10px;color:#999">Reste: ${reste.toFixed(0)}€ TTC</div>`:''}</div>
+      </div>`;
+    })()}
+
     ${ev.notes?`<div style="margin-top:15px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
   </div>
 </body>
@@ -8380,14 +8456,25 @@ function renderHistorique(){
       const ck=state.cocktails.find(x=>x.id===cfg.id);
       return s+(ck&&cfg.qty?cfg.qty*ck.priceHT:0);
     },0);
-    return c+(ev.extraBillHT||0)+(ev.deliveryBillHT||0);
+    return (c+(ev.extraBillHT||0)+(ev.deliveryBillHT||0))*evDatesCount(ev);
   };
   const evCost=ev=>{
-    const c=(ev.cocktails||[]).reduce((s,cfg)=>{
+    // Si stock retour saisi, calcul coût réel = coût prévu - valeur des bouteilles retournées
+    const ingredCost=(ev.cocktails||[]).reduce((s,cfg)=>{
       const ck=state.cocktails.find(x=>x.id===cfg.id);
       return s+(ck&&cfg.qty?cfg.qty*ck.totalCost:0);
     },0);
-    return c+(ev.extraCostHT||0)+(ev.deliveryCostHT||0);
+    let retourVal=0;
+    if(ev.stockRetour&&Object.keys(ev.stockRetour).length){
+      Object.entries(ev.stockRetour).forEach(([key,qty])=>{
+        if(!qty) return;
+        const [brand,productType]=key.split('||');
+        const prod=state.products.find(p=>p.productType===productType&&(p.brand||'')===(brand||''))
+                  ||state.products.find(p=>p.productType===productType);
+        if(prod?.costHT) retourVal+=qty*(prod.costHT||0);
+      });
+    }
+    return (Math.max(0, ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0))*evDatesCount(ev);
   };
 
   const totalRev=past.reduce((s,ev)=>s+evRevenue(ev),0);
@@ -9464,9 +9551,12 @@ function renderSuivi(){
 
 function filterSuivi(){
   const q=document.getElementById('suivi-search')?.value||'';
-  const filtered=state.events.filter(ev=>
-    (ev.name||'').toLowerCase().includes(q.toLowerCase())||
-    ((ev.clientName||state.clients.find(x=>x.id===ev.clientId)?.name)||'').toLowerCase().includes(q.toLowerCase())
+  const now=new Date();
+  const base=state.events.filter(ev=>!(ev.paid&&ev.stockRetourDone));
+  const filtered=base.filter(ev=>
+    !q||
+    (ev.name||'').toLowerCase().includes(q)||
+    ((ev.clientName||state.clients.find(x=>x.id===ev.clientId)?.name)||'').toLowerCase().includes(q)
   );
   const sorted=[...filtered].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
   const el=document.getElementById('suivi-content');if(!el)return;
