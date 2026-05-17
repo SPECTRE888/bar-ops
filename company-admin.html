@@ -326,17 +326,39 @@ function renderStats(agents, invitations) {
   document.getElementById('agentCount').textContent = (agents || []).length;
 }
 
+function detectPreset(perms) {
+  if (!perms) return null;
+  for (const [key, preset] of Object.entries(ROLE_PRESETS)) {
+    if (key === 'custom') continue;
+    const match = Object.entries(preset.perms).every(([k, v]) => !!perms[k] === v);
+    if (match) return { key, label: preset.label };
+  }
+  return { key: 'custom', label: 'Personnalisé' };
+}
+
+const PRESET_COLORS = {
+  commercial: 'background:#dbeafe;color:#1e40af',
+  barman:     'background:#d1fae5;color:#065f46',
+  custom:     'background:#f3f4f6;color:#374151',
+};
+
 function renderAgents(agents) {
   const el = document.getElementById('agentList');
   if (!agents?.length) { el.innerHTML = '<div class="empty">Aucun collaborateur pour l\'instant.</div>'; return; }
 
-  el.innerHTML = agents.map(a => `
+  el.innerHTML = agents.map(a => {
+    const preset = a.role === 'AGENT' ? detectPreset(a.permissions) : null;
+    const presetBadge = preset
+      ? `<span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;${PRESET_COLORS[preset.key]||PRESET_COLORS.custom}">${preset.label}</span>`
+      : '';
+    return `
     <div class="agent-row">
       <div class="agent-avatar">${(a.email||'?')[0].toUpperCase()}</div>
       <div class="agent-info">
         <div class="agent-email">${a.email || a.id}</div>
         <div class="agent-meta">
           <span class="badge badge-${a.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}">${a.role === 'COMPANY_ADMIN' ? 'Admin' : 'Agent'}</span>
+          ${presetBadge}
           ${a.status === 'suspended' ? '<span class="badge badge-suspended" style="margin-left:4px">Suspendu</span>' : ''}
         </div>
       </div>
@@ -348,7 +370,8 @@ function renderAgents(agents) {
         <button class="btn btn-danger btn-sm" onclick="agentAction('remove','${a.id}')">Retirer</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function renderInvitations(invitations) {
