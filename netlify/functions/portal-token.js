@@ -1,19 +1,18 @@
 /**
  * POST /.netlify/functions/portal-token
  * Auth: Bearer <access_token>
- * Body: { evId, eventData }
+ * Body: { evId }
  *
- * Signs the event data and returns a self-contained token.
- * portal-data reads the payload directly from the token — no Supabase lookup needed.
+ * Returns a signed token: base64url({uid, evId}) + "." + hmac32
  */
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 
-function b64urlEncode(buf) {
-  return Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+function b64urlEncode(str) {
+  return Buffer.from(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
-function hmac(secret, data) {
-  return crypto.createHmac('sha256', secret).update(data).digest('hex').slice(0, 32);
+function hmac(secret, uid, evId) {
+  return crypto.createHmac('sha256', secret).update(`${uid}:${evId}`).digest('hex').slice(0, 32);
 }
 
 exports.handler = async (event) => {
@@ -30,16 +29,14 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return err(400, 'invalid_json', headers); }
 
-  const { eventData } = body;
-  if (!eventData) return err(400, 'missing_eventData', headers);
+  const { evId } = body;
+  if (!evId) return err(400, 'missing_evId', headers);
 
-  // Embed uid so portal-sign can update the right workspace
-  const payload = b64urlEncode(JSON.stringify({ uid: user.id, ...eventData }));
   const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-  const sig = hmac(secret, payload);
-  const portalToken = `${payload}.${sig}`;
+  const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: String(evId) }));
+  const sig = hmac(secret, user.id, String(evId));
 
-  return { statusCode: 200, headers, body: JSON.stringify({ token: portalToken }) };
+  return { statusCode: 200, headers, body: JSON.stringify({ token: `${payload}.${sig}` }) };
 };
 
 function err(code, msg, headers = {}) {
