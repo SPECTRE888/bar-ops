@@ -3589,7 +3589,7 @@ function showSingleEventSuivi(eventId){
       ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
       ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
       ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-      ${col(coursesDone,'Stock OK',`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
+      ${col(coursesDone,'Stock','')}
       <div style="flex:1;min-width:0;text-align:center;padding:8px 4px">
         <div style="font-size:15px;color:${ficheReady?'var(--green)':'var(--text3)'};margin-bottom:3px">${ficheReady?'✓':'◇'}</div>
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:${ficheReady?'var(--text)':'var(--text3)'};margin-bottom:${ficheReady?'4px':'0'}">Fiche</div>
@@ -9527,7 +9527,7 @@ function _renderSuiviOld_unused(){
         ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
         ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
         ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-        ${col(coursesDone,'Stock OK',`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
+        ${col(coursesDone,'Stock','')}
         <div style="flex:1;min-width:0;text-align:center;padding:8px 4px">
           <div style="font-size:15px;color:${ficheReady?'var(--green)':'var(--text3)'};margin-bottom:3px">${ficheReady?'✓':'◇'}</div>
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:${ficheReady?'var(--text)':'var(--text3)'};margin-bottom:${ficheReady?'4px':'0'}">Fiche</div>
