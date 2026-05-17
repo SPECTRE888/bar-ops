@@ -2611,23 +2611,25 @@ function renderStaff(){
   const tb=document.getElementById('staff-tb'),em=document.getElementById('staff-empty');
   if(!state.staffItems.length){tb.innerHTML='';em.style.display='block';return;}
   em.style.display='none';
+  const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
+  // Masquer les colonnes financières dans le header si nécessaire
+  const hdr=document.querySelector('#staff-section table thead tr');
+  if(hdr){[...hdr.querySelectorAll('th')].forEach((th,i)=>{if([3,4,6].includes(i))th.style.display=canCost?'':'none';});}
   tb.innerHTML=state.staffItems.map(s=>{
     const margin=((s.billHT||0)-(s.rateHT||0));
     const marginPct=s.rateHT>0?(margin/s.rateHT*100).toFixed(0)+'%':'—';
     const marginColor=margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)';
     return`<tr>
-      <td>
-        <input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="e.g. Jean Dupont" style="min-width:110px"/>
-      </td>
+      <td><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="e.g. Jean Dupont" style="min-width:110px"/></td>
       <td><select onchange="updStaff(${s.id},'type',this.value)" style="width:130px">${STAFF_ROLES.map(t=>`<option${t===s.type?' selected':''}>${t}</option>`).join('')}</select></td>
       <td><div style="display:flex;align-items:center;gap:4px">
         <input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..." style="min-width:120px"/>
         ${s.phone?`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" title="WhatsApp" style="color:#25D366;font-size:14px;text-decoration:none;flex-shrink:0"></a>`:''}
       </div></td>
-      <td><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
-      <td><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
+      <td style="display:${canCost?'':'none'}"><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
+      <td style="display:${canCost?'':'none'}"><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
       <td><select onchange="updStaff(${s.id},'per',this.value)" style="width:100px">${STAFF_PER.map(p=>`<option${p===s.per?' selected':''}>${p}</option>`).join('')}</select></td>
-      <td><span style="font-size:11px;color:${marginColor};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€<br/><span style="font-weight:400;font-size:10px">${marginPct}</span></span></td>
+      <td style="display:${canCost?'':'none'}"><span style="font-size:11px;color:${marginColor};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€<br/><span style="font-weight:400;font-size:10px">${marginPct}</span></span></td>
       <td><input value="${escHtml(s.notes||'')}" onchange="updStaff(${s.id},'notes',this.value)" placeholder="Notes..."/></td>
       <td><button class="btn btn-sm btn-danger" onclick="delStaff(${s.id})">×</button></td>
     </tr>`;
@@ -3778,17 +3780,18 @@ function renderDashboard(){
     return new Date(ev.date).getFullYear()===nowCA.getFullYear();
   }).reduce((s,ev)=>s+evRev(ev),0);
   
+  const _canRevDB=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewRevenue');
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    <div class="card" data-perm="canViewRevenue" style="padding:16px;text-align:center">
+    <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA <span style="font-size:9px;color:var(--text3)">(HT)</span></div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${fmt(caPayees)}€</div>
+      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${_canRevDB?fmt(caPayees)+'€':'—'}</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
-      <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
+      ${_canRevDB?`<div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
         <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
         <span style="color:var(--text3)">→</span>
         <input type="date" id="ca-to" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
-      </div>
+      </div>`:'<div style="font-size:11px;color:var(--text3);margin-top:20px">Accès restreint</div>'}
     </div>
     <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
@@ -4417,8 +4420,8 @@ function showEvForm(ev){
     <!-- SECTION 3: STAFF -->
     <div class="card" style="padding:10px 14px">
       <div class="ctitle" style="margin-bottom:8px">${t('ev_staff_section')}</div>
-      <div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
-        <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold);text-align:center">Heures</span><span style="color:var(--red);text-align:right">Coût HT</span><span style="color:var(--green);text-align:right">Facturation HT</span><span style="text-align:right">Marge</span><span></span>
+      <div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px ${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'80px 100px 70px':''}28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
+        <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold);text-align:center">Heures</span>${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'<span style="color:var(--red);text-align:right">Coût HT</span><span style="color:var(--green);text-align:right">Facturation HT</span><span style="text-align:right">Marge</span>':''}<span></span>
       </div>
       <div id="ev-staff-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
       <button class="btn btn-ghost btn-sm" style="width:100%" onclick="addStaffAssignment(${ev.id})">+ Ajouter staff</button>
@@ -4435,6 +4438,7 @@ function showEvForm(ev){
       `:''}
 
       <!-- Staff Total -->
+      ${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?`
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:flex-end;gap:32px">
         <div style="text-align:right">
           <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Coût HT</div>
@@ -4448,7 +4452,9 @@ function showEvForm(ev){
           <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Marge</div>
           <div id="ef-staff-total-mg" style="font-size:16px;font-weight:600;color:var(--gold)">—</div>
         </div>
-      </div>
+      </div>`:''}
+      <!-- éléments cachés pour updEvCalc -->
+      <div style="display:none"><div id="ef-staff-total-cost"></div><div id="ef-staff-total-bill"></div><div id="ef-staff-total-mg"></div></div>
     </div>
 
     <!-- SECTION 3.5: LIVRAISON -->
@@ -5101,21 +5107,25 @@ function updEvCalc(){
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
   const revTTC=displayRevenue*(1+avgVat/100);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const canRev=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewRevenue');
+  const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
+  const hidden='—';
   set('es-ckt',total||'—');
-  // Compact summary: coût / facturé / marge
-  set('es-total',tc>0?tc.toFixed(0)+'€':'—');
-  set('es-rev',displayRevenue>0?displayRevenue.toFixed(0)+'€':'—');
-  // Sub labels
-  set('es-ing',ingCost>0?ingCost.toFixed(0)+'€':''+'  staff '+(staffCost>0?staffCost.toFixed(0)+'€':''));
-  set('es-staff',staffCost>0?staffCost.toFixed(0)+'€':'—');
-  set('es-staffbill',staffRevenue>0?staffRevenue.toFixed(0)+'€':'—');
-  set('es-rev-cock',revenue>0?revenue.toFixed(0)+'€':'—');
+  set('es-total',canCost&&tc>0?tc.toFixed(0)+'€':canCost?'—':hidden);
+  set('es-rev',canRev&&displayRevenue>0?displayRevenue.toFixed(0)+'€':canRev?'—':hidden);
+  set('es-ing',canCost&&ingCost>0?ingCost.toFixed(0)+'€':'');
+  set('es-staff',canCost&&staffCost>0?staffCost.toFixed(0)+'€':'—');
+  set('es-staffbill',canRev&&staffRevenue>0?staffRevenue.toFixed(0)+'€':'—');
+  set('es-rev-cock',canRev&&revenue>0?revenue.toFixed(0)+'€':'—');
   const mgEl=document.getElementById('es-mg');
-  if(mgEl){mgEl.textContent=displayRevenue>0?finalMg.toFixed(0)+'€':'—';mgEl.style.color=finalMg>0?'var(--green)':finalMg<0?'var(--red)':'var(--text)';}
+  if(mgEl){
+    if(canRev&&canCost){mgEl.textContent=displayRevenue>0?finalMg.toFixed(0)+'€':'—';mgEl.style.color=finalMg>0?'var(--green)':finalMg<0?'var(--red)':'var(--text)';}
+    else{mgEl.textContent='—';mgEl.style.color='';}
+  }
   const finalMgp=displayRevenue>0?finalMg/displayRevenue*100:0;
-  set('es-mgp',displayRevenue>0?finalMgp.toFixed(1)+'%':'—');
+  set('es-mgp',(canRev&&canCost&&displayRevenue>0)?finalMgp.toFixed(1)+'%':'—');
   const ttcEl=document.getElementById('es-ttc');
-  if(ttcEl) ttcEl.textContent=revTTC>0?'soit '+revTTC.toFixed(0)+'€ TTC':'';
+  if(ttcEl) ttcEl.textContent=canRev&&revTTC>0?'soit '+revTTC.toFixed(0)+'€ TTC':'';
 }
 
 window._evExtraProducts=window._evExtraProducts||[];
