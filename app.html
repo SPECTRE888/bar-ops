@@ -1907,11 +1907,12 @@ function onCategoryFilterChange(){
       select.value=select.options[0].value;
       return;
     }
+    window._pendingCatName=name.trim();
     const typeHtml=`<div style="display:flex;flex-direction:column;gap:12px">
       <p style="color:var(--text2);font-size:13px">Quel type de catégorie?</p>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-gold" onclick="createCategoryWithType(${JSON.stringify(name.trim())},'liquid')" style="text-align:left">Liquide (unit: kg, L, pièce)</button>
-        <button class="btn btn-gold" onclick="createCategoryWithType(${JSON.stringify(name.trim())},'material')" style="text-align:left">Matériel (pas d'unit)</button>
+        <button class="btn btn-gold" onclick="createCategoryWithType(window._pendingCatName,'liquid')" style="text-align:left">Liquide (unit: kg, L, pièce)</button>
+        <button class="btn btn-gold" onclick="createCategoryWithType(window._pendingCatName,'material')" style="text-align:left">Matériel (pas d'unit)</button>
         <button class="btn btn-ghost" onclick="document.querySelector('[style*=fixed]').remove()" style="text-align:left">Annuler</button>
       </div>
     </div>`;
