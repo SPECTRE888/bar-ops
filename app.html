@@ -100,6 +100,18 @@ fetch('/.netlify/functions/config')
     // Pour les agents : pointer sur le workspace de l'owner (données partagées)
     window._workspaceUid=access?.ownerId||session.user.id;
     window._userRole=access?.role||'COMPANY_ADMIN';
+    // Stocker le profil frais (avec permissions à jour) pour BarOpsAuth
+    if(access?.profileId){
+      const freshProfile={
+        id:access.profileId,
+        role:access.role,
+        permissions:access.permissions||{},
+        company_id:access.companyId,
+        companies:{owner_id:access.ownerId,name:access.companyName,plan:access.plan},
+        status:'active',
+      };
+      try{localStorage.setItem('barops_profile',JSON.stringify(freshProfile));}catch(e){}
+    }
     // Refresh session heartbeat every 15 minutes
     setInterval(()=>{
       if(window._userId&&window._deviceId){
@@ -10281,8 +10293,8 @@ updateCloudStatus();
   updateBadges();
   renderDashboard();
   applyTheme();
-  // Apply role-based UI visibility after render
-  if(typeof BarOpsAuth!=='undefined') BarOpsAuth.applyToDOM();
+  // Apply role-based UI visibility after render (re-init pour prendre le profil frais)
+  if(typeof BarOpsAuth!=='undefined'){BarOpsAuth.init();BarOpsAuth.applyToDOM();}
   setTimeout(()=>showChangelogIfNew(),500);
   window.addEventListener('pageshow',()=>{
     const pending=sessionStorage.getItem('pendingSend');

@@ -71,6 +71,9 @@ exports.handler = async (event) => {
     plan: subs.plan || 'pro',
     companyName: profile?.companies?.name || '',
     ownerId: ownerId,
+    permissions: profile?.permissions || null,
+    profileId: profile ? user.id : null,
+    companyId: profile?.company_id || null,
   });
 };
 
