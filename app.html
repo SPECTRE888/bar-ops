@@ -54,10 +54,8 @@ fetch('/.netlify/functions/config')
     if(profile?.status==='suspended'){window.location.href='paying.html';return;}
 
     let subs=null;
-    if(profile?.role==='AGENT'){
-      // Les agents héritent de l'abonnement de leur owner — pas de check ici (RLS bloque la lecture)
-      subs={plan:'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
-    } else {
+    const isOwner=profile?.role==='COMPANY_ADMIN'||profile?.role==='SUPER_ADMIN';
+    if(isOwner){
       for(let i=0;i<8;i++){
         const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
         subs=subsArr?.[0];
@@ -69,6 +67,9 @@ fetch('/.netlify/functions/config')
       }
       const isActive=subs&&new Date(subs.expires_at)>new Date();
       if(!isActive){window.location.href='paying.html';return;}
+    } else {
+      // Agents et profils inconnus : accès direct, l'app gère les permissions
+      subs={plan:'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
     }
 
     // Session limit: max 3 active devices per account
