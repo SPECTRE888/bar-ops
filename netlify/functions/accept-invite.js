@@ -39,8 +39,8 @@ exports.handler = async (event) => {
   if (invErr || !inv) return err(404, 'Invitation introuvable');
   if (inv.status !== 'pending') return err(409, 'Cette invitation a déjà été utilisée ou annulée');
   if (new Date(inv.expires_at) < new Date()) return err(410, 'Cette invitation a expiré');
-  if (inv.email !== user.email.toLowerCase()) {
-    return err(403, 'Cet email ne correspond pas à l\'invitation');
+  if (inv.email.toLowerCase() !== user.email.toLowerCase()) {
+    return err(403, `Cet email ne correspond pas à l'invitation (invité: ${inv.email}, connecté: ${user.email})`);
   }
 
   // Find the solo company auto-created for this user by trigger

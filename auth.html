@@ -159,10 +159,16 @@ async function handleInvite(session){
   if(action==='accept-invite'){
     const invToken=new URLSearchParams(window.location.search).get('token');
     const justLoggedIn=sessionStorage.getItem('invite_oauth_done');
-    if(session&&justLoggedIn){
-      // Retour OAuth — traiter l'invitation
+    if(justLoggedIn){
+      // Retour OAuth — attendre la session (le fragment peut ne pas être encore parsé)
       sessionStorage.removeItem('invite_oauth_done');
-      await handleInvite(session);
+      if(session){
+        await handleInvite(session);
+      } else {
+        sb.auth.onAuthStateChange(async(e,s)=>{
+          if(e==='SIGNED_IN'&&s) await handleInvite(s);
+        });
+      }
       return;
     }
     // Premier passage — déconnecter et forcer sélection compte Google
@@ -181,10 +187,7 @@ async function handleInvite(session){
     return;
   }
   sb.auth.onAuthStateChange(async(e,s)=>{
-    if(e==='SIGNED_IN'&&s){
-      if(action==='accept-invite')await handleInvite(s);
-      else await redirect(s.user.id);
-    }
+    if(e==='SIGNED_IN'&&s) await redirect(s.user.id);
   });
 })();
 </script>
