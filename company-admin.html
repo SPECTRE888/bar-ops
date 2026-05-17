@@ -64,6 +64,7 @@ h1{font-size:22px;font-weight:700;margin-bottom:4px}
 
 /* PERMISSIONS GRID */
 .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
+.preset-btn.active{background:#1e40af;color:#fff;border-color:#1e40af}
 .perm-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:13px}
 .perm-label{color:#374151}
 .toggle{position:relative;display:inline-block;width:38px;height:22px}
@@ -147,12 +148,17 @@ input:checked + .slider:before{transform:translateX(16px)}
         <button class="btn btn-primary" id="btnInvite" onclick="sendInvite()">Envoyer l'invitation</button>
       </div>
     </div>
-    <div id="invitePermissions" style="margin-top:16px;display:none">
-      <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">Permissions initiales</div>
-      <div class="perm-grid" id="invitePermGrid"></div>
-    </div>
-    <div style="margin-top:10px">
-      <button class="btn btn-ghost btn-sm" onclick="toggleInvitePerms()">⚙ Personnaliser les permissions</button>
+    <div style="margin-top:14px">
+      <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px">Profil de permissions</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm preset-btn active" id="preset-commercial" onclick="applyPreset('commercial')">Commercial</button>
+        <button class="btn btn-ghost btn-sm preset-btn" id="preset-barman" onclick="applyPreset('barman')">Barman / Carte</button>
+        <button class="btn btn-ghost btn-sm preset-btn" id="preset-custom" onclick="applyPreset('custom')">Personnalisé</button>
+      </div>
+      <div id="presetDesc" style="font-size:12px;color:#64748b;margin-bottom:10px"></div>
+      <div id="invitePermissions">
+        <div class="perm-grid" id="invitePermGrid"></div>
+      </div>
     </div>
   </div>
 
@@ -194,26 +200,75 @@ input:checked + .slider:before{transform:translateX(16px)}
 let _supabase, _session, _profile, _currentTargetId;
 
 const PERM_LABELS = {
-  canViewRevenue:     'Voir le chiffre d\'affaires',
-  canViewAnalytics:   'Voir les analyses',
+  canViewRevenue:     'Voir le CA total',
+  canViewAnalytics:   'Voir les analyses globales',
+  canViewEventMargin: 'Voir la marge par événement',
+  canViewCosts:       'Voir les coûts internes',
   canManageClients:   'Gérer les clients',
-  canEditProjects:    'Modifier les projets',
-  canManageStaff:     'Gérer le staff',
+  canCreateEvents:    'Créer des événements',
+  canEditProjects:    'Modifier les événements',
+  canManageCatalogue: 'Gérer le catalogue (produits/cocktails)',
+  canManageStaff:     'Gérer les collaborateurs',
   canManageSuppliers: 'Gérer les fournisseurs',
-  canViewCosts:       'Voir les coûts',
   canExportData:      'Exporter les données',
 };
 
-const DEFAULT_AGENT_PERMS = {
-  canViewRevenue:     false,
-  canViewAnalytics:   false,
-  canManageClients:   true,
-  canEditProjects:    true,
-  canManageStaff:     false,
-  canManageSuppliers: false,
-  canViewCosts:       false,
-  canExportData:      false,
+// Profils prédéfinis
+const ROLE_PRESETS = {
+  commercial: {
+    label: 'Commercial',
+    desc: 'Gère clients et événements, voit les marges par event/cocktail. Pas d\'accès au CA total.',
+    perms: {
+      canViewRevenue:     false,
+      canViewAnalytics:   false,
+      canViewEventMargin: true,
+      canViewCosts:       false,
+      canManageClients:   true,
+      canCreateEvents:    true,
+      canEditProjects:    true,
+      canManageCatalogue: false,
+      canManageStaff:     false,
+      canManageSuppliers: false,
+      canExportData:      false,
+    }
+  },
+  barman: {
+    label: 'Barman / Carte',
+    desc: 'Gère le catalogue (produits & cocktails). Ne crée pas d\'événements et ne voit pas les finances.',
+    perms: {
+      canViewRevenue:     false,
+      canViewAnalytics:   false,
+      canViewEventMargin: false,
+      canViewCosts:       false,
+      canManageClients:   false,
+      canCreateEvents:    false,
+      canEditProjects:    false,
+      canManageCatalogue: true,
+      canManageStaff:     false,
+      canManageSuppliers: true,
+      canExportData:      false,
+    }
+  },
+  custom: {
+    label: 'Personnalisé',
+    desc: 'Définissez manuellement les permissions.',
+    perms: {
+      canViewRevenue:     false,
+      canViewAnalytics:   false,
+      canViewEventMargin: false,
+      canViewCosts:       false,
+      canManageClients:   false,
+      canCreateEvents:    false,
+      canEditProjects:    false,
+      canManageCatalogue: false,
+      canManageStaff:     false,
+      canManageSuppliers: false,
+      canExportData:      false,
+    }
+  },
 };
+
+const DEFAULT_AGENT_PERMS = ROLE_PRESETS.commercial.perms;
 
 // ─── BOOT ────────────────────────────────────────────────────
 async function boot() {
@@ -353,22 +408,41 @@ async function loadAuditLog() {
 }
 
 // ─── INVITE ──────────────────────────────────────────────────
+let _currentPreset = 'commercial';
+
+function applyPreset(preset) {
+  _currentPreset = preset;
+  const p = ROLE_PRESETS[preset];
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('preset-' + preset);
+  if (btn) btn.classList.add('active');
+  document.getElementById('presetDesc').textContent = p.desc;
+  // Mettre à jour les toggles
+  Object.entries(p.perms).forEach(([k, v]) => {
+    const el = document.getElementById('invPerm_' + k);
+    if (el) el.checked = v;
+    const row = el?.closest('.perm-item');
+    if (row) row.style.opacity = preset === 'custom' ? '1' : (v ? '1' : '0.5');
+  });
+  // En mode custom, activer les toggles ; sinon, les désactiver (lecture seule)
+  document.querySelectorAll('#invitePermGrid input[type=checkbox]').forEach(cb => {
+    cb.disabled = preset !== 'custom';
+  });
+}
+
 function buildInvitePermGrid() {
-  const perms = { ...DEFAULT_AGENT_PERMS };
+  const perms = ROLE_PRESETS.commercial.perms;
   document.getElementById('invitePermGrid').innerHTML = Object.entries(PERM_LABELS).map(([k, label]) => `
     <div class="perm-item">
       <span class="perm-label">${label}</span>
       <label class="toggle">
-        <input type="checkbox" id="invPerm_${k}" ${perms[k] ? 'checked' : ''}>
+        <input type="checkbox" id="invPerm_${k}" ${perms[k] ? 'checked' : ''} disabled>
         <span class="slider"></span>
       </label>
     </div>
   `).join('');
-}
-
-function toggleInvitePerms() {
-  const el = document.getElementById('invitePermissions');
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  // Appliquer le preset par défaut
+  setTimeout(() => applyPreset('commercial'), 0);
 }
 
 async function sendInvite() {
@@ -376,11 +450,13 @@ async function sendInvite() {
   const role = document.getElementById('invRole').value;
   if (!email) { toast('Veuillez saisir un email', true); return; }
 
-  const permissions = {};
-  Object.keys(DEFAULT_AGENT_PERMS).forEach(k => {
-    const el = document.getElementById('invPerm_' + k);
-    if (el) permissions[k] = el.checked;
-  });
+  // Utiliser le preset actif (ou les valeurs custom si mode custom)
+  const permissions = _currentPreset !== 'custom'
+    ? { ...ROLE_PRESETS[_currentPreset].perms }
+    : Object.fromEntries(Object.keys(PERM_LABELS).map(k => {
+        const el = document.getElementById('invPerm_' + k);
+        return [k, el ? el.checked : false];
+      }));
 
   const btn = document.getElementById('btnInvite');
   btn.disabled = true; btn.textContent = 'Envoi…';
@@ -432,9 +508,15 @@ async function invAction(action, invitationId) {
 // ─── PERMISSIONS MODAL ──────────────────────────────────────
 function openPermModal(userId, currentPerms) {
   _currentTargetId = userId;
-  const perms = { ...DEFAULT_AGENT_PERMS, ...currentPerms };
+  const perms = { ...ROLE_PRESETS.custom.perms, ...currentPerms };
 
-  document.getElementById('permModalBody').innerHTML = `<div class="perm-grid">` +
+  document.getElementById('permModalBody').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${Object.entries(ROLE_PRESETS).map(([key, p]) =>
+        `<button class="btn btn-ghost btn-sm" onclick="applyModalPreset('${key}')">${p.label}</button>`
+      ).join('')}
+    </div>
+    <div class="perm-grid">` +
     Object.entries(PERM_LABELS).map(([k, label]) => `
       <div class="perm-item">
         <span class="perm-label">${label}</span>
@@ -448,6 +530,15 @@ function openPermModal(userId, currentPerms) {
   document.getElementById('permModal').style.display = 'flex';
 }
 
+function applyModalPreset(preset) {
+  const p = ROLE_PRESETS[preset];
+  if (!p) return;
+  Object.entries(p.perms).forEach(([k, v]) => {
+    const el = document.getElementById('modPerm_' + k);
+    if (el) el.checked = v;
+  });
+}
+
 function closePermModal() {
   document.getElementById('permModal').style.display = 'none';
   _currentTargetId = null;
@@ -455,7 +546,7 @@ function closePermModal() {
 
 async function savePermissions() {
   const permissions = {};
-  Object.keys(DEFAULT_AGENT_PERMS).forEach(k => {
+  Object.keys(PERM_LABELS).forEach(k => {
     const el = document.getElementById('modPerm_' + k);
     if (el) permissions[k] = el.checked;
   });

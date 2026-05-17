@@ -561,7 +561,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <button class="btn btn-ghost" onclick="showCList()" id="btn-cback" style="display:none">← Retour</button>
       <button class="btn btn-ghost" onclick="recalcAllCocktailsIce()" title="Recalcule coûts et prix de vente de tous les cocktails" id="btn-recalc-ice" style="font-size:11px">Recalculer tout</button>
-      <button class="btn btn-gold" onclick="newCocktail()" id="btn-cnew">+ Nouveau cocktail</button>
+      <button class="btn btn-gold" onclick="newCocktail()" id="btn-cnew" data-perm="canManageCatalogue">+ Nouveau cocktail</button>
     </div>
   </div>
   <div class="content" id="c-content"></div>
@@ -575,7 +575,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <button class="btn btn-ghost" onclick="showEvList()" id="btn-evback" style="display:none">← Retour</button>
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
-      <button class="btn btn-gold" onclick="newEv()" id="btn-evnew">+ Nouvel événement</button>
+      <button class="btn btn-gold" onclick="newEv()" id="btn-evnew" data-perm="canCreateEvents">+ Nouvel événement</button>
     </div>
   </div>
   <div class="content" id="ev-content"></div>
@@ -2305,6 +2305,7 @@ function getCurrentCat(){
 }
 
 async function addProduct(cat){
+  if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canManageCatalogue'))return;
   if(window._isDemo){
     await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux produits.');
     return;
@@ -2926,6 +2927,7 @@ function linkClientToEvent(clientId){
 }
 
 function newCocktail(){
+  if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canManageCatalogue'))return;
   editCId=null;
   const defaultGlass=state.glasses.find(x=>x.isDefault);
   showCForm(defaultGlass?{glass:defaultGlass.name}:{});
@@ -4241,7 +4243,10 @@ async function delEv(id){
   state.events=state.events.filter(x=>x.id!==id);save();updateBadges();showEvList();
 }
 
-function newEv(){editEvId=null;showEvForm({});}
+function newEv(){
+  if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canCreateEvents'))return;
+  editEvId=null;showEvForm({});
+}
 function editEv(id){editEvId=id;showEvForm(state.events.find(x=>x.id===id)||{});}
 
 function showEvForm(ev){
@@ -5107,8 +5112,8 @@ function updEvCalc(){
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
   const revTTC=displayRevenue*(1+avgVat/100);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  const canRev=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewRevenue');
-  const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
+  const canRev=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewRevenue')||BarOpsAuth.can('canViewEventMargin');
+  const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts')||BarOpsAuth.can('canViewEventMargin');
   const hidden='—';
   set('es-ckt',total||'—');
   set('es-total',canCost&&tc>0?tc.toFixed(0)+'€':canCost?'—':hidden);

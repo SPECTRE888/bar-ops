@@ -1,32 +1,50 @@
 /**
  * Bar Ops — Permissions & Role module
  *
- * Usage (inline script tag or <script src="permissions.js">):
+ *   BarOpsAuth.init()                    — call once at app boot
+ *   BarOpsAuth.can('canViewRevenue')     — returns boolean
+ *   BarOpsAuth.role()                    — 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'AGENT'
+ *   BarOpsAuth.isAdmin()                 — true if COMPANY_ADMIN or SUPER_ADMIN
+ *   BarOpsAuth.profile                   — raw profile object
+ *   BarOpsAuth.applyToDOM()              — hide/show elements via data-perm attributes
  *
- *   BarOpsAuth.init()          — call once at app boot
- *   BarOpsAuth.can('canViewRevenue')  — returns boolean
- *   BarOpsAuth.role()          — 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'AGENT'
- *   BarOpsAuth.isAdmin()       — true if COMPANY_ADMIN or SUPER_ADMIN
- *   BarOpsAuth.profile         — raw profile object
- *   BarOpsAuth.applyToDOM()    — hide/show elements via data-perm attributes
+ * Permissions disponibles :
+ *   canViewRevenue      — CA total et analytics globales
+ *   canViewAnalytics    — Tableau historique / KPIs globaux
+ *   canViewEventMargin  — Marge et coût au niveau d'un événement
+ *   canViewCosts        — Coûts internes (tarifs staff, coût ingrédients)
+ *   canManageClients    — Créer / modifier / supprimer des clients
+ *   canCreateEvents     — Créer de nouveaux événements
+ *   canEditProjects     — Modifier les événements existants
+ *   canManageCatalogue  — Ajouter / modifier produits et cocktails
+ *   canManageStaff      — Gérer l'équipe collaborateurs
+ *   canManageSuppliers  — Gérer les fournisseurs
+ *   canExportData       — Exporter les données
  *
- * DOM attributes:
- *   data-perm="canViewRevenue"          hide element if no permission
- *   data-perm-role="COMPANY_ADMIN"      hide if not that role (or SUPER_ADMIN)
- *   data-perm-hide-agent                hide element for AGENTs
+ * Profils prédéfinis :
+ *   COMMERCIAL  — gère clients et events, voit marge event/cocktail, pas de CA total
+ *   BARMAN      — gère catalogue (produits/cocktails), pas d'events ni finances
+ *
+ * DOM attributes :
+ *   data-perm="canViewRevenue"       hide element if no permission
+ *   data-perm-role="COMPANY_ADMIN"   hide if not that role (or SUPER_ADMIN)
  */
 const BarOpsAuth = (() => {
   let _profile = null;
 
-  const DEFAULTS = {
-    canViewRevenue:     true,
-    canViewAnalytics:   true,
-    canManageClients:   true,
-    canEditProjects:    true,
-    canManageStaff:     true,
-    canManageSuppliers: true,
-    canViewCosts:       true,
-    canExportData:      true,
+  // Valeurs par défaut pour un AGENT sans permissions explicites
+  const AGENT_DEFAULTS = {
+    canViewRevenue:     false,
+    canViewAnalytics:   false,
+    canViewEventMargin: false,
+    canViewCosts:       false,
+    canManageClients:   false,
+    canCreateEvents:    false,
+    canEditProjects:    false,
+    canManageCatalogue: false,
+    canManageStaff:     false,
+    canManageSuppliers: false,
+    canExportData:      false,
   };
 
   function init() {
@@ -38,10 +56,10 @@ const BarOpsAuth = (() => {
   }
 
   function can(permKey) {
-    if (!_profile) return true; // solo / not loaded yet → full access
+    if (!_profile) return true;
     if (_profile.role === 'SUPER_ADMIN' || _profile.role === 'COMPANY_ADMIN') return true;
     const perms = _profile.permissions || {};
-    return perms[permKey] !== undefined ? !!perms[permKey] : !!(DEFAULTS[permKey]);
+    return perms[permKey] !== undefined ? !!perms[permKey] : !!(AGENT_DEFAULTS[permKey]);
   }
 
   function role() {
@@ -53,78 +71,47 @@ const BarOpsAuth = (() => {
   }
 
   function applyToDOM() {
-    // data-perm="canViewRevenue" — hide if not permitted
     document.querySelectorAll('[data-perm]').forEach(el => {
       const key = el.dataset.perm;
-      if (!can(key)) el.style.display = 'none';
+      el.style.display = can(key) ? '' : 'none';
     });
-
-    // data-perm-role="COMPANY_ADMIN" — hide if not that role
     document.querySelectorAll('[data-perm-role]').forEach(el => {
       const required = el.dataset.permRole;
-      if (role() !== required && role() !== 'SUPER_ADMIN') el.style.display = 'none';
-    });
-
-    // data-perm-hide-agent — hide for AGENTs only
-    document.querySelectorAll('[data-perm-hide-agent]').forEach(el => {
-      if (role() === 'AGENT') el.style.display = 'none';
+      el.style.display = (role() === required || role() === 'SUPER_ADMIN') ? '' : 'none';
     });
   }
 
-  /**
-   * Guard a function call — returns null + shows a toast if forbidden
-   * Usage: if (!BarOpsAuth.guard('canManageStaff')) return;
-   */
   function guard(permKey, showMessage = true) {
     if (can(permKey)) return true;
-    if (showMessage) {
-      _showForbidden(permKey);
-    }
+    if (showMessage) _showForbidden(permKey);
     return false;
   }
 
   function _showForbidden(permKey) {
     const labels = {
-      canViewRevenue:     'Voir le chiffre d\'affaires',
-      canViewAnalytics:   'Voir les analyses',
+      canViewRevenue:     'Voir le chiffre d\'affaires total',
+      canViewAnalytics:   'Voir les analyses globales',
+      canViewEventMargin: 'Voir la marge de l\'événement',
+      canViewCosts:       'Voir les coûts internes',
       canManageClients:   'Gérer les clients',
-      canEditProjects:    'Modifier les projets',
-      canManageStaff:     'Gérer le staff',
+      canCreateEvents:    'Créer des événements',
+      canEditProjects:    'Modifier les événements',
+      canManageCatalogue: 'Gérer le catalogue',
+      canManageStaff:     'Gérer les collaborateurs',
       canManageSuppliers: 'Gérer les fournisseurs',
-      canViewCosts:       'Voir les coûts',
       canExportData:      'Exporter les données',
     };
     const label = labels[permKey] || permKey;
-    // Try to find/use existing toast function from app.html, fall back to alert
     if (typeof showToast === 'function') {
-      showToast(`Accès refusé : "${label}" — contactez votre administrateur.`, 'error');
-    } else if (typeof toast === 'function') {
-      toast(`Accès refusé : "${label}"`);
+      showToast(`Accès refusé — ${label}`, 'error');
     } else {
-      alert(`Accès refusé : "${label}"\nContactez votre administrateur.`);
+      alert(`Accès refusé : ${label}\nContactez votre administrateur.`);
     }
   }
 
-  /**
-   * Inject the "Gestion équipe" nav link for admins.
-   * Call after DOM is ready.
-   */
-  function injectAdminNavLink(containerSelector = '.nav-links, nav') {
-    if (!isAdmin()) return;
-    const container = document.querySelector(containerSelector);
-    if (!container || container.querySelector('[data-admin-nav]')) return;
-    const a = document.createElement('a');
-    a.href = '/company-admin.html';
-    a.textContent = '👥 Équipe';
-    a.dataset.adminNav = '1';
-    a.style.cssText = 'font-size:13px;color:inherit;text-decoration:none;opacity:.8';
-    container.appendChild(a);
-  }
-
-  return { init, can, role, isAdmin, guard, applyToDOM, injectAdminNavLink, get profile() { return _profile; } };
+  return { init, can, role, isAdmin, guard, applyToDOM, get profile() { return _profile; } };
 })();
 
-// Auto-init if script is loaded as a module or standalone
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => BarOpsAuth.init());
 } else {
