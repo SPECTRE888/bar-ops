@@ -8821,10 +8821,12 @@ function renderProfile(){
             </div>
           </div>
           <div style="display:flex;gap:8px;border-top:1px solid var(--border);padding-top:12px">
+            ${typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin()?`
             <button class="btn-profile" onclick="showProfileEditModal()" style="flex:1">Modifier</button>
-            <button class="btn-profile" onclick="if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canExportData'))return;exportData()" style="flex:1" data-perm="canExportData">Exporter</button>
             <button class="btn-profile" onclick="confirmResetData()" style="flex:1">Réinitialiser</button>
             <button class="btn-profile btn-danger" onclick="confirmDeleteAccount()" style="flex:1">Supprimer</button>
+            `:''}
+            <button class="btn-profile" onclick="if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canExportData'))return;exportData()" style="flex:1" data-perm="canExportData">Exporter</button>
           </div>
         </div>
         <div id="prof-bar-edit" style="display:none;flex-direction:column;gap:8px">
@@ -8963,6 +8965,10 @@ function updProfile(k,v){
 }
 
 function showProfileEditModal(){
+  if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.isAdmin()){
+    if(typeof showToast==='function')showToast('Modification du profil réservée à l\'administrateur','error');
+    return;
+  }
   const result=new Promise((resolve)=>{
     const modal=document.createElement('div');
     modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
