@@ -68,7 +68,7 @@ exports.handler = async (event) => {
     return res(200, { allowed: false, reason: 'no_active_subscription' });
   }
 
-  // Merger les permissions DB avec les defaults (toutes clés à false pour les nouvelles)
+  // Toutes les clés connues, toutes à false par défaut
   const PERM_DEFAULTS = {
     canViewRevenue: false, canViewAnalytics: false, canViewEventMargin: false,
     canViewCosts: false, canManageClients: false, canCreateEvents: false,
@@ -76,9 +76,12 @@ exports.handler = async (event) => {
     canManageSuppliers: false, canExportData: false,
   };
   const rawPerms = profile?.permissions || {};
+  // Si les permissions DB sont "anciennes" (pas de nouvelles clés), on repart de zéro
+  // pour éviter que canEditProjects:true laisse tout passer
+  const hasNewKeys = 'canCreateEvents' in rawPerms || 'canManageCatalogue' in rawPerms || 'canViewEventMargin' in rawPerms;
   const permissions = role === 'AGENT'
-    ? { ...PERM_DEFAULTS, ...rawPerms }
-    : null; // admin → pas besoin, accès total
+    ? hasNewKeys ? { ...PERM_DEFAULTS, ...rawPerms } : { ...PERM_DEFAULTS }
+    : null;
 
   return res(200, {
     allowed: true,

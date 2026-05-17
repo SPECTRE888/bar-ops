@@ -327,7 +327,7 @@ function renderStats(agents, invitations) {
 }
 
 function detectPreset(perms) {
-  if (!perms) return null;
+  if (!perms || !Object.keys(perms).length) return { key: 'custom', label: 'Personnalisé' };
   for (const [key, preset] of Object.entries(ROLE_PRESETS)) {
     if (key === 'custom') continue;
     const match = Object.entries(preset.perms).every(([k, v]) => !!perms[k] === v);
