@@ -26,7 +26,7 @@ exports.handler = async (event) => {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, status, company_id, companies(owner_id, name)')
+    .select('role, status, company_id, permissions, companies(owner_id, name)')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -68,13 +68,25 @@ exports.handler = async (event) => {
     return res(200, { allowed: false, reason: 'no_active_subscription' });
   }
 
+  // Merger les permissions DB avec les defaults (toutes clés à false pour les nouvelles)
+  const PERM_DEFAULTS = {
+    canViewRevenue: false, canViewAnalytics: false, canViewEventMargin: false,
+    canViewCosts: false, canManageClients: false, canCreateEvents: false,
+    canEditProjects: false, canManageCatalogue: false, canManageStaff: false,
+    canManageSuppliers: false, canExportData: false,
+  };
+  const rawPerms = profile?.permissions || {};
+  const permissions = role === 'AGENT'
+    ? { ...PERM_DEFAULTS, ...rawPerms }
+    : null; // admin → pas besoin, accès total
+
   return res(200, {
     allowed: true,
     role,
     plan: subs.plan || 'pro',
     companyName: profile?.companies?.name || '',
     ownerId: ownerId,
-    permissions: profile?.permissions || null,
+    permissions,
     profileId: profile ? user.id : null,
     companyId: profile?.company_id || null,
   });

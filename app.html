@@ -10309,11 +10309,12 @@ updateCloudStatus();
   } else {
     injectDemoData();
   }
+  // Init permissions avant renderDashboard pour que can() soit correct
+  if(typeof BarOpsAuth!=='undefined'){BarOpsAuth.init();}
   updateBadges();
   renderDashboard();
   applyTheme();
-  // Apply role-based UI visibility after render (re-init pour prendre le profil frais)
-  if(typeof BarOpsAuth!=='undefined'){BarOpsAuth.init();BarOpsAuth.applyToDOM();}
+  if(typeof BarOpsAuth!=='undefined'){BarOpsAuth.applyToDOM();}
   setTimeout(()=>showChangelogIfNew(),500);
   window.addEventListener('pageshow',()=>{
     const pending=sessionStorage.getItem('pendingSend');
