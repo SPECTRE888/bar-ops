@@ -1,65 +1,34 @@
 const { app, BrowserWindow, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
-const http = require('http')
 const path = require('path')
-const url  = require('url')
 
-const AUTH_PORT = 54321
 const AUTH_FILE = path.join(__dirname, 'app', 'auth.html')
 const APP_FILE  = path.join(__dirname, 'app', 'app.html')
 
-let mainWin  = null
-let authServer = null
+let mainWin = null
+let pendingCallbackUrl = null
 
-// ─── Local OAuth callback server ─────────────────────────────────────────────
-// Supabase redirectTo = http://localhost:54321/callback
-// After Google auth, Supabase redirects here with #access_token=... in the hash
-// The page sends the hash to Electron via query string so we can forward it.
+// ─── Custom protocol: barops:// ──────────────────────────────────────────────
+// Google redirige vers barops://callback#access_token=...
+// macOS ouvre l'app Electron directement — plus fiable que localhost:54321
 
-function startAuthServer() {
-  authServer = http.createServer((req, res) => {
-    const parsed = url.parse(req.url, true)
+function handleCallbackUrl(rawUrl) {
+  try {
+    // barops://callback?action=login#access_token=...
+    // new URL() ne parse pas bien les schemes custom, on le remplace
+    const httpUrl = rawUrl.replace(/^barops:\/\//, 'http://barops/')
+    const parsed  = new URL(httpUrl)
+    const search  = parsed.search || ''   // ?action=login
+    const hash    = parsed.hash   || ''   // #access_token=...
 
-    if (parsed.pathname === '/callback') {
-      res.writeHead(200, { 'Content-Type': 'text/html' })
-      res.end(`<!DOCTYPE html><html><head><meta charset="utf-8">
-        <title>Bar Ops — Connexion...</title>
-        <style>body{font-family:sans-serif;background:#080808;color:#c4a46b;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:18px;}</style>
-        </head><body>
-        <p>Connexion réussie, retour à l'application...</p>
-        <script>
-          // Implicit flow: tokens dans le hash (#access_token=...)
-          // PKCE flow: code dans le query string (?code=...)
-          const hash = window.location.hash || ''
-          const search = window.location.search || ''
-          const qs = new URLSearchParams({ hash, search })
-          fetch('/token?' + qs).then(() => window.close())
-        </script>
-        </body></html>`)
-      return
-    }
-
-    if (parsed.pathname === '/token') {
-      const hash   = parsed.query.hash   || ''
-      const search = parsed.query.search || ''
-      res.writeHead(200)
-      res.end('ok')
-      if (mainWin) {
-        mainWin.focus()
-        // Charger auth.html avec les tokens pour que Supabase détecte la session
-        const authUrl = `file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`
-        mainWin.loadURL(authUrl)
-      }
-      return
-    }
-
-    res.writeHead(404)
-    res.end()
-  })
-
-  authServer.listen(AUTH_PORT, '127.0.0.1', () => {
-    console.log(`Auth server listening on http://127.0.0.1:${AUTH_PORT}`)
-  })
+    if (!mainWin) { pendingCallbackUrl = rawUrl; return }
+    mainWin.show()
+    mainWin.focus()
+    const authUrl = `file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`
+    mainWin.loadURL(authUrl)
+  } catch(e) {
+    console.error('handleCallbackUrl error:', e)
+  }
 }
 
 // ─── Window ───────────────────────────────────────────────────────────────────
@@ -79,7 +48,6 @@ function createWindow() {
     },
   })
 
-  // User-agent Chrome pour que Google accepte l'OAuth dans la WebView
   mainWin.webContents.setUserAgent(
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
   )
@@ -88,17 +56,24 @@ function createWindow() {
 
   // Tout ce qui n'est pas local → browser système
   mainWin.webContents.setWindowOpenHandler(({ url: u }) => {
-    if (u.startsWith('file://')) return { action: 'allow' }
+    if (u.startsWith('file://') || u.startsWith('barops://')) return { action: 'allow' }
     shell.openExternal(u)
     return { action: 'deny' }
   })
 
   mainWin.webContents.on('will-navigate', (event, u) => {
-    if (!u.startsWith('file://') && !u.startsWith(`http://localhost:${AUTH_PORT}`)) {
+    if (!u.startsWith('file://') && !u.startsWith('barops://')) {
       event.preventDefault()
       shell.openExternal(u)
     }
   })
+
+  // Si un callback est arrivé avant la création de la fenêtre
+  if (pendingCallbackUrl) {
+    const pending = pendingCallbackUrl
+    pendingCallbackUrl = null
+    mainWin.webContents.once('did-finish-load', () => handleCallbackUrl(pending))
+  }
 }
 
 // ─── Single instance ──────────────────────────────────────────────────────────
@@ -106,7 +81,10 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  app.on('second-instance', () => {
+  // Windows/Linux : deep link via second instance
+  app.on('second-instance', (_event, argv) => {
+    const url = argv.find(a => a.startsWith('barops://'))
+    if (url) handleCallbackUrl(url)
     if (mainWin) { mainWin.show(); mainWin.focus() }
   })
 }
@@ -137,7 +115,6 @@ app.whenReady().then(() => {
     } catch(e) {}
   }
 
-  startAuthServer()
   createWindow()
   if (app.isPackaged) setupUpdater()
 
@@ -146,7 +123,12 @@ app.whenReady().then(() => {
   })
 })
 
+// macOS : deep link via open-url
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  handleCallbackUrl(url)
+})
+
 app.on('window-all-closed', () => {
-  authServer?.close()
   if (process.platform !== 'darwin') app.quit()
 })
