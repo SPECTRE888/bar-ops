@@ -36,7 +36,7 @@ exports.handler = async (event) => {
   if (!uid || !evId) return err(400, 'invalid_token', headers);
 
   const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-  if (parts[1] !== hmac(secret, uid, evId)) return err(403, 'bad_signature', headers);
+  if (parts[1] !== hmac(secret, uid, String(evId))) return err(403, 'bad_signature', headers);
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -49,7 +49,7 @@ exports.handler = async (event) => {
   if (!ws?.data) return err(404, 'workspace_not_found', headers);
 
   const workspaceData = ws.data;
-  const evIdx = (workspaceData.events || []).findIndex(e => e.id == evId);
+  const evIdx = (workspaceData.events || []).findIndex(e => String(e.id) === String(evId));
   if (evIdx === -1) return err(404, 'event_not_found', headers);
 
   workspaceData.events[evIdx].portalSignedAt = new Date().toISOString();

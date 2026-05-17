@@ -36,7 +36,7 @@ exports.handler = async (event) => {
   if (!uid || !evId) return err(400, 'invalid_token', headers);
 
   const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-  const expected = hmac(secret, uid, evId);
+  const expected = hmac(secret, uid, String(evId));
   if (parts[1] !== expected) return err(403, 'bad_signature', headers);
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -50,7 +50,7 @@ exports.handler = async (event) => {
   if (!ws?.data) return err(404, 'workspace_not_found', headers);
 
   const workspaceData = ws.data;
-  const event_ = (workspaceData.events || []).find(e => e.id == evId);
+  const event_ = (workspaceData.events || []).find(e => String(e.id) === String(evId));
   if (!event_) return err(404, 'event_not_found', headers);
 
   const profile = workspaceData.profile || {};

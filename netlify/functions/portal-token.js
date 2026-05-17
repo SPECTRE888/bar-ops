@@ -29,18 +29,22 @@ exports.handler = async (event) => {
   if (!evId) return err(400, 'missing_evId', headers);
 
   // Verify event belongs to user's workspace
-  const { data: ws } = await supabase
+  const { data: ws, error: wsErr } = await supabase
     .from('workspaces')
     .select('data')
     .eq('user_id', user.id)
     .maybeSingle();
 
+  console.log('[portal-token] user:', user.id, '| evId:', evId, '| ws found:', !!ws, '| wsErr:', wsErr?.message);
+  console.log('[portal-token] events count:', ws?.data?.events?.length ?? 0);
+
   const found = (ws?.data?.events || []).some(e => String(e.id) === String(evId));
+  console.log('[portal-token] event found:', found);
   if (!found) return err(404, 'event_not_found', headers);
 
   const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-  const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: parseInt(evId) }));
-  const sig = hmac(secret, user.id, parseInt(evId));
+  const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: String(evId) }));
+  const sig = hmac(secret, user.id, String(evId));
   const portalToken = `${payload}.${sig}`;
 
   return { statusCode: 200, headers, body: JSON.stringify({ token: portalToken }) };
