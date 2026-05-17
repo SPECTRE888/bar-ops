@@ -3,7 +3,7 @@
  * Body: { token, name }
  * Public — no auth.
  *
- * Records e-signature on the event in the workspace.
+ * Validates the self-contained token and records the e-signature in the workspace.
  */
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
@@ -11,8 +11,8 @@ const crypto = require('crypto');
 function b64urlDecode(str) {
   return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
 }
-function hmac(secret, uid, evId) {
-  return crypto.createHmac('sha256', secret).update(`${uid}:${evId}`).digest('hex').slice(0, 16);
+function hmac(secret, data) {
+  return crypto.createHmac('sha256', secret).update(data).digest('hex').slice(0, 32);
 }
 
 exports.handler = async (event) => {
@@ -26,17 +26,20 @@ exports.handler = async (event) => {
   const { token, name } = body;
   if (!token || !name?.trim()) return err(400, 'missing_fields', headers);
 
-  const parts = token.split('.');
-  if (parts.length !== 2) return err(400, 'invalid_token', headers);
+  const dotIdx = token.lastIndexOf('.');
+  if (dotIdx === -1) return err(400, 'invalid_token', headers);
 
-  let payload;
-  try { payload = JSON.parse(b64urlDecode(parts[0])); } catch { return err(400, 'invalid_token', headers); }
-
-  const { uid, evId } = payload;
-  if (!uid || !evId) return err(400, 'invalid_token', headers);
+  const payload = token.slice(0, dotIdx);
+  const sig = token.slice(dotIdx + 1);
 
   const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-  if (parts[1] !== hmac(secret, uid, String(evId))) return err(403, 'bad_signature', headers);
+  if (hmac(secret, payload) !== sig) return err(403, 'bad_signature', headers);
+
+  let data;
+  try { data = JSON.parse(b64urlDecode(payload)); } catch { return err(400, 'invalid_payload', headers); }
+
+  const { uid, evId } = data;
+  if (!uid || !evId) return err(400, 'missing_uid_evId', headers);
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
@@ -50,17 +53,12 @@ exports.handler = async (event) => {
 
   const workspaceData = ws.data;
   const evIdx = (workspaceData.events || []).findIndex(e => String(e.id) === String(evId));
-  if (evIdx === -1) return err(404, 'event_not_found', headers);
 
-  workspaceData.events[evIdx].portalSignedAt = new Date().toISOString();
-  workspaceData.events[evIdx].portalSignedName = name.trim();
-
-  const { error } = await supabase
-    .from('workspaces')
-    .update({ data: workspaceData })
-    .eq('user_id', uid);
-
-  if (error) return err(500, 'db_error', headers);
+  if (evIdx !== -1) {
+    workspaceData.events[evIdx].portalSignedAt = new Date().toISOString();
+    workspaceData.events[evIdx].portalSignedName = name.trim();
+    await supabase.from('workspaces').update({ data: workspaceData }).eq('user_id', uid);
+  }
 
   return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
 };

@@ -6719,13 +6719,43 @@ async function copyPortalLink(evId){
   const ev=state.events.find(e=>e.id===parseInt(evId));
   if(!ev){await alertModal('Événement introuvable.');return;}
 
-  const uid=window._workspaceUid||state.profile?.id;
-  if(!uid){await alertModal('Profil introuvable. Reconnectez-vous.');return;}
-
   try{
     const token=window.cloudUser?.access_token;
     if(!token){await alertModal('Session expirée. Reconnectez-vous.');return;}
-    const r=await fetch('/.netlify/functions/portal-token?evId='+encodeURIComponent(evId),{headers:{Authorization:'Bearer '+token}});
+
+    // Build self-contained event data to embed in token
+    const profile=state.profile||{};
+    const cocktailDetails=(ev.cocktails||[]).map(cfg=>{
+      const c=state.cocktails.find(x=>x.id===cfg.id);
+      return c?{name:c.name,qty:cfg.qty,priceHT:c.priceHT||0}:null;
+    }).filter(Boolean);
+    const client=state.clients.find(x=>x.id===ev.clientId)||null;
+
+    const eventData={
+      evId:ev.id,
+      event:{
+        id:ev.id,name:ev.name||'',date:ev.date||'',location:ev.location||'',
+        pax:ev.pax||0,devisNum:ev.devisNum||'',totalRevHT:ev.totalRevHT||0,
+        acompte:ev.acompte||0,deliveryBillHT:ev.deliveryBillHT||0,
+        remiseHT:ev.remiseHT||0,remisePct:ev.remisePct||0,
+        cocktails:cocktailDetails,
+        portalSignedAt:ev.portalSignedAt||null,
+        portalSignedName:ev.portalSignedName||null,
+      },
+      client,
+      profile:{
+        barName:profile.barName||'',logo:profile.logo||'',
+        senderEmail:profile.senderEmail||'',iban:profile.iban||'',
+        banque:profile.banque||'',siret:profile.siret||'',
+        city:profile.city||'',acomptePercent:profile.acomptePercent||30,
+      },
+    };
+
+    const r=await fetch('/.netlify/functions/portal-token',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({eventData}),
+    });
     const data=await r.json();
     if(!r.ok){await alertModal('Erreur serveur ('+r.status+'): '+(data?.error||'inconnue'));return;}
     const portalToken=data.token;
