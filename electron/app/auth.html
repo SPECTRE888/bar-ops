@@ -98,7 +98,8 @@ async function redirect(userId){
     const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
     if(data&&new Date(data.expires_at)>new Date()){window.location.href='app.html';return;}
   }catch(e){}
-  window.location.href='paying.html';
+  // paying.html n'existe pas dans l'app Electron — envoyer vers app.html directement
+  window.location.href='app.html';
 }
 
 // Redirect after Google OAuth callback
@@ -109,14 +110,23 @@ async function redirect(userId){
 
   await waitForSb();
 
-  // PKCE: session may already be established by the time JS runs
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){
-    await redirect(session.user.id);
-    return;
+  // Extraire les tokens directement du hash (#access_token=...&refresh_token=...)
+  const hash=window.location.hash.slice(1);
+  if(hash){
+    const hp=new URLSearchParams(hash);
+    const accessToken=hp.get('access_token');
+    const refreshToken=hp.get('refresh_token');
+    if(accessToken&&refreshToken){
+      const{data,error}=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
+      if(!error&&data?.session){await redirect(data.session.user.id);return;}
+    }
   }
 
-  // Fallback: listen for sign-in event
+  // Fallback: session déjà établie par detectSessionInUrl
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){await redirect(session.user.id);return;}
+
+  // Dernier recours: écouter l'événement
   sb.auth.onAuthStateChange(async(e,s)=>{
     if(e==='SIGNED_IN'&&s) await redirect(s.user.id);
   });
