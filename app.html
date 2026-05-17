@@ -54,8 +54,9 @@ fetch('/.netlify/functions/config')
         headers:{'Authorization':'Bearer '+session.access_token}
       });
       access=await r.json();
+      console.log('[check-access] attempt',i,access);
       if(access.allowed)break;
-      if(access.reason==='suspended'||access.reason==='auth_required'||access.reason==='invalid_token')break;
+      if(access.reason==='suspended'||access.reason==='auth_required'||access.reason==='invalid_token'||access.reason==='no_company')break;
       // reason=no_active_subscription → peut être webhook encore en transit
       if(i===0){
         document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Vérification de votre abonnement…</p><p style="font-size:12px;color:#585450">Cela peut prendre quelques secondes après le paiement.</p></div></div>`;

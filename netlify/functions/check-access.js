@@ -30,6 +30,8 @@ exports.handler = async (event) => {
     .eq('id', user.id)
     .maybeSingle();
 
+  console.log('[check-access] user:', user.id, user.email, '| profile:', JSON.stringify(profile));
+
   if (profile?.status === 'suspended') {
     return res(200, { allowed: false, reason: 'suspended' });
   }
@@ -39,9 +41,10 @@ exports.handler = async (event) => {
     ? profile?.companies?.owner_id
     : user.id;
 
+  console.log('[check-access] role:', role, '| ownerId:', ownerId);
+
   if (!ownerId) {
-    // Pas de company trouvée — bloquer
-    return res(200, { allowed: false, reason: 'no_company' });
+    return res(200, { allowed: false, reason: 'no_company', debug: { role, profile } });
   }
 
   const { data: subs } = await supabase
