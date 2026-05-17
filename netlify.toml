@@ -3,6 +3,7 @@
 
 [build.environment]
   NETLIFY_SKIP_SECURITY_CHECKS = "1"
+  SECRETS_SCAN_OMIT_KEYS = "APP_URL"
 
 [functions]
   node_bundler = "esbuild"
