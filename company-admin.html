@@ -306,7 +306,7 @@ async function boot() {
   // UI init
   document.getElementById('navAvatar').textContent = (session.user.email || '?')[0].toUpperCase();
   document.getElementById('companySubtitle').textContent =
-    `${profile.companies?.name || 'Votre entreprise'} — Plan ${(profile.companies?.plan || '?').toUpperCase()}`;
+    `${profile.companies?.name || 'Votre entreprise'} — ${{'solo':'Early Access','pro':'Pro','business':'Business'}[profile.companies?.plan] || (profile.companies?.plan || '?')}`;
 
   buildInvitePermGrid();
   await loadData();
