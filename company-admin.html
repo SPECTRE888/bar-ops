@@ -4,101 +4,109 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bar Ops — Gestion de l'équipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+:root{
+  --bg:#0a0a0a;--surface:#111;--surface2:#181818;--border:#2a2520;
+  --text:#ede8e0;--text-muted:#7a7060;--gold:#c4a46b;--gold-dim:#8a6f3f;
+  --danger:#c0392b;--danger-dim:#3d1010;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* NAV */
-nav{background:#1e293b;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px}
-nav .logo{font-weight:700;font-size:18px;color:#60a5fa}
+nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px}
+nav .logo{font-weight:700;font-size:18px;color:var(--gold);letter-spacing:.02em}
 nav .links{display:flex;gap:16px;align-items:center}
-nav a{color:#94a3b8;text-decoration:none;font-size:14px;transition:color .15s}
-nav a:hover{color:#fff}
-nav a.active{color:#fff}
-.avatar{width:32px;height:32px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer}
+nav a{color:var(--text-muted);text-decoration:none;font-size:14px;transition:color .15s}
+nav a:hover{color:var(--text)}
+nav a.active{color:var(--gold)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer}
 
 /* LAYOUT */
 .page{max-width:900px;margin:0 auto;padding:32px 16px}
-h1{font-size:22px;font-weight:700;margin-bottom:4px}
-.subtitle{color:#64748b;font-size:14px;margin-bottom:28px}
+h1{font-size:22px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.subtitle{color:var(--text-muted);font-size:14px;margin-bottom:28px}
 
 /* CARDS */
-.card{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.card-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text)}
 .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
-.badge-admin{background:#dbeafe;color:#1d4ed8}
-.badge-agent{background:#f0fdf4;color:#15803d}
-.badge-pending{background:#fef3c7;color:#92400e}
-.badge-suspended{background:#fee2e2;color:#991b1b}
+.badge-admin{background:rgba(196,164,107,.15);color:var(--gold);border:1px solid var(--gold-dim)}
+.badge-agent{background:rgba(196,164,107,.08);color:#a89060;border:1px solid #3a2f1a}
+.badge-pending{background:rgba(180,140,60,.12);color:#c4a46b;border:1px solid #4a3820}
+.badge-suspended{background:var(--danger-dim);color:#e05c5c;border:1px solid #5a2020}
 
 /* INVITE FORM */
 .invite-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-.invite-form label{font-size:13px;font-weight:500;display:block;margin-bottom:6px;color:#374151}
-.invite-form input, .invite-form select{
-  padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;
-  outline:none;transition:border-color .15s
+.invite-form label{font-size:13px;font-weight:500;display:block;margin-bottom:6px;color:var(--text-muted)}
+.invite-form input,.invite-form select{
+  padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;
+  background:var(--surface2);color:var(--text);outline:none;transition:border-color .15s;font-family:'DM Sans',sans-serif
 }
-.invite-form input:focus, .invite-form select:focus{border-color:#2563eb}
+.invite-form input:focus,.invite-form select:focus{border-color:var(--gold)}
+.invite-form select option{background:var(--surface2)}
 .invite-form .field{display:flex;flex-direction:column}
 .invite-form .field.grow{flex:1;min-width:200px}
 
 /* BUTTONS */
-.btn{padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:background .15s}
-.btn-primary{background:#2563eb;color:#fff}
-.btn-primary:hover{background:#1d4ed8}
-.btn-primary:disabled{background:#93c5fd;cursor:not-allowed}
-.btn-ghost{background:transparent;color:#64748b;border:1.5px solid #e2e8f0}
-.btn-ghost:hover{background:#f1f5f9}
-.btn-danger{background:#fee2e2;color:#b91c1c}
-.btn-danger:hover{background:#fecaca}
+.btn{padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:var(--gold);color:#0a0a0a}
+.btn-primary:hover{background:#d4b47b}
+.btn-primary:disabled{background:var(--gold-dim);color:#5a4a2a;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);border-color:#3a3028}
+.btn-danger{background:var(--danger-dim);color:#e05c5c;border:1px solid #5a2020}
+.btn-danger:hover{background:#5a1a1a}
 .btn-sm{padding:5px 10px;font-size:12px}
 
 /* AGENT LIST */
-.agent-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.agent-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
 .agent-row:last-child{border-bottom:none}
-.agent-avatar{width:38px;height:38px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.agent-avatar{width:38px;height:38px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--gold);flex-shrink:0}
 .agent-info{flex:1;min-width:0}
-.agent-email{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agent-meta{font-size:12px;color:#94a3b8;margin-top:2px}
+.agent-email{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.agent-meta{font-size:12px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .agent-actions{display:flex;gap:6px;flex-shrink:0}
 
 /* PERMISSIONS GRID */
 .perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
-.preset-btn.active{background:#1e40af;color:#fff;border-color:#1e40af}
-.perm-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:13px}
-.perm-label{color:#374151}
+.preset-btn.active{background:var(--gold);color:#0a0a0a;border-color:var(--gold)}
+.perm-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px}
+.perm-label{color:var(--text-muted)}
 .toggle{position:relative;display:inline-block;width:38px;height:22px}
 .toggle input{opacity:0;width:0;height:0}
-.slider{position:absolute;inset:0;background:#cbd5e1;border-radius:22px;transition:.2s;cursor:pointer}
-.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
-input:checked + .slider{background:#2563eb}
-input:checked + .slider:before{transform:translateX(16px)}
+.slider{position:absolute;inset:0;background:#2a2520;border-radius:22px;transition:.2s;cursor:pointer}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#666;border-radius:50%;transition:.2s}
+input:checked + .slider{background:var(--gold-dim)}
+input:checked + .slider:before{transform:translateX(16px);background:var(--gold)}
 
 /* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
-.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:17px;font-weight:700;margin-bottom:20px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:20px;color:var(--text)}
 .modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
 
 /* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;z-index:200;opacity:0;transform:translateY(8px);transition:.25s;max-width:320px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 18px;border-radius:10px;font-size:14px;z-index:200;opacity:0;transform:translateY(8px);transition:.25s;max-width:320px}
 .toast.show{opacity:1;transform:none}
-.toast.error{background:#dc2626}
+.toast.error{background:var(--danger-dim);border-color:#5a2020;color:#e05c5c}
 
 /* STATS */
 .stats{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
-.stat{background:#fff;border-radius:10px;padding:16px 20px;flex:1;min-width:120px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.stat-val{font-size:26px;font-weight:700;color:#1e293b}
-.stat-lbl{font-size:12px;color:#94a3b8;margin-top:2px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;flex:1;min-width:120px}
+.stat-val{font-size:26px;font-weight:700;color:var(--gold)}
+.stat-lbl{font-size:12px;color:var(--text-muted);margin-top:2px}
 
 /* EMPTY */
-.empty{text-align:center;padding:32px;color:#94a3b8;font-size:14px}
+.empty{text-align:center;padding:32px;color:var(--text-muted);font-size:14px}
 
 /* AUDIT */
-.audit-row{font-size:13px;padding:8px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:10px;align-items:flex-start}
+.audit-row{font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
 .audit-row:last-child{border-bottom:none}
-.audit-time{color:#94a3b8;white-space:nowrap;min-width:130px}
-.audit-action{color:#374151}
+.audit-time{color:var(--text-muted);white-space:nowrap;min-width:130px}
+.audit-action{color:var(--text)}
 
 @media(max-width:600px){
   .invite-form{flex-direction:column}
@@ -149,13 +157,13 @@ input:checked + .slider:before{transform:translateX(16px)}
       </div>
     </div>
     <div style="margin-top:14px">
-      <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:8px">Profil de permissions</label>
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px">Profil de permissions</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <button class="btn btn-ghost btn-sm preset-btn active" id="preset-commercial" onclick="applyPreset('commercial')">Commercial</button>
         <button class="btn btn-ghost btn-sm preset-btn" id="preset-barman" onclick="applyPreset('barman')">Barman / Carte</button>
         <button class="btn btn-ghost btn-sm preset-btn" id="preset-custom" onclick="applyPreset('custom')">Personnalisé</button>
       </div>
-      <div id="presetDesc" style="font-size:12px;color:#64748b;margin-bottom:10px"></div>
+      <div id="presetDesc" style="font-size:12px;color:var(--text-muted);margin-bottom:10px"></div>
       <div id="invitePermissions">
         <div class="perm-grid" id="invitePermGrid"></div>
       </div>
@@ -332,11 +340,11 @@ function renderStats(agents, invitations) {
     if (!seatBanner) {
       seatBanner = document.createElement('div');
       seatBanner.id = 'seatBanner';
-      seatBanner.style.cssText = 'background:#fef9ec;border:1px solid #f59e0b;border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px';
+      seatBanner.style.cssText = 'background:#1a1408;border:1px solid #4a3820;border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px';
       seatBanner.innerHTML = `
         <div>
-          <div style="font-weight:600;color:#92400e;margin-bottom:4px">Limite de collaborateurs atteinte</div>
-          <div style="font-size:13px;color:#78350f">Ajoutez un siège supplémentaire pour inviter un collaborateur de plus.</div>
+          <div style="font-weight:600;color:#c4a46b;margin-bottom:4px">Limite de collaborateurs atteinte</div>
+          <div style="font-size:13px;color:#8a7050">Ajoutez un siège supplémentaire pour inviter un collaborateur de plus.</div>
         </div>
         <button class="btn btn-primary" onclick="addSeat()" style="white-space:nowrap;flex-shrink:0">
           + 1 siège — 29€/mois
@@ -374,9 +382,9 @@ function detectPreset(perms) {
 }
 
 const PRESET_COLORS = {
-  commercial: 'background:#dbeafe;color:#1e40af',
-  barman:     'background:#d1fae5;color:#065f46',
-  custom:     'background:#f3f4f6;color:#374151',
+  commercial: 'background:rgba(196,164,107,.15);color:#c4a46b;border:1px solid #4a3820',
+  barman:     'background:rgba(100,180,120,.1);color:#7ab88a;border:1px solid #1a3a20',
+  custom:     'background:rgba(255,255,255,.05);color:#7a7060;border:1px solid #2a2520',
 };
 
 function renderAgents(agents) {
@@ -418,7 +426,7 @@ function renderInvitations(invitations) {
 
   document.getElementById('invList').innerHTML = invitations.map(inv => `
     <div class="agent-row">
-      <div class="agent-avatar" style="background:#fef3c7;color:#92400e">✉</div>
+      <div class="agent-avatar" style="background:#1a1408;color:#c4a46b">✉</div>
       <div class="agent-info">
         <div class="agent-email">${inv.email}</div>
         <div class="agent-meta">
