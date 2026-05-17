@@ -47,30 +47,23 @@ fetch('/.netlify/functions/config')
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
 
-    // Charger le profil pour savoir si c'est un agent
-    const{data:profile}=await sb.from('profiles')
-      .select('role,company_id,status,companies(owner_id)')
-      .eq('id',session.user.id).maybeSingle();
-    if(profile?.status==='suspended'){window.location.href='paying.html';return;}
-
-    let subs=null;
-    const isOwner=profile?.role==='COMPANY_ADMIN'||profile?.role==='SUPER_ADMIN';
-    if(isOwner){
-      for(let i=0;i<8;i++){
-        const{data:subsArr}=await sb.from('subscriptions').select('*').eq('user_id',session.user.id).order('created_at',{ascending:false}).limit(1);
-        subs=subsArr?.[0];
-        if(subs&&new Date(subs.expires_at)>new Date())break;
-        if(i===0){
-          document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Vérification de votre abonnement…</p><p style="font-size:12px;color:#585450">Cela peut prendre quelques secondes après le paiement.</p></div></div>`;
-        }
-        await new Promise(r=>setTimeout(r,1500));
+    // Vérification d'accès centralisée (admin → son abo, agent → abo de l'owner)
+    let access=null;
+    for(let i=0;i<8;i++){
+      const r=await fetch('/.netlify/functions/check-access',{
+        headers:{'Authorization':'Bearer '+session.access_token}
+      });
+      access=await r.json();
+      if(access.allowed)break;
+      if(access.reason==='suspended'||access.reason==='auth_required'||access.reason==='invalid_token')break;
+      // reason=no_active_subscription → peut être webhook encore en transit
+      if(i===0){
+        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Vérification de votre abonnement…</p><p style="font-size:12px;color:#585450">Cela peut prendre quelques secondes après le paiement.</p></div></div>`;
       }
-      const isActive=subs&&new Date(subs.expires_at)>new Date();
-      if(!isActive){window.location.href='paying.html';return;}
-    } else {
-      // Agents et profils inconnus : accès direct, l'app gère les permissions
-      subs={plan:'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
+      await new Promise(r=>setTimeout(r,1500));
     }
+    if(!access?.allowed){window.location.href='paying.html';return;}
+    const subs={plan:access.plan||'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
 
     // Session limit: max 3 active devices per account
     let deviceId=localStorage.getItem('_bar_ops_device');
