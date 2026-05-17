@@ -60,6 +60,18 @@ exports.handler = async (event) => {
 
   if (stripeEvent.type === 'checkout.session.completed') {
     const session = stripeEvent.data.object;
+
+    // Achat de siège supplémentaire
+    if (session.metadata?.type === 'seat') {
+      const { company_id, seats } = session.metadata;
+      const toAdd = parseInt(seats) || 1;
+      const { data: company } = await supabase.from('companies').select('max_agents').eq('id', company_id).single();
+      const current = company?.max_agents ?? 2;
+      await supabase.from('companies').update({ max_agents: current + toAdd }).eq('id', company_id);
+      console.log(`[seat] company ${company_id} max_agents ${current} → ${current + toAdd}`);
+      return { statusCode: 200, body: 'seat_ok' };
+    }
+
     const { user_id, plan, period } = session.metadata;
     const customerEmail = session.customer_details?.email || session.customer_email;
 

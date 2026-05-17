@@ -321,9 +321,46 @@ function renderStats(agents, invitations) {
   const active = (agents || []).filter(a => a.status === 'active').length;
   const maxAgents = _profile.companies?.max_agents ?? 2;
   document.getElementById('statAgents').textContent = active;
-  document.getElementById('statMax').textContent = maxAgents + 1; // agents + admin
+  document.getElementById('statMax').textContent = maxAgents + 1;
   document.getElementById('statPending').textContent = (invitations || []).length;
   document.getElementById('agentCount').textContent = (agents || []).length;
+
+  // Afficher le bouton "Ajouter un siège" si limite atteinte
+  const limitReached = active >= maxAgents;
+  let seatBanner = document.getElementById('seatBanner');
+  if (limitReached) {
+    if (!seatBanner) {
+      seatBanner = document.createElement('div');
+      seatBanner.id = 'seatBanner';
+      seatBanner.style.cssText = 'background:#fef9ec;border:1px solid #f59e0b;border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px';
+      seatBanner.innerHTML = `
+        <div>
+          <div style="font-weight:600;color:#92400e;margin-bottom:4px">Limite de collaborateurs atteinte</div>
+          <div style="font-size:13px;color:#78350f">Ajoutez un siège supplémentaire pour inviter un collaborateur de plus.</div>
+        </div>
+        <button class="btn btn-primary" onclick="addSeat()" style="white-space:nowrap;flex-shrink:0">
+          + 1 siège — 29€/mois
+        </button>`;
+      document.querySelector('.page').insertBefore(seatBanner, document.querySelector('.card'));
+    }
+  } else if (seatBanner) {
+    seatBanner.remove();
+  }
+}
+
+async function addSeat() {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Chargement…';
+  try {
+    const r = await fetch('/.netlify/functions/add-seat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_session.access_token}` },
+      body: JSON.stringify({ quantity: 1 }),
+    });
+    const d = await r.json();
+    if (!r.ok) { toast(d.error || 'Erreur', true); btn.disabled = false; btn.textContent = '+ 1 siège — 29€/mois'; return; }
+    window.location.href = d.url;
+  } catch(e) { toast(e.message, true); btn.disabled = false; btn.textContent = '+ 1 siège — 29€/mois'; }
 }
 
 function detectPreset(perms) {
@@ -607,7 +644,12 @@ function toast(msg, isError = false) {
   _toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
 }
 
-boot();
+boot().then(() => {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('seat') === 'success') toast('Siège ajouté ! Vous pouvez maintenant inviter un collaborateur supplémentaire.');
+  if (p.get('seat') === 'cancelled') toast('Ajout de siège annulé.', true);
+  if (p.get('seat')) history.replaceState({}, '', '/company-admin.html');
+});
 </script>
 </body>
 </html>
