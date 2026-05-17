@@ -4916,8 +4916,7 @@ function renderStaffList(evId){
 
     const staffForRole=state.staffItems.filter(x=>x.type===s.role).map(x=>x.name);
 
-    const canCostRow=(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'));
-    return`<div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px ${canCostRow?'80px 100px 70px':''}28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
+    return`<div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
       <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">
         <option value="">— Rôle —</option>
         ${roleOpts.map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}
@@ -4926,13 +4925,13 @@ function renderStaffList(evId){
       <select onchange="updStaffAssignment(${evId},${s.id},'arrivalTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.arrivalTime)}</select>
       <select onchange="updStaffAssignment(${evId},${s.id},'departureTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.departureTime)}</select>
       <span style="color:var(--gold);font-weight:600;text-align:center">${hours.toFixed(1)}h</span>
-      ${canCostRow?`<div>
+      <div style="display:flex;flex-direction:column;gap:1px">
         <input type="number" value="${hours>0?cost.toFixed(2):s.costHT||''}" placeholder="Total €" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
       </div>
       <div>
         <input type="number" value="${hours>0?bill.toFixed(2):s.billHT||''}" placeholder="Total €" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
       </div>
-      <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>`:''}
+      <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
       <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
     </div>`;
   }).join('');
