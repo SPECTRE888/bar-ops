@@ -86,7 +86,7 @@ async function googleAuth(action){
     provider:'google',
     options:{
       redirectTo:'http://127.0.0.1:54321/callback?action='+action,
-      queryParams:{prompt:'select_account'},
+      queryParams:{prompt:'select_account',auth_type:'reauthenticate'},
       skipBrowserRedirect:true,
     }
   });

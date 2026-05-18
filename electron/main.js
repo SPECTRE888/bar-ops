@@ -13,8 +13,8 @@ let mainWin = null
 ipcMain.handle('open-oauth', async (_event, oauthUrl) => {
   return new Promise((resolve) => {
     const popup = new BrowserWindow({
-      width: 520,
-      height: 640,
+      width: 900,
+      height: 700,
       title: 'Connexion — Bar Ops',
       parent: mainWin,
       modal: false,
