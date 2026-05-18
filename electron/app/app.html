@@ -1253,8 +1253,7 @@ async function doCloudLogin(){
     updateCloudStatus();
     renderDashboard();
     updateBadges();
-    const _v = (window.electronConfig||{}).version ? ` · v${window.electronConfig.version}` : '';
-    toast('Connecté' + (pulled?' — données synchronisées':' — bienvenue !') + _v);
+    toast('Connecté' + (pulled?' — données synchronisées':' — bienvenue !'));
   } else {
     if(errEl)errEl.textContent=res.error||'Identifiants incorrects';
     if(btn){btn.textContent='Connexion';btn.disabled=false;}
