@@ -1,8 +1,7 @@
 const { contextBridge } = require('electron');
-const cfg = require('./config.js');
 
 contextBridge.exposeInMainWorld('electronConfig', {
-  supabaseUrl:     cfg.supabaseUrl,
-  supabaseAnonKey: cfg.supabaseAnonKey,
-  stripePublicKey: cfg.stripePublicKey,
+  supabaseUrl:     'https://hrpcdtkhnewigewomcvv.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhycGNkdGtobmV3aWdld29tY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2NTE2ODEsImV4cCI6MjA5MjIyNzY4MX0.VExeqSOA8M_kR4Uw8GXBRaqbctQjpZ8DgOn_-n-HJ5c',
+  stripePublicKey: 'pk_live_51TPeGrH4pmIQwgqgv1oUnw3u4B1JqqmSOfvUOb13YEh6Wp0vTNtTxjSvNpck7oDmUreNa2jqvjuHqxd8UcrYDNNx00162OWLeN',
 });
