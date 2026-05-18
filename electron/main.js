@@ -4,7 +4,7 @@ const http = require('http')
 const path = require('path')
 const url  = require('url')
 
-const AUTH_PORT = 54321
+const AUTH_PORT = 59876
 const AUTH_FILE = path.join(__dirname, 'app', 'auth.html')
 
 let mainWin   = null
