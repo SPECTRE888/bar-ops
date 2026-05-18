@@ -125,7 +125,16 @@ function setupUpdater() {
 
   autoUpdater.on('update-downloaded', () => {
     toast('Mise à jour prête — redémarrage dans 5s…')
-    setTimeout(() => autoUpdater.quitAndInstall(false, true), 5000)
+    setTimeout(() => {
+      // Spawn a detached script: wait for ShipIt to replace the app,
+      // strip quarantine, then reopen — needed for unsigned apps on macOS
+      const appPath = process.execPath.split('.app/Contents/')[0] + '.app'
+      const { spawn } = require('child_process')
+      spawn('bash', ['-c',
+        `sleep 5 && xattr -cr "${appPath}" && open "${appPath}"`
+      ], { detached: true, stdio: 'ignore' }).unref()
+      autoUpdater.quitAndInstall(true, false)
+    }, 5000)
   })
 
   autoUpdater.on('error', (err) => {
