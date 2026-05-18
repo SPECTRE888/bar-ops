@@ -1,33 +1,55 @@
 const { app, BrowserWindow, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
+const http = require('http')
 const path = require('path')
+const url  = require('url')
 
+const AUTH_PORT = 54321
 const AUTH_FILE = path.join(__dirname, 'app', 'auth.html')
 
-let mainWin = null
-let pendingCallbackUrl = null
+let mainWin   = null
+let authServer = null
 
-// ─── barops:// callback handler ───────────────────────────────────────────────
-// Safari redirige vers barops://callback?action=login#access_token=...
-// macOS ouvre l'app via open-url, on charge auth.html avec les tokens.
+// ─── Local OAuth callback server ─────────────────────────────────────────────
+function startAuthServer() {
+  authServer = http.createServer((req, res) => {
+    const parsed = url.parse(req.url, true)
 
-function handleCallbackUrl(rawUrl) {
-  try {
-    const fixed  = rawUrl.replace(/^barops:\/\//, 'http://barops/')
-    const parsed = new URL(fixed)
-    const search = parsed.search || ''
-    const hash   = parsed.hash   || ''
-    if (!mainWin) { pendingCallbackUrl = rawUrl; return }
-    mainWin.show()
-    mainWin.focus()
-    mainWin.loadURL(`file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`)
-  } catch(e) {
-    console.error('handleCallbackUrl error:', e)
-  }
+    if (parsed.pathname === '/callback') {
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end(`<!DOCTYPE html><html><head><meta charset="utf-8">
+        <title>Bar Ops — Connexion...</title>
+        <style>body{font-family:sans-serif;background:#080808;color:#c4a46b;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:18px}</style>
+        </head><body><p>Connexion réussie, retour à l'application...</p>
+        <script>
+          const hash   = window.location.hash   || ''
+          const search = window.location.search || ''
+          fetch('/token?' + new URLSearchParams({ hash, search })).then(() => window.close())
+        </script></body></html>`)
+      return
+    }
+
+    if (parsed.pathname === '/token') {
+      const hash   = parsed.query.hash   || ''
+      const search = parsed.query.search || ''
+      res.writeHead(200); res.end('ok')
+      if (mainWin) {
+        mainWin.show(); mainWin.focus()
+        mainWin.loadURL(`file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`)
+      }
+      return
+    }
+
+    res.writeHead(404); res.end()
+  })
+
+  authServer.on('error', (e) => console.error('[authServer] error:', e.message))
+  authServer.listen(AUTH_PORT, '127.0.0.1', () => {
+    console.log(`Auth server listening on http://127.0.0.1:${AUTH_PORT}`)
+  })
 }
 
 // ─── Window ───────────────────────────────────────────────────────────────────
-
 function createWindow() {
   mainWin = new BrowserWindow({
     width: 1280,
@@ -49,25 +71,18 @@ function createWindow() {
 
   mainWin.loadFile(AUTH_FILE)
 
-  // Liens externes → Safari (pour que les passkeys fonctionnent)
   mainWin.webContents.setWindowOpenHandler(({ url: u }) => {
     if (u.startsWith('file://')) return { action: 'allow' }
     shell.openExternal(u)
     return { action: 'deny' }
   })
 
-  mainWin.webContents.on('will-navigate', (_event, u) => {
-    if (!u.startsWith('file://')) {
-      _event.preventDefault()
+  mainWin.webContents.on('will-navigate', (event, u) => {
+    if (!u.startsWith('file://') && !u.startsWith(`http://127.0.0.1:${AUTH_PORT}`)) {
+      event.preventDefault()
       shell.openExternal(u)
     }
   })
-
-  if (pendingCallbackUrl) {
-    const pending = pendingCallbackUrl
-    pendingCallbackUrl = null
-    mainWin.webContents.once('did-finish-load', () => handleCallbackUrl(pending))
-  }
 }
 
 // ─── Single instance ──────────────────────────────────────────────────────────
@@ -75,9 +90,7 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  app.on('second-instance', (_event, argv) => {
-    const url = argv.find(a => a.startsWith('barops://'))
-    if (url) handleCallbackUrl(url)
+  app.on('second-instance', () => {
     if (mainWin) { mainWin.show(); mainWin.focus() }
   })
 }
@@ -99,10 +112,7 @@ function setupUpdater() {
     `).then(() => setTimeout(() => autoUpdater.quitAndInstall(false, true), 5000)).catch(() => {})
   })
 
-  autoUpdater.on('error', (err) => {
-    console.error('[updater] error:', err?.message || err)
-  })
-
+  autoUpdater.on('error', (err) => console.error('[updater] error:', err?.message || err))
   autoUpdater.checkForUpdates().catch((err) => console.error('[updater] check failed:', err?.message))
   setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000)
 }
@@ -117,6 +127,7 @@ app.whenReady().then(() => {
     } catch(e) {}
   }
 
+  startAuthServer()
   createWindow()
   if (app.isPackaged) setupUpdater()
 
@@ -125,12 +136,7 @@ app.whenReady().then(() => {
   })
 })
 
-// macOS : reçoit barops:// depuis Safari après OAuth
-app.on('open-url', (event, url) => {
-  event.preventDefault()
-  handleCallbackUrl(url)
-})
-
 app.on('window-all-closed', () => {
+  authServer?.close()
   if (process.platform !== 'darwin') app.quit()
 })
