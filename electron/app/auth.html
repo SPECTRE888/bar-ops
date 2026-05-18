@@ -82,18 +82,14 @@ async function waitForSb(){
 async function googleAuth(action){
   const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
   await s.auth.signOut();
-  const{data,error}=await s.auth.signInWithOAuth({
+  const{error}=await s.auth.signInWithOAuth({
     provider:'google',
     options:{
-      redirectTo:'http://127.0.0.1:54321/callback?action='+action,
-      queryParams:{prompt:'select_account',auth_type:'reauthenticate'},
-      skipBrowserRedirect:true,
+      redirectTo:'barops://callback?action='+action,
+      queryParams:{prompt:'select_account'},
     }
   });
-  if(error)return msg(error.message,'err');
-  if(data?.url&&window.electronConfig?.openOAuth){
-    await window.electronConfig.openOAuth(data.url);
-  }
+  if(error)msg(error.message,'err');
 }
 async function googleAuthLogin(){await googleAuth('login');}
 async function googleAuthSignup(){await googleAuth('signup');}

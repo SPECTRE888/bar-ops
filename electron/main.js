@@ -1,50 +1,30 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, shell } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const path = require('path')
 
 const AUTH_FILE = path.join(__dirname, 'app', 'auth.html')
 
 let mainWin = null
+let pendingCallbackUrl = null
 
-// ─── OAuth popup in-app ───────────────────────────────────────────────────────
-// On ouvre Google auth dans une BrowserWindow Electron, pas dans Safari.
-// On intercepte la navigation vers le callback pour extraire les tokens.
+// ─── barops:// callback handler ───────────────────────────────────────────────
+// Safari redirige vers barops://callback?action=login#access_token=...
+// macOS ouvre l'app via open-url, on charge auth.html avec les tokens.
 
-ipcMain.handle('open-oauth', async (_event, oauthUrl) => {
-  return new Promise((resolve) => {
-    const popup = new BrowserWindow({
-      width: 900,
-      height: 700,
-      title: 'Connexion — Bar Ops',
-      parent: mainWin,
-      modal: false,
-      webPreferences: { nodeIntegration: false, contextIsolation: true },
-    })
-
-    popup.setMenuBarVisibility(false)
-    popup.loadURL(oauthUrl)
-
-    function handleRedirect(url) {
-      // On intercepte quand Google redirige vers notre callback
-      if (!url.includes('127.0.0.1:54321') && !url.startsWith('barops://')) return false
-      try {
-        const fixed  = url.replace(/^barops:\/\//, 'http://barops/')
-        const parsed = new URL(fixed)
-        const search = parsed.search || ''
-        const hash   = parsed.hash   || ''
-        popup.destroy()
-        const authUrl = `file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`
-        mainWin.loadURL(authUrl)
-      } catch(e) { console.error('oauth redirect parse error:', e) }
-      resolve()
-      return true
-    }
-
-    popup.webContents.on('will-redirect', (_e, url) => handleRedirect(url))
-    popup.webContents.on('will-navigate', (_e, url) => handleRedirect(url))
-    popup.on('closed', () => resolve())
-  })
-})
+function handleCallbackUrl(rawUrl) {
+  try {
+    const fixed  = rawUrl.replace(/^barops:\/\//, 'http://barops/')
+    const parsed = new URL(fixed)
+    const search = parsed.search || ''
+    const hash   = parsed.hash   || ''
+    if (!mainWin) { pendingCallbackUrl = rawUrl; return }
+    mainWin.show()
+    mainWin.focus()
+    mainWin.loadURL(`file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`)
+  } catch(e) {
+    console.error('handleCallbackUrl error:', e)
+  }
+}
 
 // ─── Window ───────────────────────────────────────────────────────────────────
 
@@ -68,6 +48,26 @@ function createWindow() {
   )
 
   mainWin.loadFile(AUTH_FILE)
+
+  // Liens externes → Safari (pour que les passkeys fonctionnent)
+  mainWin.webContents.setWindowOpenHandler(({ url: u }) => {
+    if (u.startsWith('file://')) return { action: 'allow' }
+    shell.openExternal(u)
+    return { action: 'deny' }
+  })
+
+  mainWin.webContents.on('will-navigate', (_event, u) => {
+    if (!u.startsWith('file://')) {
+      _event.preventDefault()
+      shell.openExternal(u)
+    }
+  })
+
+  if (pendingCallbackUrl) {
+    const pending = pendingCallbackUrl
+    pendingCallbackUrl = null
+    mainWin.webContents.once('did-finish-load', () => handleCallbackUrl(pending))
+  }
 }
 
 // ─── Single instance ──────────────────────────────────────────────────────────
@@ -75,7 +75,9 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  app.on('second-instance', () => {
+  app.on('second-instance', (_event, argv) => {
+    const url = argv.find(a => a.startsWith('barops://'))
+    if (url) handleCallbackUrl(url)
     if (mainWin) { mainWin.show(); mainWin.focus() }
   })
 }
@@ -121,6 +123,12 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+})
+
+// macOS : reçoit barops:// depuis Safari après OAuth
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  handleCallbackUrl(url)
 })
 
 app.on('window-all-closed', () => {
