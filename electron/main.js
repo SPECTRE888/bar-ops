@@ -96,25 +96,40 @@ if (!gotLock) {
 }
 
 // ─── Auto-updater ─────────────────────────────────────────────────────────────
+function toast(msg) {
+  const safe = msg.replace(/\\/g, '\\\\').replace(/`/g, '\\`')
+  mainWin?.webContents.executeJavaScript(`
+    if(typeof showToast==='function') showToast(\`${safe}\`);
+    else console.warn('[updater]', \`${safe}\`);
+  `).catch(() => {})
+}
+
 function setupUpdater() {
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
+  autoUpdater.logger = require('electron-log')
+  autoUpdater.logger.transports.file.level = 'info'
 
-  autoUpdater.on('update-available', (info) => {
-    mainWin?.webContents.executeJavaScript(`
-      if(typeof showToast==='function') showToast('Mise à jour v${info?.version || ''} disponible — téléchargement en cours…');
-    `).catch(() => {})
-  })
+  autoUpdater.on('checking-for-update', () => toast('Vérification des mises à jour…'))
+  autoUpdater.on('update-available',    (i) => toast(`Mise à jour v${i.version} disponible — téléchargement…`))
+  autoUpdater.on('update-not-available',() => toast('App à jour.'))
+  autoUpdater.on('download-progress',   (p) => toast(`Téléchargement ${Math.round(p.percent)}%…`))
 
   autoUpdater.on('update-downloaded', () => {
-    mainWin?.webContents.executeJavaScript(`
-      if(typeof showToast==='function') showToast('Mise à jour prête — redémarrage dans 5s…');
-    `).catch(() => {})
+    toast('Mise à jour prête — redémarrage dans 5s…')
     setTimeout(() => autoUpdater.quitAndInstall(false, true), 5000)
   })
 
-  autoUpdater.on('error', (err) => console.error('[updater] error:', err?.message || err))
-  autoUpdater.checkForUpdates().catch((err) => console.error('[updater] check failed:', err?.message))
+  autoUpdater.on('error', (err) => {
+    const msg = err?.message || String(err)
+    console.error('[updater] error:', msg)
+    toast('Erreur mise à jour: ' + msg)
+  })
+
+  // Attendre 10s que la fenêtre soit chargée avant le premier check
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((err) => toast('Check failed: ' + (err?.message || err)))
+  }, 10000)
   setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000)
 }
 
