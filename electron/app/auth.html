@@ -79,19 +79,24 @@ async function waitForSb(){
   return sb;
 }
 
-async function googleAuthLogin(){
+async function googleAuth(action){
   const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
   await s.auth.signOut();
-  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'barops://callback?action=login',queryParams:{prompt:'select_account'}}});
-  if(error)msg(error.message,'err');
+  const{data,error}=await s.auth.signInWithOAuth({
+    provider:'google',
+    options:{
+      redirectTo:'http://127.0.0.1:54321/callback?action='+action,
+      queryParams:{prompt:'select_account'},
+      skipBrowserRedirect:true,
+    }
+  });
+  if(error)return msg(error.message,'err');
+  if(data?.url&&window.electronConfig?.openOAuth){
+    await window.electronConfig.openOAuth(data.url);
+  }
 }
-
-async function googleAuthSignup(){
-  const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
-  await s.auth.signOut();
-  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'barops://callback?action=signup',queryParams:{prompt:'select_account'}}});
-  if(error)msg(error.message,'err');
-}
+async function googleAuthLogin(){await googleAuth('login');}
+async function googleAuthSignup(){await googleAuth('signup');}
 
 async function redirect(userId){
   try{

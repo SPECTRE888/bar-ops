@@ -1,35 +1,50 @@
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const path = require('path')
 
 const AUTH_FILE = path.join(__dirname, 'app', 'auth.html')
-const APP_FILE  = path.join(__dirname, 'app', 'app.html')
 
 let mainWin = null
-let pendingCallbackUrl = null
 
-// ─── Custom protocol: barops:// ──────────────────────────────────────────────
-// Google redirige vers barops://callback#access_token=...
-// macOS ouvre l'app Electron directement — plus fiable que localhost:54321
+// ─── OAuth popup in-app ───────────────────────────────────────────────────────
+// On ouvre Google auth dans une BrowserWindow Electron, pas dans Safari.
+// On intercepte la navigation vers le callback pour extraire les tokens.
 
-function handleCallbackUrl(rawUrl) {
-  try {
-    // barops://callback?action=login#access_token=...
-    // new URL() ne parse pas bien les schemes custom, on le remplace
-    const httpUrl = rawUrl.replace(/^barops:\/\//, 'http://barops/')
-    const parsed  = new URL(httpUrl)
-    const search  = parsed.search || ''   // ?action=login
-    const hash    = parsed.hash   || ''   // #access_token=...
+ipcMain.handle('open-oauth', async (_event, oauthUrl) => {
+  return new Promise((resolve) => {
+    const popup = new BrowserWindow({
+      width: 520,
+      height: 640,
+      title: 'Connexion — Bar Ops',
+      parent: mainWin,
+      modal: false,
+      webPreferences: { nodeIntegration: false, contextIsolation: true },
+    })
 
-    if (!mainWin) { pendingCallbackUrl = rawUrl; return }
-    mainWin.show()
-    mainWin.focus()
-    const authUrl = `file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`
-    mainWin.loadURL(authUrl)
-  } catch(e) {
-    console.error('handleCallbackUrl error:', e)
-  }
-}
+    popup.setMenuBarVisibility(false)
+    popup.loadURL(oauthUrl)
+
+    function handleRedirect(url) {
+      // On intercepte quand Google redirige vers notre callback
+      if (!url.includes('127.0.0.1:54321') && !url.startsWith('barops://')) return false
+      try {
+        const fixed  = url.replace(/^barops:\/\//, 'http://barops/')
+        const parsed = new URL(fixed)
+        const search = parsed.search || ''
+        const hash   = parsed.hash   || ''
+        popup.destroy()
+        const authUrl = `file://${AUTH_FILE.replace(/\\/g, '/')}${search}${hash}`
+        mainWin.loadURL(authUrl)
+      } catch(e) { console.error('oauth redirect parse error:', e) }
+      resolve()
+      return true
+    }
+
+    popup.webContents.on('will-redirect', (_e, url) => handleRedirect(url))
+    popup.webContents.on('will-navigate', (_e, url) => handleRedirect(url))
+    popup.on('closed', () => resolve())
+  })
+})
 
 // ─── Window ───────────────────────────────────────────────────────────────────
 
@@ -53,27 +68,6 @@ function createWindow() {
   )
 
   mainWin.loadFile(AUTH_FILE)
-
-  // Tout ce qui n'est pas local → browser système
-  mainWin.webContents.setWindowOpenHandler(({ url: u }) => {
-    if (u.startsWith('file://') || u.startsWith('barops://')) return { action: 'allow' }
-    shell.openExternal(u)
-    return { action: 'deny' }
-  })
-
-  mainWin.webContents.on('will-navigate', (event, u) => {
-    if (!u.startsWith('file://') && !u.startsWith('barops://')) {
-      event.preventDefault()
-      shell.openExternal(u)
-    }
-  })
-
-  // Si un callback est arrivé avant la création de la fenêtre
-  if (pendingCallbackUrl) {
-    const pending = pendingCallbackUrl
-    pendingCallbackUrl = null
-    mainWin.webContents.once('did-finish-load', () => handleCallbackUrl(pending))
-  }
 }
 
 // ─── Single instance ──────────────────────────────────────────────────────────
@@ -81,10 +75,7 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  // Windows/Linux : deep link via second instance
-  app.on('second-instance', (_event, argv) => {
-    const url = argv.find(a => a.startsWith('barops://'))
-    if (url) handleCallbackUrl(url)
+  app.on('second-instance', () => {
     if (mainWin) { mainWin.show(); mainWin.focus() }
   })
 }
@@ -116,7 +107,6 @@ function setupUpdater() {
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
-  // Remove macOS quarantine on first launch
   if (process.platform === 'darwin' && app.isPackaged) {
     try {
       const { execSync } = require('child_process')
@@ -131,12 +121,6 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-})
-
-// macOS : deep link via open-url
-app.on('open-url', (event, url) => {
-  event.preventDefault()
-  handleCallbackUrl(url)
 })
 
 app.on('window-all-closed', () => {
