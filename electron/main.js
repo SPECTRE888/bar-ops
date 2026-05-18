@@ -109,6 +109,12 @@ function setupUpdater() {
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.logger = require('electron-log')
   autoUpdater.logger.transports.file.level = 'info'
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'SPECTRE888',
+    repo: 'bar-ops',
+    token: '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'
+  })
 
   autoUpdater.on('checking-for-update', () => toast('Vérification des mises à jour…'))
   autoUpdater.on('update-available',    (i) => toast(`Mise à jour v${i.version} disponible — téléchargement…`))
