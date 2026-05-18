@@ -94,14 +94,24 @@ function setupUpdater() {
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
 
-  autoUpdater.on('update-downloaded', () => {
+  autoUpdater.on('update-available', (info) => {
     mainWin?.webContents.executeJavaScript(`
-      if(typeof showToast==='function') showToast('Mise à jour prête — redémarrage dans 5s...');
-    `).then(() => setTimeout(() => autoUpdater.quitAndInstall(), 5000))
+      if(typeof showToast==='function') showToast('Mise à jour v${info?.version || ''} disponible — téléchargement en cours…');
+    `).catch(() => {})
   })
 
-  autoUpdater.checkForUpdatesAndNotify().catch(() => {})
-  setInterval(() => autoUpdater.checkForUpdatesAndNotify().catch(() => {}), 4 * 60 * 60 * 1000)
+  autoUpdater.on('update-downloaded', () => {
+    mainWin?.webContents.executeJavaScript(`
+      if(typeof showToast==='function') showToast('Mise à jour prête — redémarrage dans 5s…');
+    `).then(() => setTimeout(() => autoUpdater.quitAndInstall(false, true), 5000)).catch(() => {})
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('[updater] error:', err?.message || err)
+  })
+
+  autoUpdater.checkForUpdates().catch((err) => console.error('[updater] check failed:', err?.message))
+  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000)
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
