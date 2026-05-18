@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require('electron')
+const { app, BrowserWindow, shell, dialog } = require('electron')
 const { autoUpdater } = require('electron-updater')
 const http = require('http')
 const path = require('path')
@@ -123,7 +123,13 @@ function setupUpdater() {
   autoUpdater.on('error', (err) => {
     const msg = err?.message || String(err)
     console.error('[updater] error:', msg)
-    toast('Erreur mise à jour: ' + msg)
+    dialog.showMessageBox(mainWin, {
+      type: 'error',
+      title: 'Erreur mise à jour',
+      message: 'La mise à jour automatique a échoué',
+      detail: msg,
+      buttons: ['OK']
+    }).catch(() => {})
   })
 
   // Attendre 10s que la fenêtre soit chargée avant le premier check
