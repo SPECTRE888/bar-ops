@@ -1089,84 +1089,63 @@ let _initDone=false;
 // Sync immédiat vers le cloud
 async function doSyncNow(){
   if(!_initDone||isSyncing) return;
-
   isSyncing=true;
+  let shouldRetry=false;
+  try{
+    if(!cloudUser) return;
 
-  if(!cloudUser) {
-    isSyncing=false;
-    return;
-  }
-
-  // Ensure token is valid before pushing
-  let token=extractToken(cloudUser);
-  if(!token){
-    const refreshed=await cloudRefreshSession();
-    if(!refreshed){
-      isSyncing=false;
-      updateCloudStatus();
-      console.warn('doSyncNow: token refresh failed');
-      return;
-    }
-    token=extractToken(cloudUser);
-  }
-
-  // Push data to cloud
-  const success=await cloudPush();
-  updateCloudStatus();
-
-  const statusEl=document.getElementById('save-status');
-
-  if(success){
-    // ✓ Synchronisation réussie
-    pendingSyncChanges=false;
-    if(statusEl){
-      // Clear any existing timeout to reset the timer
-      if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
-
-      statusEl.style.display='flex';
-      statusEl.style.background='#86efac';
-      statusEl.style.color='#1f2937';
-      const timeEl=document.getElementById('save-time');
-      if(timeEl){
-        const now=new Date();
-        const date=now.toLocaleDateString('fr-FR');
-        const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        timeEl.textContent=date+' '+time;
+    // Ensure token is valid before pushing
+    let token=extractToken(cloudUser);
+    if(!token){
+      const refreshed=await cloudRefreshSession();
+      if(!refreshed){
+        updateCloudStatus();
+        console.warn('doSyncNow: token refresh failed');
+        return;
       }
+      token=extractToken(cloudUser);
+    }
 
-      // Auto-hide after 3 seconds
-      saveStatusTimeout=setTimeout(()=>{
-        statusEl.style.display='none';
-        saveStatusTimeout=null;
-      },3000);
-    }
-    console.log('✓ Cloud sync successful');
+    // Push data to cloud
+    const success=await cloudPush();
+    updateCloudStatus();
+    const statusEl=document.getElementById('save-status');
 
-    // Si d'autres changements sont arrivés pendant le sync, refaire un sync
-    if(pendingSyncChanges){
-      isSyncing=false;
-      doSyncNow();
-      return;
+    if(success){
+      pendingSyncChanges=false;
+      if(statusEl){
+        if(saveStatusTimeout) clearTimeout(saveStatusTimeout);
+        statusEl.style.display='flex';
+        statusEl.style.background='#86efac';
+        statusEl.style.color='#1f2937';
+        const timeEl=document.getElementById('save-time');
+        if(timeEl){
+          const now=new Date();
+          const date=now.toLocaleDateString('fr-FR');
+          const time=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+          timeEl.textContent=date+' '+time;
+        }
+        saveStatusTimeout=setTimeout(()=>{statusEl.style.display='none';saveStatusTimeout=null;},3000);
+      }
+      console.log('✓ Cloud sync successful');
+      if(pendingSyncChanges) shouldRetry=true;
+    } else {
+      if(statusEl){
+        statusEl.style.background='rgba(252,165,165,0.2)';
+        statusEl.style.color='#991b1b';
+        statusEl.innerHTML='<span id="save-time">Erreur sync — Retry...</span>';
+      }
+      console.error('doSyncNow: cloudPush failed - will retry');
+      await new Promise(r=>setTimeout(r,3000));
+      if(cloudUser) shouldRetry=true;
     }
-  } else {
-    // ✗ Erreur de synchronisation - les données restent en pending
-    if(statusEl){
-      statusEl.style.background='rgba(252,165,165,0.2)';
-      statusEl.style.color='#991b1b';
-      statusEl.innerHTML='⚠️ <span id="save-time">Erreur — Retry...</span>';
-    }
-    console.error('doSyncNow: cloudPush failed - will retry');
-
-    // Retry après 3 secondes
-    await new Promise(r=>setTimeout(r,3000));
-    if(cloudUser) {
-      isSyncing=false;
-      doSyncNow();
-      return;
-    }
+  } catch(e){
+    console.error('doSyncNow: unexpected error',e);
+  } finally {
+    // Always reset — prevents permanent lock even on unexpected exception
+    isSyncing=false;
   }
-
-  isSyncing=false;
+  if(shouldRetry) doSyncNow();
 }
 
 function schedulePush(){
@@ -2198,7 +2177,7 @@ function mkSS(wrapId, opts, ph, onSel, val='', allowCreate=true){
   if(!wrap)return null;
   wrap.className='ss-wrap';
   wrap.style.position='relative';
-  wrap.innerHTML=`<input class="ss-input" placeholder="${ph}" value="${(val||'').replace(/"/g,'&quot;')}" autocomplete="off"/>`;
+  wrap.innerHTML=`<input class="ss-input" placeholder="${escHtml(ph)}" value="${escHtml(val||'')}" autocomplete="off"/>`;
   const inp=wrap.querySelector('.ss-input');
 
   // Mount dropdown on body to escape any stacking context
@@ -2216,8 +2195,8 @@ function mkSS(wrapId, opts, ph, onSel, val='', allowCreate=true){
   function build(f=''){
     const fl=f.toLowerCase();
     const filt=opts.filter(o=>o.toLowerCase().includes(fl));
-    dd.innerHTML=filt.map(o=>`<div class="ss-opt" data-v="${o.replace(/"/g,'&quot;')}">${o}</div>`).join('');
-    if(allowCreate&&f&&!opts.find(o=>o.toLowerCase()===fl)) dd.innerHTML+=`<div class="ss-opt new-opt" data-v="${f}">+ Ajouter "${f}"</div>`;
+    dd.innerHTML=filt.map(o=>`<div class="ss-opt" data-v="${escHtml(o)}">${escHtml(o)}</div>`).join('');
+    if(allowCreate&&f&&!opts.find(o=>o.toLowerCase()===fl)) dd.innerHTML+=`<div class="ss-opt new-opt" data-v="${escHtml(f)}">+ Ajouter "${escHtml(f)}"</div>`;
     dd.querySelectorAll('.ss-opt').forEach(op=>op.addEventListener('mousedown',e=>{
       e.preventDefault();inp.value=op.dataset.v;dd.classList.remove('open');onSel(op.dataset.v, op.classList.contains('new-opt'));
     }));
@@ -2367,7 +2346,7 @@ function renderCatPage(cat){
     const stockLow=hasStock&&p.stockAlert>0&&p.stock<=p.stockAlert;
     html+=`<tr style="${missingPrice?'opacity:.6':''}">
       <td><div id="pt-${p.id}-ss" style="min-width:120px"></div></td>
-      <td><input value="${(p.brand||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'brand',this.value)" placeholder="Marque *" style="border-color:${!p.brand?'var(--red)':''}"/></td>
+      <td><input value="${escHtml(p.brand||'')}" onchange="updProd(${p.id},'brand',this.value)" placeholder="Marque *" style="border-color:${!p.brand?'var(--red)':''}"/></td>
       <td><input type="number" value="${p.priceHT||''}" step="0.01" min="0" placeholder="0.00" onchange="updProd(${p.id},'priceHT',parseFloat(this.value)||0)" style="width:80px;border-color:${missingPrice?'var(--red)':''}"/></td>
       <td><input type="number" value="${p.qty||''}" step="0.1" min="0" placeholder="70" onchange="updProd(${p.id},'qty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
       <td><select onchange="updProd(${p.id},'unit',this.value)" style="width:60px">
@@ -2376,9 +2355,9 @@ function renderCatPage(cat){
       <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}" id="cpu-${p.id}">${cpu>0?cpu.toFixed(2)+' €/'+uLabel:'Prix manquant'}</span></td>
       <td><select onchange="updProd(${p.id},'supplier',this.value)" style="min-width:110px">
         <option value="">— Fournisseur —</option>
-        ${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${p.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}
+        ${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${p.supplier===s.name?' selected':''}>${escHtml(s.name)}</option>`).join('')}
       </select></td>
-      <td><input value="${(p.supplierCode||'').replace(/"/g,'&quot;')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
+      <td><input value="${escHtml(p.supplierCode||'')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="min-width:90px;font-family:monospace;font-size:11px"/></td>
       <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:4px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
         style="width:65px;border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"/>
@@ -2427,18 +2406,18 @@ function renderGlassware(){
     return`<tr>
       <td><input type="checkbox" ${g.isDefault?'checked':''} onchange="updGlass(${g.id},'isDefault',this.checked);resetDefaultGlass(${g.id})" title="Par défaut" style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold)"/></td>
       <td><div id="gs-${g.id}" style="min-width:120px"></div></td>
-      <td><input value="${(g.appellation||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
+      <td><input value="${escHtml(g.appellation||'')}" onchange="updGlass(${g.id},'appellation',this.value)" placeholder="Chef & Sommelier, Arcoroc..." style="min-width:120px"/></td>
       <td><input type="number" value="${g.priceHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
       <td><input type="number" value="${g.priceBilledHT||0}" step="0.001" min="0" onchange="updGlass(${g.id},'priceBilledHT',parseFloat(this.value)||0)" style="width:80px"/></td>
       <td><input type="number" value="${g.volumeCl||0}" step="1" min="0" onchange="updGlass(${g.id},'volumeCl',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box" placeholder="cl"/></td>
-      <td><select onchange="updGlass(${g.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${g.supplier===s.name?' selected':''}>  ${s.name}</option>`).join('')}</select></td>
-      <td><input value="${(g.notes||'').replace(/"/g,'&quot;')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
+      <td><select onchange="updGlass(${g.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/\"/g,'&quot;')}"${g.supplier===s.name?' selected':''}>${escHtml(s.name)}</option>`).join('')}</select></td>
+      <td><input value="${escHtml(g.notes||'')}" onchange="updGlass(${g.id},'notes',this.value)" placeholder="Notes..."/></td>
       <td><input type="number" value="${g.stock||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${g.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
       <td><select onchange="updGlass(${g.id},'breakagePercent',this.value)" style="width:70px;height:30px;padding:4px 6px;font-size:10px"><option value="5" ${g.breakagePercent==='5'||g.breakagePercent==5||!g.breakagePercent?'selected':''}>5%</option><option value="10" ${g.breakagePercent==='10'||g.breakagePercent==10?'selected':''}>10%</option><option value="15" ${g.breakagePercent==='15'||g.breakagePercent==15?'selected':''}>15%</option></select></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
-        <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;letter-spacing:.05em;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${g.id},'glass','${g.name||''.replace(/'/g,"\\'")}','${(g.supplier||'').replace(/'/g,"\\'")}')">+ COURSES</button>
+        <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;letter-spacing:.05em;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${g.id},'glass',${JSON.stringify(g.name||'')},${JSON.stringify(g.supplier||'')})">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delGlass(${g.id})">×</button>
       </div></td>
     </tr>`;
@@ -2454,18 +2433,18 @@ function renderGlassware(){
     const totalHT=(priceHT*qty).toFixed(2);
     return`<tr>
       <td><input type="checkbox" ${i.isForShaker?'checked':''} onchange="updIce(${i.id},'isForShaker',this.checked)" title="Utiliser pour shaker" style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold)"/></td>
-      <td><input value="${(i.name||'').replace(/"/g,'&quot;')}" onchange="updIce(${i.id},'name',this.value)" placeholder="Glaçons, Glace pilée..."/></td>
+      <td><input value="${escHtml(i.name||'')}" onchange="updIce(${i.id},'name',this.value)" placeholder="Glaçons, Glace pilée..."/></td>
       <td><input type="number" value="${priceHT}" step="0.01" min="0" onchange="updIce(${i.id},'priceHT',parseFloat(this.value)||0)" style="width:80px"/></td>
       <td><input type="number" value="${qty}" step="0.5" min="0" onchange="updIce(${i.id},'qty',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
       <td><select onchange="updIce(${i.id},'unit',this.value)" style="width:55px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"><option value="kg"${unit==='kg'?' selected':''}>kg</option><option value="L"${unit==='L'?' selected':''}>L</option><option value="Pièce"${unit==='Pièce'?' selected':''}>Pièce</option></select></td>
       <td><span class="cpu cpu-ok" id="ice-total-${i.id}">${totalHT}€ ${unit}</span></td>
       <td><input type="number" value="${i.minOrder||''}" step="0.5" min="0" onchange="updIce(${i.id},'minOrder',parseFloat(this.value)||0)" placeholder="—" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
-      <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${s.name}</option>`).join('')}</select></td>
+      <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}"${i.supplier===s.name?' selected':''}>${escHtml(s.name)}</option>`).join('')}</select></td>
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${i.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
-        <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${i.id},'ice','${i.name||''}','${i.supplier||''}')">+ COURSES</button>
+        <button class="btn" style="font-size:8px;padding:4px 8px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addIceOrGlassToOrder(${i.id},'ice',${JSON.stringify(i.name||'')},${JSON.stringify(i.supplier||'')})">+ COURSES</button>
         <button class="btn btn-sm btn-danger" onclick="delIce(${i.id})">×</button>
       </div></td>
     </tr>`;
@@ -2556,18 +2535,18 @@ function renderStaff(){
     const marginColor=margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)';
     return`<tr>
       <td>
-        <input value="${(s.name||'').replace(/"/g,'&quot;')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="e.g. Jean Dupont" style="min-width:110px"/>
+        <input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="e.g. Jean Dupont" style="min-width:110px"/>
       </td>
       <td><select onchange="updStaff(${s.id},'type',this.value)" style="width:130px">${STAFF_ROLES.map(t=>`<option${t===s.type?' selected':''}>${t}</option>`).join('')}</select></td>
       <td><div style="display:flex;align-items:center;gap:4px">
-        <input value="${(s.phone||'').replace(/"/g,'&quot;')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..." style="min-width:120px"/>
+        <input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..." style="min-width:120px"/>
         ${s.phone?`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" title="WhatsApp" style="color:#25D366;font-size:14px;text-decoration:none;flex-shrink:0"></a>`:''}
       </div></td>
       <td><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
       <td><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
       <td><select onchange="updStaff(${s.id},'per',this.value)" style="width:100px">${STAFF_PER.map(p=>`<option${p===s.per?' selected':''}>${p}</option>`).join('')}</select></td>
       <td><span style="font-size:11px;color:${marginColor};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€<br/><span style="font-weight:400;font-size:10px">${marginPct}</span></span></td>
-      <td><input value="${(s.notes||'').replace(/"/g,'&quot;')}" onchange="updStaff(${s.id},'notes',this.value)" placeholder="Notes..."/></td>
+      <td><input value="${escHtml(s.notes||'')}" onchange="updStaff(${s.id},'notes',this.value)" placeholder="Notes..."/></td>
       <td><button class="btn btn-sm btn-danger" onclick="delStaff(${s.id})">×</button></td>
     </tr>`;
   }).join('');
@@ -2891,14 +2870,14 @@ function showCForm(c){
       <div class="card" style="padding:12px">
         <div class="ctitle" style="margin-bottom:8px">Informations générales</div>
         <div class="g3" style="gap:6px;margin-bottom:6px">
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${(c.name||'').replace(/"/g,'&quot;')}" placeholder="ex: Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Nom du cocktail *</label><input id="cf-name" value="${escHtml(c.name||'')}" placeholder="ex: Passion Mule" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Catégorie</label><select id="cf-cat" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="updCRecap()">
             <option${(c.category||'Cocktail Signature')==='Cocktail Signature'?' selected':''}>Cocktail Signature</option>
             <option${(c.category||'Cocktail Signature')==='Cocktail Classique'?' selected':''}>Cocktail Classique</option>
             <option${(c.category||'Cocktail Signature')==='Mocktail Signature'?' selected':''}>Mocktail Signature</option>
             <option${(c.category||'Cocktail Signature')==='Mocktail Classique'?' selected':''}>Mocktail Classique</option>
           </select></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Code</label><input id="cf-code" value="${(c.code||'').replace(/"/g,'&quot;')}" placeholder="ex: MM01" style="font-family:monospace;font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="checkCodeDuplicate(this.value,${c.id||0})"/><div id="cf-code-status" style="font-size:10px;margin-top:2px;min-height:14px"></div></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Code</label><input id="cf-code" value="${escHtml(c.code||'')}" placeholder="ex: MM01" style="font-family:monospace;font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="checkCodeDuplicate(this.value,${c.id||0})"/><div id="cf-code-status" style="font-size:10px;margin-top:2px;min-height:14px"></div></div>
         </div>
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre</label><div id="cf-glass-sel"></div></div>
@@ -3162,8 +3141,8 @@ function _rebuildBrandSS(id, brands, type, val=''){
   function build(f=''){
     const fl=f.toLowerCase();
     const filt=suggestions.filter(b=>b.toLowerCase().includes(fl));
-    dd.innerHTML=filt.map(b=>`<div class="ss-opt" data-v="${b.replace(/"/g,'&quot;')}">${b}</div>`).join('');
-    if(f&&!suggestions.find(b=>b.toLowerCase()===fl)) dd.innerHTML+=`<div class="ss-opt new-opt" data-v="${f}">+ "${f}"</div>`;
+    dd.innerHTML=filt.map(b=>`<div class="ss-opt" data-v="${escHtml(b)}">${escHtml(b)}</div>`).join('');
+    if(f&&!suggestions.find(b=>b.toLowerCase()===fl)) dd.innerHTML+=`<div class="ss-opt new-opt" data-v="${escHtml(f)}">+ "${escHtml(f)}"</div>`;
     dd.querySelectorAll('.ss-opt').forEach(op=>op.addEventListener('mousedown',e=>{
       e.preventDefault();
       const selectedBrand=op.dataset.v;
@@ -3499,7 +3478,7 @@ function showSingleEventSuivi(eventId){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div style="min-width:0;flex:1">
         <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
-        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+        <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
         <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
       </div>
       <div style="text-align:right;flex-shrink:0;margin-left:12px">
@@ -3820,11 +3799,11 @@ function renderDashboard(){
 
       html+=`<div class="card" style="padding:10px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between;${borderStyle}" onclick="goToEventSuivi(${ev.id})">
         <div>
-          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
           <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} • ${days}j</div>
-          ${cl?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${cl.name}</div>`:''}
+          ${cl?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${escHtml(cl.name)}</div>`:''}
           <div style="font-size:9px;color:var(--text3);margin-top:4px;display:flex;gap:12px">
-            ${ev.location?`<span>📍 ${ev.location}</span>`:''}
+            ${ev.location?`<span>📍 ${escHtml(ev.location)}</span>`:''}
             <span>👥 ${assigned}</span>
           </div>
           <div style="font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
@@ -4085,7 +4064,7 @@ function showEvList(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div class="cat" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}</div>
-          <h3 style="font-size:18px;font-weight:600;margin:0">${ev.name||t('no_name')}</h3>
+          <h3 style="font-size:18px;font-weight:600;margin:0">${escHtml(ev.name||t('no_name'))}</h3>
         </div>
         <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
       </div>
@@ -4117,14 +4096,14 @@ function filterEvList(){
   }
   el.innerHTML='<div class="c-grid">'+sorted.map(ev=>{
     const tot=evTot(ev);
-    const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):t('no_date');
+    const fmtDate=fmtEvDates(ev);
     const confirmed=(ev.staffConfirmed||[]).length;
     const assigned=(ev.assignedStaff||[]).length;
     return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div class="cat" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${fmtDate}</div>
-          <h3 style="font-size:18px;font-weight:600;margin:0">${ev.name||t('no_name')}</h3>
+          <h3 style="font-size:18px;font-weight:600;margin:0">${escHtml(ev.name||t('no_name'))}</h3>
         </div>
         <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id})" style="flex-shrink:0;width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;font-size:16px;margin-left:8px">×</button>
       </div>
@@ -4228,10 +4207,10 @@ function showEvForm(ev){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div class="field"><label>Email</label>
-          <input id="ef-email" type="email" value="${(ev.email||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com"/>
+          <input id="ef-email" type="email" value="${escHtml(ev.email||'')}" placeholder="contact@example.com"/>
         </div>
         <div class="field"><label>Téléphone</label>
-          <input id="ef-phone" value="${(ev.phone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..."/>
+          <input id="ef-phone" value="${escHtml(ev.phone||'')}" placeholder="+33 6..."/>
         </div>
       </div>
 
@@ -4273,14 +4252,14 @@ function showEvForm(ev){
       </div>
 
       <div class="field" style="margin-bottom:8px"><label>Contact / Responsable</label>
-        <input id="ef-contact" value="${(ev.contact||'').replace(/"/g,'&quot;')}" placeholder="Personne responsable..."/>
+        <input id="ef-contact" value="${escHtml(ev.contact||'')}" placeholder="Personne responsable..."/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="field"><label>Email Contact</label>
-          <input id="ef-contactemail" type="email" value="${(ev.contactEmail||'').replace(/"/g,'&quot;')}" placeholder="contact@example.com" onchange="if(${editEvId}){const ev=state.events.find(x=>x.id===${editEvId});if(ev){ev.contactEmail=this.value;save();}}"/>
+          <input id="ef-contactemail" type="email" value="${escHtml(ev.contactEmail||'')}" placeholder="contact@example.com" onchange="if(${editEvId}){const ev=state.events.find(x=>x.id===${editEvId});if(ev){ev.contactEmail=this.value;save();}}"/>
         </div>
         <div class="field"><label>Tél. Contact</label>
-          <input id="ef-contactphone" value="${(ev.contactPhone||'').replace(/"/g,'&quot;')}" placeholder="+33 6..." onchange="if(${editEvId}){const ev=state.events.find(x=>x.id===${editEvId});if(ev){ev.contactPhone=this.value;save();}}"/>
+          <input id="ef-contactphone" value="${escHtml(ev.contactPhone||'')}" placeholder="+33 6..." onchange="if(${editEvId}){const ev=state.events.find(x=>x.id===${editEvId});if(ev){ev.contactPhone=this.value;save();}}"/>
         </div>
       </div>
     </div>
@@ -4290,7 +4269,7 @@ function showEvForm(ev){
       <div class="ctitle">Événement</div>
 
       <div class="field" style="margin-bottom:8px"><label>${t('ev_name')}</label>
-        <input id="ef-name" value="${(ev.name||'').replace(/"/g,'&quot;')}" placeholder="Mariage Dupont, Gala XYZ..."/>
+        <input id="ef-name" value="${escHtml(ev.name||'')}" placeholder="Mariage Dupont, Gala XYZ..."/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div class="field">
@@ -4309,10 +4288,10 @@ function showEvForm(ev){
         </div>
       </div>
       <div class="field" style="margin-bottom:8px"><label>${t('ev_address')}</label>
-        <input id="ef-addr" value="${(ev.address||'').replace(/"/g,'&quot;')}" placeholder="12 rue de la Paix, Paris"/>
+        <input id="ef-addr" value="${escHtml(ev.address||'')}" placeholder="12 rue de la Paix, Paris"/>
       </div>
       <div class="field"><label>${t('ev_access')}</label>
-        <input id="ef-access" value="${(ev.access||'').replace(/"/g,'&quot;')}" placeholder="Code porte..."/>
+        <input id="ef-access" value="${escHtml(ev.access||'')}" placeholder="Code porte..."/>
       </div>
     </div>
 
@@ -4756,7 +4735,7 @@ function updBarOptions(){
   const colSel=document.getElementById('ef-bar-color');
   if(colSel){
     const curVal=colSel.value;
-    colSel.innerHTML='<option value="">—</option>'+availColors.map(c=>`<option value="${c}">${c}</option>`).join('');
+    colSel.innerHTML='<option value="">—</option>'+availColors.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
     if(availColors.includes(curVal))colSel.value=curVal;
   }
 
@@ -5103,12 +5082,12 @@ function _renderExtraProds(){
     return`<div style="background:var(--surface2);border-radius:var(--radius);padding:8px;margin-bottom:6px;display:grid;grid-template-columns:1.2fr 85px 65px 70px 24px 55px 24px 70px 24px 55px 55px 28px;gap:6px;align-items:center;font-size:11px">
       <!-- Produit (avec autocomplete) -->
       <div style="position:relative;min-width:0">
-        <input id="ep-search-${i}" value="${(p.productType||'').replace(/"/g,'&quot;')}" placeholder="Vodka, Champagne..." style="width:100%;font-size:11px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 8px;color:var(--text);box-sizing:border-box" oninput="epSearch(${i},this.value)"/>
+        <input id="ep-search-${i}" value="${escHtml(p.productType||'')}" placeholder="Vodka, Champagne..." style="width:100%;font-size:11px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 8px;color:var(--text);box-sizing:border-box" oninput="epSearch(${i},this.value)"/>
         <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>
       </div>
       <!-- Marque (autocomplete par type) -->
       <div style="position:relative;min-width:0">
-        <input id="ep-brand-${i}" value="${(p.brand||'').replace(/"/g,'&quot;')}" placeholder="Marque..." style="width:100%;font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text2);box-sizing:border-box" oninput="updExtraProd(${i},'brand',this.value);epBrandSearch(${i},this.value)" onfocus="epBrandSearch(${i},this.value)"/>
+        <input id="ep-brand-${i}" value="${escHtml(p.brand||'')}" placeholder="Marque..." style="width:100%;font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text2);box-sizing:border-box" oninput="updExtraProd(${i},'brand',this.value);epBrandSearch(${i},this.value)" onfocus="epBrandSearch(${i},this.value)"/>
         <div id="ep-brand-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>
       </div>
       <!-- Format -->
@@ -5154,7 +5133,7 @@ function epSearch(i,val){
   if(!types.length){sugg.style.display='none';return;}
   sugg.style.display='block';
   sugg.innerHTML=types.slice(0,8).map(type=>
-    `<div onmousedown="epSelectType(${i},'${type.replace(/'/g,"\\'")}')" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${type}</strong></div>`
+    `<div onmousedown="epSelectType(${i},${JSON.stringify(type)})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${escHtml(type)}</strong></div>`
   ).join('');
 }
 
@@ -5178,8 +5157,8 @@ function epBrandSearch(i,val){
   sugg.style.display='block';
   sugg.innerHTML=matches.slice(0,8).map(pr=>{
     const unit=pr.unit||'pc';const qty=pr.qty||0;
-    return`<div onmousedown="epSelectBrand(${i},'${(pr.brand||'').replace(/'/g,"\\'")}','${unit}',${(pr.priceHT||0).toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <strong>${pr.brand||'—'}</strong><span style="color:var(--text3);font-size:10px;margin-left:6px">${qty}${unit}</span>
+    return`<div onmousedown="epSelectBrand(${i},${JSON.stringify(pr.brand||'')},${JSON.stringify(unit)},${(pr.priceHT||0).toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <strong>${escHtml(pr.brand||'—')}</strong><span style="color:var(--text3);font-size:10px;margin-left:6px">${qty}${escHtml(unit)}</span>
     </div>`;
   }).join('');
 }
@@ -5503,7 +5482,7 @@ async function openIceOrderModal(msgKey){
       <label style="font-size:11px;color:var(--text3);margin-bottom:4px;display:block">Contact sur place (staff confirmé sur cet event)</label>
       ${assignedStaff.length
         ? `<select id="ice-contact-sel" onchange="updateIceOrderMsg('${msgKey}')" style="font-size:13px;width:100%">
-            ${contactOpts.map((c,i)=>`<option value="${i}" data-name="${c.name.replace(/"/g,'&quot;')}" data-phone="${c.phone.replace(/"/g,'&quot;')}">${c.label}</option>`).join('')}
+            ${contactOpts.map((c,i)=>`<option value="${i}" data-name="${escHtml(c.name)}" data-phone="${escHtml(c.phone)}">${escHtml(c.label)}</option>`).join('')}
            </select>`
         : `<div class="txs tm" style="color:var(--text3)">Aucun staff confirmé — <span style="color:var(--gold);cursor:pointer" onclick="document.getElementById('ice-order-modal').remove();goPage('prestation')">confirmer dans Fiche Prestation ↗</span></div>`}
     </div>
@@ -5634,7 +5613,7 @@ async function shareShoppingWA(){
         return`<a href="https://wa.me/${phone}?text=${enc}" target="_blank"
           style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;border:1px solid ${isConfirmed?'var(--green)':isAssigned?'var(--gold)':'var(--border2)'};background:${isConfirmed?'rgba(110,201,138,0.08)':isAssigned?'var(--gold-bg)':'var(--surface2)'};text-decoration:none;margin-bottom:5px">
           <div>
-            <div style="font-size:13px;color:var(--text);font-weight:${isAssigned?'500':'400'}">${s.name}</div>
+            <div style="font-size:13px;color:var(--text);font-weight:${isAssigned?'500':'400'}">${escHtml(s.name)}</div>
             <div class="txs tm">${role}${isConfirmed?' · Confirmé':isAssigned?' · Assigné':''}</div>
           </div>
           <span style="color:#25D366;font-size:18px"></span>
@@ -5646,7 +5625,7 @@ async function shareShoppingWA(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:520px;width:92%;max-height:85vh;overflow-y:auto">
     <div style="font-size:15px;font-weight:500;margin-bottom:4px"> Envoyer la liste de courses</div>
-    <div class="txs tm" style="margin-bottom:14px">${ev.name}</div>
+    <div class="txs tm" style="margin-bottom:14px">${escHtml(ev.name)}</div>
 
     ${staffWithPhone.length?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Envoyer à un membre de l'équipe</div>
     <div style="margin-bottom:14px">${staffBtns}</div>`:''}
@@ -5924,7 +5903,7 @@ function renderShopping(){
   });
   const totalCost=items.reduce((s,i)=>s+i.costTotal,0);
   let html=`<div class="card flex-b mb1" style="padding:14px 18px">
-    <div><div style="font-size:16px;font-family:'DM Serif Display',serif">${ev.name}</div>
+    <div><div style="font-size:16px;font-family:'DM Serif Display',serif">${escHtml(ev.name)}</div>
     <div class="ts tm">${ev.date||''} · ${ev.pax||'?'} guests · ${total} cocktails</div></div>
     <button class="btn no-print" onclick="window.print()"> Print</button></div>
     <table class="shop-table" style="width:100%;border-collapse:collapse;font-size:12px">
@@ -5958,7 +5937,7 @@ function renderShopping(){
         <input type="checkbox" id="${stockOkId}" data-ev="${evId}" data-item="${item.itemKey}" data-unit="${item.unit}" data-input="${qtyInputId}" ${allocQty>0?'checked':''} onchange="onShopStockOkChange(this)" style="cursor:pointer;width:18px;height:18px"/>
       </td>
       <td style="padding:10px;text-align:center"><input type="number" id="${qtyInputId}" value="${pQty}" min="1" style="width:60px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
-      <td style="padding:10px;text-align:center"><button class="btn-profile" onclick="addToSupplierBasket(${evId},'${item.productType}','${item.brand.replace(/'/g,"&apos;")}','${item.unit}',document.getElementById('${qtyInputId}').value,'${item.supplierEmail}','${item.supplierName.replace(/'/g,"&apos;")}','${item.supplierCode}')" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap;background:var(--gold);color:#0d0d0d;border:none;border-radius:6px;cursor:pointer;font-weight:500">+ Commander</button></td>
+      <td style="padding:10px;text-align:center"><button class="btn-profile" onclick="addToSupplierBasket(${evId},${JSON.stringify(item.productType)},${JSON.stringify(item.brand)},${JSON.stringify(item.unit)},document.getElementById('${qtyInputId}').value,${JSON.stringify(item.supplierEmail)},${JSON.stringify(item.supplierName)},${JSON.stringify(item.supplierCode)})" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap;background:var(--gold);color:#0d0d0d;border:none;border-radius:6px;cursor:pointer;font-weight:500">+ Commander</button></td>
     </tr>`;
   });
   html+=`</tbody></table>
@@ -6147,7 +6126,7 @@ function renderPrestation(){
           '<button class="btn btn-sm btn-gold" onclick="sendBriefWA('+evId+','+sid+')">Brief</button>'):
           '';
         return'<div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.4fr 1.2fr 100px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
-          '<span style="'+(isUnavail?'text-decoration:line-through;color:var(--text3)':'')+'">'+(s.name||s.type)+'</span>'+
+          '<span style="'+(isUnavail?'text-decoration:line-through;color:var(--text3)':'')+'">'+(escHtml(s.name||s.type))+'</span>'+
           '<span style="color:var(--text3)">'+role+'</span>'+
           '<span style="color:var(--text3)">'+phone+'</span>'+
           '<span>'+dispo+'</span>'+
@@ -6511,8 +6490,8 @@ function buildPrestHTML(ev){
           </tr></thead>
           <tbody>
             ${named.map(s=>`<tr style="border-bottom:1px solid #f0ede8;${s.unavail?'opacity:.5':''}">
-              <td style="padding:9px 10px;font-weight:500;${s.unavail?'text-decoration:line-through':''}">${s.name}</td>
-              <td style="padding:9px 10px;color:#666">${s.role}</td>
+              <td style="padding:9px 10px;font-weight:500;${s.unavail?'text-decoration:line-through':''}">${escHtml(s.name)}</td>
+              <td style="padding:9px 10px;color:#666">${escHtml(s.role)}</td>
               <td style="padding:9px 10px;text-align:center;font-size:11px;font-weight:500;color:${s.unavail?'#c96e6e':'#2a6e45'}">${s.unavail?'Indispo':'Confirmé'}</td>
             </tr>`).join('')}
           </tbody>
@@ -6958,7 +6937,7 @@ function renderContacts(){
     html+=`<div style="background:var(--gold-bg);border:1px solid rgba(201,169,110,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
       <div>
         <span class="ts" style="color:var(--gold)">‍ ${unimported.length} membre${unimported.length>1?'s':''} du staff non importé${unimported.length>1?'s':''} :</span>
-        <span class="txs tm" style="margin-left:6px">${unimported.map(s=>s.name).join(', ')}</span>
+        <span class="txs tm" style="margin-left:6px">${unimported.map(s=>escHtml(s.name)).join(', ')}</span>
       </div>
       <button class="btn btn-sm btn-gold" onclick="importStaffContacts()">↓ Importer tout</button>
     </div>`;
@@ -6971,14 +6950,14 @@ function renderContacts(){
       const linkedStaff=c.staffId?state.staffItems.find(s=>s.id===c.staffId):null;
       return`<div style="display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:center;margin-bottom:7px;padding:8px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
         <div>
-          <input value="${(c.name||'').replace(/"/g,'&quot;')}" onchange="updContact(${c.id},'name',this.value)" placeholder="Prénom Nom" style="font-size:13px"/>
-          ${linkedStaff?`<div class="txs tm" style="margin-top:2px;padding-left:2px">↗ Staff: ${linkedStaff.type}</div>`:''}
+          <input value="${escHtml(c.name||'')}" onchange="updContact(${c.id},'name',this.value)" placeholder="Prénom Nom" style="font-size:13px"/>
+          ${linkedStaff?`<div class="txs tm" style="margin-top:2px;padding-left:2px">↗ Staff: ${escHtml(linkedStaff.type)}</div>`:''}
         </div>
         <select onchange="updContact(${c.id},'role',this.value)" style="font-size:12px;padding:6px 7px">
           ${['Bartender','Bar Manager','Serveur','Autre'].map(r=>`<option${r===c.role?' selected':''}>${r}</option>`).join('')}
         </select>
         <div style="display:flex;align-items:center;gap:6px">
-          <input value="${(c.phone||'').replace(/"/g,'&quot;')}" onchange="updContact(${c.id},'phone',this.value)" placeholder="+33 6 XX XX XX XX"/>
+          <input value="${escHtml(c.phone||'')}" onchange="updContact(${c.id},'phone',this.value)" placeholder="+33 6 XX XX XX XX"/>
           ${c.phone?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:#25D366;font-size:15px;text-decoration:none;flex-shrink:0" title="WhatsApp"></a>`:''}
         </div>
         <button class="btn btn-sm btn-danger" onclick="delContact(${c.id})"></button>
@@ -7042,8 +7021,8 @@ function renderDressCodes(){
   el.innerHTML=state.dressCodes.map(d=>`
     <div style="display:grid;grid-template-columns:auto 1fr 1fr 28px;gap:8px;align-items:center;margin-bottom:7px;padding:8px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
       <input type="checkbox" ${d.active?'checked':''} onchange="updDC(${d.id},'active',this.checked)" style="width:auto;accent-color:var(--gold)"/>
-      <input value="${(d.name||'').replace(/"/g,'&quot;')}" onchange="updDC(${d.id},'name',this.value)" style="font-weight:500;font-size:12px"/>
-      <input value="${(d.desc||'').replace(/"/g,'&quot;')}" onchange="updDC(${d.id},'desc',this.value)" placeholder="Description..." style="font-size:12px"/>
+      <input value="${escHtml(d.name||'')}" onchange="updDC(${d.id},'name',this.value)" style="font-weight:500;font-size:12px"/>
+      <input value="${escHtml(d.desc||'')}" onchange="updDC(${d.id},'desc',this.value)" placeholder="Description..." style="font-size:12px"/>
       <button class="btn btn-sm btn-danger" onclick="delDressCode(${d.id})">×</button>
     </div>`).join('');
 }
@@ -7149,8 +7128,8 @@ async function sharePrestation(){
         const phone=waPhone(s.phone||'');
         if(!phone) return '';
         return`<label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border-radius:8px;cursor:pointer;margin-bottom:6px">
-          <input type="checkbox" data-phone="${phone}" data-name="${s.name||''}" style="cursor:pointer;width:16px;height:16px"/>
-          <span style="flex:1">${s.name} <span style="font-size:10px;color:var(--text3)">${s.type||''}</span></span>
+          <input type="checkbox" data-phone="${phone}" data-name="${escHtml(s.name||''}" style="cursor:pointer;width:16px;height:16px"/>
+          <span style="flex:1">${escHtml(s.name)} <span style="font-size:10px;color:var(--text3)">${escHtml(s.type||'')}</span></span>
         </label>`;
       }).join('')
     : `<p style="font-size:12px;color:var(--text3)">Ajoute des numéros dans <span style="color:var(--gold);cursor:pointer" onclick="goPage('staff')">Mon équipe ↗</span></p>`;
@@ -7161,7 +7140,7 @@ async function sharePrestation(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:580px;width:92%;max-height:88vh;overflow-y:auto">
     <div style="font-size:15px;font-weight:500;margin-bottom:4px;color:var(--text)">Envoyer la fiche prestation</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">${ev.name}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px">${escHtml(ev.name)}</div>
 
     <!-- CONTACTS DIRECTS -->
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Sélectionner contacts</div>
@@ -7259,7 +7238,7 @@ function renderPlanning(){
 
     html+=`<div style="min-height:64px;padding:5px;border-radius:var(--radius);border:1px solid ${hasEvents?'var(--gold)':isToday?'var(--border2)':'var(--border)'};background:${hasEvents?'var(--gold-bg)':isToday?'var(--surface2)':'transparent'};cursor:${hasEvents?'pointer':'default'}" ${hasEvents?`onclick="${dayEvents.length===1?`editEv(${dayEvents[0].id});goPage('events')`:`scrollToPlanEvent('${dateStr}')` }"`:''}>
       <div style="font-size:11px;font-weight:${isToday?'500':'400'};color:${isToday?'var(--gold)':hasEvents?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
-      ${dayEvents.map(ev=>`<div style="font-size:9px;background:var(--gold);color:#0d0d0d;border-radius:3px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>`).join('')}
+      ${dayEvents.map(ev=>`<div style="font-size:9px;background:var(--gold);color:#0d0d0d;border-radius:3px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>`).join('')}
     </div>`;
   }
 
@@ -7296,7 +7275,7 @@ function checkCodeDuplicate(val, currentId){
   if(!code){el.innerHTML='';return;}
   const dup=state.cocktails.find(c=>c.id!==currentId&&c.code&&c.code.toUpperCase()===code);
   if(dup){
-    el.innerHTML=`<span style="color:var(--red);font-weight:500">Déjà utilisé — ${dup.name}</span>`;
+    el.innerHTML=`<span style="color:var(--red);font-weight:500">Déjà utilisé — ${escHtml(dup.name)}</span>`;
   } else {
     el.innerHTML=`<span style="color:var(--green)">Disponible</span>`;
   }
@@ -7319,12 +7298,12 @@ function renderClients(){
   el.innerHTML=state.clients.map(c=>{
     const evCount=state.events.filter(ev=>ev.clientId===c.id).length;
     const isOpen=c._open===true;
-    const subtitle=[c.company,c.phone,c.email].filter(Boolean).join(' · ');
+    const subtitle=[c.company,c.phone,c.email].filter(Boolean).map(escHtml).join(' · ');
     return`<div class="card client-card" style="margin-bottom:8px;padding:0;overflow:hidden">
       <!-- Header — always visible -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:${isOpen?'var(--surface2)':'var(--surface)'}" onclick="toggleClient(${c.id})">
         <div style="min-width:0">
-          <div style="font-size:14px;font-weight:500">${c.name||'Sans nom'}</div>
+          <div style="font-size:14px;font-weight:500">${escHtml(c.name||'Sans nom')}</div>
           ${subtitle?`<div class="txs tm" style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtitle}</div>`:''}
           <div class="txs tm" style="margin-top:2px">${evCount} ${evCount!==1?t('client_events_pl'):t('client_events')}</div>
         </div>
@@ -7337,25 +7316,25 @@ function renderClients(){
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border)">
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Nom / Prénom</label>
-            <input value="${(c.name||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/>
+            <input value="${escHtml(c.name||'')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/>
           </div>
           <div class="field"><label>Société</label>
-            <input value="${(c.company||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/>
+            <input value="${escHtml(c.company||'')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/>
           </div>
         </div>
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Email</label>
-            <input type="email" value="${(c.email||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/>
+            <input type="email" value="${escHtml(c.email||'')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/>
           </div>
           <div class="field"><label>Téléphone</label>
-            <input value="${(c.phone||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/>
+            <input value="${escHtml(c.phone||'')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/>
           </div>
         </div>
         <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label>
-          <input value="${(c.address||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/>
+          <input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/>
         </div>
         <div class="field" style="margin-bottom:6px"><label>Notes</label>
-          <input value="${(c.notes||'').replace(/"/g,'&quot;')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/>
+          <input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/>
         </div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">Supprimer</button>
@@ -7416,17 +7395,17 @@ function openSupplierOrder(supplierName){
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
-  const sEsc=supplierName.replace(/'/g,"\\'");
-  const html=items.map((i,idx)=>{const u=i.unit==='cl'?'btl':i.unit;return `<tr style="border-bottom:1px solid var(--border2)"><td style="padding:6px">${i.name}</td><td style="padding:6px">${i.brand||'—'}</td><td style="padding:6px;font-family:monospace;font-size:11px">${i.code||'—'}</td><td style="padding:6px"><input type="number" value="${i.qty}" min="1" style="width:55px;padding:3px 5px;font-size:12px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text)" onchange="updateSupplierOrderQty('${sEsc}',${idx},this.value)"/> ${u}</td><td style="padding:6px;text-align:center"><button onclick="removeSupplierOrderLine('${sEsc}',${idx})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕</button></td></tr>`}).join('');
+  const sJson=JSON.stringify(supplierName);
+  const html=items.map((i,idx)=>{const u=i.unit==='cl'?'btl':i.unit;return `<tr style="border-bottom:1px solid var(--border2)"><td style="padding:6px">${escHtml(i.name)}</td><td style="padding:6px">${escHtml(i.brand||'—')}</td><td style="padding:6px;font-family:monospace;font-size:11px">${escHtml(i.code||'—')}</td><td style="padding:6px"><input type="number" value="${i.qty}" min="1" style="width:55px;padding:3px 5px;font-size:12px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text)" onchange="updateSupplierOrderQty(${sJson},${idx},this.value)"/> ${escHtml(u)}</td><td style="padding:6px;text-align:center"><button onclick="removeSupplierOrderLine(${sJson},${idx})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕</button></td></tr>`}).join('');
   const modal=document.createElement('div');
   modal.id='supplier-order-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
   const btns=[];
-  if(sup.email)btns.push('<button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder(\''+supplierName+'\',\'email\')">Mail</button>');
-  if(sup.phone)btns.push('<button class="btn" style="flex:1;background:#25D366;color:white;border-color:#25D366;cursor:pointer" onclick="sendSupplierOrder(\''+supplierName+'\',\'whatsapp\')">WhatsApp</button>');
-  btns.push('<button class="btn btn-danger" style="flex:1" onclick="clearSupplierOrder(\''+supplierName+'\');this.closest(\'[style*=fixed]\').remove()"> Vider</button>');
+  if(sup.email)btns.push('<button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder('+sJson+',\'email\')">Mail</button>');
+  if(sup.phone)btns.push('<button class="btn" style="flex:1;background:#25D366;color:white;border-color:#25D366;cursor:pointer" onclick="sendSupplierOrder('+sJson+',\'whatsapp\')">WhatsApp</button>');
+  btns.push('<button class="btn btn-danger" style="flex:1" onclick="clearSupplierOrder('+sJson+');this.closest(\'[style*=fixed]\').remove()"> Vider</button>');
   const content=!items.length?'<p style="color:var(--text3);font-size:13px">Aucun article en liste de course pour ce fournisseur.</p>':'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.1em"><th style="text-align:left;padding:4px 6px">Produit</th><th style="text-align:left;padding:4px 6px">Marque</th><th style="text-align:left;padding:4px 6px">Réf</th><th style="text-align:left;padding:4px 6px">Qté</th><th style="padding:4px 6px"></th></tr></thead><tbody>'+html+'</tbody></table><div style="display:flex;gap:8px;margin-top:12px">'+btns.join('')+'</div>';
-  modal.innerHTML='<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Commande — '+supplierName+'</div><button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button></div>'+content+'</div>';
+  modal.innerHTML='<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Commande — '+escHtml(supplierName)+'</div><button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button></div>'+content+'</div>';
   document.body.appendChild(modal);
 }
 function removeSupplierOrderLine(supplierName,idx){
@@ -7571,19 +7550,19 @@ function showPendingOrders(){
       <div style="display:flex;flex-direction:column;gap:8px">
         ${order.items.map((item,iidx)=>`
           <div style="display:flex;align-items:center;gap:8px;font-size:11px">
-            <input type="checkbox" id="chk-${order.id}-${iidx}" ${item.received?'checked':''} style="width:auto;accent-color:var(--gold)" onchange="toggleOrderItem('${order.supplier}',${order.id},${iidx})"/>
+            <input type="checkbox" id="chk-${order.id}-${iidx}" ${item.received?'checked':''} style="width:auto;accent-color:var(--gold)" onchange="toggleOrderItem(${JSON.stringify(order.supplier)},${order.id},${iidx})"/>
             <div style="flex:1">
-              <div>${item.brand||item.name}</div>
-              <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+item.code:''}</div>
+              <div>${escHtml(item.brand||item.name)}</div>
+              <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+escHtml(item.code):''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
-              <input type="number" value="${item.receivedQty||item.qty}" min="0" style="width:40px;padding:2px 4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:10px;text-align:center" onchange="updateReceivedQty('${order.supplier}',${order.id},${iidx},this.value)"/>
+              <input type="number" value="${item.receivedQty||item.qty}" min="0" style="width:40px;padding:2px 4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:10px;text-align:center" onchange="updateReceivedQty(${JSON.stringify(order.supplier)},${order.id},${iidx},this.value)"/>
               <span style="color:var(--text3);font-size:10px">${item.unit==='cl'?'btl':item.unit==='pièce'?'pièce':'pièce'}</span>
             </div>
           </div>
         `).join('')}
       </div>
-      <button class="btn btn-sm btn-gold" style="width:100%;margin-top:8px" onclick="receiveOrder('${order.supplier}',${order.id})">Marquer comme reçue</button>
+      <button class="btn btn-sm btn-gold" style="width:100%;margin-top:8px" onclick="receiveOrder(${JSON.stringify(order.supplier)},${order.id})">Marquer comme reçue</button>
     </div>
   `).join('');
 
@@ -7629,8 +7608,8 @@ function showOrderHistory(){
         ${order.items.map(item=>`
           <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
             <div>
-              <div>${item.brand||item.name}</div>
-              <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+item.code:''}</div>
+              <div>${escHtml(item.brand||item.name)}</div>
+              <div style="color:var(--text3);font-size:10px">${item.code?'Réf '+escHtml(item.code):''}</div>
             </div>
             <div style="text-align:right;color:var(--text2)">
               <div>${item.receivedQty||item.qty} ${item.unit==='cl'?'btl':item.unit==='pièce'?'pièce':'pièce'}</div>
@@ -7714,14 +7693,14 @@ function renderSuppliers(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:600;letter-spacing:.02em">${s.name}</div>
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.join(' · ')}</div>`:''}\n        </div>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.map(escHtml).join(' · ')}</div>`:''}\n        </div>
         <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
-        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${s.phone||'—'}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${s.email||'—'}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${s.address}</span></div>`:''}\n      </div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${escHtml(s.phone||'—')}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${escHtml(s.email||'—')}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${escHtml(s.address)}</span></div>`:''}\n      </div>
       <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
         <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})">Modifier</button>
-        <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder('${s.name.replace(/'/g,"\\'")}')">
+        <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder(${JSON.stringify(s.name)})">
           Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px\">${orderCount}</span>`:''}\n        </button>
       </div>
     </div>`;
@@ -7765,13 +7744,13 @@ function editSupplier(id){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
   modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px">
     <div style="font-size:16px;font-weight:600">Modifier fournisseur</div>
-    <div class="field"><label>Nom *</label><input id="sp-name" value="${s.name||''}" /></div>
+    <div class="field"><label>Nom *</label><input id="sp-name" value="${escHtml(s.name||'')}" /></div>
     <div class="g2">
-      <div class="field"><label>Téléphone</label><input id="sp-phone" value="${s.phone||''}" type="tel"/></div>
-      <div class="field"><label>Email</label><input id="sp-email" value="${s.email||''}" type="email"/></div>
+      <div class="field"><label>Téléphone</label><input id="sp-phone" value="${escHtml(s.phone||'')}" type="tel"/></div>
+      <div class="field"><label>Email</label><input id="sp-email" value="${escHtml(s.email||'')}" type="email"/></div>
     </div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${s.contact||''}" placeholder="Jean Martin" /></div>
-    <div class="field"><label>Adresse</label><input id="sp-address" value="${s.address||''}"/></div>
+    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jean Martin" /></div>
+    <div class="field"><label>Adresse</label><input id="sp-address" value="${escHtml(s.address||'')}"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
         ${cats.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" value="${c}" class="sp-cat-chk" style="width:auto" ${(s.categories||[]).includes(c)?'checked':''}/> ${c}</label>`).join('')}
@@ -7875,12 +7854,12 @@ async function showAvailabilityModal(evId){
     const avail=!conflict;
     return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
       <div>
-        <div style="font-size:13px">${s.name||s.type}</div>
-        <div class="txs tm">${s.role||s.type}</div>
+        <div style="font-size:13px">${escHtml(s.name||s.type)}</div>
+        <div class="txs tm">${escHtml(s.role||s.type)}</div>
       </div>
       ${avail
         ?`<span style="font-size:11px;padding:2px 10px;border-radius:10px;background:rgba(110,201,138,0.15);color:var(--green);font-weight:500">Dispo</span>`
-        :`<span style="font-size:11px;padding:2px 10px;border-radius:10px;background:rgba(201,110,110,0.15);color:var(--red);font-weight:500">Occupé — ${conflict.name}</span>`}
+        :`<span style="font-size:11px;padding:2px 10px;border-radius:10px;background:rgba(201,110,110,0.15);color:var(--red);font-weight:500">Occupé — ${escHtml(conflict.name)}</span>`}
     </div>`;
   }).join('');
 
@@ -8251,7 +8230,7 @@ function buildEventSummaryHTML(ev){
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>${ev.name} - Récapitulatif</title>
+  <title>${escHtml(ev.name)} - Récapitulatif</title>
   <style>
     body{font-family:Arial,sans-serif;background:#f5f3ef;margin:0;padding:20px}
     .container{background:white;max-width:800px;margin:0 auto;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
@@ -8276,7 +8255,7 @@ function buildEventSummaryHTML(ev){
 </head>
 <body>
   <div class="container">
-    <h1>${ev.name}</h1>
+    <h1>${escHtml(ev.name)}</h1>
     
     <div class="header">
       <div class="header-item">
@@ -8349,8 +8328,8 @@ function buildEventSummaryHTML(ev){
         const s=state.staffItems.find(x=>x.id===sid);
         if(!s)return'';
         return`<div style="padding:12px;background:#f9f9f9;border-radius:6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
-          <div><strong>${s.name}</strong><br><small style="color:#999">${s.type||'—'}</small></div>
-          <div><small style="color:#999">Téléphone</small><br>${s.phone||'—'}</div>
+          <div><strong>${escHtml(s.name)}</strong><br><small style="color:#999">${escHtml(s.type||'—')}</small></div>
+          <div><small style="color:#999">Téléphone</small><br>${escHtml(s.phone||'—')}</div>
           <div><small style="color:#999">Dispo</small><br><span style="color:${(ev.staffStatus||{})[sid]?.confirmed?'#5a9b6f':'#999'}">${(ev.staffStatus||{})[sid]?.confirmed?'✓ Oui':'Confirmé'}</span></div>
         </div>`;
       }).join('')}
@@ -8400,8 +8379,8 @@ function buildEventSummaryHTML(ev){
       const marginPct=totalRev>0?(margin/totalRev*100).toFixed(1):0;
       const acompte=ev.acompte||0;
       const reste=Math.max(0,totalTTC-acompte);
-      const cocktailRows=(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return'';return`<tr><td>${c.name}</td><td style="text-align:center">${cfg.qty}</td><td style="text-align:right">${(c.priceHT||0).toFixed(2)}€</td><td style="text-align:right">${(cfg.qty*(c.priceHT||0)).toFixed(2)}€</td><td style="text-align:right;color:#c00">${(cfg.qty*c.totalCost).toFixed(2)}€</td></tr>`;}).join('');
-      const staffRows=(ev.staffAssignments||[]).map(a=>{const h=calcStaffHours(a.arrivalTime,a.departureTime);return`<tr><td>${a.name||'—'} (${a.role||'—'})</td><td style="text-align:center">${h.toFixed(1)}h</td><td style="text-align:right">${(a.billHT||0).toFixed(2)}€/h</td><td style="text-align:right">${((a.billHT||0)*h).toFixed(2)}€</td><td style="text-align:right;color:#c00">${((a.costHT||0)*h).toFixed(2)}€</td></tr>`;}).join('');
+      const cocktailRows=(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return'';return`<tr><td>${escHtml(c.name)}</td><td style="text-align:center">${cfg.qty}</td><td style="text-align:right">${(c.priceHT||0).toFixed(2)}€</td><td style="text-align:right">${(cfg.qty*(c.priceHT||0)).toFixed(2)}€</td><td style="text-align:right;color:#c00">${(cfg.qty*c.totalCost).toFixed(2)}€</td></tr>`;}).join('');
+      const staffRows=(ev.staffAssignments||[]).map(a=>{const h=calcStaffHours(a.arrivalTime,a.departureTime);return`<tr><td>${escHtml(a.name||'—')} (${escHtml(a.role||'—')})</td><td style="text-align:center">${h.toFixed(1)}h</td><td style="text-align:right">${(a.billHT||0).toFixed(2)}€/h</td><td style="text-align:right">${((a.billHT||0)*h).toFixed(2)}€</td><td style="text-align:right;color:#c00">${((a.costHT||0)*h).toFixed(2)}€</td></tr>`;}).join('');
       return`
       <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:12px">
         <thead><tr style="background:#f0f0f0"><th>Cocktail</th><th style="text-align:center">Qté</th><th style="text-align:right">PU HT</th><th style="text-align:right">Facturation HT</th><th style="text-align:right">Coût HT</th></tr></thead>
@@ -8527,7 +8506,7 @@ function renderHistorique(){
       const fmtDate=new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
       const cktCount=evTot(ev);
       html+=`<div class="card" style="padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
-        <div style="flex:1;cursor:pointer" onclick="goToEventSuivi(${ev.id})">
+        <div style="flex:1" onclick="goToEventSuivi(${ev.id})">
           <div style="font-size:13px;font-weight:500">${ev.name}</div>
           <div class="txs tm">${fmtDate}${ev.pax?' · '+ev.pax+' pax':''}${cktCount?' · '+cktCount+' cocktails':''}</div>
         </div>
@@ -9405,7 +9384,7 @@ function renderSuivi(){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="min-width:0;flex:1">
           <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
-          <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.name}</div>
+          <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
           <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
         </div>
         <div style="text-align:right;flex-shrink:0;margin-left:12px">
@@ -9550,7 +9529,7 @@ function renderSuivi(){
 }
 
 function filterSuivi(){
-  const q=document.getElementById('suivi-search')?.value||'';
+  const q=document.getElementById('suivi-search')?.value.toLowerCase()||'';
   const now=new Date();
   const base=state.events.filter(ev=>!(ev.paid&&ev.stockRetourDone));
   const filtered=base.filter(ev=>
@@ -9901,7 +9880,7 @@ function renderBarItems(){
         <td><div id="bar-transport-${b.id}" style="min-width:90px"></div></td>
         <td><div id="bar-setup-${b.id}" style="min-width:80px"></div></td>
         <td><input type="checkbox" ${b.customizable?'checked':''} onchange="updBarItem(${b.id},'customizable',this.checked)" title="Personnalisable" style="width:auto;accent-color:var(--gold)"/></td>
-        <td><input value="${(b.notes||'').replace(/"/g,'&quot;')}" onchange="updBarItem(${b.id},'notes',this.value)" placeholder="Éclairage LED, logo..."/></td>
+        <td><input value="${escHtml(b.notes||'')}" onchange="updBarItem(${b.id},'notes',this.value)" placeholder="Éclairage LED, logo..."/></td>
         <td><input type="checkbox" ${b.available!==false?'checked':''} onchange="updBarItem(${b.id},'available',this.checked)" title="Disponible" style="width:auto;accent-color:var(--green)"/></td>
         <td>
           ${b.photo?`<button class="btn btn-sm btn-ghost" onclick="updBarItem(${b.id},'photo','');renderBarItems()" title="Supprimer photo" style="margin-bottom:2px">✕</button><br>`:''}
