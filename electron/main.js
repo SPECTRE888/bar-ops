@@ -109,7 +109,8 @@ function setupUpdater() {
   autoUpdater.on('update-downloaded', () => {
     mainWin?.webContents.executeJavaScript(`
       if(typeof showToast==='function') showToast('Mise à jour prête — redémarrage dans 5s…');
-    `).then(() => setTimeout(() => autoUpdater.quitAndInstall(false, true), 5000)).catch(() => {})
+    `).catch(() => {})
+    setTimeout(() => autoUpdater.quitAndInstall(false, true), 5000)
   })
 
   autoUpdater.on('error', (err) => console.error('[updater] error:', err?.message || err))
