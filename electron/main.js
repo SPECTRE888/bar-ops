@@ -115,6 +115,8 @@ function setupUpdater() {
     repo: 'bar-ops',
     token: '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'
   })
+  // App non signée — désactiver la vérification de signature pour l'auto-update
+  autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(undefined)
 
   autoUpdater.on('checking-for-update', () => toast('Vérification des mises à jour…'))
   autoUpdater.on('update-available',    (i) => toast(`Mise à jour v${i.version} disponible — téléchargement…`))
