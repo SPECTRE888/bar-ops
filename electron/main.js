@@ -1,5 +1,4 @@
 const { app, BrowserWindow, shell, dialog } = require('electron')
-const { autoUpdater } = require('electron-updater')
 const http = require('http')
 const path = require('path')
 const url  = require('url')
@@ -95,7 +94,15 @@ if (!gotLock) {
   })
 }
 
-// ─── Auto-updater ─────────────────────────────────────────────────────────────
+// ─── Auto-updater custom (bypass Squirrel.Mac — app non signée) ───────────────
+const https    = require('https')
+const fs       = require('fs')
+const os       = require('os')
+const { spawn } = require('child_process')
+
+const GH_OWNER = 'SPECTRE888'
+const GH_REPO  = 'bar-ops'
+
 function toast(msg) {
   const safe = msg.replace(/\\/g, '\\\\').replace(/`/g, '\\`')
   mainWin?.webContents.executeJavaScript(`
@@ -104,52 +111,98 @@ function toast(msg) {
   `).catch(() => {})
 }
 
-function setupUpdater() {
-  autoUpdater.autoDownload = true
-  autoUpdater.autoInstallOnAppQuit = true
-  autoUpdater.logger = require('electron-log')
-  autoUpdater.logger.transports.file.level = 'info'
-  // setFeedURL non nécessaire : electron-builder génère app-update.yml
-  // avec le token injecté depuis GH_PAT_UPDATER au moment du build CI
-  // App non signée — désactiver la vérification de signature pour l'auto-update
-  autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(undefined)
+function get(url) {
+  return new Promise((resolve, reject) => {
+    const follow = (u) => {
+      https.get(u, { headers: { 'User-Agent': 'Bar-Ops-Updater' } }, (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302)
+          return follow(res.headers.location)
+        let d = ''
+        res.on('data', c => d += c)
+        res.on('end', () => resolve(d))
+      }).on('error', reject)
+    }
+    follow(url)
+  })
+}
 
-  autoUpdater.on('checking-for-update', () => toast('Vérification des mises à jour…'))
-  autoUpdater.on('update-available',    (i) => toast(`Mise à jour v${i.version} disponible — téléchargement…`))
-  autoUpdater.on('update-not-available',() => toast('App à jour.'))
-  autoUpdater.on('download-progress',   (p) => toast(`Téléchargement ${Math.round(p.percent)}%…`))
+function download(url, dest) {
+  return new Promise((resolve, reject) => {
+    const follow = (u) => {
+      https.get(u, { headers: { 'User-Agent': 'Bar-Ops-Updater' } }, (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302)
+          return follow(res.headers.location)
+        const f = fs.createWriteStream(dest)
+        res.pipe(f)
+        f.on('finish', () => f.close(resolve))
+        f.on('error', reject)
+      }).on('error', reject)
+    }
+    follow(url)
+  })
+}
 
-  autoUpdater.on('update-downloaded', () => {
-    toast('Mise à jour prête — redémarrage dans 5s…')
+function semverGt(a, b) {
+  const pa = a.replace(/^v/, '').split('.').map(Number)
+  const pb = b.replace(/^v/, '').split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    if (pa[i] > pb[i]) return true
+    if (pa[i] < pb[i]) return false
+  }
+  return false
+}
+
+async function checkAndUpdate() {
+  try {
+    const raw     = await get(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/releases/latest`)
+    const release = JSON.parse(raw)
+    const latest  = release.tag_name.replace(/^v/, '')
+    const current = app.getVersion()
+
+    if (!semverGt(latest, current)) return  // déjà à jour
+
+    toast(`Mise à jour v${latest} disponible — téléchargement…`)
+
+    const asset = release.assets.find(a => a.name.match(/arm64-mac\.zip$/) && !a.name.endsWith('.blockmap'))
+    if (!asset) throw new Error('Asset ZIP introuvable dans la release')
+
+    const tmpDir  = fs.mkdtempSync(path.join(os.tmpdir(), 'bar-ops-upd-'))
+    const zipPath = path.join(tmpDir, 'update.zip')
+
+    await download(asset.browser_download_url, zipPath)
+    toast('Installation en cours…')
+
+    const appPath   = process.execPath.split('.app/Contents/')[0] + '.app'
+    const extractDir = path.join(tmpDir, 'ext')
+    fs.mkdirSync(extractDir)
+
+    // Extrait, signe en ad-hoc, remplace l'app en place, relance
+    const script = [
+      `set -e`,
+      `cd "${extractDir}"`,
+      `unzip -q "${zipPath}"`,
+      `NEWAPP=$(find "${extractDir}" -maxdepth 2 -name "*.app" | head -1)`,
+      `xattr -cr "$NEWAPP"`,
+      `codesign --force --deep --sign - --timestamp=none "$NEWAPP" 2>/dev/null || true`,
+      `cp -R "$NEWAPP/." "${appPath}/"`,
+      `sleep 1`,
+      `open "${appPath}"`,
+    ].join('\n')
+
+    toast('Mise à jour prête — redémarrage dans 3s…')
     setTimeout(() => {
-      // Spawn a detached script: wait for ShipIt to replace the app,
-      // strip quarantine, then reopen — needed for unsigned apps on macOS
-      const appPath = process.execPath.split('.app/Contents/')[0] + '.app'
-      const { spawn } = require('child_process')
-      spawn('bash', ['-c',
-        `sleep 5 && xattr -cr "${appPath}" && open "${appPath}"`
-      ], { detached: true, stdio: 'ignore' }).unref()
-      autoUpdater.quitAndInstall(true, false)
-    }, 5000)
-  })
+      spawn('bash', ['-c', script], { detached: true, stdio: 'ignore' }).unref()
+      app.quit()
+    }, 3000)
 
-  autoUpdater.on('error', (err) => {
-    const msg = err?.message || String(err)
-    console.error('[updater] error:', msg)
-    dialog.showMessageBox(mainWin, {
-      type: 'error',
-      title: 'Erreur mise à jour',
-      message: 'La mise à jour automatique a échoué',
-      detail: msg,
-      buttons: ['OK']
-    }).catch(() => {})
-  })
+  } catch (err) {
+    console.error('[updater]', err?.message || err)
+  }
+}
 
-  // Attendre 10s que la fenêtre soit chargée avant le premier check
-  setTimeout(() => {
-    autoUpdater.checkForUpdates().catch((err) => toast('Check failed: ' + (err?.message || err)))
-  }, 10000)
-  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 30 * 60 * 1000)
+function setupUpdater() {
+  setTimeout(checkAndUpdate, 10000)
+  setInterval(checkAndUpdate, 30 * 60 * 1000)
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
