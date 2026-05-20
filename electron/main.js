@@ -113,7 +113,7 @@ function setupUpdater() {
     provider: 'github',
     owner: 'SPECTRE888',
     repo: 'bar-ops',
-    token: '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'
+    token: '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'
   })
   // App non signée — désactiver la vérification de signature pour l'auto-update
   autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(undefined)

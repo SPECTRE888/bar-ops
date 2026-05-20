@@ -1,6 +1,6 @@
 {
   "name": "bar-ops",
-  "version": "1.4.5",
+  "version": "1.4.7",
   "description": "Bar Ops — gestion d'événements bar",
   "main": "electron/main.js",
   "scripts": {
@@ -13,6 +13,7 @@
   "build": {
     "appId": "com.barops.app",
     "productName": "Bar Ops",
+    "afterPack": "scripts/afterPack.js",
 "directories": {
       "output": "dist"
     },
@@ -37,6 +38,9 @@
     "mac": {
       "icon": "electron/assets/icon.icns",
       "identity": null,
+      "hardenedRuntime": false,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist",
       "target": [
         {
           "target": "dmg",

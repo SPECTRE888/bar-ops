@@ -19,7 +19,6 @@ module.exports = async function afterPack(context) {
     }
   }
 
-  // Strip frameworks and helpers
   const find = (pattern) => {
     try {
       return execSync(`find "${appPath}" ${pattern}`, { stdio: 'pipe' })
@@ -27,15 +26,23 @@ module.exports = async function afterPack(context) {
     } catch (e) { return [] }
   }
 
+  // 1. Strip nested .app helper bundles (e.g. Electron Helper.app)
+  const helperApps = find('-name "*.app" -type d')
+  for (const p of helperApps) strip(p)
+
+  // 2. Strip .framework bundles
+  const frameworks = find('-name "*.framework" -type d')
+  for (const p of frameworks) strip(p)
+
+  // 3. Strip individual binaries & dylibs
   const binaries = [
     ...find('-name "*.dylib"'),
     ...find('-name "*.node"'),
-    ...find('-name "Electron Framework" -type f'),
-    ...find('-name "*.helper" -type f'),
     ...find('-perm +111 -type f'),
   ]
-
   for (const bin of binaries) strip(bin)
+
+  // 4. Strip the top-level .app bundle last
   strip(appPath)
 
   console.log('[afterPack] Done stripping signatures.')
