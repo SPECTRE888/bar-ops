@@ -9,13 +9,16 @@ module.exports = async function afterPack(context) {
     `${context.packager.appInfo.productName}.app`
   )
 
-  console.log('[afterPack] Stripping all code signatures from:', appPath)
+  console.log('[afterPack] Ad-hoc re-signing:', appPath)
 
-  const strip = (target) => {
+  const sign = (target) => {
     try {
-      execSync(`codesign --remove-signature "${target}"`, { stdio: 'pipe' })
+      execSync(`codesign --force --sign - --timestamp=none --preserve-metadata=identifier,entitlements "${target}"`, { stdio: 'pipe' })
     } catch (e) {
-      // Ignore — some binaries may not have a signature
+      // fallback sans preserve-metadata
+      try {
+        execSync(`codesign --force --sign - --timestamp=none "${target}"`, { stdio: 'pipe' })
+      } catch (e2) { /* ignore */ }
     }
   }
 
@@ -26,24 +29,23 @@ module.exports = async function afterPack(context) {
     } catch (e) { return [] }
   }
 
-  // 1. Strip nested .app helper bundles (e.g. Electron Helper.app)
-  const helperApps = find('-name "*.app" -type d')
-  for (const p of helperApps) strip(p)
+  // Signer dans l'ordre : d'abord les composants internes, puis les bundles parents
 
-  // 2. Strip .framework bundles
-  const frameworks = find('-name "*.framework" -type d')
-  for (const p of frameworks) strip(p)
+  // 1. Dylibs et binaires natifs
+  for (const p of find('-name "*.dylib"')) sign(p)
+  for (const p of find('-name "*.node"')) sign(p)
 
-  // 3. Strip individual binaries & dylibs
-  const binaries = [
-    ...find('-name "*.dylib"'),
-    ...find('-name "*.node"'),
-    ...find('-perm +111 -type f'),
-  ]
-  for (const bin of binaries) strip(bin)
+  // 2. Executables dans les helpers
+  for (const p of find('-perm +111 -type f')) sign(p)
 
-  // 4. Strip the top-level .app bundle last
-  strip(appPath)
+  // 3. Frameworks (bundles répertoire)
+  for (const p of find('-name "*.framework" -type d')) sign(p)
 
-  console.log('[afterPack] Done stripping signatures.')
+  // 4. Helper .app bundles
+  for (const p of find('-name "*.app" -type d')) sign(p)
+
+  // 5. L'app principale en dernier
+  sign(appPath)
+
+  console.log('[afterPack] Ad-hoc signing done.')
 }
