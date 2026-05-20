@@ -109,12 +109,8 @@ function setupUpdater() {
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.logger = require('electron-log')
   autoUpdater.logger.transports.file.level = 'info'
-  autoUpdater.setFeedURL({
-    provider: 'github',
-    owner: 'SPECTRE888',
-    repo: 'bar-ops',
-    token: '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'
-  })
+  // setFeedURL non nécessaire : electron-builder génère app-update.yml
+  // avec le token injecté depuis GH_PAT_UPDATER au moment du build CI
   // App non signée — désactiver la vérification de signature pour l'auto-update
   autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(undefined)
 

@@ -30,5 +30,8 @@ jobs:
     - name: Build & Publish
       run: npx electron-builder --mac --arm64 --publish=always
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # GITHUB_TOKEN pour créer la release
+        GH_TOKEN: ${{ secrets.GH_PAT_UPDATER }}
+        # Token embarqué dans app-update.yml pour que l'app télécharge les mises à jour
+        EP_GITHUB_TOKEN: ${{ secrets.GH_PAT_UPDATER }}
         CSC_IDENTITY_AUTO_DISCOVERY: false

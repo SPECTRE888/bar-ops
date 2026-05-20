@@ -27,7 +27,8 @@
       "provider": "github",
       "owner": "SPECTRE888",
       "repo": "bar-ops",
-      "releaseType": "release"
+      "releaseType": "release",
+      "private": true
     },
     "protocols": {
       "name": "Bar Ops",
