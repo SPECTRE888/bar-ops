@@ -177,16 +177,34 @@ async function checkAndUpdate() {
     fs.mkdirSync(extractDir)
 
     // Extrait, signe en ad-hoc, remplace l'app en place, relance
+    const logFile = path.join(tmpDir, 'update.log')
     const script = [
-      `set -e`,
+      `exec > "${logFile}" 2>&1`,
+      `set -ex`,
+      `echo "=== Bar Ops update script ==="`,
+      `echo "Waiting for app to quit..."`,
+      `sleep 5`,
+      `# Attendre que le process soit vraiment mort`,
+      `for i in $(seq 1 20); do`,
+      `  pgrep -f "Bar Ops" >/dev/null 2>&1 || break`,
+      `  sleep 1`,
+      `done`,
+      `echo "App quit confirmed"`,
       `cd "${extractDir}"`,
       `unzip -q "${zipPath}"`,
-      `NEWAPP=$(find "${extractDir}" -maxdepth 2 -name "*.app" | head -1)`,
+      `NEWAPP=$(find "${extractDir}" -maxdepth 2 -name "*.app" -type d | head -1)`,
+      `echo "Found: $NEWAPP"`,
+      `if [ -z "$NEWAPP" ]; then echo "ERROR: no .app found"; exit 1; fi`,
       `xattr -cr "$NEWAPP"`,
-      `codesign --force --deep --sign - --timestamp=none "$NEWAPP" 2>/dev/null || true`,
-      `cp -R "$NEWAPP/." "${appPath}/"`,
-      `sleep 1`,
+      `echo "Removing old app..."`,
+      `rm -rf "${appPath}"`,
+      `echo "Copying new app..."`,
+      `cp -R "$NEWAPP" "${appPath}"`,
+      `xattr -cr "${appPath}"`,
+      `codesign --force --deep --sign - --timestamp=none "${appPath}" 2>/dev/null || true`,
+      `echo "Opening app..."`,
       `open "${appPath}"`,
+      `echo "Done."`,
     ].join('\n')
 
     toast('Mise à jour prête — redémarrage dans 3s…')
