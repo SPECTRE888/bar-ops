@@ -2,16 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!-- Accès réseau sortant (requis pour auto-update via Chromium net) -->
   <key>com.apple.security.network.client</key>
   <true/>
-  <!-- Accès réseau entrant (pour le serveur local Electron si besoin) -->
   <key>com.apple.security.network.server</key>
-  <true/>
-  <!-- Désactive le sandbox strict (app non signée) -->
-  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-  <true/>
-  <key>com.apple.security.cs.disable-library-validation</key>
   <true/>
 </dict>
 </plist>
