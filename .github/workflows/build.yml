@@ -27,7 +27,16 @@ jobs:
       run: npm ci
 
     - name: Clean existing release
-      run: gh release delete "${{ github.ref_name }}" --yes --cleanup-tag 2>/dev/null || true
+      run: |
+        TAG="${GITHUB_REF_NAME}"
+        # Supprimer les assets de la release existante (sans toucher au tag)
+        RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$TAG --jq '.id' 2>/dev/null || echo "")
+        if [ -n "$RELEASE_ID" ]; then
+          echo "Deleting release $RELEASE_ID for tag $TAG"
+          gh api -X DELETE repos/${{ github.repository }}/releases/$RELEASE_ID
+        else
+          echo "No existing release for $TAG"
+        fi
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
