@@ -1904,22 +1904,31 @@ async function deleteSelectedCategory(){
 function onCategoryFilterChange(){
   const select=document.getElementById('cat-filter');
   if(select.value==='__ADD_CATEGORY__'){
-    const name=prompt('Nom de la nouvelle catégorie:');
-    if(!name?.trim()){
-      select.value=select.options[0].value;
-      return;
-    }
-    window._pendingCatName=name.trim();
-    const typeHtml=`<div style="display:flex;flex-direction:column;gap:12px">
-      <p style="color:var(--text2);font-size:13px">Quel type de catégorie?</p>
+    select.value=select.options[0].value;
+    // prompt() est bloqué dans Electron → modal custom
+    const modal=document.createElement('div');
+    modal.id='add-cat-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:15px;font-weight:600">Nouvelle catégorie</div>
+      <div class="field"><label>Nom</label><input id="new-cat-name" placeholder="Ex: Bières, Thés glacés…" autofocus/></div>
+      <div style="font-size:13px;color:var(--text2)">Type de produits :</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button class="btn btn-gold" onclick="createCategoryWithType(window._pendingCatName,'liquid')" style="text-align:left">Liquide (unit: kg, L, pièce)</button>
-        <button class="btn btn-gold" onclick="createCategoryWithType(window._pendingCatName,'material')" style="text-align:left">Matériel (pas d'unit)</button>
-        <button class="btn btn-ghost" onclick="document.querySelector('[style*=fixed]').remove()" style="text-align:left">Annuler</button>
+        <button class="btn btn-gold" style="text-align:left;padding:10px 14px" onclick="
+          const n=document.getElementById('new-cat-name').value.trim();
+          if(!n){document.getElementById('new-cat-name').focus();return;}
+          document.getElementById('add-cat-modal').remove();
+          createCategoryWithType(n,'liquid')">Liquide (avec unité : cl, L, pc…)</button>
+        <button class="btn btn-gold" style="text-align:left;padding:10px 14px" onclick="
+          const n=document.getElementById('new-cat-name').value.trim();
+          if(!n){document.getElementById('new-cat-name').focus();return;}
+          document.getElementById('add-cat-modal').remove();
+          createCategoryWithType(n,'material')">Matériel (sans unité)</button>
+        <button class="btn btn-ghost" style="text-align:left;padding:10px 14px" onclick="document.getElementById('add-cat-modal').remove()">Annuler</button>
       </div>
     </div>`;
-    showModal('Type de catégorie',typeHtml,350);
-    select.value=select.options[0].value;
+    document.body.appendChild(modal);
+    setTimeout(()=>document.getElementById('new-cat-name')?.focus(),50);
   }else{
     renderCatalogue();
   }
@@ -3813,7 +3822,7 @@ function renderDashboard(){
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
-      const onclick=a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
+      const onclick=a.type==='stock_retour'&&a.event?`goToEventSuivi(${a.event.id})`:a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
       html+=`<div style="padding:10px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
         <span style="color:${textColor};font-weight:500">${icon} ${a.text}</span>
       </div>`;
@@ -8268,19 +8277,51 @@ async function exportStockEuro(){
 
   if(!confirmed) return;
 
-  // Submit hidden form to trigger server-side download (avoids Safari prompt)
-  const form=document.createElement('form');
-  form.method='POST';
-  form.action='https://bar-opsv2public.netlify.app/.netlify/functions/export-stock';
-  form.style.display='none';
-  const input=document.createElement('input');
-  input.type='hidden';
-  input.name='data';
-  input.value=JSON.stringify({products,glasses,consommables,barItems});
-  form.appendChild(input);
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
+  // Générer le PDF localement (form.submit → Netlify bloqué dans Electron)
+  const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const bycat={};
+  allItems.forEach(i=>{if(!bycat[i.category])bycat[i.category]=[];bycat[i.category].push(i);});
+  let tableRows='';
+  Object.entries(bycat).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cat,items])=>{
+    tableRows+=`<tr style="background:#f0f0f0"><td colspan="6" style="padding:8px 10px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#555">${cat}</td></tr>`;
+    items.forEach(i=>{
+      tableRows+=`<tr style="border-bottom:1px solid #eee">
+        <td style="padding:7px 10px;font-size:12px">${i.type||'—'}</td>
+        <td style="padding:7px 10px;font-size:12px;color:#666">${i.brand||'—'}</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:center">${i.stock} ${i.unit}</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:right">${parseFloat(i.priceHT).toFixed(2)} €</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:right;font-weight:500">${parseFloat(i.valueTotalHT).toFixed(2)} €</td>
+        <td style="padding:7px 10px;font-size:11px;color:#999">${i.supplier||'—'}</td>
+      </tr>`;
+    });
+  });
+  const barName=state.profile?.barName||'Bar Ops';
+  const reportHTML=`<div style="font-family:sans-serif;color:#111;padding:0;max-width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #111">
+      <div><div style="font-size:20px;font-weight:700;letter-spacing:.04em">${barName}</div><div style="font-size:12px;color:#666;margin-top:4px">Inventaire valorisé — ${today}</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.08em">Valeur totale HT</div><div style="font-size:26px;font-weight:700;color:#b8922b">${totalValueHT.toFixed(2)} €</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#111;color:#fff"><th style="padding:8px 10px;text-align:left;font-weight:500">Produit</th><th style="padding:8px 10px;text-align:left;font-weight:500">Marque</th><th style="padding:8px 10px;text-align:center;font-weight:500">Stock</th><th style="padding:8px 10px;text-align:right;font-weight:500">Prix u. HT</th><th style="padding:8px 10px;text-align:right;font-weight:500">Valeur HT</th><th style="padding:8px 10px;text-align:left;font-weight:500">Fournisseur</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  </div>`;
+
+  const el=document.createElement('div');
+  el.style.cssText='position:absolute;left:-9999px;top:0;width:750px;background:#fff';
+  el.innerHTML=reportHTML;
+  document.body.appendChild(el);
+
+  const filename=`Inventaire-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`;
+  if(typeof html2pdf!=='undefined'){
+    html2pdf().set({margin:[12,12,12,12],filename,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}})
+      .from(el).save().then(()=>el.remove());
+  }else{
+    // Fallback : télécharger en HTML
+    const blob=new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Inventaire</title></head><body style="margin:24px">${reportHTML}</body></html>`],{type:'text/html'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.pdf','.html');
+    document.body.appendChild(a);a.click();document.body.removeChild(a);el.remove();
+  }
 }
 
 function buildEventSummaryHTML(ev){
