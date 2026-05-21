@@ -3699,16 +3699,22 @@ function showSingleEventSuivi(eventId){
               <span style="font-size:10px;color:var(--text3);width:22px">${unit}</span>
             </div>`).join('')}
           </div>`:''}
-          <button class="btn btn-sm btn-ghost" style="width:100%;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="${ev.paid?`injectStockRetour(${ev.id})`:'toast(\"Marquez d\\'abord la prestation comme payée\")'}">
+          <button class="btn btn-sm btn-ghost" style="width:100%;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="suiviReinject(${ev.id})">
             Réinjecter en stock
           </button>
-          ${!ev.paid?`<div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center">Marquez la prestation comme payée pour valider</div>`:''}
+          ${!ev.paid?'<div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center">Marquez la prestation comme payée pour valider</div>':''}
         </div>`;
       })():''}`;
     })()}
   </div>`;
 
   el.innerHTML=html;
+}
+
+function suiviReinject(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(!ev.paid){toast("Marquez d'abord la prestation comme payée");return;}
+  injectStockRetour(evId);
 }
 
 function markPaidSuivi(evId, paid){
