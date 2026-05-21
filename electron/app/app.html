@@ -4136,6 +4136,27 @@ async function saveCocktail(){
 // ════════════════════════════════════════════════════════
 // EVENTS
 // ════════════════════════════════════════════════════════
+const EV_STATUSES=[
+  {key:'planning',  label:'Devis',     color:'#7eaadc', bg:'rgba(126,170,220,.13)', border:'rgba(126,170,220,.3)'},
+  {key:'suivi',     label:'Confirmé',  color:'#4ade80', bg:'rgba(74,222,128,.13)',  border:'rgba(74,222,128,.3)'},
+  {key:'historique',label:'Archivé',   color:'var(--text3)', bg:'var(--surface2)', border:'var(--border)'},
+];
+function evStatusBadge(ev){
+  const cur=EV_STATUSES.find(s=>s.key===(ev.status||'planning'))||EV_STATUSES[0];
+  return `<span onclick="event.stopPropagation();openStatusDropdown(${ev.id},this)" style="font-size:10px;cursor:pointer;color:${cur.color};text-transform:uppercase;letter-spacing:.06em;background:${cur.bg};padding:3px 9px;border-radius:4px;border:1px solid ${cur.border};white-space:nowrap;transition:.15s;display:inline-flex;align-items:center;gap:4px;user-select:none" onmouseover="this.style.filter='brightness(1.15)'" onmouseout="this.style.filter=''">${cur.label}<span style="font-size:8px;opacity:.6">▾</span></span>`;
+}
+function openStatusDropdown(evId,el){
+  document.querySelectorAll('.ev-status-dd').forEach(d=>d.remove());
+  const dd=document.createElement('div');
+  dd.className='ev-status-dd';
+  dd.style.cssText='position:fixed;z-index:9999;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px;min-width:130px;box-shadow:0 6px 20px rgba(0,0,0,.4)';
+  dd.innerHTML=EV_STATUSES.map(s=>`<div onclick="event.stopPropagation();updEvField(${evId},'status','${s.key}');showEvList();document.querySelectorAll('.ev-status-dd').forEach(d=>d.remove())" style="padding:7px 12px;font-size:11px;cursor:pointer;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;color:${s.color}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">${s.label}</div>`).join('');
+  const r=el.getBoundingClientRect();
+  dd.style.top=(r.bottom+4)+'px';
+  dd.style.left=r.left+'px';
+  document.body.appendChild(dd);
+  setTimeout(()=>document.addEventListener('click',()=>document.querySelectorAll('.ev-status-dd').forEach(d=>d.remove()),{once:true}),0);
+}
 function showEvList(){
   editEvId=null;
   // Header h2 removed - no longer display title
@@ -4175,8 +4196,6 @@ function showEvList(){
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
-      const statusLabel=ev.status==='historique'?'Archivé':ev.status==='suivi'?'Suivi':'Planning';
-      const statusColor=ev.status==='historique'?'var(--text3)':ev.status==='suivi'?'var(--gold)':'var(--text2)';
       const isPast=ev.date&&new Date(ev.date)<new Date();
       return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 72px 88px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
@@ -4187,9 +4206,7 @@ function showEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
-        <div>
-          <span onclick="event.stopPropagation();updEvField(${ev.id},'confirmed',!${!!ev.confirmed});showEvList()" title="Cliquer pour changer" style="font-size:9px;cursor:pointer;color:${ev.confirmed?'#4ade80':statusColor};text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);padding:3px 7px;border-radius:3px;border:1px solid ${ev.confirmed?'#4ade80':ev.status==='suivi'?'var(--gold-border)':'var(--border)'};white-space:nowrap;transition:.15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">${ev.confirmed?'Confirmé':statusLabel}</span>
-        </div>
+        <div>${evStatusBadge(ev)}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:22px;height:22px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
@@ -4230,8 +4247,6 @@ function filterEvList(){
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
-      const statusLabel=ev.status==='historique'?'Archivé':ev.status==='suivi'?'Suivi':'Planning';
-      const statusColor=ev.status==='historique'?'var(--text3)':ev.status==='suivi'?'var(--gold)':'var(--text2)';
       const isPast=ev.date&&new Date(ev.date)<new Date();
       return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 72px 88px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
@@ -4242,9 +4257,7 @@ function filterEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
-        <div>
-          <span onclick="event.stopPropagation();updEvField(${ev.id},'confirmed',!${!!ev.confirmed});showEvList()" title="Cliquer pour changer" style="font-size:9px;cursor:pointer;color:${ev.confirmed?'#4ade80':statusColor};text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);padding:3px 7px;border-radius:3px;border:1px solid ${ev.confirmed?'#4ade80':ev.status==='suivi'?'var(--gold-border)':'var(--border)'};white-space:nowrap;transition:.15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">${ev.confirmed?'Confirmé':statusLabel}</span>
-        </div>
+        <div>${evStatusBadge(ev)}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:22px;height:22px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
