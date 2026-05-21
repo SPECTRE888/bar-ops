@@ -9082,7 +9082,7 @@ function renderProfile(){
           </div>
           <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
         </div>
-        <div id="prof-logo-edit" style="display:none;flex:1;display:flex;flex-direction:column;gap:12px">
+        <div id="prof-logo-edit" style="display:none;flex-direction:column;gap:12px">
           <div style="flex:1">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Fichier image</div>
             <input id="prof-logo-input" type="file" accept="image/*" style="width:100%;font-size:11px;padding:6px"/>
@@ -9163,8 +9163,8 @@ function confirmBarEdit(){
 function toggleLogoEdit(show){
   const view=document.getElementById('prof-logo-view');
   const edit=document.getElementById('prof-logo-edit');
-  if(view) view.style.display=show?'none':'block';
-  if(edit) edit.style.display=show?'block':'none';
+  if(view) view.style.display=show?'none':'flex';
+  if(edit) edit.style.display=show?'flex':'none';
 }
 
 function toggleSendgridEdit(show){
