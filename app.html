@@ -7620,16 +7620,30 @@ function sendSupplierOrder(supplierName,method){
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${u}`}).join('\n');
-  const contact=sup.contact?'Bonjour '+sup.contact+',':'Bonjour,';
+  // Greeting personnalisé : tutoiement ou vouvoiement, avec prénom du contact
+  let greeting;
+  if(sup.contact){
+    const prenom=sup.contact.split(' ')[0];
+    if(sup.tutoie){
+      greeting=`Bonjour ${prenom},\n\nJ'espère que tu vas bien !`;
+    }else{
+      greeting=`Bonjour ${prenom},\n\nJ'espère que vous allez bien.`;
+    }
+  }else{
+    greeting='Bonjour,';
+  }
+  const closing=sup.tutoie?'\n\nMerci d\'avance, n\'hésite pas si tu as des questions.\n\nCordialement':'\n\nMerci de bien vouloir confirmer la disponibilité.\n\nCordialement';
 
   // Close modal first
   document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
 
   // Open mail/whatsapp IMMEDIATELY
   if(method==='email'&&sup.email){
-    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+    const body=greeting+'\n\nVoici notre commande :\n\n'+lines+closing;
+    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — att. '+sup.contact.split(' ')[0]:''))+'&body='+encodeURIComponent(body);
   }else if(method==='whatsapp'&&sup.phone){
-    window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+    const body=greeting+'\n\nCommande :\n\n'+lines+(sup.tutoie?'\n\nMerci !':'\n\nMerci de confirmer.');
+    window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(body), '_blank');
   }
 
   // After 5 seconds, show confirmation popup
@@ -7860,19 +7874,26 @@ function renderSuppliers(){
   }
   el.innerHTML=`<div class="c-grid">${state.suppliers.map(s=>{
     const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
+    const tutoieBadge=s.tutoie?`<span style="font-size:9px;color:var(--text3);background:var(--surface2);padding:2px 6px;border-radius:4px;margin-left:4px">tutoiement</span>`:'';
     return`<div class="c-card" style="display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
           <div style="font-size:15px;font-weight:600;letter-spacing:.02em">${escHtml(s.name)}</div>
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.map(escHtml).join(' · ')}</div>`:''}\n        </div>
-        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.06em">${s.categories.map(escHtml).join(' · ')}</div>`:''}
+        </div>
+        <button onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:50%;cursor:pointer;font-size:14px;line-height:1">×</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
-        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}\">${escHtml(s.phone||'—')}</span></div>\n        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}\">${escHtml(s.email||'—')}</span></div>\n        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px\">${escHtml(s.address)}</span></div>`:''}\n      </div>
+        ${s.contact?`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">👤 ${escHtml(s.contact)}${tutoieBadge}</div>`:''}
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📞</span><span style="color:${s.phone?'var(--text2)':'var(--text3)'}">${escHtml(s.phone||'—')}</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">✉</span><span style="color:${s.email?'var(--text2)':'var(--text3)'}">${escHtml(s.email||'—')}</span></div>
+        ${s.address?`<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--text3);width:14px;text-align:center;font-size:11px">📍</span><span style="color:var(--text3);font-size:11px">${escHtml(s.address)}</span></div>`:''}
+      </div>
       <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
         <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})">Modifier</button>
         <button class="btn btn-sm btn-gold" style="margin-left:auto" onclick="openSupplierOrder(${JSON.stringify(s.name)})">
-          Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px\">${orderCount}</span>`:''}\n        </button>
+          Commander${orderCount?` <span style="background:rgba(0,0,0,.2);border-radius:10px;padding:1px 6px;font-size:10px">${orderCount}</span>`:''}
+        </button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -7891,7 +7912,13 @@ async function addSupplier(){
       <div class="field"><label>Téléphone</label><input id="sp-phone" placeholder="+33 6 00 00 00 00" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" placeholder="commande@..." type="email"/></div>
     </div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
+    <div class="g2">
+      <div class="field"><label>Contact (prénom nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:22px">
+        <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0"/>
+        <label for="sp-tutoie" style="font-size:12px;cursor:pointer">Tutoiement</label>
+      </div>
+    </div>
     <div class="field"><label>Adresse</label><input id="sp-address" placeholder="12 rue du Marché, Paris"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
@@ -7920,7 +7947,13 @@ function editSupplier(id){
       <div class="field"><label>Téléphone</label><input id="sp-phone" value="${escHtml(s.phone||'')}" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" value="${escHtml(s.email||'')}" type="email"/></div>
     </div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jean Martin" /></div>
+    <div class="g2">
+      <div class="field"><label>Contact (prénom nom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jean Martin" /></div>
+      <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:22px">
+        <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0" ${s.tutoie?'checked':''}/>
+        <label for="sp-tutoie" style="font-size:12px;cursor:pointer">Tutoiement</label>
+      </div>
+    </div>
     <div class="field"><label>Adresse</label><input id="sp-address" value="${escHtml(s.address||'')}"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
@@ -7945,7 +7978,8 @@ async function saveSupplier(id){
     name,
     phone:document.getElementById('sp-phone')?.value.trim()||'',
     email:document.getElementById('sp-email')?.value.trim()||'',
-    address:document.getElementById('sp-address')?.value.trim()||'',
+    contact:document.getElementById('sp-contact')?.value.trim()||'',
+    tutoie:document.getElementById('sp-tutoie')?.checked||false,
     address:document.getElementById('sp-address')?.value.trim()||'',
     notes:document.getElementById('sp-notes')?.value.trim()||'',
     categories
