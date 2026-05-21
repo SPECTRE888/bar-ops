@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
 
   const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-  const APP_URL = process.env.APP_URL || 'https://bar-ops.vercel.app';
+  const APP_URL = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
 
   const token = (req.headers['authorization'] || '').replace('Bearer ', '').trim();
   if (!token) return res.status(401).json({ error: 'auth_required' });

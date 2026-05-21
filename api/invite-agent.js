@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
   const { data: invitation, error: invErr } = await supabase.from('invitations').insert({ company_id: profile.company_id, invited_by: user.id, email: email.toLowerCase(), role, permissions: mergedPerms }).select().single();
   if (invErr) return res.status(500).json({ error: invErr.message });
 
-  const appUrl = process.env.APP_URL || 'https://bar-ops.vercel.app';
+  const appUrl = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
   const inviteUrl = `${appUrl}/auth.html?action=accept-invite&token=${invitation.token}`;
 
   const sgKey = sendgridApiKey || process.env.SENDGRID_API_KEY;

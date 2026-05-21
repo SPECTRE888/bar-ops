@@ -84,7 +84,7 @@ module.exports = async function handler(req, res) {
     const { data: inv } = await supabase.from('invitations').select('*, companies(name)').eq('id', invitationId).eq('company_id', callerProfile.company_id).single();
     if (!inv) return res.status(404).json({ error: 'Invitation introuvable' });
     await supabase.from('invitations').update({ expires_at: new Date(Date.now() + 7 * 86400 * 1000).toISOString() }).eq('id', invitationId);
-    const appUrl = process.env.APP_URL || 'https://bar-ops.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
     const inviteUrl = `${appUrl}/auth.html?action=accept-invite&token=${inv.token}`;
     try {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);

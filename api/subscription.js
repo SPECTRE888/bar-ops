@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     const { data: emailSubs } = emailHash ? await supabase.from('subscriptions').select('id').eq('email_hash', emailHash).limit(1) : { data: null };
     const isFirstTime = (!pastSubs || pastSubs.length === 0) && (!emailSubs || emailSubs.length === 0);
 
-    const APP_URL = process.env.APP_URL || 'https://bar-ops.vercel.app';
+    const APP_URL = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
     const sessionParams = {
       payment_method_types: ['card'],
       line_items: [{ price_data: { currency: 'eur', product_data: { name: `BAR OPS — ${plan}` }, unit_amount: priceInCents, recurring: { interval: period === 'yearly' ? 'year' : 'month' } }, quantity: 1 }],

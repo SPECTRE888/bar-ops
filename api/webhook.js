@@ -48,7 +48,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  const APP_URL = process.env.APP_URL || 'https://bar-ops.vercel.app';
+  const APP_URL = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
 
   if (stripeEvent.type === 'checkout.session.completed') {
     const session = stripeEvent.data.object;

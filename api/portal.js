@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
     if (!sub?.stripe_subscription_id) return res.status(404).json({ error: 'Aucun abonnement trouvé' });
 
     const subscription = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
-    const APP_URL = process.env.APP_URL || 'https://bar-ops.vercel.app';
+    const APP_URL = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
     const session = await stripe.billingPortal.sessions.create({ customer: subscription.customer, return_url: `${APP_URL}/app.html` });
 
     return res.status(200).json({ url: session.url });
