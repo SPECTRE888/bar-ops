@@ -304,7 +304,17 @@ async function boot() {
 
   // UI init
   document.getElementById('navAvatar').textContent = (session.user.email || '?')[0].toUpperCase();
-  const _p = profile.companies?.plan || '';
+  // Plan : priorité check-access (source de vérité billing) > DB companies.plan
+  let _planFromAccess = '';
+  try {
+    const _ar = await fetch('https://bar-opsv2public.netlify.app/.netlify/functions/check-access', {
+      headers: { 'Authorization': 'Bearer ' + session.access_token }
+    });
+    const _at = await _ar.text();
+    const _aa = JSON.parse(_at);
+    _planFromAccess = _aa.plan || '';
+  } catch(e) {}
+  const _p = _planFromAccess || profile.companies?.plan || '';
   const _planLabel = ({'solo':'Early Access','pro':'Pro','business':'Business','lifetime_business':'Lifetime Business','lifetime-business':'Lifetime Business','lifetime_pro':'Lifetime Pro','lifetime':'Lifetime'}[_p]) || (_p ? _p.replace(/_/g,' ').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) : '?');
   document.getElementById('companySubtitle').textContent =
     `${profile.companies?.name || 'Votre entreprise'} — ${_planLabel}`;
