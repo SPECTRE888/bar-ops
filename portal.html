@@ -92,6 +92,7 @@ tr:last-child td{border-bottom:none}
 <div id="root"><div class="loading">Chargement du devis…</div></div>
 
 <script>
+const API_BASE="https://bar-ops-v2.vercel.app";
 const TOKEN = new URLSearchParams(location.search).get('token') || '';
 let DATA = null;
 let signatureDataUrl = null;
@@ -120,7 +121,7 @@ function fmtDate(d) {
 async function load() {
   if (!TOKEN) { showError('Lien invalide', 'Ce lien de devis est invalide ou expiré.'); return; }
   try {
-    const r = await fetch('/.netlify/functions/portal-data?token=' + encodeURIComponent(TOKEN));
+    const r = await fetch(API_BASE+'/api/portal-public?token=' + encodeURIComponent(TOKEN));
     if (!r.ok) { const e = await r.json(); showError('Erreur', e.error || 'Une erreur est survenue.'); return; }
     DATA = await r.json();
     // Apply theme chosen by the bar owner
@@ -333,7 +334,7 @@ async function submitSign() {
   document.getElementById('sig-msg').textContent = '';
 
   try {
-    const r = await fetch('/.netlify/functions/portal-sign', {
+    const r = await fetch(API_BASE+'/api/portal-public', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: TOKEN, name }),

@@ -745,7 +745,7 @@ async function revokeSession(deviceId){
 async function openBillingPortal(){
   try{
     const token=extractToken(cloudUser)||'';
-    const res=await fetch(API_BASE+'/api/portal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({})});
+    const res=await fetch(API_BASE+'/api/billing',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'portal'})});
     const{url,error}=await res.json();
     if(error){showToast('Erreur: '+error);return;}
     window.location.href=url;
@@ -1132,7 +1132,7 @@ async function cloudPull(){
   // Les agents passent par la function (service key, pas de RLS)
   if(window._userRole==='AGENT'){
     try{
-      const r=await fetch(API_BASE+'/api/workspace-pull',{
+      const r=await fetch(API_BASE+'/api/workspace',{
         headers:{'Authorization':'Bearer '+token}
       });
       if(!r.ok){console.warn('cloudPull agent HTTP error:',r.status);return false;}
@@ -6847,7 +6847,7 @@ async function copyPortalLink(evId){
 
     await cloudPush();
 
-    const r=await fetch(API_BASE+'/api/portal-token',{
+    const r=await fetch(API_BASE+'/api/workspace',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body:JSON.stringify({evId:ev.id,theme}),
@@ -9495,7 +9495,7 @@ async function deleteAccountConfirmed(){
     const r=await fetch(API_BASE+'/api/delete-account',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({})
+      body:JSON.stringify({action:'portal'})
     });
     
     if(!r.ok){

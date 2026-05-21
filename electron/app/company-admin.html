@@ -329,7 +329,7 @@ async function boot() {
 // ─── DATA ────────────────────────────────────────────────────
 async function loadData() {
   const token = _session.access_token;
-  const res = await apiFetch('manage-agent', { action: 'list' }, token);
+  const res = await apiFetch('agents', { type:'manage', action: 'list' }, token);
   if (!res.ok) { toast('Erreur lors du chargement', true); return; }
   const { agents, invitations } = res.data;
 
@@ -374,7 +374,7 @@ async function addSeat() {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Chargement…';
   try {
-    const r = await fetch(API_BASE+'/api/add-seat', {
+    const r = await fetch(API_BASE+'/api/billing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_session.access_token}` },
       body: JSON.stringify({ quantity: 1 }),
@@ -555,7 +555,7 @@ async function sendInvite() {
     console.log('[invite] fromEmail:', fromEmail, '| sgKey:', sendgridApiKey ? 'OK' : 'MISSING');
   } catch(e) { console.error('[invite] localStorage error:', e); }
 
-  const res = await apiFetch('invite-agent', { email, role, permissions, fromEmail, fromName, sendgridApiKey }, _session.access_token);
+  const res = await apiFetch('agents', { type:'invite', email, role, permissions, fromEmail, fromName, sendgridApiKey }, _session.access_token);
   btn.disabled = false; btn.textContent = 'Envoyer l\'invitation';
 
   if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
@@ -574,14 +574,14 @@ async function sendInvite() {
 async function agentAction(action, targetUserId) {
   const labels = { suspend: 'suspendre', remove: 'retirer', reactivate: 'réactiver' };
   if (!confirm(`Voulez-vous vraiment ${labels[action] || action} cet agent ?`)) return;
-  const res = await apiFetch('manage-agent', { action, targetUserId }, _session.access_token);
+  const res = await apiFetch('agents', { type:'manage', action, targetUserId }, _session.access_token);
   if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
   toast('Action effectuée');
   loadData();
 }
 
 async function invAction(action, invitationId) {
-  const res = await apiFetch('manage-agent', { action, invitationId }, _session.access_token);
+  const res = await apiFetch('agents', { type:'manage', action, invitationId }, _session.access_token);
   if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
   toast('Invitation mise à jour');
   loadData();
@@ -632,7 +632,7 @@ async function savePermissions() {
     const el = document.getElementById('modPerm_' + k);
     if (el) permissions[k] = el.checked;
   });
-  const res = await apiFetch('manage-agent',
+  const res = await apiFetch('agents',
     { action: 'update_permissions', targetUserId: _currentTargetId, permissions },
     _session.access_token
   );
