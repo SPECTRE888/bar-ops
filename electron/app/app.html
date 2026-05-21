@@ -4185,8 +4185,8 @@ function showEvList(){
   const pageEvs=sorted.slice(pg*PAGE,(pg+1)*PAGE);
   const totalPg=Math.ceil(sorted.length/PAGE);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 72px 88px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Staff</div><div style="text-align:right">CA HT</div><div>Statut</div><div></div>
+    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:right">CA HT</div><div>Statut</div><div></div>
     </div>
     ${pageEvs.map(ev=>{
       const fmtDate=fmtEvDates(ev);
@@ -4197,7 +4197,7 @@ function showEvList(){
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
       const isPast=ev.date&&new Date(ev.date)<new Date();
-      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 72px 88px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4209,7 +4209,7 @@ function showEvList(){
         <div>${evStatusBadge(ev)}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
-          <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:22px;height:22px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
+          <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
     }).join('')}
@@ -4236,8 +4236,8 @@ function filterEvList(){
     return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 72px 88px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Staff</div><div style="text-align:right">CA HT</div><div>Statut</div><div></div>
+    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:right">CA HT</div><div>Statut</div><div></div>
     </div>
     ${sorted.map(ev=>{
       const fmtDate=fmtEvDates(ev);
@@ -4248,7 +4248,7 @@ function filterEvList(){
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
       const isPast=ev.date&&new Date(ev.date)<new Date();
-      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 72px 88px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4260,7 +4260,7 @@ function filterEvList(){
         <div>${evStatusBadge(ev)}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
-          <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:22px;height:22px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
+          <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
     }).join('')}
@@ -7938,7 +7938,7 @@ function renderSuppliers(){
           ${s.contact?`<div style="font-size:12px;color:var(--text2);margin-top:3px">👤 ${escHtml(s.contact)}${tutoieBadge}</div>`:''}
           ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.05em">${s.categories.map(escHtml).join(' · ')}</div>`:''}
         </div>
-        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:24px;height:24px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text3)" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
+        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text3)" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px;flex:1">
         <div>${phone}</div>
