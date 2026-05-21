@@ -3709,9 +3709,9 @@ function renderDashboard(){
 
   const now=new Date();
   const upcoming=state.events.filter(ev=>ev.date&&new Date(ev.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const past=state.events.filter(ev=>ev.date&&new Date(ev.date)<now).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const past=state.events.filter(ev=>ev.date&&new Date(ev.date)<now&&ev.stockRetourDone).sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  // CA total (past events) — utilise totalRevHT comme l'historique
+  // CA total (past events) — même filtre et même calcul que l'historique
   const totalRevenue=past.reduce((s,ev)=>s+(ev.totalRevHT||0),0);
 
   // Next event
@@ -8222,9 +8222,23 @@ async function downloadEventPDF(evId){
 function openEventHTML(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   const html=buildEventSummaryHTML(ev);
-  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  window.open(url);
+  // Affichage en modal intégré (évite l'erreur blob:file:// dans Electron)
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#1a1a1a;display:flex;flex-direction:column';
+  overlay.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#111;border-bottom:1px solid #333;flex-shrink:0">
+      <span style="color:#ede8e0;font-size:13px;font-weight:500">${escHtml(ev.name)} — Récapitulatif</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="downloadEventPDF(${ev.id})" style="padding:6px 14px;background:#c4a46b;color:#000;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.06em">⬇ PDF</button>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="padding:6px 14px;background:transparent;border:1px solid #555;color:#ede8e0;border-radius:4px;cursor:pointer;font-size:12px">Fermer ×</button>
+      </div>
+    </div>
+    <iframe id="ev-html-frame" style="flex:1;border:none;background:#fff"></iframe>`;
+  document.body.appendChild(overlay);
+  const iframe=overlay.querySelector('#ev-html-frame');
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
 }
 
 function exportEventHTML(evId){
@@ -8555,18 +8569,41 @@ function buildEventSummaryHTML(ev){
       <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
     </div>`:''}
 
-    ${(ev.assignedStaff||[]).length?`<h3 style="margin-top:25px">Équipe assignée</h3>
-    <div style="display:grid;gap:12px;margin-bottom:20px">
-      ${(ev.assignedStaff||[]).map(sid=>{
-        const s=state.staffItems.find(x=>x.id===sid);
-        if(!s)return'';
-        return`<div style="padding:12px;background:#f9f9f9;border-radius:6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
-          <div><strong>${escHtml(s.name)}</strong><br><small style="color:#999">${escHtml(s.type||'—')}</small></div>
-          <div><small style="color:#999">Téléphone</small><br>${escHtml(s.phone||'—')}</div>
-          <div><small style="color:#999">Dispo</small><br><span style="color:${(ev.staffStatus||{})[sid]?.confirmed?'#5a9b6f':'#999'}">${(ev.staffStatus||{})[sid]?.confirmed?'✓ Oui':'Confirmé'}</span></div>
-        </div>`;
-      }).join('')}
-    </div>`:''}
+    ${(()=>{
+      // Préférer staffAssignments (avec horaires) sinon fallback sur assignedStaff
+      const assignments=ev.staffAssignments&&ev.staffAssignments.length?ev.staffAssignments
+        :(ev.assignedStaff||[]).map(sid=>{const s=state.staffItems.find(x=>x.id===sid);return s?{name:s.name,role:s.type,phone:s.phone,billHT:s.billHT,costHT:s.costHT}:null;}).filter(Boolean);
+      if(!assignments.length)return'';
+      const rows=assignments.map(a=>{
+        const h=a.arrivalTime&&a.departureTime?calcStaffHours(a.arrivalTime,a.departureTime):null;
+        const bill=h!=null?(a.billHT||0)*h:null;
+        return`<tr>
+          <td style="padding:8px 10px;font-size:12px"><strong>${escHtml(a.name||'—')}</strong></td>
+          <td style="padding:8px 10px;font-size:12px;color:#666">${escHtml(a.role||'—')}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:center">${a.arrivalTime?escHtml(a.arrivalTime):'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:center">${a.departureTime?escHtml(a.departureTime):'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:center">${h!=null?h.toFixed(1)+'h':'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:right">${a.billHT?a.billHT.toFixed(2)+'€/h':'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:600;color:#d4a574">${bill!=null?bill.toFixed(2)+'€':'—'}</td>
+        </tr>`;
+      }).join('');
+      const totalBill=assignments.reduce((s,a)=>{const h=calcStaffHours(a.arrivalTime,a.departureTime);return s+(a.billHT||0)*h;},0);
+      return`<h3 style="margin-top:25px;margin-bottom:12px">Équipe</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">
+        <thead><tr style="background:#f0f0f0">
+          <th style="padding:8px 10px;text-align:left">Nom</th>
+          <th style="padding:8px 10px;text-align:left">Rôle</th>
+          <th style="padding:8px 10px;text-align:center">Arrivée</th>
+          <th style="padding:8px 10px;text-align:center">Départ</th>
+          <th style="padding:8px 10px;text-align:center">Heures</th>
+          <th style="padding:8px 10px;text-align:right">Tarif</th>
+          <th style="padding:8px 10px;text-align:right">Facturation HT</th>
+        </tr></thead>
+        <tbody>${rows}
+          ${totalBill>0?`<tr style="border-top:2px solid #ddd;font-weight:600"><td colspan="6" style="padding:8px 10px;text-align:right">Total équipe HT</td><td style="padding:8px 10px;text-align:right;color:#d4a574">${totalBill.toFixed(2)}€</td></tr>`:''}
+        </tbody>
+      </table>`;
+    })()}
 
     <h3 style="margin-top:30px;margin-bottom:15px;padding-top:20px;border-top:2px solid #e0e0e0">Récapitulatif matériel</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
@@ -8663,15 +8700,10 @@ function renderHistorique(){
   const searchFilter=document.getElementById('hist-search')?.value.toLowerCase()||'';
   const filtered=searchFilter?past.filter(ev=>ev.name.toLowerCase().includes(searchFilter)||ev.location?.toLowerCase().includes(searchFilter)):past;
 
-  const evRevenue=ev=>{
-    const c=(ev.cocktails||[]).reduce((s,cfg)=>{
-      const ck=state.cocktails.find(x=>x.id===cfg.id);
-      return s+(ck&&cfg.qty?cfg.qty*ck.priceHT:0);
-    },0);
-    return (c+(ev.extraBillHT||0)+(ev.deliveryBillHT||0))*evDatesCount(ev);
-  };
+  // Revenue = totalRevHT stocké (inclut remise, multiplicateur dates) — identique au dashboard
+  const evRevenue=ev=>ev.totalRevHT||0;
   const evCost=ev=>{
-    // Si stock retour saisi, calcul coût réel = coût prévu - valeur des bouteilles retournées
+    // Coût ingrédients réel (retour déduit)
     const ingredCost=(ev.cocktails||[]).reduce((s,cfg)=>{
       const ck=state.cocktails.find(x=>x.id===cfg.id);
       return s+(ck&&cfg.qty?cfg.qty*ck.totalCost:0);
@@ -8686,7 +8718,12 @@ function renderHistorique(){
         if(prod?.costHT) retourVal+=qty*(prod.costHT||0);
       });
     }
-    return (Math.max(0, ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0))*evDatesCount(ev);
+    // Coût staff (si staffAssignments)
+    const staffCost=(ev.staffAssignments||[]).reduce((s,a)=>{
+      const h=calcStaffHours(a.arrivalTime,a.departureTime);
+      return s+(a.costHT||0)*h;
+    },0);
+    return Math.max(0,ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0)+staffCost;
   };
 
   const totalRev=past.reduce((s,ev)=>s+evRevenue(ev),0);
@@ -8754,10 +8791,11 @@ function renderHistorique(){
           <div style="font-size:15px;font-weight:600;color:var(--gold)">${fmt(rev)}</div>
           <div style="font-size:11px;color:${mg>=0?'var(--green)':'var(--red)'};margin-top:2px">${mg>=0?'+':''}${fmt(mg)} marge</div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <button style="padding:7px 14px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;transition:.2s;letter-spacing:.04em" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
-          <button style="padding:7px 14px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;transition:.2s;letter-spacing:.04em" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">HTML</button>
-          <button style="padding:7px 10px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:13px;transition:.2s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" onclick="delEvHistorique(${ev.id})">×</button>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'" onclick="generateDevis(${ev.id})">Devis</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">Récap</button>
+          <button style="padding:6px 9px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:12px;transition:.2s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" onclick="delEvHistorique(${ev.id})">×</button>
         </div>
       </div>`;
     });
