@@ -5,9 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Quick Start
 
 - **No build process** - vanilla HTML/JS/CSS, zero dependencies in frontend
-- **Deploy** - git push to `main` → auto-deploys on Netlify (~30s)
+- **Deploy** - git push to `main` → auto-deploys on Vercel (~30s)
 - **Dev server** - open HTML files directly in browser (works offline with `?demo=1`)
-- **Backend** - Netlify Functions in `netlify/functions/` (Node.js + esbuild)
+- **Backend** - Vercel Serverless Functions in `api/` (Node.js)
 
 ## Architecture Overview
 
@@ -27,16 +27,21 @@ All CSS/JS embedded inline. No modules, no build step.
 - **Cloud** - Supabase (auth + PostgreSQL) via `cloudPush()/cloudRequest()`
 - **Demo mode** - `?demo=1` uses `freshState()`, no cloud access
 
-### Backend (Netlify Functions)
+### Backend (Vercel Serverless Functions)
 ```
-netlify/functions/
-├── subscription.js   → Stripe checkout session creation
-├── delete-account.js → User account deletion
+api/
+├── config.js         → Returns public Supabase anon key (never secrets)
+├── agents.js         → Agent invite/accept/manage (routes by body.type)
+├── billing.js        → Stripe portal + add-seat (routes by body.action)
+├── workspace.js      → GET=workspace-pull, POST=portal-token
+├── portal-public.js  → GET=portal-data, POST=portal-sign (public, no auth)
 ├── send-quote.js     → Quote email via SendGrid
-└── webhook.js        → Stripe webhook handler
+├── webhook.js        → Stripe webhook handler
+└── delete-account.js → User account deletion
 ```
 
-All functions read from `process.env` (API keys from Netlify config). Use `fetch('/.netlify/functions/<name>')` from frontend.
+`API_BASE = 'https://bar-ops-v2.vercel.app'` — all frontend calls use this constant.  
+All functions read secrets from Vercel env vars (`process.env`). Real secrets (STRIPE_SECRET_KEY, SUPABASE_SERVICE_KEY) are **never** in source code.
 
 ### Business Flow (Métier)
 ```
@@ -72,7 +77,7 @@ Client {
 }
 
 Supplier {
-  id, name, contact, speciality
+  id, name, contact, speciality, tutoie
 }
 
 Event {
@@ -83,7 +88,8 @@ Event {
   assignedStaff: [staffId],
   deliveryCostHT, deliveryBillHT,
   status: 'planning|suivi|historique',
-  paid, acompte, stockRetourDone
+  paid, acompte, stockRetourDone,
+  totalRevHT  ← canonical CA (remise + dates multiplied, stored on save)
 }
 ```
 
@@ -91,13 +97,16 @@ Event {
 
 **app.html contains**:
 - `getSupabase()` - Client instance
-- `cloudRequest()` - HTTP wrapper for Netlify functions
-- `cloudPush()/cloudPull()` - Supabase sync
+- `cloudRequest()` - HTTP wrapper for Vercel API functions
+- `cloudPush()/cloudPull()` - Supabase workspace sync
 - `fmt()` - Currency formatting
+- `archiveFromSuivi(evId)` - Toggle stockRetourDone (archive ↔ suivi)
+- `evStatusBadge(ev)` / `openStatusDropdown(evId, el)` - Status badge (Devis/Confirmé/Archivé)
 - Page controllers (event, cocktail, staff, etc.)
 
 **Constants**:
-- Supabase URL/key + Stripe key in HTML (embedded, not secrets)
+- `API_BASE = 'https://bar-ops-v2.vercel.app'` — backend base URL
+- Supabase anon key fetched at runtime via `/api/config` (not hardcoded)
 - Staff types hardcoded: `'Bartender'`, `'Serveur'`, `'Bar Manager'`, `'Manutentionnaire'`
 - Only `'per hour'` billing for staff
 
@@ -105,16 +114,16 @@ Event {
 
 1. **Modify app.html** - locate the page function or module section (search for section comments like `/* ── EVENTS ── */`)
 2. **Test locally** - open `app.html` in browser, use `?demo=1` for offline mode
-3. **Add Netlify function** - create `netlify/functions/myfunction.js`, export `handler(event, context)`, redeploy
+3. **Add Vercel function** - create `api/myfunction.js`, export `module.exports = async function handler(req, res){...}`, redeploy
 4. **Supabase queries** - use `supabase().from('table').select()` syntax
 5. **Change staff UI** - staff name conventions are enforced in calculations (see PROJECT_CONTEXT.md)
 
 ## File Roles
 
 - `.env.example` - template (duplicate to `.env.local` for local functions)
-- `netlify.toml` - build config (functions directory)
+- `vercel.json` - Vercel config (rewrites, function routes)
 - `package.json` - minimal (only SendGrid, Supabase, Stripe SDKs for backend)
-- `.github/workflows/deploy.yml` - CI setup (ignored, Netlify handles auto-deploy)
+- `.github/workflows/deploy.yml` - unused (Vercel handles auto-deploy from GitHub)
 
 ## Obsidian Plugin Integration
 
@@ -126,19 +135,20 @@ The Obsidian Claude Code Plugin (`obsidian-claude-code-plugin`) allows seamless 
 ## Common Tasks
 
 ```bash
-# Add a new Netlify function
-touch netlify/functions/myfunction.js
+# Add a new Vercel function
+touch api/myfunction.js
 
 # Test locally with demo mode
-# Open index.html?demo=1 in browser
+# Open app.html?demo=1 in browser
 
 # View cloud data
 # Use Supabase dashboard at https://supabase.co
+# Use Vercel dashboard at https://vercel.com for logs/env vars
 
 # Push changes
 git add .
 git commit -m "description"
-git push origin main  # Auto-deploys
+git push origin main  # Auto-deploys on Vercel
 ```
 
 ## Constraints
@@ -148,3 +158,4 @@ git push origin main  # Auto-deploys
 - Cocktail qty integer-only
 - All staff types must match PROJECT_CONTEXT.md conventions
 - localStorage is single-user (no concurrent editing)
+- Real secrets only in Vercel env vars — never in source code
