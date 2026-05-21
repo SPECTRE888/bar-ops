@@ -61,14 +61,30 @@ jobs:
         VERSION="${GITHUB_REF_NAME#v}"
         TAG="$GITHUB_REF_NAME"
 
-        gh release create "$TAG" \
-          --title "$TAG" \
-          --notes "Bar Ops ${TAG}" \
+        echo "=== dist/ contents ==="
+        ls -lh dist/ || true
+
+        # Collect files that actually exist
+        FILES=()
+        for f in \
           "dist/Bar-Ops-${VERSION}-Installer.pkg" \
           "dist/Bar Ops-${VERSION}-arm64-mac.zip" \
           "dist/Bar Ops-${VERSION}-arm64-mac.zip.blockmap" \
           "dist/Bar Ops-${VERSION}-arm64.dmg" \
           "dist/Bar Ops-${VERSION}-arm64.dmg.blockmap" \
           "dist/latest-mac.yml"
+        do
+          if [ -f "$f" ]; then
+            FILES+=("$f")
+            echo "✅ Found: $f"
+          else
+            echo "⚠️  Missing: $f"
+          fi
+        done
+
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --notes "Bar Ops ${TAG}" \
+          "${FILES[@]}"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
