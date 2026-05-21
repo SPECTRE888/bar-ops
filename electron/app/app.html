@@ -3638,6 +3638,9 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});showSingleEventSuivi(${ev.id})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
+          <button class="btn btn-sm ${ev.stockRetourDone?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px;${ev.stockRetourDone?'':'border-color:#4ade80;color:#4ade80'}" onclick="archiveFromSuivi(${ev.id})">
+            ${ev.stockRetourDone?'✓ Archivé':'✓ Archiver (terminé)'}
+          </button>
           <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
@@ -3648,6 +3651,24 @@ function showSingleEventSuivi(eventId){
   </div>`;
 
   el.innerHTML=html;
+}
+
+function archiveFromSuivi(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(ev.stockRetourDone){
+    // Désarchiver
+    ev.stockRetourDone=false;
+    save();cloudPush();
+    toast('Événement sorti de l\'historique');
+  } else {
+    ev.stockRetourDone=true;
+    if(!ev.paid) ev.paid=true;
+    save();cloudPush();
+    toast('Événement archivé dans l\'historique ✓');
+  }
+  showSingleEventSuivi(evId);
+  renderSuivi();
+  renderDashboard();
 }
 
 function updCARange(){
@@ -4179,7 +4200,7 @@ function showEvList(){
   const pageEvs=sorted.slice(pg*PAGE,(pg+1)*PAGE);
   const totalPg=Math.ceil(sorted.length/PAGE);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+    <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
       <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div>Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${pageEvs.map(ev=>{
@@ -4191,7 +4212,7 @@ function showEvList(){
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
       const isPast=ev.date&&new Date(ev.date)<new Date();
-      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4199,8 +4220,8 @@ function showEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${ev.pax||'?'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
-        <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div>${evStatusBadge(ev)}</div>
+        <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
@@ -4230,7 +4251,7 @@ function filterEvList(){
     return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+    <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
       <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div>Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${sorted.map(ev=>{
@@ -4242,7 +4263,7 @@ function filterEvList(){
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
       const isPast=ev.date&&new Date(ev.date)<new Date();
-      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4250,8 +4271,8 @@ function filterEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${ev.pax||'?'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
-        <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div>${evStatusBadge(ev)}</div>
+        <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>

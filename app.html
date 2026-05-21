@@ -3633,6 +3633,9 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});showSingleEventSuivi(${ev.id})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
+          <button class="btn btn-sm ${ev.stockRetourDone?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px;${ev.stockRetourDone?'':'border-color:#4ade80;color:#4ade80'}" onclick="archiveFromSuivi(${ev.id})">
+            ${ev.stockRetourDone?'✓ Archivé':'✓ Archiver (terminé)'}
+          </button>
           <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
@@ -3643,6 +3646,23 @@ function showSingleEventSuivi(eventId){
   </div>`;
 
   el.innerHTML=html;
+}
+
+function archiveFromSuivi(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(ev.stockRetourDone){
+    ev.stockRetourDone=false;
+    save();cloudPush();
+    toast('Événement sorti de l\'historique');
+  } else {
+    ev.stockRetourDone=true;
+    if(!ev.paid) ev.paid=true;
+    save();cloudPush();
+    toast('Événement archivé dans l\'historique ✓');
+  }
+  showSingleEventSuivi(evId);
+  renderSuivi();
+  renderDashboard();
 }
 
 function updCARange(){
