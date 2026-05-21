@@ -408,16 +408,13 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       Profil
     </div>
     <!-- Lien admin équipe — visible uniquement pour COMPANY_ADMIN / SUPER_ADMIN -->
-    <a href="./company-admin.html" data-perm-role="COMPANY_ADMIN"
-       style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);color:var(--text3);font-size:12px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:all .2s"
-       onmouseover="this.style.color='var(--text2)';this.style.background='var(--surface2)'"
-       onmouseout="this.style.color='var(--text3)';this.style.background='none'">
+    <a href="./company-admin.html" class="nav-item" data-perm-role="COMPANY_ADMIN" style="text-decoration:none">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
         <circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5"/>
         <circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/>
         <path d="M13 8v4M11 10h4" stroke-width="1.4"/>
       </svg>
-      Collaborateurs
+      Accès équipe
     </a>
 
   </nav>

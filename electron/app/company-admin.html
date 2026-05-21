@@ -120,8 +120,8 @@ input:checked + .slider:before{transform:translateX(16px);background:var(--gold)
 <nav>
   <span class="logo">Bar Ops</span>
   <div class="links">
-    <a href="/app.html">← Application</a>
-    <a href="/company-admin.html" class="active">Équipe</a>
+    <a href="./app.html">← Application</a>
+    <a href="./company-admin.html" class="active">Équipe</a>
     <div class="avatar" id="navAvatar">?</div>
   </div>
 </nav>
@@ -630,7 +630,7 @@ async function savePermissions() {
 // ─── HELPERS ─────────────────────────────────────────────────
 async function apiFetch(fn, body, token) {
   try {
-    const r = await fetch(`/.netlify/functions/${fn}`, {
+    const r = await fetch(`https://bar-opsv2public.netlify.app/.netlify/functions/${fn}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
@@ -655,7 +655,7 @@ boot().then(() => {
   const p = new URLSearchParams(window.location.search);
   if (p.get('seat') === 'success') toast('Siège ajouté ! Vous pouvez maintenant inviter un collaborateur supplémentaire.');
   if (p.get('seat') === 'cancelled') toast('Ajout de siège annulé.', true);
-  if (p.get('seat')) history.replaceState({}, '', '/company-admin.html');
+  if (p.get('seat')) history.replaceState({}, '', './company-admin.html');
 });
 </script>
 </body>
