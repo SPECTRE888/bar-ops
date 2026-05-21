@@ -9824,13 +9824,14 @@ function _renderSuiviOld_unused(){
         const rows=Object.entries(ingredients);
         if(!rows.length) return '';
         const alreadyDone=ev.stockRetourDone||false;
-        const manualProducts=window._evStockRetourCustom?.[ev.id]||[];
+        const customItems=ev.stockRetourCustomItems||[];
+        const inp=(id,type,ph,extra='')=>`<input id="${id}" type="${type}" placeholder="${ph}" style="padding:5px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)" ${extra}/>`;
         return`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)">Stock retour</div>
             ${alreadyDone?`<span style="font-size:10px;color:var(--green)">✓ Réinjecté</span>`:''}
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Quantités non consommées à réinjecter en stock</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Quantités non consommées — produits du devis</div>
           <div id="stock-retour-${ev.id}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
             ${rows.map(([key,{label,unit,needed}])=>{
               const bottlesUsed=(needed/(state.products.find(p=>label.includes(p.productType))?.qty||1));
@@ -9844,34 +9845,35 @@ function _renderSuiviOld_unused(){
               </div>`;
             }).join('')}
           </div>
-          ${manualProducts.length>0?`
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:12px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Produits ajoutés manuellement</div>
+          ${customItems.length>0?`
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:4px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Produits hors devis</div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
-              ${manualProducts.map(mp=>{
-                const key=(mp.brand||'')+'||'+mp.productType;
-                return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
-                  <span style="flex:1;color:var(--text2)">${mp.brand?mp.brand+' — ':''}${mp.productType}</span>
-                  <input type="number" min="0" step="0.1" value="${(ev.stockRetour||{})[key]||mp.qty}"
-                    style="width:90px;padding:3px 6px;font-size:11px"
-                    onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
-                  <button class="btn" style="font-size:8px;padding:2px 6px;white-space:nowrap" onclick="removeStockRetourCustom(${ev.id},'${key}')">✕</button>
-                </div>`;
-              }).join('')}
+              ${customItems.map((item,idx)=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                  <span style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(item.nom)}${item.detail?`<span style="color:var(--text4);margin-left:5px">${escHtml(item.detail)}</span>`:''}${item.cout?`<span style="color:var(--gold);margin-left:6px;font-size:10px">${item.cout}€/u</span>`:''}${item.unite?`<span style="color:var(--text4);margin-left:4px;font-size:10px">${escHtml(item.unite)}</span>`:''}</span>
+                  <input type="number" min="0" step="0.1" value="${item.qty||1}"
+                    style="width:70px;padding:3px 6px;font-size:11px"
+                    onchange="updStockRetourCustomItem(${ev.id},${idx},parseFloat(this.value)||0)"/>
+                  <button class="btn" style="font-size:10px;padding:2px 7px" onclick="removeStockRetourCustomItem(${ev.id},${idx})">✕</button>
+                </div>`).join('')}
             </div>
           `:''}
           <div id="stock-retour-add-form-${ev.id}" style="display:none;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:8px">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-              <div style="flex:1;min-width:150px" id="src-ss-${ev.id}"></div>
-              <input id="src-product-${ev.id}" type="hidden"/>
-              <input id="src-brand-${ev.id}" type="text" placeholder="Marque" style="flex:1;min-width:120px;padding:6px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
-              <input id="src-qty-${ev.id}" type="number" step="0.1" min="0.1" placeholder="Qté" value="1" style="width:60px;padding:6px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);margin-bottom:6px">Produit récupéré hors devis</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+              ${inp(`src-nom-${ev.id}`,'text','Produit (ex: Vin rouge)')}
+              ${inp(`src-detail-${ev.id}`,'text','Détail (ex: Morgon 2022)')}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:6px;margin-bottom:8px">
+              ${inp(`src-unite-${ev.id}`,'text','Unité (btl, kg...)')}
+              ${inp(`src-cout-${ev.id}`,'number','Coût €','step="0.01" min="0"')}
+              ${inp(`src-qty-${ev.id}`,'number','Qté','step="0.1" min="0.1" value="1"')}
             </div>
             <div style="display:flex;gap:6px">
               <button class="btn btn-sm btn-ghost" style="flex:1" onclick="toggleAddStockRetour(${ev.id})">Annuler</button>
               <button class="btn btn-sm btn-gold" style="flex:1" onclick="addStockRetourCustom(${ev.id})">Ajouter</button>
             </div>
           </div>
-          <button class="btn btn-sm btn-ghost" style="width:100%;text-align:left" onclick="toggleAddStockRetour(${ev.id})">+ Ajouter un produit</button>
+          <button class="btn btn-sm btn-ghost" style="width:100%;text-align:left;margin-bottom:6px" onclick="toggleAddStockRetour(${ev.id})">+ Produit hors devis</button>
           <button class="btn btn-sm btn-gold" onclick="injectStockRetour(${ev.id})" ${alreadyDone?'style="opacity:.5"':''}>
             ${alreadyDone?'Réinjecter à nouveau':'Réinjecter en stock'}
           </button>
@@ -9938,108 +9940,70 @@ function updStockRetour(evId, key, val){
 
 function injectStockRetour(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  if(!ev.stockRetour){ev.stockRetourDone=true;save();cloudPush();toast('Prestation archivée');renderSuivi();renderDashboard();showSingleEventSuivi(evId);return;}
   let count=0;
-  Object.entries(ev.stockRetour).forEach(([key,qty])=>{
-    if(!qty) return;
-    const [brand,productType]=key.split('||');
-    const prod=state.products.find(p=>p.productType===productType&&(p.brand||'')===(brand||''))
-              ||state.products.find(p=>p.productType===productType);
-    if(!prod) return;
-    prod.stock=(prod.stock||0)+qty;
+  // Produits du devis
+  if(ev.stockRetour){
+    Object.entries(ev.stockRetour).forEach(([key,qty])=>{
+      if(!qty) return;
+      const [brand,productType]=key.split('||');
+      const prod=state.products.find(p=>p.productType===productType&&(p.brand||'')===(brand||''))
+                ||state.products.find(p=>p.productType===productType);
+      if(!prod) return;
+      prod.stock=(prod.stock||0)+qty;
+      count++;
+    });
+  }
+  // Produits hors devis — injecter si trouvé en catalogue, sinon juste comptabiliser
+  (ev.stockRetourCustomItems||[]).forEach(item=>{
+    if(!item.qty) return;
+    const prod=state.products.find(p=>
+      p.productType?.toLowerCase()===item.nom?.toLowerCase()||
+      p.name?.toLowerCase()===item.nom?.toLowerCase()
+    );
+    if(prod){prod.stock=(prod.stock||0)+item.qty;}
     count++;
   });
   ev.stockRetourDone=true;
-  save();
+  save();cloudPush();
   toast(`${count} produit(s) réinjecté(s) en stock`);
-  renderSuivi();
-  renderDashboard();
+  renderSuivi();renderDashboard();
 }
 
-// ── MANUAL STOCK RETURN FUNCTIONS ──
 function toggleAddStockRetour(evId){
   const el=document.getElementById('stock-retour-add-form-'+evId);
   if(!el) return;
-  if(el.style.display==='none'){
-    el.style.display='block';
-    setTimeout(()=>{
-      initStockRetourProductSearch(evId);
-      document.getElementById('src-product-'+evId)?.focus();
-    },0);
-  }else{
-    el.style.display='none';
-  }
-}
-
-function initStockRetourProductSearch(evId){
-  const ssWrap=document.getElementById('src-ss-'+evId);
-  if(!ssWrap||ssWrap.dataset.initialized) return;
-  ssWrap.dataset.initialized='true';
-
-  const allProducts=[
-    ...state.products.map(p=>p.productType).filter(Boolean),
-    ...state.glasses.map(g=>g.name).filter(Boolean),
-    ...state.iceTypes.map(i=>i.name).filter(Boolean)
-  ];
-  const uniqueProducts=[...new Set(allProducts)].sort();
-
-  mkSS('src-ss-'+evId,uniqueProducts,'Produit...', v=>{
-    document.getElementById('src-product-'+evId).value=v;
-  },'',true);
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block') setTimeout(()=>document.getElementById('src-nom-'+evId)?.focus(),0);
 }
 
 function addStockRetourCustom(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  const productInput=document.getElementById('src-product-'+evId);
-  const brandInput=document.getElementById('src-brand-'+evId);
-  const qtyInput=document.getElementById('src-qty-'+evId);
-
-  const productType=(productInput?.value||'').trim();
-  const brand=(brandInput?.value||'').trim();
-  const qty=parseFloat(qtyInput?.value)||0;
-
-  if(!productType||qty<=0){
-    toast('Veuillez remplir le produit et la quantité','var(--red)');
-    return;
-  }
-
-  const category=state.products.find(p=>p.productType===productType)?.category||'Produit';
-  saveStockRetourCustom(evId,brand,productType,qty,category);
-
-  // Reset form
-  productInput.value='';
-  brandInput.value='';
-  qtyInput.value='';
+  const nom=(document.getElementById('src-nom-'+evId)?.value||'').trim();
+  const detail=(document.getElementById('src-detail-'+evId)?.value||'').trim();
+  const unite=(document.getElementById('src-unite-'+evId)?.value||'').trim();
+  const cout=parseFloat(document.getElementById('src-cout-'+evId)?.value)||0;
+  const qty=parseFloat(document.getElementById('src-qty-'+evId)?.value)||0;
+  if(!nom||qty<=0){toast('Remplissez au minimum le produit et la quantité','var(--red)');return;}
+  if(!ev.stockRetourCustomItems) ev.stockRetourCustomItems=[];
+  ev.stockRetourCustomItems.push({nom,detail,unite,cout,qty});
+  // Réinitialiser le formulaire
+  ['src-nom-','src-detail-','src-unite-','src-cout-','src-qty-'].forEach(p=>{const el=document.getElementById(p+evId);if(el){el.value=p==='src-qty-'?'1':'';} });
   document.getElementById('stock-retour-add-form-'+evId).style.display='none';
-}
-
-function saveStockRetourCustom(evId,brand,productType,qty,category){
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  if(!ev.stockRetour) ev.stockRetour={};
-
-  const key=(brand||'')+'||'+productType;
-  ev.stockRetour[key]=(ev.stockRetour[key]||0)+qty;
-
-  if(!window._evStockRetourCustom) window._evStockRetourCustom={};
-  if(!window._evStockRetourCustom[evId]) window._evStockRetourCustom[evId]=[];
-  window._evStockRetourCustom[evId].push({brand,productType,qty,category});
-
   save();
-  toast(`${brand?brand+' ':''}${productType} ajouté au retour`);
+  toast(`${nom}${detail?' — '+detail:''} ajouté`);
   renderSuivi();
 }
 
-function removeStockRetourCustom(evId,key){
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  if(ev.stockRetour) ev.stockRetour[key]=0;
-
-  if(window._evStockRetourCustom&&window._evStockRetourCustom[evId]){
-    const [brand,productType]=key.split('||');
-    window._evStockRetourCustom[evId]=window._evStockRetourCustom[evId].filter(p=>!(p.brand===brand&&p.productType===productType));
-  }
-
+function updStockRetourCustomItem(evId,idx,qty){
+  const ev=state.events.find(x=>x.id===evId);if(!ev||!ev.stockRetourCustomItems)return;
+  if(ev.stockRetourCustomItems[idx]) ev.stockRetourCustomItems[idx].qty=qty;
   save();
-  renderSuivi();
+}
+
+function removeStockRetourCustomItem(evId,idx){
+  const ev=state.events.find(x=>x.id===evId);if(!ev||!ev.stockRetourCustomItems)return;
+  ev.stockRetourCustomItems.splice(idx,1);
+  save();renderSuivi();
 }
 
 function updEvField(evId, key, value){
