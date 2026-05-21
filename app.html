@@ -538,11 +538,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
   </div>
   <div class="content">
     <div id="staff-section">
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="ptable"><thead><tr><th>Nom &amp; Prénom</th><th>Rôle</th><th>Téléphone</th><th>Coût HT (€)</th><th>Facturé HT (€)</th><th>Par</th><th>Marge</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="staff-tb"></tbody></table>
-      </div>
-      <div id="staff-empty" class="empty" style="display:none"><div class="empty-icon">‍</div><p>Aucun staff.</p></div>
+      <div id="staff-content"></div>
+      <div id="staff-empty" class="empty" style="display:none"><div class="empty-icon">‍</div><p>Aucun membre d'équipe.</p></div>
     </div>
 
     <div id="dresscode-section" style="display:none">
@@ -1421,7 +1418,7 @@ const CAT_ICONS  = {Spirit:'',Juice:'',Mixer:'',Syrup:'',Garnish:'',Consumable:'
 const UNITS = ['cl','ml','L','g','kg','pc'];
 const STAFF_ROLES = ['Bartender','Serveur','Bar Manager','Manutentionnaire'];
 const STAFF_ROLES_DISPLAY = {'Bartender':'Bartender','Serveur':'Serveur','Bar Manager':'Bar Manager','Manutentionnaire':'Manutentionnaire'};
-const STAFF_PER   = ['per hour'];
+const STAFF_PER   = ['par heure'];
 
 const GLASS_TYPES=['Rocks','Highball','Verre','Martini','Coupe','Collins','Flûte','Tiki mug','Copper mug','Hurricane','Snifter','Shot glass','Wine glass','Goblet','Jam jar','Stemless wine','Sling glass'];
 
@@ -1615,9 +1612,9 @@ function injectDemoData(){
 
   // ── STAFF ──────────────────────────────────────────────
   state.staffItems=[
-    {id:now+40,name:'Alex Martin',type:'Bartender',rateHT:30,billHT:55,per:'per hour',phone:'',notes:''},
-    {id:now+41,name:'Sara Dubois',type:'Bartender',rateHT:22,billHT:40,per:'per hour',phone:'',notes:''},
-    {id:now+42,name:'Thomas Rey',type:'Serveur',rateHT:18,billHT:32,per:'per hour',phone:'',notes:''},
+    {id:now+40,name:'Alex Martin',type:'Bartender',rateHT:30,billHT:55,per:'par heure',phone:'',notes:''},
+    {id:now+41,name:'Sara Dubois',type:'Bartender',rateHT:22,billHT:40,per:'par heure',phone:'',notes:''},
+    {id:now+42,name:'Thomas Rey',type:'Serveur',rateHT:18,billHT:32,per:'par heure',phone:'',notes:''},
   ];
 
   // ── DRESS CODES ────────────────────────────────────────
@@ -2554,9 +2551,9 @@ function renderGlassware(){
 // STAFF
 // ════════════════════════════════════════════════════════
 const STAFF_DEFAULTS={
-  'Bartender':     {rateHT:25, billHT:45, per:'per hour'},
-  'Serveur': {rateHT:20, billHT:35, per:'per hour'},
-  'Bar Manager':   {rateHT:30, billHT:55, per:'per hour'},
+  'Bartender':     {rateHT:25, billHT:45, per:'par heure'},
+  'Serveur': {rateHT:20, billHT:35, per:'par heure'},
+  'Bar Manager':   {rateHT:30, billHT:55, per:'par heure'},
   'Other':         {rateHT:0,  billHT:0,  per:'per event'},
 };
 
@@ -2574,7 +2571,7 @@ function updStaffType(id, type){
 async function addStaff(){
   if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux membres du staff.');return;}
   const d=STAFF_DEFAULTS['Bartender'];
-  state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,notes:''});
+  state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,phone:'',email:'',address:'',taille:'',mensuration:'',pointure:'',couleurPeau:'',notes:'',_open:true});
   save();renderStaff();
 }
 function delStaff(id){state.staffItems=state.staffItems.filter(x=>x.id!==id);save();renderStaff();}
@@ -2617,40 +2614,76 @@ function showStaffTab(tab){
 }
 
 function filterStaff(){
-  const query=document.getElementById('staff-search')?.value?.toLowerCase()||'';
-  document.querySelectorAll('#staff-tb tbody tr').forEach(row=>{
-    const text=row.textContent.toLowerCase();
-    row.style.display=text.includes(query)?'':'none';
+  const q=document.getElementById('staff-search')?.value?.toLowerCase()||'';
+  document.querySelectorAll('#staff-content .staff-card').forEach(card=>{
+    card.style.display=card.textContent.toLowerCase().includes(q)?'':'none';
   });
 }
 
+function toggleStaff(id){
+  const s=state.staffItems.find(x=>x.id===id);if(!s)return;
+  s._open=!s._open;
+  renderStaff();
+}
+
 function renderStaff(){
-  const tb=document.getElementById('staff-tb'),em=document.getElementById('staff-empty');
-  if(!state.staffItems.length){tb.innerHTML='';em.style.display='block';return;}
+  const el=document.getElementById('staff-content'),em=document.getElementById('staff-empty');
+  if(!el)return;
+  if(!state.staffItems.length){el.innerHTML='';em.style.display='block';return;}
   em.style.display='none';
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
-  // Masquer les colonnes financières dans le header si nécessaire
-  const hdr=document.querySelector('#staff-section table thead tr');
-  if(hdr){[...hdr.querySelectorAll('th')].forEach((th,i)=>{if([3,4,6].includes(i))th.style.display=canCost?'':'none';});}
-  tb.innerHTML=state.staffItems.map(s=>{
-    const margin=((s.billHT||0)-(s.rateHT||0));
-    const marginPct=s.rateHT>0?(margin/s.rateHT*100).toFixed(0)+'%':'—';
-    const marginColor=margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)';
-    return`<tr>
-      <td><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="e.g. Jean Dupont" style="min-width:110px"/></td>
-      <td><select onchange="updStaff(${s.id},'type',this.value)" style="width:130px">${STAFF_ROLES.map(t=>`<option${t===s.type?' selected':''}>${t}</option>`).join('')}</select></td>
-      <td><div style="display:flex;align-items:center;gap:4px">
-        <input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..." style="min-width:120px"/>
-        ${s.phone?`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" title="WhatsApp" style="color:#25D366;font-size:14px;text-decoration:none;flex-shrink:0"></a>`:''}
-      </div></td>
-      <td style="display:${canCost?'':'none'}"><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
-      <td style="display:${canCost?'':'none'}"><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" style="width:80px" placeholder="0.00"/></td>
-      <td><select onchange="updStaff(${s.id},'per',this.value)" style="width:100px">${STAFF_PER.map(p=>`<option${p===s.per?' selected':''}>${p}</option>`).join('')}</select></td>
-      <td style="display:${canCost?'':'none'}"><span style="font-size:11px;color:${marginColor};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€<br/><span style="font-weight:400;font-size:10px">${marginPct}</span></span></td>
-      <td><input value="${escHtml(s.notes||'')}" onchange="updStaff(${s.id},'notes',this.value)" placeholder="Notes..."/></td>
-      <td><button class="btn btn-sm btn-danger" onclick="delStaff(${s.id})">×</button></td>
-    </tr>`;
-  }).join('');
+  const ROLE_COLOR={'Bartender':'var(--gold)','Serveur':'var(--blue,#7eaadc)','Bar Manager':'var(--green)','Manutentionnaire':'var(--text3)'};
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.staffItems.map(s=>{
+    const isOpen=s._open===true;
+    const initials=(s.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const roleColor=ROLE_COLOR[s.type]||'var(--text3)';
+    const margin=(s.billHT||0)-(s.rateHT||0);
+    const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
+    const infos=[];
+    if(s.phone) infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">📞 ${escHtml(s.phone)}</a>`);
+    if(s.email) infos.push(`<span style="font-size:11px;color:var(--text3)">✉ ${escHtml(s.email)}</span>`);
+    if(s.address) infos.push(`<span style="font-size:11px;color:var(--text3)">📍 ${escHtml(s.address)}</span>`);
+    if(canCost&&s.billHT) infos.push(`<span style="font-size:11px;color:var(--gold);font-weight:500">${s.billHT}€/h</span>`);
+    return`<div class="card staff-card" style="padding:0;overflow:hidden;border-radius:var(--radius)">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px;cursor:pointer" onclick="toggleStaff(${s.id})">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(196,164,107,.15),rgba(196,164,107,.05));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0">${initials}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</div>
+        <span style="font-size:10px;font-weight:600;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border:1px solid ${roleColor};border-radius:20px;opacity:.8;flex-shrink:0">${escHtml(s.type||'')}</span>
+        ${infos.length?`<div style="display:flex;align-items:center;flex-wrap:nowrap;overflow:hidden;flex:1;min-width:0">${sep}${infos.join(sep)}</div>`:'<div style="flex:1"></div>'}
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-ghost" onclick="toggleStaff(${s.id})" style="padding:4px 10px;font-size:10px">${isOpen?'✕ Fermer':'✏ Modifier'}</button>
+        </div>
+      </div>
+      ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
+        <div class="g2" style="margin-bottom:10px">
+          <div class="field"><label>Nom / Prénom</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
+          <div class="field"><label>Rôle</label><select onchange="updStaff(${s.id},'type',this.value)">${STAFF_ROLES.map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}</select></div>
+        </div>
+        <div class="g2" style="margin-bottom:10px">
+          <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
+          <div class="field"><label>Email</label><input type="email" value="${escHtml(s.email||'')}" onchange="updStaff(${s.id},'email',this.value)" placeholder="jean@mail.com"/></div>
+        </div>
+        <div class="field" style="margin-bottom:10px"><label>Adresse</label><input value="${escHtml(s.address||'')}" onchange="updStaff(${s.id},'address',this.value)" placeholder="Adresse complète"/></div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px;margin-top:4px">Mensurations</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="field"><label>Taille</label><input value="${escHtml(s.taille||'')}" onchange="updStaff(${s.id},'taille',this.value)" placeholder="M / L / XL..."/></div>
+          <div class="field"><label>Mensuration</label><input value="${escHtml(s.mensuration||'')}" onchange="updStaff(${s.id},'mensuration',this.value)" placeholder="82-64-90..."/></div>
+          <div class="field"><label>Pointure</label><input value="${escHtml(s.pointure||'')}" onchange="updStaff(${s.id},'pointure',this.value)" placeholder="42"/></div>
+          <div class="field"><label>Couleur de peau</label><input value="${escHtml(s.couleurPeau||'')}" onchange="updStaff(${s.id},'couleurPeau',this.value)" placeholder="Claire, mate..."/></div>
+        </div>
+        ${canCost?`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Tarifs</div>
+        <div class="g2" style="margin-bottom:10px">
+          <div class="field"><label>Coût HT (€/h)</label><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
+          <div class="field"><label>Facturé HT (€/h)</label><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Marge : <span style="color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€/h</span> — facturation <strong>par heure</strong></div>`:''}
+        <div class="field" style="margin-bottom:10px"><label>Notes</label><input value="${escHtml(s.notes||'')}" onchange="updStaff(${s.id},'notes',this.value)" placeholder="Spécialités, contraintes..."/></div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">Supprimer</button>
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('')+`</div>`;
   filterStaff();
 }
 
