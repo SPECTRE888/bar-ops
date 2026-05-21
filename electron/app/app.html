@@ -2584,7 +2584,7 @@ function updStaffType(id, type){
 async function addStaff(){
   if(window._isDemo){await alertModal('Version démo : Vous pouvez créer des cocktails et des événements, mais pas de nouveaux membres du staff.');return;}
   const d=STAFF_DEFAULTS['Bartender'];
-  state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,phone:'',email:'',address:'',tailleCm:'',tailleHaut:'',taillePantalon:'',pointure:'',couleurCheveux:'',langues:'',physique:'',notes:'',_open:true});
+  state.staffItems.push({id:Date.now(),name:'',type:'Bartender',rateHT:d.rateHT,billHT:d.billHT,per:d.per,phone:'',email:'',address:'',age:'',tailleCm:'',tailleHaut:'',taillePantalon:'',pointure:'',couleurCheveux:'',langues:'',physique:'',notes:'',_open:true});
   save();renderStaff();
 }
 function delStaff(id){state.staffItems=state.staffItems.filter(x=>x.id!==id);save();renderStaff();}
@@ -2654,8 +2654,8 @@ function renderStaff(){
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     const infos=[];
-    if(s.phone) infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">📞 ${escHtml(s.phone)}</a>`);
-    if(s.email) infos.push(`<span style="font-size:11px;color:var(--text3)">✉ ${escHtml(s.email)}</span>`);
+    if(s.phone) infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">Tél. ${escHtml(s.phone)}</a>`);
+    if(s.address) infos.push(`<span style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${escHtml(s.address)}</span>`);
     if(canCost&&s.billHT) infos.push(`<span style="font-size:11px;color:var(--gold);font-weight:500">${s.billHT}€/h</span>`);
     const chip=(label,val)=>`<span style="font-size:10px;padding:1px 7px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text3);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text4);font-size:9px;letter-spacing:.04em;text-transform:uppercase;margin-right:3px">${label}</span>${escHtml(val)}</span>`;
     const phys=[];
@@ -2666,7 +2666,7 @@ function renderStaff(){
     if(s.physique)       phys.push(chip('phys.',s.physique));
     if(s.langues)        phys.push(chip('lang.',s.langues));
     if(s.couleurCheveux) phys.push(chip('chx',s.couleurCheveux));
-    const searchData=[s.name,s.type,s.phone,s.email,s.address,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
+    const searchData=[s.name,s.type,s.phone,s.email,s.address,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
     return`<div class="card staff-card" style="padding:0;overflow:hidden;border-radius:var(--radius)" data-search="${escHtml(searchData)}">
       <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px;cursor:pointer" onclick="toggleStaff(${s.id})">
         <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(196,164,107,.15),rgba(196,164,107,.05));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0">${initials}</div>
@@ -2684,9 +2684,10 @@ function renderStaff(){
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Identité</div>
-        <div class="g2" style="margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:10px">
           <div class="field"><label>Nom / Prénom</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
           <div class="field"><label>Rôle</label><select onchange="updStaff(${s.id},'type',this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}</select></div>
+          <div class="field"><label>Âge</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
         </div>
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
