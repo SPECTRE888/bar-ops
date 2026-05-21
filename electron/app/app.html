@@ -18,7 +18,7 @@ SUPA_KEY=(window.electronConfig||{}).supabaseAnonKey||'';
 window.STRIPE_PUBLIC_KEY=(window.electronConfig||{}).stripePublicKey||'';
 
 // ← URL des Netlify Functions — à changer ici uniquement si le site change
-const API_BASE='https://bar-opsv2public.netlify.app';
+const API_BASE='https://bar-ops-work.vercel.app';
 
 
 (async()=>{
@@ -47,7 +47,7 @@ const API_BASE='https://bar-opsv2public.netlify.app';
     let access=null;
     for(let i=0;i<8;i++){
       try{
-        const r=await fetch(API_BASE+'/.netlify/functions/check-access',{
+        const r=await fetch(API_BASE+'/api/check-access',{
           headers:{'Authorization':'Bearer '+session.access_token}
         });
         const txt=await r.text();
@@ -745,7 +745,7 @@ async function revokeSession(deviceId){
 async function openBillingPortal(){
   try{
     const token=extractToken(cloudUser)||'';
-    const res=await fetch(API_BASE+'/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({})});
+    const res=await fetch(API_BASE+'/api/portal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({})});
     const{url,error}=await res.json();
     if(error){showToast('Erreur: '+error);return;}
     window.location.href=url;
@@ -1132,7 +1132,7 @@ async function cloudPull(){
   // Les agents passent par la function (service key, pas de RLS)
   if(window._userRole==='AGENT'){
     try{
-      const r=await fetch(API_BASE+'/.netlify/functions/workspace-pull',{
+      const r=await fetch(API_BASE+'/api/workspace-pull',{
         headers:{'Authorization':'Bearer '+token}
       });
       if(!r.ok){console.warn('cloudPull agent HTTP error:',r.status);return false;}
@@ -6847,7 +6847,7 @@ async function copyPortalLink(evId){
 
     await cloudPush();
 
-    const r=await fetch(API_BASE+'/.netlify/functions/portal-token',{
+    const r=await fetch(API_BASE+'/api/portal-token',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body:JSON.stringify({evId:ev.id,theme}),
@@ -6881,7 +6881,7 @@ async function sendQuoteToClient(evId,devisNum){
   '</div>';
   const emailBody=devisHTML.replace(/(<body[^>]*>)/i,'$1'+intro);
   try{
-    const r=await fetch(API_BASE+'/.netlify/functions/send-quote',{
+    const r=await fetch(API_BASE+'/api/send-quote',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
@@ -9492,7 +9492,7 @@ async function deleteAccountConfirmed(){
     
     // Call Netlify function to delete from Supabase
     const token=extractToken(cloudUser)||'';
-    const r=await fetch(API_BASE+'/.netlify/functions/delete-account',{
+    const r=await fetch(API_BASE+'/api/delete-account',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({})
