@@ -759,7 +759,7 @@ async function openBillingPortal(){
 async function sidebarLogout(){
   const sb=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
   if(sb)await sb.auth.signOut();
-  window.location.href='index.html';
+  window.location.href='auth.html';
 }
 
 function fmt(n){
