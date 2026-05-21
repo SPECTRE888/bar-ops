@@ -205,6 +205,9 @@ input:checked + .slider:before{transform:translateX(16px);background:var(--gold)
 
 <script>
 // ─── CONFIG ─────────────────────────────────────────────────
+// ← URL des Netlify Functions — à changer ici uniquement si le site change
+const API_BASE='https://bar-opsv2public.netlify.app';
+
 let _supabase, _session, _profile, _currentTargetId;
 
 const PERM_LABELS = {
@@ -307,7 +310,7 @@ async function boot() {
   // Plan : priorité check-access (source de vérité billing) > DB companies.plan
   let _planFromAccess = '';
   try {
-    const _ar = await fetch('https://bar-opsv2public.netlify.app/.netlify/functions/check-access', {
+    const _ar = await fetch(API_BASE+'/.netlify/functions/check-access', {
       headers: { 'Authorization': 'Bearer ' + session.access_token }
     });
     const _at = await _ar.text();
@@ -371,7 +374,7 @@ async function addSeat() {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Chargement…';
   try {
-    const r = await fetch('https://bar-opsv2public.netlify.app/.netlify/functions/add-seat', {
+    const r = await fetch(API_BASE+'/.netlify/functions/add-seat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_session.access_token}` },
       body: JSON.stringify({ quantity: 1 }),
@@ -642,7 +645,7 @@ async function savePermissions() {
 // ─── HELPERS ─────────────────────────────────────────────────
 async function apiFetch(fn, body, token) {
   try {
-    const r = await fetch(`https://bar-opsv2public.netlify.app/.netlify/functions/${fn}`, {
+    const r = await fetch(`${API_BASE}/.netlify/functions/${fn}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
