@@ -1,0 +1,9 @@
+#!/bin/bash
+# Post-install: retirer quarantaine + signature ad-hoc + lancement
+APP="/Applications/Bar Ops.app"
+xattr -cr "$APP" 2>/dev/null || true
+codesign --force --deep --sign - --timestamp=none "$APP" 2>/dev/null || true
+# Lancer l'app pour l'utilisateur courant (pas en root)
+CURRENT_USER=$(stat -f "%Su" /dev/console)
+sudo -u "$CURRENT_USER" open "$APP" 2>/dev/null || true
+exit 0

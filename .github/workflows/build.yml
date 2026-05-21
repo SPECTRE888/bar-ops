@@ -32,8 +32,43 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build & Publish
-      run: npx electron-builder --mac --arm64 --publish=always
+    - name: Build Electron app
+      run: npx electron-builder --mac --arm64 --publish=never
+      env:
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+
+    - name: Build PKG installer
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        APP_PATH="dist/mac-arm64/Bar Ops.app"
+
+        # Signer l'app en ad-hoc avant packaging
+        codesign --force --deep --sign - --timestamp=none "$APP_PATH"
+
+        # Créer le PKG
+        pkgbuild \
+          --root "dist/mac-arm64" \
+          --install-location "/Applications" \
+          --scripts "scripts/pkg" \
+          --identifier "com.barops.app" \
+          --version "$VERSION" \
+          "dist/Bar-Ops-${VERSION}-Installer.pkg"
+
+        echo "✅ PKG créé: dist/Bar-Ops-${VERSION}-Installer.pkg"
+
+    - name: Create release & upload assets
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        TAG="$GITHUB_REF_NAME"
+
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --notes "Bar Ops ${TAG}" \
+          "dist/Bar-Ops-${VERSION}-Installer.pkg" \
+          "dist/Bar Ops-${VERSION}-arm64-mac.zip" \
+          "dist/Bar Ops-${VERSION}-arm64-mac.zip.blockmap" \
+          "dist/Bar Ops-${VERSION}-arm64.dmg" \
+          "dist/Bar Ops-${VERSION}-arm64.dmg.blockmap" \
+          "dist/latest-mac.yml"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CSC_IDENTITY_AUTO_DISCOVERY: false
