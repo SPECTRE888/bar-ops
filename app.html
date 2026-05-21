@@ -3706,14 +3706,8 @@ function renderDashboard(){
   const upcoming=state.events.filter(ev=>ev.date&&new Date(ev.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const past=state.events.filter(ev=>ev.date&&new Date(ev.date)<now).sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  // CA total (past events)
-  const totalRevenue=past.reduce((s,ev)=>{
-    const cocktailRev=(ev.cocktails||[]).reduce((cs,cfg)=>{
-      const c=state.cocktails.find(x=>x.id===cfg.id);
-      return cs+(c?cfg.qty*(c.priceHT||0):0);
-    },0);
-    return s+cocktailRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0);
-  },0);
+  // CA total (past events) — utilise totalRevHT comme l'historique
+  const totalRevenue=past.reduce((s,ev)=>s+(ev.totalRevHT||0),0);
 
   // Next event
   const next=upcoming[0];

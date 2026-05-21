@@ -425,7 +425,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
         <circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/>
         <path d="M13 8v4M11 10h4" stroke-width="1.4"/>
       </svg>
-      Équipe
+      Collaborateurs
     </a>
 
   </nav>
@@ -3711,14 +3711,8 @@ function renderDashboard(){
   const upcoming=state.events.filter(ev=>ev.date&&new Date(ev.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const past=state.events.filter(ev=>ev.date&&new Date(ev.date)<now).sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  // CA total (past events)
-  const totalRevenue=past.reduce((s,ev)=>{
-    const cocktailRev=(ev.cocktails||[]).reduce((cs,cfg)=>{
-      const c=state.cocktails.find(x=>x.id===cfg.id);
-      return cs+(c?cfg.qty*(c.priceHT||0):0);
-    },0);
-    return s+cocktailRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0);
-  },0);
+  // CA total (past events) — utilise totalRevHT comme l'historique
+  const totalRevenue=past.reduce((s,ev)=>s+(ev.totalRevHT||0),0);
 
   // Next event
   const next=upcoming[0];
@@ -4185,8 +4179,8 @@ function showEvList(){
   const pageEvs=sorted.slice(pg*PAGE,(pg+1)*PAGE);
   const totalPg=Math.ceil(sorted.length/PAGE);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:right">CA HT</div><div>Statut</div><div></div>
+    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div>Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${pageEvs.map(ev=>{
       const fmtDate=fmtEvDates(ev);
@@ -4197,7 +4191,7 @@ function showEvList(){
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
       const isPast=ev.date&&new Date(ev.date)<new Date();
-      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4236,8 +4230,8 @@ function filterEvList(){
     return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:right">CA HT</div><div>Statut</div><div></div>
+    <div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div>Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${sorted.map(ev=>{
       const fmtDate=fmtEvDates(ev);
@@ -4248,7 +4242,7 @@ function filterEvList(){
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
       const isPast=ev.date&&new Date(ev.date)<new Date();
-      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 84px 90px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:95px 2fr 1fr 1fr 52px 72px 62px 90px 84px 78px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
