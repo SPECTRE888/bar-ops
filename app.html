@@ -3633,36 +3633,63 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});showSingleEventSuivi(${ev.id})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
-          <button class="btn btn-sm ${ev.stockRetourDone?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px;${ev.stockRetourDone?'':'border-color:#4ade80;color:#4ade80'}" onclick="archiveFromSuivi(${ev.id})">
-            ${ev.stockRetourDone?'✓ Archivé':'✓ Archiver (terminé)'}
-          </button>
           <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">🔗 Lien client</button>
         </div>
-      </div>`;
+      </div>
+      ${isPast?(()=>{
+        const hasCocktailsForRetour=(ev.cocktails||[]).length>0;
+        const alreadyDone=ev.stockRetourDone||false;
+        if(!hasCocktailsForRetour){
+          return`<div style="margin-top:8px;padding:10px 14px;border-top:1px solid var(--border)">
+            <button class="btn btn-sm ${alreadyDone?'btn-primary':'btn-ghost'}" style="width:100%;${alreadyDone?'':'border-color:#4ade80;color:#4ade80'}" onclick="${ev.paid||alreadyDone?`injectStockRetour(${ev.id})`:'toast(\"Marquez d\\'abord la prestation comme payée\")'}">
+              ${alreadyDone?'✓ Archivé':'Valider et archiver'}
+            </button>
+            ${!ev.paid&&!alreadyDone?`<div style="font-size:10px;color:var(--text3);margin-top:6px">⚠ Marquez la prestation comme payée d'abord</div>`:''}
+          </div>`;
+        }
+        const ingredients={};
+        (ev.cocktails||[]).forEach(cfg=>{
+          const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
+          const qty=cfg.qty||0;
+          (c.ingredients||[]).forEach(ing=>{
+            const key=(ing.brand||'')+'||'+ing.productType;
+            if(!ingredients[key])ingredients[key]={label:`${ing.brand?ing.brand+' ':''}${ing.productType}`,unit:ing.unit||'cl',needed:0};
+            ingredients[key].needed+=ing.qty*qty;
+          });
+        });
+        const rows=Object.entries(ingredients);
+        return`<div style="margin-top:8px;padding:10px 14px;border-top:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:600">Stock retour</div>
+            ${alreadyDone?`<span style="font-size:10px;color:var(--green)">✓ Réinjecté</span>`:''}
+          </div>
+          ${rows.length?`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+            ${rows.map(([key,{label,unit}])=>{
+              const savedVal=(ev.stockRetour||{})[key]||'';
+              return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                <span style="flex:1;color:var(--text2)">${label}</span>
+                <input type="number" min="0" step="0.1" placeholder="retour" value="${savedVal}"
+                  style="width:80px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right"
+                  onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
+                <span style="font-size:10px;color:var(--text3);width:20px">${unit}</span>
+              </div>`;
+            }).join('')}
+          </div>`:''}
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn btn-sm ${alreadyDone?'btn-primary':'btn-ghost'}" style="flex:1;${!ev.paid&&!alreadyDone?'opacity:.45;':''}${alreadyDone?'':'border-color:#4ade80;color:#4ade80'}" onclick="${ev.paid||alreadyDone?`injectStockRetour(${ev.id})`:'toast(\"Marquez d\\'abord la prestation comme payée\")'}">
+              ${alreadyDone?'✓ Archivé (réinjecté)':'Réinjecter et archiver'}
+            </button>
+          </div>
+          ${!ev.paid&&!alreadyDone?`<div style="font-size:10px;color:var(--text3);margin-top:6px">⚠ Marquez la prestation comme payée d'abord</div>`:''}
+        </div>`;
+      })():''}`;
     })()}
   </div>`;
 
   el.innerHTML=html;
-}
-
-function archiveFromSuivi(evId){
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  if(ev.stockRetourDone){
-    ev.stockRetourDone=false;
-    save();cloudPush();
-    toast('Événement sorti de l\'historique');
-  } else {
-    ev.stockRetourDone=true;
-    if(!ev.paid) ev.paid=true;
-    save();cloudPush();
-    toast('Événement archivé dans l\'historique ✓');
-  }
-  showSingleEventSuivi(evId);
-  renderSuivi();
-  renderDashboard();
 }
 
 function updCARange(){
@@ -9836,7 +9863,8 @@ function updStockRetour(evId, key, val){
 }
 
 function injectStockRetour(evId){
-  const ev=state.events.find(x=>x.id===evId);if(!ev||!ev.stockRetour)return;
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(!ev.stockRetour){ev.stockRetourDone=true;save();cloudPush();toast('Prestation archivée');renderSuivi();renderDashboard();showSingleEventSuivi(evId);return;}
   let count=0;
   Object.entries(ev.stockRetour).forEach(([key,qty])=>{
     if(!qty) return;
