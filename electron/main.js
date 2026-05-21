@@ -17,15 +17,37 @@ function startAuthServer() {
     if (parsed.pathname === '/callback') {
       res.writeHead(200, { 'Content-Type': 'text/html' })
       res.end(`<!DOCTYPE html><html><head><meta charset="utf-8">
-        <title>Bar Ops</title>
-        <style>body{background:#080808;margin:0}</style>
+        <title>Bar Ops — Connexion réussie</title>
+        <style>
+          *{box-sizing:border-box;margin:0;padding:0}
+          body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#080808;color:#ede8e0;display:flex;align-items:center;justify-content:center;height:100vh}
+          .box{text-align:center;padding:48px 40px;max-width:360px}
+          .icon{font-size:52px;margin-bottom:20px;animation:pop .4s ease}
+          @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+          h1{font-size:20px;font-weight:500;letter-spacing:.06em;margin-bottom:10px;color:#c4a46b}
+          p{font-size:13px;color:#666;margin-bottom:24px;line-height:1.6}
+          .btn{padding:11px 32px;background:#c4a46b;color:#080808;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+          .btn:hover{background:#d4b47a}
+        </style>
         </head><body>
+        <div class="box">
+          <div class="icon">✓</div>
+          <h1>BAR OPS</h1>
+          <p>Authentification réussie.<br>L'application est prête.</p>
+          <button class="btn" id="btn">Fermer cet onglet</button>
+        </div>
         <script>
           const hash   = window.location.hash   || ''
           const search = window.location.search || ''
-          fetch('/token?' + new URLSearchParams({ hash, search }))
-            .then(() => { window.location.href = 'barops://auth-done' })
-            .catch(() => {})
+          fetch('/token?' + new URLSearchParams({ hash, search })).catch(()=>{})
+
+          function closeTab(){
+            window.open('about:blank','_self');
+            window.close();
+          }
+          document.getElementById('btn').addEventListener('click', closeTab)
+          // Tentative auto après 1s
+          setTimeout(closeTab, 1000)
         </script></body></html>`)
       return
     }
@@ -91,27 +113,13 @@ function createWindow() {
   })
 }
 
-// ─── Custom protocol barops:// ───────────────────────────────────────────────
-app.setAsDefaultProtocolClient('barops')
-
-// macOS : open-url event
-app.on('open-url', (event, u) => {
-  event.preventDefault()
-  if (mainWin) { mainWin.show(); mainWin.focus() }
-})
-
 // ─── Single instance ──────────────────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
-  // Windows/Linux : barops:// arrive via second-instance
-  app.on('second-instance', (event, argv) => {
-    if (argv.find(a => a.startsWith('barops://'))) {
-      if (mainWin) { mainWin.show(); mainWin.focus() }
-    } else {
-      if (mainWin) { mainWin.show(); mainWin.focus() }
-    }
+  app.on('second-instance', () => {
+    if (mainWin) { mainWin.show(); mainWin.focus() }
   })
 }
 
