@@ -13,9 +13,10 @@
 // Clés API chargées dynamiquement depuis le serveur pour la sécurité
 let SUPA_URL='', SUPA_KEY='';
 window.STRIPE_PUBLIC_KEY='';
+const API_BASE='https://bar-ops-v2.vercel.app';
 
-// Charger les clés depuis la Netlify Function
-fetch('/.netlify/functions/config')
+// Charger les clés depuis l'API Vercel
+fetch(API_BASE+'/api/config')
   .then(r=>r.json())
   .then(cfg=>{
     SUPA_URL=cfg.supabaseUrl;
@@ -51,7 +52,7 @@ fetch('/.netlify/functions/config')
     let access=null;
     for(let i=0;i<8;i++){
       try{
-        const r=await fetch('/.netlify/functions/check-access',{
+        const r=await fetch(API_BASE+'/api/check-access',{
           headers:{'Authorization':'Bearer '+session.access_token}
         });
         const txt=await r.text();
@@ -66,8 +67,14 @@ fetch('/.netlify/functions/config')
       }
       await new Promise(r=>setTimeout(r,1500));
     }
+    if(access===null){
+      document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">Impossible de joindre le serveur.</p><button onclick="location.reload()" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
+      return;
+    }
     if(!access?.allowed){
-      document.body.innerHTML=`<div style="font-family:monospace;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:20px;color:#c4a46b;margin-bottom:24px">DEBUG — accès refusé</div><pre style="text-align:left;background:#111;padding:16px;border-radius:6px;font-size:13px;color:#f87171;max-width:600px;overflow:auto">${JSON.stringify(access,null,2)}</pre><button onclick="window.location.href='paying.html'" style="margin-top:20px;background:#c4a46b;color:#080808;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:13px">Continuer vers paywall</button></div></div>`;
+      const msgs={suspended:'Votre accès a été suspendu. Contactez votre administrateur.',no_active_subscription:'Votre abonnement est inactif.',no_company:'Aucune entreprise associée à ce compte.',invalid_token:'Session invalide. Reconnectez-vous.',auth_required:'Authentification requise.'};
+      const txt=msgs[access.reason]||'Accès refusé.';
+      document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">${txt}</p><button onclick="window.location.href='auth.html'" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button>${access.reason==='no_active_subscription'?`<br><br><button onclick="window.location.href='paying.html'" style="background:transparent;color:#c4a46b;border:1px solid #c4a46b;padding:10px 24px;border-radius:3px;font-size:12px;cursor:pointer;margin-top:8px">Voir les offres</button>`:''}</div></div>`;
       return;
     }
     const subs={plan:access.plan||'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
@@ -742,7 +749,7 @@ async function revokeSession(deviceId){
 async function openBillingPortal(){
   try{
     const token=extractToken(cloudUser)||'';
-    const res=await fetch('/.netlify/functions/portal',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({})});
+    const res=await fetch(API_BASE+'/api/billing',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'portal'})});
     const{url,error}=await res.json();
     if(error){showToast('Erreur: '+error);return;}
     window.location.href=url;
@@ -1129,7 +1136,7 @@ async function cloudPull(){
   // Les agents passent par la function (service key, pas de RLS)
   if(window._userRole==='AGENT'){
     try{
-      const r=await fetch('/.netlify/functions/workspace-pull',{
+      const r=await fetch(API_BASE+'/api/workspace',{
         headers:{'Authorization':'Bearer '+token}
       });
       if(!r.ok){console.warn('cloudPull agent HTTP error:',r.status);return false;}
@@ -6799,7 +6806,7 @@ async function copyPortalLink(evId){
 
     await cloudPush();
 
-    const r=await fetch('/.netlify/functions/portal-token',{
+    const r=await fetch(API_BASE+'/api/workspace',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body:JSON.stringify({evId:ev.id,theme}),
@@ -6833,7 +6840,7 @@ async function sendQuoteToClient(evId,devisNum){
   '</div>';
   const emailBody=devisHTML.replace(/(<body[^>]*>)/i,'$1'+intro);
   try{
-    const r=await fetch('/.netlify/functions/send-quote',{
+    const r=await fetch(API_BASE+'/api/send-quote',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
@@ -8236,19 +8243,48 @@ async function exportStockEuro(){
 
   if(!confirmed) return;
 
-  // Submit hidden form to trigger server-side download (avoids Safari prompt)
-  const form=document.createElement('form');
-  form.method='POST';
-  form.action='/.netlify/functions/export-stock';
-  form.style.display='none';
-  const input=document.createElement('input');
-  input.type='hidden';
-  input.name='data';
-  input.value=JSON.stringify({products,glasses,consommables,barItems});
-  form.appendChild(input);
-  document.body.appendChild(form);
-  form.submit();
-  document.body.removeChild(form);
+  // Générer le PDF localement
+  const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  const bycat={};
+  allItems.forEach(i=>{if(!bycat[i.category])bycat[i.category]=[];bycat[i.category].push(i);});
+  let tableRows='';
+  Object.entries(bycat).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cat,items])=>{
+    tableRows+=`<tr style="background:#f0f0f0"><td colspan="6" style="padding:8px 10px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#555">${cat}</td></tr>`;
+    items.forEach(i=>{
+      tableRows+=`<tr style="border-bottom:1px solid #eee">
+        <td style="padding:7px 10px;font-size:12px">${i.type||'—'}</td>
+        <td style="padding:7px 10px;font-size:12px;color:#666">${i.brand||'—'}</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:center">${i.stock} ${i.unit}</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:right">${parseFloat(i.priceHT).toFixed(2)} €</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:right;font-weight:500">${parseFloat(i.valueTotalHT).toFixed(2)} €</td>
+        <td style="padding:7px 10px;font-size:11px;color:#999">${i.supplier||'—'}</td>
+      </tr>`;
+    });
+  });
+  const barName=state.profile?.barName||'Bar Ops';
+  const reportHTML=`<div style="font-family:sans-serif;color:#111;padding:0;max-width:100%">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #111">
+      <div><div style="font-size:20px;font-weight:700;letter-spacing:.04em">${barName}</div><div style="font-size:12px;color:#666;margin-top:4px">Inventaire valorisé — ${today}</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.08em">Valeur totale HT</div><div style="font-size:26px;font-weight:700;color:#b8922b">${totalValueHT.toFixed(2)} €</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#111;color:#fff"><th style="padding:8px 10px;text-align:left;font-weight:500">Produit</th><th style="padding:8px 10px;text-align:left;font-weight:500">Marque</th><th style="padding:8px 10px;text-align:center;font-weight:500">Stock</th><th style="padding:8px 10px;text-align:right;font-weight:500">Prix u. HT</th><th style="padding:8px 10px;text-align:right;font-weight:500">Valeur HT</th><th style="padding:8px 10px;text-align:left;font-weight:500">Fournisseur</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
+  </div>`;
+  const el=document.createElement('div');
+  el.style.cssText='position:absolute;left:-9999px;top:0;width:750px;background:#fff';
+  el.innerHTML=reportHTML;
+  document.body.appendChild(el);
+  const filename=`Inventaire-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`;
+  if(typeof html2pdf!=='undefined'){
+    html2pdf().set({margin:[12,12,12,12],filename,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}})
+      .from(el).save().then(()=>el.remove());
+  }else{
+    const blob=new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Inventaire</title></head><body style="margin:24px">${reportHTML}</body></html>`],{type:'text/html'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.pdf','.html');
+    document.body.appendChild(a);a.click();document.body.removeChild(a);el.remove();
+  }
 }
 
 function buildEventSummaryHTML(ev){
@@ -9298,7 +9334,7 @@ async function deleteAccountConfirmed(){
     
     // Call Netlify function to delete from Supabase
     const token=extractToken(cloudUser)||'';
-    const r=await fetch('/.netlify/functions/delete-account',{
+    const r=await fetch(API_BASE+'/api/delete-account',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({})
