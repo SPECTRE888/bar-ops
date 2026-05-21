@@ -3635,7 +3635,7 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});showSingleEventSuivi(${ev.id})">
             ${acompteRecu?'✓ Acompte reçu':'Acompte reçu'}
           </button>
-          <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});showSingleEventSuivi(${ev.id})">
+          <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="markPaidSuivi(${ev.id},!${ev.paid})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
           <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
@@ -3644,59 +3644,48 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">🔗 Lien client</button>
         </div>
       </div>
-      ${isPast?(()=>{
-        const hasCocktailsForRetour=(ev.cocktails||[]).length>0;
-        const alreadyDone=ev.stockRetourDone||false;
-        const canArchive=ev.paid&&(alreadyDone||!hasCocktailsForRetour);
-        if(!hasCocktailsForRetour){
-          // Pas de cocktails : juste un bouton "Terminer" conditionné au paiement
-          return`<div style="margin-top:8px;padding:10px 14px;border-top:1px solid var(--border)">
-            <button class="btn btn-sm ${alreadyDone?'btn-primary':'btn-ghost'}" style="width:100%;${alreadyDone?'':'border-color:#4ade80;color:#4ade80;opacity:${ev.paid?1:.4}'}" onclick="${ev.paid?`archiveFromSuivi(${ev.id})`:'toast(\"Marquez d\\'abord la prestation comme payée\")'}" ${!ev.paid&&!alreadyDone?'':''}">
-              ${alreadyDone?'✓ Archivé':'Valider et archiver'}
-            </button>
-          </div>`;
-        }
-        // Section stock retour
+      ${(isPast&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0)?(()=>{
         const ingredients={};
         (ev.cocktails||[]).forEach(cfg=>{
           const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
-          const qty=cfg.qty||0;
           (c.ingredients||[]).forEach(ing=>{
             const key=(ing.brand||'')+'||'+ing.productType;
-            if(!ingredients[key])ingredients[key]={label:`${ing.brand?ing.brand+' ':''}${ing.productType}`,unit:ing.unit||'cl',needed:0};
-            ingredients[key].needed+=ing.qty*qty;
+            if(!ingredients[key])ingredients[key]={label:`${ing.brand?ing.brand+' ':''}${ing.productType}`,unit:ing.unit||'cl'};
+            ingredients[key].needed=(ingredients[key].needed||0)+ing.qty*(cfg.qty||0);
           });
         });
         const rows=Object.entries(ingredients);
         return`<div style="margin-top:8px;padding:10px 14px;border-top:1px solid var(--border)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:600">Stock retour</div>
-            ${alreadyDone?`<span style="font-size:10px;color:var(--green)">✓ Réinjecté</span>`:''}
-          </div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:600;margin-bottom:8px">Stock retour</div>
           ${rows.length?`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
-            ${rows.map(([key,{label,unit,needed}])=>{
-              const savedVal=(ev.stockRetour||{})[key]||'';
-              return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
-                <span style="flex:1;color:var(--text2)">${label}</span>
-                <input type="number" min="0" step="0.1" placeholder="retour" value="${savedVal}"
-                  style="width:80px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right"
-                  onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
-                <span style="font-size:10px;color:var(--text3);width:20px">${unit}</span>
-              </div>`;
-            }).join('')}
+            ${rows.map(([key,{label,unit}])=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+              <span style="flex:1;color:var(--text2)">${label}</span>
+              <input type="number" min="0" step="0.1" placeholder="0" value="${(ev.stockRetour||{})[key]||''}"
+                style="width:75px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right"
+                onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
+              <span style="font-size:10px;color:var(--text3);width:22px">${unit}</span>
+            </div>`).join('')}
           </div>`:''}
-          <div style="display:flex;gap:6px;align-items:center">
-            <button class="btn btn-sm ${alreadyDone?'btn-primary':'btn-ghost'}" style="flex:1;${!ev.paid&&!alreadyDone?'opacity:.45;':''}${alreadyDone?'':'border-color:#4ade80;color:#4ade80'}" onclick="${ev.paid||alreadyDone?`injectStockRetour(${ev.id})`:'toast(\"Marquez d\\'abord la prestation comme payée\")'}">
-              ${alreadyDone?'✓ Archivé (réinjecté)':'Réinjecter et archiver'}
-            </button>
-          </div>
-          ${!ev.paid&&!alreadyDone?`<div style="font-size:10px;color:var(--text3);margin-top:6px">⚠ Marquez la prestation comme payée d'abord</div>`:''}
+          <button class="btn btn-sm btn-ghost" style="width:100%;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="${ev.paid?`injectStockRetour(${ev.id})`:'toast(\"Marquez d\\'abord la prestation comme payée\")'}">
+            Réinjecter en stock
+          </button>
+          ${!ev.paid?`<div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center">Marquez la prestation comme payée pour valider</div>`:''}
         </div>`;
       })():''}`;
     })()}
   </div>`;
 
   el.innerHTML=html;
+}
+
+function markPaidSuivi(evId, paid){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  ev.paid=paid;
+  // Pas de cocktails → archive auto dès que payé
+  if(paid&&!(ev.cocktails||[]).length) ev.stockRetourDone=true;
+  save();cloudPush();
+  showSingleEventSuivi(evId);
+  if(ev.paid&&ev.stockRetourDone){renderSuivi();renderDashboard();}
 }
 
 function updCARange(){
