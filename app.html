@@ -424,7 +424,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
       Profil
     </div>
-    <!-- Lien admin équipe — visible uniquement pour COMPANY_ADMIN / SUPER_ADMIN -->
+    <!-- Lien admin collaborateurs — visible uniquement pour COMPANY_ADMIN / SUPER_ADMIN -->
     <a href="/company-admin.html" class="nav-item" data-perm-role="COMPANY_ADMIN" style="text-decoration:none">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
         <circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5"/>
@@ -529,10 +529,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     </div>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" id="tab-staff" onclick="showStaffTab('staff')" style="background:var(--gold);color:#000">Équipe</button>
+        <button class="btn btn-ghost" id="tab-staff" onclick="showStaffTab('staff')" style="background:var(--gold);color:#000">Collaborateurs</button>
         <button class="btn btn-ghost" id="tab-dresscode" onclick="showStaffTab('dresscode')">Tenues</button>
       </div>
-      <button class="btn btn-gold" onclick="addStaff()" id="btn-add-staff">+ Ajouter equipe</button>
+      <button class="btn btn-gold" onclick="addStaff()" id="btn-add-staff">+ Ajouter collaborateur</button>
       <button class="btn btn-gold" onclick="addDressCodeModal()" id="btn-add-tenue" style="display:none">+ Ajouter tenue</button>
     </div>
   </div>
@@ -3695,7 +3695,7 @@ function renderDashboard(){
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:8px">Raccourcis utiles</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()">Import CSV catalogue</button>
-            <button class="btn btn-ghost" onclick="goPage('staff')">Configurer mon équipe</button>
+            <button class="btn btn-ghost" onclick="goPage('staff')">Configurer mes collaborateurs</button>
           </div>
         </div>
       </div>`;
@@ -3919,7 +3919,7 @@ function renderDashboard(){
         </div>`:''}
         <div style="display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);justify-content:space-between">
           <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Équipe</div>
+            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Collaborateurs</div>
             <div style="font-size:13px;color:${staffColor};font-weight:500">${staffIcon}</div>
           </div>
           <div style="text-align:center;flex:1">
@@ -5729,7 +5729,7 @@ async function shareShoppingWA(){
           <span style="color:#25D366;font-size:18px"></span>
         </a>`;
       }).join('')
-    : `<p class="ts tm">Ajoute des numéros dans <span style="color:var(--gold);cursor:pointer" onclick="goPage('staff')">Mon équipe ↗</span></p>`;
+    : `<p class="ts tm">Ajoute des numéros dans <span style="color:var(--gold);cursor:pointer" onclick="goPage('staff')">Mes collaborateurs ↗</span></p>`;
 
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
@@ -5737,7 +5737,7 @@ async function shareShoppingWA(){
     <div style="font-size:15px;font-weight:500;margin-bottom:4px"> Envoyer la liste de courses</div>
     <div class="txs tm" style="margin-bottom:14px">${escHtml(ev.name)}</div>
 
-    ${staffWithPhone.length?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Envoyer à un membre de l'équipe</div>
+    ${staffWithPhone.length?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Envoyer à un collaborateur</div>
     <div style="margin-bottom:14px">${staffBtns}</div>`:''}
 
     <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Autres options</div>
@@ -6213,7 +6213,7 @@ function renderPrestation(){
     <!-- ÉQUIPE -->
     <div class="card" style="margin-bottom:14px;padding:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Équipe</div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Collaborateurs</div>
       </div>
       <div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.4fr 1.2fr 100px;gap:8px;font-size:10px;color:var(--text3);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)">
         <div>Nom</div><div>Rôle</div><div>Téléphone</div><div>Disponibilité</div><div></div>
@@ -6379,7 +6379,7 @@ async function sendBriefFromClient(evId){
   const staffNames=(ev.assignedStaff||[]).map(sid=>{
     const s=state.staffItems.find(x=>x.id===sid);
     return s?.name||'Staff';
-  }).join(', ')||'équipe';
+  }).join(', ')||'collaborateurs';
   
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const lines=[
@@ -6592,7 +6592,7 @@ function buildPrestHTML(ev){
         const eventRole=(ev.staffRoles||{})[sid]||s.role||s.type;
         return{name:s.name||s.type,role:eventRole,unavail};
       }).filter(Boolean);
-      if(named.length) return sec('‍ Équipe',`
+      if(named.length) return sec('‍ Collaborateurs',`
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead><tr style="background:#f8f6f2">
             <th style="text-align:left;padding:8px 10px;font-size:10px;color:#aaa;font-weight:400;text-transform:uppercase">Nom</th>
@@ -6610,7 +6610,7 @@ function buildPrestHTML(ev){
         ${ev.barMeters?`<div style="margin-top:10px;font-size:13px;color:#555">Longueur du bar : <strong>${ev.barMeters} mètre(s)</strong></div>`:''}
       `);
       if(!staffRows.length) return '';
-      return sec('‍ Équipe',`
+      return sec('‍ Collaborateurs',`
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead><tr style="background:#f8f6f2">
             <th style="text-align:left;padding:8px 10px;font-size:10px;color:#aaa;font-weight:400;text-transform:uppercase">Rôle</th>
@@ -6964,7 +6964,7 @@ function buildDevisHTML(ev,devisNum){
     <thead><tr><th>Désignation</th><th style="text-align:center">Qté</th><th style="text-align:right">P.U. HT</th><th style="text-align:right">Total HT</th></tr></thead>
     <tbody>
       ${(ev.cocktails||[]).length?`<tr class="section-header"><td colspan="4">Cocktails</td></tr>${(ev.cocktails||[]).map(cfg=>{const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return '';const totalHT=(cfg.qty*c.priceHT).toFixed(2);return`<tr><td class="label-col">${escHtml(c.name)}</td><td style="text-align:center">${cfg.qty}</td><td class="num-col">${c.priceHT.toFixed(2)}€</td><td class="num-col">${totalHT}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${cocktailTotalHT.toFixed(2)}€</td></tr>`:''}
-      ${hasStaffAssignments?(ev.staffAssignments||[]).length?`<tr class="section-header"><td colspan="4">Équipe</td></tr>${(ev.staffAssignments||[]).map(assign=>{let hrs=0;if(assign.arrivalTime&&assign.departureTime){const[ah,am]=(assign.arrivalTime||'00:00').split(':').map(Number);const[dh,dm]=(assign.departureTime||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=(assign.billHT||0)*hrs;return`<tr><td class="label-col">${escHtml(assign.name||'—')} (${escHtml(assign.role||'—')})${assign.arrivalTime&&assign.departureTime?` (${escHtml(assign.arrivalTime)}–${escHtml(assign.departureTime)})`:''}</td><td style="text-align:center">1</td><td class="num-col">${(assign.billHT||0).toFixed(2)}€/h</td><td class="num-col">${totalHT.toFixed(2)}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:'':staffRoles.some(r=>r.n)?`<tr class="section-header"><td colspan="4">Équipe</td></tr>${staffRoles.filter(r=>r.n).map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));const billHT=s?.billHT||0;let hrs=0;let arrTime=r.arr||'';let depTime=r.dep||'';if(arrTime&&depTime){const[ah,am]=(arrTime||'00:00').split(':').map(Number);const[dh,dm]=(depTime||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);return`<tr><td class="label-col">${r.n} ${escHtml(r.label)}${arrTime&&depTime?` (${escHtml(arrTime)}–${escHtml(depTime)})`:''}</td><td style="text-align:center">${r.n}</td><td class="num-col">${billHT.toFixed(2)}€${s?.per==='per event'?'/event':'/h'}</td><td class="num-col">${totalHT.toFixed(2)}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
+      ${hasStaffAssignments?(ev.staffAssignments||[]).length?`<tr class="section-header"><td colspan="4">Collaborateurs</td></tr>${(ev.staffAssignments||[]).map(assign=>{let hrs=0;if(assign.arrivalTime&&assign.departureTime){const[ah,am]=(assign.arrivalTime||'00:00').split(':').map(Number);const[dh,dm]=(assign.departureTime||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=(assign.billHT||0)*hrs;return`<tr><td class="label-col">${escHtml(assign.name||'—')} (${escHtml(assign.role||'—')})${assign.arrivalTime&&assign.departureTime?` (${escHtml(assign.arrivalTime)}–${escHtml(assign.departureTime)})`:''}</td><td style="text-align:center">1</td><td class="num-col">${(assign.billHT||0).toFixed(2)}€/h</td><td class="num-col">${totalHT.toFixed(2)}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:'':staffRoles.some(r=>r.n)?`<tr class="section-header"><td colspan="4">Collaborateurs</td></tr>${staffRoles.filter(r=>r.n).map(r=>{const s=state.staffItems.find(x=>r.types.some(t=>x.type===t));const billHT=s?.billHT||0;let hrs=0;let arrTime=r.arr||'';let depTime=r.dep||'';if(arrTime&&depTime){const[ah,am]=(arrTime||'00:00').split(':').map(Number);const[dh,dm]=(depTime||'00:00').split(':').map(Number);let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;hrs=Math.max(0,mins/60);}const totalHT=billHT*(s?.per==='per event'?r.n:r.n*hrs);return`<tr><td class="label-col">${r.n} ${escHtml(r.label)}${arrTime&&depTime?` (${escHtml(arrTime)}–${escHtml(depTime)})`:''}</td><td style="text-align:center">${r.n}</td><td class="num-col">${billHT.toFixed(2)}€${s?.per==='per event'?'/event':'/h'}</td><td class="num-col">${totalHT.toFixed(2)}€</td></tr>`;}).join('')}<tr class="subtotal"><td colspan="3" style="text-align:right">Sous-total</td><td style="text-align:right">${staffTotalHT.toFixed(2)}€</td></tr>`:''}
       ${ev.barModel||ev.barType?`<tr class="section-header"><td colspan="4">Bar</td></tr><tr><td class="label-col">${escHtml(ev.barModel||'—')} (${escHtml(String(ev.barLength||'—'))}m • ${escHtml(ev.barColor||'—')} • ${escHtml(ev.barStyle||'—')})</td><td></td><td></td><td class="num-col">${(ev.barPrice||0).toFixed(2)}€</td></tr>`:''}
       ${deliveryBill||extraBill?`<tr class="section-header"><td colspan="4">Options & Frais</td></tr>${deliveryBill?`<tr><td class="label-col">Livraison & matériel</td><td></td><td></td><td class="num-col">${deliveryBill.toFixed(2)}€</td></tr>`:''}${extraBill?`<tr><td class="label-col">Frais divers</td><td></td><td></td><td class="num-col">${extraBill.toFixed(2)}€</td></tr>`:''}`:''}
     </tbody>
@@ -7307,7 +7307,7 @@ async function sharePrestation(){
           <span style="flex:1">${escHtml(s.name)} <span style="font-size:10px;color:var(--text3)">${escHtml(s.type||'')}</span></span>
         </label>`;
       }).join('')
-    : `<p style="font-size:12px;color:var(--text3)">Ajoute des numéros dans <span style="color:var(--gold);cursor:pointer" onclick="goPage('staff')">Mon équipe ↗</span></p>`;
+    : `<p style="font-size:12px;color:var(--text3)">Ajoute des numéros dans <span style="color:var(--gold);cursor:pointer" onclick="goPage('staff')">Mes collaborateurs ↗</span></p>`;
   
   const selectedCount=staffCheckboxes.split('input type="checkbox"').length-1;
 
@@ -8464,7 +8464,7 @@ function buildEventSummaryHTML(ev){
       <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
     </div>`:''}
 
-    ${(ev.assignedStaff||[]).length?`<h3 style="margin-top:25px">Équipe assignée</h3>
+    ${(ev.assignedStaff||[]).length?`<h3 style="margin-top:25px">Collaborateurs assignés</h3>
     <div style="display:grid;gap:12px;margin-bottom:20px">
       ${(ev.assignedStaff||[]).map(sid=>{
         const s=state.staffItems.find(x=>x.id===sid);
@@ -10072,8 +10072,8 @@ const I18N={
     // Nav
     nav_dashboard:'Tableau de bord',nav_catalogue:'Catalogue',nav_cocktails:'Cocktails',
     nav_events:'Événements',nav_suivi:'Suivi',nav_historique:'Historique',
-    nav_planning:'Planning',nav_staff:'Mon équipe',nav_clients:'Clients',nav_profile:'Profil',
-    nav_bar:'Bar',nav_prestation:'Prestation',nav_team:'Équipe',
+    nav_planning:'Planning',nav_staff:'Mes collaborateurs',nav_clients:'Clients',nav_profile:'Profil',
+    nav_bar:'Bar',nav_prestation:'Prestation',nav_team:'Collaborateurs',
     // Topbar
     save:'Sauvegardé',
     btn_new_event:'+ Nouvel événement',btn_back:'← Retour',
@@ -10083,7 +10083,7 @@ const I18N={
     btn_save:'Enregistrer',btn_cancel:'Annuler',btn_delete:'Supprimer',
     btn_edit:'Modifier',btn_duplicate:'Dupliquer',btn_close:'Fermer',
     btn_copy:'Copier',btn_save_draft:'Sauvegarder',
-    btn_add_staff:'+ Ajouter equipe',btn_add_client:'+ Ajouter un client',btn_add_event:'+ Ajouter un événement',
+    btn_add_staff:'+ Ajouter collaborateur',btn_add_client:'+ Ajouter un client',btn_add_event:'+ Ajouter un événement',
     empty_staff:'Aucun staff',empty_client:'Aucun client',empty_cocktail:'Aucun cocktail',empty_event:'Aucun événement',
     empty_supplier:'Aucun prestataire',empty_dresscode:'Aucune tenue',empty_contact:'Aucun contact',
     yes:'Oui',no:'Non',
@@ -10389,7 +10389,7 @@ function applyLang(){
 
   // Update nav section headers
   const secs=document.querySelectorAll('.nav-sec');
-  const secLabels={fr:['Bar','Équipe','Prestation'],en:['Bar','Team','Events'],es:['Bar','Equipo','Eventos']};
+  const secLabels={fr:['Bar','Collaborateurs','Prestation'],en:['Bar','Team','Events'],es:['Bar','Equipo','Eventos']};
   const labels=secLabels[lang]||secLabels.fr;
   secs.forEach((s,i)=>{if(labels[i])s.textContent=labels[i];});
 
@@ -10413,7 +10413,7 @@ function applyLang(){
   const textMap={
     'Aucun staff':'empty_staff','Aucun client':'empty_client','Aucun cocktail':'empty_cocktail','Aucun événement':'empty_event',
     'Aucun prestataire':'empty_supplier','Aucune tenue':'empty_dresscode','Aucun contact':'empty_contact',
-    'Ajouter':'btn_add','Ajouter equipe':'btn_add_staff','Ajouter un client':'btn_add_client','Ajouter un événement':'btn_add_event',
+    'Ajouter':'btn_add','Ajouter collaborateur':'btn_add_staff','Ajouter un client':'btn_add_client','Ajouter un événement':'btn_add_event',
     'Modifier':'btn_edit','Supprimer':'btn_delete','Annuler':'btn_cancel','Enregistrer':'btn_save',
     'Nouveau cocktail':'btn_new_cocktail','Nouvel événement':'btn_new_event',
     'Oui':'yes','Non':'no','Sauvegarder':'btn_save_draft','Copier':'btn_copy','Fermer':'btn_close'
@@ -10733,7 +10733,7 @@ window.addSupplierFromOnboarding = function(supplier) {
     <!-- STEP 4 : Staff -->
     <div class="ob-step" id="ob-step-4" style="display:none">
       <div class="ob-icon">=</div>
-      <h2 class="ob-title">Ton equipe</h2>
+      <h2 class="ob-title">Mes collaborateurs</h2>
       <p class="ob-subtitle">Ajoute tes 1ers barmen / serveuses avec leurs tarifs horaires.</p>
 
       <div class="ob-field">
