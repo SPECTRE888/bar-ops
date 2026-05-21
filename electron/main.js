@@ -129,17 +129,24 @@ function get(url) {
 
 function download(url, dest) {
   return new Promise((resolve, reject) => {
-    const follow = (u) => {
+    const follow = (u, redirects) => {
+      if (redirects > 10) return reject(new Error('Trop de redirections'))
       https.get(u, { headers: { 'User-Agent': 'Bar-Ops-Updater' } }, (res) => {
-        if (res.statusCode === 301 || res.statusCode === 302)
-          return follow(res.headers.location)
+        if ([301, 302, 303, 307, 308].includes(res.statusCode)) {
+          res.resume() // consommer le corps pour libérer la connexion
+          return follow(res.headers.location, redirects + 1)
+        }
+        if (res.statusCode !== 200) {
+          res.resume()
+          return reject(new Error(`HTTP ${res.statusCode} lors du téléchargement`))
+        }
         const f = fs.createWriteStream(dest)
         res.pipe(f)
-        f.on('finish', () => f.close(resolve))
+        f.on('finish', () => f.close(() => resolve()))
         f.on('error', reject)
       }).on('error', reject)
     }
-    follow(url)
+    follow(url, 0)
   })
 }
 
@@ -216,6 +223,7 @@ async function checkAndUpdate() {
 
   } catch (err) {
     console.error('[updater]', err?.message || err)
+    toast(`Mise à jour échouée : ${err?.message || err}`)
   }
 }
 
