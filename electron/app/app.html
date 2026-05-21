@@ -657,11 +657,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <div id="page-historique" class="page">
   <div class="topbar">
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-ghost" id="tab-hist-prest" onclick="showHistTab('prestations')" style="background:var(--gold);color:#000">Prestations</button>
-      <button class="btn btn-ghost" id="tab-hist-devis" onclick="showHistTab('devis')">Devis</button>
+      <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
+      <button class="btn btn-ghost" id="tab-hist-prest" onclick="showHistTab('prestations')" style="background:var(--gold);color:#000">Prestations</button>
+      <button class="btn btn-ghost" id="tab-hist-devis" onclick="showHistTab('devis')">Devis</button>
     </div>
   </div>
   <div class="content" id="historique-content"></div>
@@ -4174,15 +4174,17 @@ function showEvList(){
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
-        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.location?escHtml(ev.location):'—'}</div>
+        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.address||ev.location?escHtml(ev.address||ev.location):'—'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${ev.pax||'?'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
-        <div><span style="font-size:9px;color:${statusColor};text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);white-space:nowrap">${statusLabel}</span></div>
-        <div style="display:flex;gap:5px;justify-content:flex-end">
+        <div>
+          <span onclick="event.stopPropagation();updEvField(${ev.id},'confirmed',!${!!ev.confirmed});showEvList()" title="Cliquer pour changer" style="font-size:9px;cursor:pointer;color:${ev.confirmed?'#4ade80':statusColor};text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);padding:3px 7px;border-radius:3px;border:1px solid ${ev.confirmed?'#4ade80':ev.status==='suivi'?'var(--gold-border)':'var(--border)'};white-space:nowrap;transition:.15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">${ev.confirmed?'Confirmé':statusLabel}</span>
+        </div>
+        <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delEv(${ev.id})" style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px">×</button>
+          <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:22px;height:22px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
     }).join('')}
@@ -4227,15 +4229,17 @@ function filterEvList(){
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
-        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.location?escHtml(ev.location):'—'}</div>
+        <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ev.address||ev.location?escHtml(ev.address||ev.location):'—'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${ev.pax||'?'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
-        <div><span style="font-size:9px;color:${statusColor};text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);white-space:nowrap">${statusLabel}</span></div>
-        <div style="display:flex;gap:5px;justify-content:flex-end">
+        <div>
+          <span onclick="event.stopPropagation();updEvField(${ev.id},'confirmed',!${!!ev.confirmed});showEvList()" title="Cliquer pour changer" style="font-size:9px;cursor:pointer;color:${ev.confirmed?'#4ade80':statusColor};text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);padding:3px 7px;border-radius:3px;border:1px solid ${ev.confirmed?'#4ade80':ev.status==='suivi'?'var(--gold-border)':'var(--border)'};white-space:nowrap;transition:.15s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">${ev.confirmed?'Confirmé':statusLabel}</span>
+        </div>
+        <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delEv(${ev.id})" style="width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;font-size:13px">×</button>
+          <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:22px;height:22px;padding:0;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
     }).join('')}
@@ -7649,16 +7653,30 @@ function sendSupplierOrder(supplierName,method){
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${u}`}).join('\n');
-  const contact=sup.contact?'Bonjour '+sup.contact+',':'Bonjour,';
+  // Greeting personalisé : tutoiement ou vouvoiement, avec prénom du contact
+  let greeting;
+  if(sup.contact){
+    const prenom=sup.contact.split(' ')[0];
+    if(sup.tutoie){
+      greeting=`Bonjour ${prenom},\n\nJ'espère que tu vas bien !`;
+    }else{
+      greeting=`Bonjour ${prenom},\n\nJ'espère que vous allez bien.`;
+    }
+  }else{
+    greeting='Bonjour,';
+  }
+  const closing=sup.tutoie?'\n\nMerci d\'avance, n\'hésite pas si tu as des questions.\n\nCordialement':'\n\nMerci de bien vouloir confirmer la disponibilité.\n\nCordialement';
 
   // Close modal first
   document.querySelectorAll('[style*="position:fixed"][style*="inset:0"]').forEach(m=>m.remove());
 
   // Open mail/whatsapp IMMEDIATELY
   if(method==='email'&&sup.email){
-    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — '+sup.contact:''))+'&body='+encodeURIComponent(contact+'\n\nVoici notre commande :\n\n'+lines+'\n\nMerci de confirmer.\nCordialement');
+    const body=greeting+'\n\nVoici notre commande :\n\n'+lines+closing;
+    window.location.href='mailto:'+sup.email+'?subject='+encodeURIComponent('Commande — '+supplierName+(sup.contact?' — att. '+sup.contact.split(' ')[0]:''))+'&body='+encodeURIComponent(body);
   }else if(method==='whatsapp'&&sup.phone){
-    window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(contact+'\n\nCommande :\n\n'+lines+'\n\nMerci !'), '_blank');
+    const body=greeting+'\n\nCommande :\n\n'+lines+(sup.tutoie?'\n\nMerci !':'\n\nMerci de confirmer.');
+    window.open('https://wa.me/'+sup.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(body), '_blank');
   }
 
   // After 5 seconds, show confirmation popup
@@ -7887,26 +7905,28 @@ function renderSuppliers(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
     return;
   }
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">${state.suppliers.map(s=>{
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">${state.suppliers.map(s=>{
     const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
-    const phone=s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:11px" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">📞 ${escHtml(s.phone)}</a>`:`<span style="color:var(--text3);font-size:11px">📞 —</span>`;
-    const email=s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">✉ ${escHtml(s.email)}</a>`:`<span style="color:var(--text3);font-size:11px">✉ —</span>`;
-    return`<div class="c-card" style="display:flex;flex-direction:column;gap:8px;padding:12px">
+    const phone=s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:12px" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">📞 ${escHtml(s.phone)}</a>`:`<span style="color:var(--text3);font-size:12px">📞 —</span>`;
+    const email=s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">✉ ${escHtml(s.email)}</a>`:`<span style="color:var(--text3);font-size:12px">✉ —</span>`;
+    const tutoieBadge=s.tutoie?`<span style="font-size:9px;color:var(--text3);background:var(--surface2);padding:2px 6px;border-radius:4px;margin-left:4px">tutoiement</span>`:'';
+    return`<div class="c-card" style="display:flex;flex-direction:column;gap:10px;padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}</div>
-          ${s.categories?.length?`<div style="font-size:9px;color:var(--text3);margin-top:2px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.categories.map(escHtml).join(' · ')}</div>`:''}
+          <div style="font-size:15px;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}</div>
+          ${s.contact?`<div style="font-size:12px;color:var(--text2);margin-top:3px">👤 ${escHtml(s.contact)}${tutoieBadge}</div>`:''}
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.05em">${s.categories.map(escHtml).join(' · ')}</div>`:''}
         </div>
-        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:22px;height:22px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px">×</button>
+        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:24px;height:24px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text3)" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+      <div style="display:flex;flex-direction:column;gap:5px;flex:1">
         <div>${phone}</div>
         <div style="overflow:hidden">${email}</div>
-        ${s.address?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${escHtml(s.address)}</div>`:''}
+        ${s.address?`<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${escHtml(s.address)}</div>`:''}
       </div>
-      <div style="display:flex;gap:5px;border-top:1px solid var(--border);padding-top:8px">
-        <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})" style="font-size:10px;padding:4px 8px">Modifier</button>
-        <button class="btn btn-sm btn-gold" style="margin-left:auto;font-size:10px;padding:4px 8px;white-space:nowrap" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` <span style="background:rgba(0,0,0,.25);border-radius:8px;padding:1px 5px;font-size:9px">${orderCount}</span>`:''}</button>
+      <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
+        <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})" style="font-size:11px;padding:5px 10px">Modifier</button>
+        <button class="btn btn-sm btn-gold" style="margin-left:auto;font-size:11px;padding:5px 10px;white-space:nowrap" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` <span style="background:rgba(0,0,0,.25);border-radius:8px;padding:1px 5px;font-size:9px">${orderCount}</span>`:''}</button>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -7925,7 +7945,16 @@ async function addSupplier(){
       <div class="field"><label>Téléphone</label><input id="sp-phone" placeholder="+33 6 00 00 00 00" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" placeholder="commande@..." type="email"/></div>
     </div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
+    <div class="g2">
+      <div class="field"><label>Contact (prénom)</label><input id="sp-contact" placeholder="Jérôme" /></div>
+      <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+          <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0"/>
+          <span style="font-size:12px">Tutoiement</span>
+          <span style="font-size:10px;color:var(--text3)">(sinon vouvoiement)</span>
+        </label>
+      </div>
+    </div>
     <div class="field"><label>Adresse</label><input id="sp-address" placeholder="12 rue du Marché, Paris"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
@@ -7954,7 +7983,16 @@ function editSupplier(id){
       <div class="field"><label>Téléphone</label><input id="sp-phone" value="${escHtml(s.phone||'')}" type="tel"/></div>
       <div class="field"><label>Email</label><input id="sp-email" value="${escHtml(s.email||'')}" type="email"/></div>
     </div>
-    <div class="field"><label>Contact (nom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jean Martin" /></div>
+    <div class="g2">
+      <div class="field"><label>Contact (prénom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jérôme" /></div>
+      <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+          <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0" ${s.tutoie?'checked':''}/>
+          <span style="font-size:12px">Tutoiement</span>
+          <span style="font-size:10px;color:var(--text3)">(sinon vouvoiement)</span>
+        </label>
+      </div>
+    </div>
     <div class="field"><label>Adresse</label><input id="sp-address" value="${escHtml(s.address||'')}"/></div>
     <div class="field"><label>Catégories livrées</label>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
@@ -7979,7 +8017,8 @@ async function saveSupplier(id){
     name,
     phone:document.getElementById('sp-phone')?.value.trim()||'',
     email:document.getElementById('sp-email')?.value.trim()||'',
-    address:document.getElementById('sp-address')?.value.trim()||'',
+    contact:document.getElementById('sp-contact')?.value.trim()||'',
+    tutoie:document.getElementById('sp-tutoie')?.checked||false,
     address:document.getElementById('sp-address')?.value.trim()||'',
     notes:document.getElementById('sp-notes')?.value.trim()||'',
     categories
@@ -9232,8 +9271,8 @@ function renderProfile(){
       <div class="card" style="display:flex;flex-direction:column;gap:8px">
         <div class="ctitle">Logo & Signature</div>
         <div id="prof-logo-view" style="flex:1;display:flex;flex-direction:column;gap:8px">
-          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:8px;min-height:80px">
-            ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:80px;object-fit:contain"/>`:`<div style="font-size:11px;color:var(--text3)">Aucun logo</div>`}
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:12px;min-height:140px">
+            ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:130px;object-fit:contain"/>`:`<div style="font-size:11px;color:var(--text3)">Aucun logo</div>`}
           </div>
           <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
         </div>
