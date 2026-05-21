@@ -37,6 +37,9 @@ jobs:
       env:
         CSC_IDENTITY_AUTO_DISCOVERY: false
 
+    - name: List dist output
+      run: ls -lh dist/ || true
+
     - name: Build PKG installer
       run: |
         VERSION="${GITHUB_REF_NAME#v}"
@@ -45,16 +48,16 @@ jobs:
         # Signer l'app en ad-hoc avant packaging
         codesign --force --deep --sign - --timestamp=none "$APP_PATH"
 
-        # Créer le PKG
+        # Créer le PKG (nom sans espace)
         pkgbuild \
           --root "dist/mac-arm64" \
           --install-location "/Applications" \
           --scripts "scripts/pkg" \
           --identifier "com.barops.app" \
           --version "$VERSION" \
-          "dist/Bar-Ops-${VERSION}-Installer.pkg"
+          "dist/BarOps-${VERSION}-Installer.pkg"
 
-        echo "✅ PKG créé: dist/Bar-Ops-${VERSION}-Installer.pkg"
+        echo "✅ PKG créé: dist/BarOps-${VERSION}-Installer.pkg"
 
     - name: Create release & upload assets
       run: |
@@ -62,16 +65,16 @@ jobs:
         TAG="$GITHUB_REF_NAME"
 
         echo "=== dist/ contents ==="
-        ls -lh dist/ || true
+        ls -lh dist/
 
-        # Collect files that actually exist
+        # Collecter uniquement les fichiers qui existent
         FILES=()
         for f in \
-          "dist/Bar-Ops-${VERSION}-Installer.pkg" \
-          "dist/Bar Ops-${VERSION}-arm64-mac.zip" \
-          "dist/Bar Ops-${VERSION}-arm64-mac.zip.blockmap" \
-          "dist/Bar Ops-${VERSION}-arm64.dmg" \
-          "dist/Bar Ops-${VERSION}-arm64.dmg.blockmap" \
+          "dist/BarOps-${VERSION}-Installer.pkg" \
+          "dist/BarOps-${VERSION}-arm64-mac.zip" \
+          "dist/BarOps-${VERSION}-arm64-mac.zip.blockmap" \
+          "dist/BarOps-${VERSION}-arm64.dmg" \
+          "dist/BarOps-${VERSION}-arm64.dmg.blockmap" \
           "dist/latest-mac.yml"
         do
           if [ -f "$f" ]; then
