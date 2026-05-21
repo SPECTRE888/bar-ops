@@ -540,14 +540,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <div id="staff-section">
       <div id="staff-content"></div>
       <div id="staff-empty" class="empty" style="display:none"><div class="empty-icon">‍</div><p>Aucun membre d'équipe.</p></div>
-      <div id="staff-custom-roles-panel" style="margin-top:18px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:10px">Catégories personnalisées</div>
-        <div id="staff-custom-roles-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="staff-new-role-input" class="input-md" style="flex:1;max-width:220px;font-size:12px" placeholder="Nouveau rôle..." onkeydown="if(event.key==='Enter')addStaffCustomRole()"/>
-          <button class="btn btn-sm btn-ghost" onclick="addStaffCustomRole()">+ Ajouter</button>
-        </div>
-      </div>
     </div>
 
     <div id="dresscode-section" style="display:none">
@@ -2650,9 +2642,9 @@ function renderStaff(){
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     // Ligne contact
     const infos=[];
-    if(s.phone) infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">Tél. ${escHtml(s.phone)}</a>`);
+    if(s.age)    infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.age)} ans</span>`);
+    if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">Tél. ${escHtml(s.phone)}</a>`);
     if(s.address) infos.push(`<span style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${escHtml(s.address)}</span>`);
-    if(canCost&&s.billHT) infos.push(`<span style="font-size:11px;color:var(--gold);font-weight:500">${s.billHT}€/h</span>`);
     // Chips physiques (ligne visible sans ouvrir) — sans emoji
     const chip=(label,val)=>`<span style="font-size:10px;padding:1px 7px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text3);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text4);font-size:9px;letter-spacing:.04em;text-transform:uppercase;margin-right:3px">${label}</span>${escHtml(val)}</span>`;
     const phys=[];
@@ -2682,10 +2674,15 @@ function renderStaff(){
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Identité</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:6px">
           <div class="field"><label>Nom / Prénom</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
           <div class="field"><label>Rôle</label><select onchange="updStaff(${s.id},'type',this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}</select></div>
           <div class="field"><label>Âge</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
+        </div>
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:10px;padding:6px 8px;border-radius:4px;background:rgba(255,255,255,.02);border:1px solid var(--border)">
+          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);margin-right:2px">Rôles custom</span>
+          ${(state.staffCustomRoles||[]).map(r=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--text3)">${escHtml(r)}<button onclick="event.stopPropagation();delStaffCustomRole(${JSON.stringify(r)})" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:13px;line-height:1;padding:0">×</button></span>`).join('')}
+          <input id="staff-new-role-input-${s.id}" style="border:none;background:none;color:var(--text2);font-size:11px;outline:none;width:120px;min-width:80px" placeholder="+ nouveau rôle..." onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRole(${s.id})}"/>
         </div>
         <div class="g2" style="margin-bottom:10px">
           <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
@@ -2718,29 +2715,21 @@ function renderStaff(){
     </div>`;
   }).join('')+`</div>`;
   filterStaff();
-  renderStaffCustomRoles();
 }
 
-function renderStaffCustomRoles(){
-  const el=document.getElementById('staff-custom-roles-list');if(!el)return;
-  const roles=state.staffCustomRoles||[];
-  if(!roles.length){el.innerHTML=`<span style="font-size:11px;color:var(--text4);font-style:italic">Aucune catégorie personnalisée</span>`;return;}
-  el.innerHTML=roles.map(r=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:3px;border:1px solid var(--border2);background:var(--surface3,var(--surface));color:var(--text2)">${escHtml(r)}<button onclick="delStaffCustomRole(${JSON.stringify(r)})" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:12px;line-height:1;padding:0" title="Supprimer">×</button></span>`).join('');
-}
-
-function addStaffCustomRole(){
-  const inp=document.getElementById('staff-new-role-input');if(!inp)return;
+function addStaffCustomRole(staffId){
+  const inp=document.getElementById(`staff-new-role-input-${staffId}`);if(!inp)return;
   const v=inp.value.trim();if(!v)return;
   if(!state.staffCustomRoles)state.staffCustomRoles=[];
   if([...STAFF_ROLES,...state.staffCustomRoles].map(r=>r.toLowerCase()).includes(v.toLowerCase())){inp.value='';return;}
   state.staffCustomRoles.push(v);
   inp.value='';
-  save();renderStaffCustomRoles();renderStaff();
+  save();renderStaff();
 }
 
 function delStaffCustomRole(name){
   state.staffCustomRoles=(state.staffCustomRoles||[]).filter(r=>r!==name);
-  save();renderStaffCustomRoles();renderStaff();
+  save();renderStaff();
 }
 
 // ════════════════════════════════════════════════════════
