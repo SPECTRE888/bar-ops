@@ -29,13 +29,12 @@ jobs:
     - name: Clean existing release
       run: |
         TAG="${GITHUB_REF_NAME}"
-        # Supprimer les assets de la release existante (sans toucher au tag)
-        RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$TAG --jq '.id' 2>/dev/null || echo "")
-        if [ -n "$RELEASE_ID" ]; then
-          echo "Deleting release $RELEASE_ID for tag $TAG"
-          gh api -X DELETE repos/${{ github.repository }}/releases/$RELEASE_ID
+        RELEASE_ID=$(gh api "repos/${{ github.repository }}/releases/tags/${TAG}" --jq '.id' 2>/dev/null || true)
+        if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+          echo "Deleting release ${RELEASE_ID} for tag ${TAG}"
+          gh api -X DELETE "repos/${{ github.repository }}/releases/${RELEASE_ID}"
         else
-          echo "No existing release for $TAG"
+          echo "No existing release for ${TAG}, continuing"
         fi
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
