@@ -421,7 +421,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
         <circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/>
         <path d="M13 8v4M11 10h4" stroke-width="1.4"/>
       </svg>
-      Accès équipe
+      Collaborateurs
     </a>
 
   </nav>
@@ -1999,10 +1999,11 @@ function commandProductFromLowStock(pid){
   const existing=state.orders[sKey].find(x=>x.pid===pid);
   if(existing)existing.qty+=qty;
   else state.orders[sKey].push({pid,name:p.productType,brand:p.brand||'',code:p.supplierCode||'',unit:p.unit||'',qty});
-  inp.value='';
+  inp.value='';inp.style.borderColor='';
   save();
-  const supplier=state.suppliers?.find(s=>s.id===sKey||s.name===sKey);
-  toast(`✓ ${qty} × ${p.productType} → ${supplier?.name||sKey}`);
+  // Ouvrir directement le résumé de commande pour envoyer par WhatsApp / Mail
+  const supplierName=state.suppliers?.find(s=>s.id===sKey||s.name===sKey)?.name||sKey;
+  openSupplierOrder(supplierName);
 }
 
 function renderCatalogue(){
@@ -4264,6 +4265,11 @@ function newEv(){
   if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canCreateEvents'))return;
   editEvId=null;showEvForm({});
 }
+function newEvForClient(clientId){
+  if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canCreateEvents'))return;
+  editEvId=null;showEvForm({clientId});
+  goPage('events');
+}
 function editEv(id){editEvId=id;showEvForm(state.events.find(x=>x.id===id)||{});}
 
 function showEvForm(ev){
@@ -5930,8 +5936,9 @@ function addToSupplierBasket(evId,productType,brand,unit,qty,supplierEmail,suppl
     name:productType,brand:brand||productType,code:supplierCode,unit,qty:qtyNum,evId,timestamp:Date.now()
   });
   save();
-  alertModal(`✓ Ajouté au panier ${supplierName||supplierEmail}`);
   renderSuppliers();
+  // Ouvrir directement le résumé pour envoyer par WhatsApp / Mail
+  openSupplierOrder(supplierKey);
 }
 
 function renderShopping(){
@@ -7452,53 +7459,44 @@ function renderClients(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun client. Crée un profil réutilisable pour tes clients récurrents.</p></div>`;
     return;
   }
-  el.innerHTML=state.clients.map(c=>{
-    const evCount=state.events.filter(ev=>ev.clientId===c.id).length;
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.clients.map(c=>{
     const isOpen=c._open===true;
-    const subtitle=[c.company,c.phone,c.email].filter(Boolean).map(escHtml).join(' · ');
-    return`<div class="card client-card" style="margin-bottom:8px;padding:0;overflow:hidden">
-      <!-- Header — always visible -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:${isOpen?'var(--surface2)':'var(--surface)'}" onclick="toggleClient(${c.id})">
-        <div style="min-width:0">
-          <div style="font-size:14px;font-weight:500">${escHtml(c.name||'Sans nom')}</div>
-          ${subtitle?`<div class="txs tm" style="margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtitle}</div>`:''}
-          <div class="txs tm" style="margin-top:2px">${evCount} ${evCount!==1?t('client_events_pl'):t('client_events')}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          ${c.phone?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" style="color:#25D366;text-decoration:none;font-size:16px"></a>`:''}
-          <span style="color:var(--text3);font-size:12px">${isOpen?'':''}</span>
+    const initials=(c.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
+    const infos=[];
+    if(c.company) infos.push(`<span style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase">${escHtml(c.company)}</span>`);
+    if(c.address) infos.push(`<span style="font-size:11px;color:var(--text3)">📍 ${escHtml(c.address)}</span>`);
+    if(c.email) infos.push(`<a href="mailto:${escHtml(c.email)}" onclick="event.stopPropagation()" title="${escHtml(c.email)}" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">✉ ${escHtml(c.email.length>26?c.email.slice(0,24)+'…':c.email)}</a>`);
+    if(c.phone) infos.push(`<a href="tel:${escHtml(c.phone)}" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">📞 ${escHtml(c.phone)}</a>`);
+    if(c.notes) infos.push(`<span style="font-size:10px;color:var(--text3);font-style:italic" title="${escHtml(c.notes)}">— ${escHtml(c.notes.length>30?c.notes.slice(0,28)+'…':c.notes)}</span>`);
+    return`<div class="card client-card" style="padding:0;overflow:hidden;border-radius:var(--radius)">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold-bg),rgba(196,164,107,0.06));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0;letter-spacing:.04em">${initials}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(c.name||'Sans nom')}</div>
+        ${infos.length?`<div style="display:flex;align-items:center;flex-wrap:nowrap;overflow:hidden;gap:0;flex:1;min-width:0">${sep}${infos.join(sep)}</div>`:'<div style="flex:1"></div>'}
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+          ${c.phone?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm" style="background:#25D366;color:#fff;border-color:#25D366;padding:4px 9px;font-size:10px">WA</a>`:''}
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();toggleClient(${c.id})" style="padding:4px 9px;font-size:10px">${isOpen?'Fermer':'✏'}</button>
+          <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})" style="padding:4px 9px;font-size:10px">+ Presta</button>
         </div>
       </div>
-      <!-- Expanded edit form -->
-      ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border)">
+      ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
         <div class="g2" style="margin-bottom:10px">
-          <div class="field"><label>Nom / Prénom</label>
-            <input value="${escHtml(c.name||'')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/>
-          </div>
-          <div class="field"><label>Société</label>
-            <input value="${escHtml(c.company||'')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/>
-          </div>
+          <div class="field"><label>Nom / Prénom</label><input value="${escHtml(c.name||'')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/></div>
+          <div class="field"><label>Société</label><input value="${escHtml(c.company||'')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/></div>
         </div>
         <div class="g2" style="margin-bottom:10px">
-          <div class="field"><label>Email</label>
-            <input type="email" value="${escHtml(c.email||'')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/>
-          </div>
-          <div class="field"><label>Téléphone</label>
-            <input value="${escHtml(c.phone||'')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/>
-          </div>
+          <div class="field"><label>Email</label><input type="email" value="${escHtml(c.email||'')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/></div>
+          <div class="field"><label>Téléphone</label><input value="${escHtml(c.phone||'')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/></div>
         </div>
-        <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label>
-          <input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/>
-        </div>
-        <div class="field" style="margin-bottom:6px"><label>Notes</label>
-          <input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/>
-        </div>
+        <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label><input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/></div>
+        <div class="field" style="margin-bottom:10px"><label>Notes</label><input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/></div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">Supprimer</button>
         </div>
       </div>`:''}
     </div>`;
-  }).join('');
+  }).join('')+`</div>`;
   filterClients();
 }
 
