@@ -3962,115 +3962,73 @@ function renderDashboard(){
     html+=`</div></div>`;
   }
   
-  // ═══ UPCOMING EVENTS GRID (MINI TILES) ═══
+  // ═══ UPCOMING EVENTS LIST ═══
   if(upcoming.length>0){
     html+=`<div style="margin-bottom:16px">
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Événements à venir</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">`;
-    
-    upcoming.slice(0,12).forEach(ev=>{
+      <div style="display:grid;grid-template-columns:90px 2fr 1.2fr 52px 52px 52px 52px 90px 80px;column-gap:12px;padding:6px 14px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px">
+        <div>Date</div><div>Événement</div><div>Client</div><div style="text-align:center">Équipe</div><div style="text-align:center">Stock</div><div style="text-align:center">Cokt.</div><div style="text-align:center">Payé</div><div style="text-align:right">CA HT</div><div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">`;
+
+    upcoming.slice(0,16).forEach(ev=>{
       const d=new Date(ev.date);
       const days=Math.ceil((d-now)/(1000*60*60*24));
       const cl=state.clients.find(c=>c.id===ev.clientId);
       const confirmed=(ev.staffConfirmed||[]).length;
       const assigned=(ev.assignedStaff||[]).length;
-      const hasCocktails=(ev.cocktails||[]).length>0;
-      
-      // Stock issues for this event
-      const eventStockIssues=[];
-      // Agréger besoins totaux par produit
+
       const neededMap={};
       (ev.cocktails||[]).forEach(cfg=>{
         const cocktail=state.cocktails.find(x=>x.id===cfg.id);
         if(!cocktail) return;
-        const qty=cfg.qty||0;
         (cocktail.ingredients||[]).forEach(ing=>{
           const key=(ing.brand||'')+'||'+ing.productType;
           neededMap[key]=(neededMap[key]||{ing,total:0});
-          neededMap[key].total+=ing.qty*qty;
+          neededMap[key].total+=ing.qty*(cfg.qty||0);
         });
       });
+      let stockIssues=0;
       Object.values(neededMap).forEach(({ing,total})=>{
         const product=state.products.find(p=>p.productType===ing.productType&&p.brand===ing.brand)||state.products.find(p=>p.productType===ing.productType);
         if(!product||product.stock==null) return;
-        const isConfirmed=ev.stockAllocations&&Object.keys(ev.stockAllocations).some(k=>{
-          const pts=k.split('||');return pts[0]===ing.productType&&pts[1]===(ing.brand||'');
-        });
-        if(isConfirmed) return;
-        const bottlesNeeded=total/(product.qty||1);
-        if(product.stock<bottlesNeeded){
-          const missing=(bottlesNeeded-product.stock).toFixed(1);
-          eventStockIssues.push({productType:ing.productType,brand:ing.brand,missing,stock:product.stock,needed:bottlesNeeded.toFixed(1)});
-        }
+        const isOk=ev.stockAllocations&&Object.keys(ev.stockAllocations).some(k=>{const pts=k.split('||');return pts[0]===ing.productType&&pts[1]===(ing.brand||'');});
+        if(!isOk&&product.stock<total/(product.qty||1)) stockIssues++;
       });
 
-      let staffIcon='✔',staffColor='var(--green)';
-      if(assigned===0){staffIcon='—';staffColor='var(--text3)';}
-      else if(confirmed<assigned){staffIcon='⚠';staffColor='var(--gold)';}
+      const staffColor=assigned===0?'var(--text3)':confirmed>=assigned?'var(--green)':'var(--gold)';
+      const staffTxt=assigned===0?'—':`${confirmed}/${assigned}`;
 
-      let stockIcon='✔',stockColor='var(--green)';
-      if(isAllStockOk(ev)){stockIcon='✔';stockColor='var(--green)';}
-      else if(eventStockIssues.length>0){
-        if(eventStockIssues.length>=3){stockIcon='❌';stockColor='var(--red)';}
-        else {stockIcon='⚠';stockColor='var(--gold)';}
-      }
-      
-      let payIcon='○',payColor='var(--text3)';
-      if(ev.paid){payIcon='✔';payColor='var(--green)';}
-      else if(ev.acompte>0){payIcon='◐';payColor='var(--gold)';}
+      const stockOkAll=isAllStockOk(ev);
+      const stockColor=stockOkAll?'var(--green)':stockIssues>=3?'var(--red)':stockIssues>0?'var(--gold)':'var(--text3)';
+      const stockTxt=stockOkAll?'✔':stockIssues>0?'⚠':'—';
 
-      // Event-specific alerts for this event
+      const payColor=ev.paid?'var(--green)':ev.acompte>0?'var(--gold)':'var(--text3)';
+      const payTxt=ev.paid?'✔':ev.acompte>0?'◐':'○';
+
       const evAlerts=eventAlerts.filter(a=>a.event?.id===ev.id);
-      const hasAlerts=evAlerts.length>0;
-      const hasCriticalAlerts=evAlerts.some(a=>a.severity==='critical');
-      const borderStyle=hasCriticalAlerts?'border-top:2px solid var(--red)':hasAlerts?'border-color:var(--gold-border)':'';
+      const hasCritical=evAlerts.some(a=>a.severity==='critical');
+      const hasWarn=evAlerts.length>0&&!hasCritical;
+      const leftBorder=hasCritical?'border-left:2px solid var(--red)':hasWarn?'border-left:2px solid var(--gold)':'border-left:2px solid transparent';
 
-      html+=`<div class="card" style="padding:10px;cursor:pointer;min-height:180px;display:flex;flex-direction:column;justify-content:space-between;${borderStyle}" onclick="goToEventSuivi(${ev.id})">
+      html+=`<div style="display:grid;grid-template-columns:90px 2fr 1.2fr 52px 52px 52px 52px 90px 80px;column-gap:12px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;cursor:pointer;transition:.15s;${leftBorder}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" onclick="goToEventSuivi(${ev.id})">
         <div>
-          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
-          <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})} • ${days}j</div>
-          ${cl?`<div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">👤 ${escHtml(cl.name)}</div>`:''}
-          <div style="font-size:9px;color:var(--text3);margin-top:4px;display:flex;gap:12px">
-            ${ev.location?`<span>📍 ${escHtml(ev.location)}</span>`:''}
-            <span>👥 ${assigned}</span>
-          </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-            ${ev.paid?`<div style="color:var(--green);font-weight:500">✓ Entièrement payé</div>`:ev.acompte>0?`<div>Acompte: <span style="color:var(--gold);font-weight:500">${ev.acompte}€</span></div>`:'<div style="color:var(--text3)">En attente</div>'}
-          </div>
+          <div style="font-size:11px;color:var(--text2)">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</div>
+          <div style="font-size:9px;color:var(--text3)">${days}j</div>
         </div>
-        ${hasAlerts?`<div style="margin:8px 0;padding:8px;background:${hasCriticalAlerts?'var(--red-bg)':'var(--gold-bg)'};border-left:3px solid ${hasCriticalAlerts?'var(--red)':'var(--gold)'};border-radius:var(--radius);font-size:9px">
-          ${evAlerts.map(a=>{
-            const txt=a.text.includes(' — ')?a.text.split(' — ')[1]:a.text;
-            return `<div style="color:${a.severity==='critical'?'var(--red)':'var(--gold)'}; margin-bottom:3px">
-              ${a.severity==='critical'?'🚨':'⚠️'} ${txt}
-            </div>`;
-          }).join('')}
-        </div>`:''}
-        <div style="display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border);justify-content:space-between">
-          <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Équipe</div>
-            <div style="font-size:13px;color:${staffColor};font-weight:500">${staffIcon}</div>
-          </div>
-          <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Stock</div>
-            <div style="font-size:13px;color:${stockColor};font-weight:500">${stockIcon}</div>
-          </div>
-          <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Cocktails</div>
-            <div style="font-size:13px;color:var(--gold);font-weight:500">${(ev.cocktails||[]).length}</div>
-          </div>
-          <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Payé</div>
-            <div style="font-size:13px;color:${payColor};font-weight:500">${payIcon}</div>
-          </div>
-          <div style="text-align:center;flex:1">
-            <div style="font-size:8px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Retour</div>
-            <div style="font-size:13px;color:${ev.stockRetourDone?'var(--green)':'var(--text3)'};font-weight:500">${ev.stockRetourDone?'✔':'○'}</div>
-          </div>
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
+        <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cl?escHtml(cl.name):'—'}</div>
+        <div style="text-align:center;font-size:11px;color:${staffColor};font-weight:500">${staffTxt}</div>
+        <div style="text-align:center;font-size:13px;color:${stockColor};font-weight:500">${stockTxt}</div>
+        <div style="text-align:center;font-size:11px;color:var(--gold);font-weight:500">${(ev.cocktails||[]).length||'—'}</div>
+        <div style="text-align:center;font-size:13px;color:${payColor};font-weight:500">${payTxt}</div>
+        <div style="text-align:right;font-size:12px;font-weight:${ev.totalRevHT?'600':'400'};color:${ev.totalRevHT?'var(--gold)':'var(--text3)'}">${ev.totalRevHT?fmt(ev.totalRevHT):'—'}</div>
+        <div style="display:flex;justify-content:flex-end">
+          <button onclick="event.stopPropagation();goToEventSuivi(${ev.id})" style="padding:4px 10px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Suivi →</button>
         </div>
       </div>`;
     });
-    
+
     html+=`</div></div>`;
   }
 
@@ -8050,31 +8008,32 @@ function renderSuppliers(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
     return;
   }
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">${state.suppliers.map(s=>{
-    const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
-    const phone=s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:12px" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">📞 ${escHtml(s.phone)}</a>`:`<span style="color:var(--text3);font-size:12px">📞 —</span>`;
-    const email=s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">✉ ${escHtml(s.email)}</a>`:`<span style="color:var(--text3);font-size:12px">✉ —</span>`;
-    const tutoieBadge=s.tutoie?`<span style="font-size:9px;color:var(--text3);background:var(--surface2);padding:2px 6px;border-radius:4px;margin-left:4px">tutoiement</span>`:'';
-    return`<div class="c-card" style="display:flex;flex-direction:column;gap:10px;padding:16px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}</div>
-          ${s.contact?`<div style="font-size:12px;color:var(--text2);margin-top:3px">👤 ${escHtml(s.contact)}${tutoieBadge}</div>`:''}
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.05em">${s.categories.map(escHtml).join(' · ')}</div>`:''}
+  const ROW='display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr auto;column-gap:16px;align-items:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;transition:.15s';
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">
+    <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr auto;column-gap:16px;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <div>Fournisseur</div><div>Contact</div><div>Téléphone</div><div>Email</div><div></div>
+    </div>
+    ${state.suppliers.map(s=>{
+      const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
+      const tutoieBadge=s.tutoie?` <span style="font-size:9px;color:var(--text3);opacity:.7">(tutoiement)</span>`:'';
+      return`<div style="${ROW}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}${tutoieBadge}</div>
+          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.04em">${s.categories.map(escHtml).join(' · ')}</div>`:s.speciality?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${escHtml(s.speciality)}</div>`:''}
         </div>
-        <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text3)" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:5px;flex:1">
-        <div>${phone}</div>
-        <div style="overflow:hidden">${email}</div>
-        ${s.address?`<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${escHtml(s.address)}</div>`:''}
-      </div>
-      <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
-        <button onclick="editSupplier(${s.id})" style="padding:5px 12px;font-size:11px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Modifier</button>
-        <button class="btn btn-sm btn-gold" style="margin-left:auto;font-size:11px;padding:5px 10px;white-space:nowrap" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` <span style="background:rgba(0,0,0,.25);border-radius:8px;padding:1px 5px;font-size:9px">${orderCount}</span>`:''}</button>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
+        <div style="font-size:12px;color:${s.contact?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.contact||'—')}</div>
+        <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.phone)}</a>`:'—'}</div>
+        <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.email)}</a>`:'—'}</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+          <button data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap">
+            Commander${orderCount?` (${orderCount})`:''}
+          </button>
+          <button onclick="editSupplier(${s.id})" style="padding:4px 10px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Modifier</button>
+          <button onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:14px;transition:.15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 async function addSupplier(){
