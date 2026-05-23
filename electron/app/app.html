@@ -276,6 +276,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn-gold:active{transform:scale(.98)}
 .btn-ghost{border:1px solid var(--border);color:var(--text2);padding:9px 12px;border-radius:3px;font-size:11px;white-space:nowrap;transition:.25s;letter-spacing:.08em;text-transform:uppercase;height:36px;display:inline-flex;align-items:center;background:transparent;cursor:pointer}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.08)}
+.btn-edit{padding:4px 12px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s;line-height:1.4}
+.btn-edit:hover{border-color:var(--gold-border);color:var(--gold)}
 .btn-sm{padding:6px 12px;font-size:9px;letter-spacing:.08em;height:auto}
 .btn-ghost.btn-sm{padding:6px 12px;font-size:9px;height:auto;border-radius:5px}
 .btn-danger.btn-sm{padding:6px 12px;font-size:9px;height:auto;border-radius:5px}
@@ -2697,7 +2699,7 @@ function renderStaff(){
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-          <button onclick="toggleStaff(${s.id})" style="padding:4px 12px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">${isOpen?'Fermer':'Modifier'}</button>
+          <button class="btn-edit" onclick="toggleStaff(${s.id})">${isOpen?'Fermer':'Modifier'}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -2828,7 +2830,7 @@ function renderCGrid(){
       <div class="c-footer">
         <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${(c.ingredients||[]).length} ingr. · ${c.glass||'—'}</div>
         <div class="flex-g no-print" style="flex-wrap:nowrap;gap:4px;white-space:nowrap">
-          <button class="btn btn-sm btn-gold" onclick="editC(${c.id})" style="padding:6px 8px;font-size:11px;background:var(--green);color:#080808;border:1px solid var(--green);font-weight:600">Modifier</button>
+          <button class="btn-edit" onclick="editC(${c.id})">Modifier</button>
           <button class="btn btn-sm btn-ghost" onclick="dupC(${c.id})" style="padding:6px 8px;font-size:11px">⧉ Dup</button>
           <button class="btn btn-sm btn-danger" onclick="delC(${c.id})" style="padding:6px 8px;font-size:11px">✕</button>
         </div>
@@ -3074,7 +3076,7 @@ function showCForm(c){
         </div>
         <div class="g3" style="gap:6px;margin-bottom:6px">
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Verre</label><div id="cf-glass-sel"></div></div>
-          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Coût verre €</label><input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
+          <div class="field" style="margin-bottom:0"><label style="font-size:12px">Prix vente verre HT €</label><input type="number" id="cf-glass-cost" value="${c.glassCost||0}" step="0.001" min="0" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" oninput="updCRecap()"/></div>
           <div class="field" style="margin-bottom:0"><label style="font-size:12px">Préparation</label><select id="cf-technique" style="font-size:13px;padding:6px;height:32px;box-sizing:border-box" onchange="onTechniqueChange()">
             <option value="none"${(c.technique||'none')==='none'?' selected':''}>Direct</option>
             <option value="stirred"${c.technique==='stirred'?' selected':''}>Mélangé</option>
@@ -3724,7 +3726,7 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="markPaidSuivi(${ev.id},!${ev.paid})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
-          <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
+          <button class="btn-edit" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">🔗 Lien client</button>
@@ -4292,7 +4294,7 @@ function showEvList(){
         <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
-          <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
+          <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
@@ -4343,7 +4345,7 @@ function filterEvList(){
         <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
-          <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
+          <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
@@ -4782,8 +4784,8 @@ function renderEvPicker(){
     // Sync into sel for calc
     sel[c.id].glassCostHT=glassCostHT;
 
-    // c.totalCost = prod sans verre ; on ajoute le verre de l'event
-    const ingCostUnit=(c.totalCost||0)+glassCostHT;
+    // Coût de prod pur (verre = prix de vente, pas un coût)
+    const ingCostUnit=(c.totalCost||0);
     const totalCostUnit=ingCostUnit;
     const adjustedPriceHT=(c.priceHT||0)-(c.glassCost||0)+glassCostHT;
     const totalCost=qty?(qty*totalCostUnit).toFixed(2):null;
@@ -4882,7 +4884,7 @@ function updEvCGlass(cid, glassIdStr){
   // Update unit cost display immediately
   const cocktail=state.cocktails.find(x=>x.id===cid);
   if(cocktail){
-    const totalCostUnit=(cocktail.totalCost||0)+sel[cid].glassCostHT;
+    const totalCostUnit=(cocktail.totalCost||0); // verre = prix de vente, pas un coût
     const unitCostEl=document.getElementById('unit-cost-'+cid);
     if(unitCostEl) unitCostEl.textContent=totalCostUnit.toFixed(3)+'€';
   }
@@ -5198,8 +5200,8 @@ function updEvCalc(){
     const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
     const qty=cfg.qty||0;
     const gc=cfg.glassCostHT||0;
-    // c.totalCost = prod sans verre ; on ajoute le verre de l'event (gc)
-    ingCost+=qty*((c.totalCost||0)+gc);
+    // Coût de prod pur (sans verre — le verre n'est pas un coût, c'est un prix de vente)
+    ingCost+=qty*(c.totalCost||0);
     const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
     revenue+=qty*adjustedPrice;
     glassCost+=qty*gc;
@@ -7631,7 +7633,7 @@ function renderClients(){
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${createdLabel?`<span style="font-size:10px;color:var(--text3);white-space:nowrap">depuis ${createdLabel}</span>`:''}
           ${totalCA>0?`<span style="font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;padding:3px 8px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:4px">${fmt(totalCA)} HT</span>`:''}
-          <button onclick="event.stopPropagation();toggleClient(${c.id})" style="padding:4px 12px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">${isOpen?'Fermer':'Modifier'}</button>
+          <button class="btn-edit" onclick="event.stopPropagation();toggleClient(${c.id})">${isOpen?'Fermer':'Modifier'}</button>
           <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})" style="padding:4px 10px;font-size:10px">+ Prestation</button>
         </div>
       </div>
@@ -8031,7 +8033,7 @@ function renderSuppliers(){
           <button data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap">
             Commander${orderCount?` (${orderCount})`:''}
           </button>
-          <button onclick="editSupplier(${s.id})" style="padding:4px 10px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Modifier</button>
+          <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
           <button onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:14px;transition:.15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
@@ -9924,7 +9926,7 @@ function _renderSuiviOld_unused(){
             <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
               ${ev.paid?'✓ Prestation payée':'Prestation payée'}
             </button>
-            <button class="btn btn-sm btn-primary" style="flex:0;min-width:fit-content" onclick="goPage('prestation',${ev.id})">Modifier</button>
+            <button class="btn-edit" onclick="goPage('prestation',${ev.id})">Modifier</button>
             <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
             <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
           </div>
