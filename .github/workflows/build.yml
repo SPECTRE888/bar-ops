@@ -73,8 +73,8 @@ jobs:
           "dist/BarOps-${VERSION}-Installer.pkg" \
           "dist/BarOps-${VERSION}-arm64-mac.zip" \
           "dist/BarOps-${VERSION}-arm64-mac.zip.blockmap" \
-          "dist/BarOps-${VERSION}-arm64.dmg" \
-          "dist/BarOps-${VERSION}-arm64.dmg.blockmap" \
+          "dist/BarOps-${VERSION}-arm64-mac.dmg" \
+          "dist/BarOps-${VERSION}-arm64-mac.dmg.blockmap" \
           "dist/latest-mac.yml"
         do
           if [ -f "$f" ]; then
