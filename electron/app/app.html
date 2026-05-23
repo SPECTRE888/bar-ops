@@ -2598,7 +2598,7 @@ function addStaffCustomRoleInline(staffId){
   const inp=document.getElementById('new-role-inp-'+staffId);
   if(!inp)return;
   const val=(inp.value||'').trim();
-  if(!val)return;
+  if(!val){inp.style.display='none';const sel=document.getElementById('role-sel-'+staffId);if(sel)sel.style.display='';return;}
   if(!state.staffCustomRoles)state.staffCustomRoles=[];
   if(!state.staffCustomRoles.includes(val))state.staffCustomRoles.push(val);
   const s=state.staffItems.find(x=>x.id===staffId);
@@ -2612,8 +2612,9 @@ function delStaffCustomRoleByIdx(idx){
 }
 function onStaffRoleChange(staffId,val){
   if(val==='__new__'){
+    const sel=document.getElementById('role-sel-'+staffId);
     const inp=document.getElementById('new-role-inp-'+staffId);
-    if(inp){inp.style.display='';inp.focus();}
+    if(sel&&inp){sel.style.display='none';inp.style.display='';inp.value='';inp.focus();}
   } else {
     updStaff(staffId,'type',val);
   }
@@ -2695,18 +2696,21 @@ function renderStaff(){
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;order:-1;margin-right:4px" onclick="event.stopPropagation()">
-          <button class="btn btn-sm btn-ghost" onclick="toggleStaff(${s.id})" style="padding:4px 10px;font-size:10px">${isOpen?'Fermer':'Modifier'}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button onclick="toggleStaff(${s.id})" style="padding:4px 12px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">${isOpen?'Fermer':'Modifier'}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 80px;gap:8px;margin-bottom:8px">
           <div class="field"><label>Nom / Prénom</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
-          <div class="field"><label>Rôle</label><select onchange="onStaffRoleChange(${s.id},this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}<option value="__new__">+ Nouveau rôle...</option></select></div>
-          <div class="field"><label style="opacity:0">.</label><input id="new-role-inp-${s.id}" placeholder="Nom du rôle" style="display:none" onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRoleInline(${s.id})}"/></div>
+          <div class="field" style="position:relative">
+            <label>Rôle</label>
+            <select id="role-sel-${s.id}" onchange="onStaffRoleChange(${s.id},this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}<option value="__new__">+ Nouveau rôle...</option></select>
+            <input id="new-role-inp-${s.id}" placeholder="Nom du rôle → Entrée" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;padding:0 8px;border:1px solid var(--gold-border);border-radius:4px;background:var(--surface);color:var(--text);font-size:12px;z-index:2" onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRoleInline(${s.id})}else if(event.key==='Escape'){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}" onblur="if(!this.value.trim()){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}"/>
+          </div>
           <div class="field"><label>Âge</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
+          <div></div>
         </div>
-        ${(state.staffCustomRoles||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${(state.staffCustomRoles||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--text3)">${escHtml(r)}<button onclick="event.stopPropagation();delStaffCustomRoleByIdx(${i})" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:12px;line-height:1;padding:0">×</button></span>`).join('')}</div>`:''}
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
           <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
           <div class="field"><label>Email</label><input type="email" value="${escHtml(s.email||'')}" onchange="updStaff(${s.id},'email',this.value)" placeholder="jean@mail.com"/></div>
@@ -2725,11 +2729,11 @@ function renderStaff(){
           <div class="field"><label>Langues parlées</label><input value="${escHtml(s.langues||'')}" onchange="updStaff(${s.id},'langues',this.value)" placeholder="FR, EN, IT, ES..."/></div>
         </div>
         ${canCost?`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Tarifs</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
           <div class="field"><label>Coût HT (€/h)</label><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
           <div class="field"><label>Facturé HT (€/h)</label><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
-          <div style="padding-bottom:6px;white-space:nowrap;font-size:11px;color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:500">Marge ${margin>0?'+':''}${margin.toFixed(2)}€/h</div>
-        </div>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Marge : <span style="color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:600">${margin>0?'+':''}${margin.toFixed(2)} €/h</span></div>`:''}
         <div class="field" style="margin-bottom:10px"><label>Infos supplémentaires</label><input value="${escHtml(s.infosSupp||s.notes||'')}" onchange="updStaff(${s.id},'infosSupp',this.value)" placeholder="Disponibilité, véhiculé, spécialités, allergies..."/></div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">Supprimer</button>
@@ -4306,7 +4310,7 @@ function showEvList(){
   const totalPg=Math.ceil(sorted.length/PAGE);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
     <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div>Statut</div><div style="text-align:right">CA HT</div><div></div>
+      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:center">Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${pageEvs.map(ev=>{
       const fmtDate=fmtEvDates(ev);
@@ -4325,7 +4329,7 @@ function showEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${ev.pax||'?'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
-        <div>${evStatusBadge(ev)}</div>
+        <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
@@ -4357,7 +4361,7 @@ function filterEvList(){
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
     <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div>Statut</div><div style="text-align:right">CA HT</div><div></div>
+      <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:center">Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${sorted.map(ev=>{
       const fmtDate=fmtEvDates(ev);
@@ -4376,7 +4380,7 @@ function filterEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${ev.pax||'?'}</div>
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
-        <div>${evStatusBadge(ev)}</div>
+        <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn btn-sm btn-gold" onclick="editEv(${ev.id})" style="padding:4px 10px;font-size:10px">Modifier</button>
@@ -7666,7 +7670,7 @@ function renderClients(){
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${createdLabel?`<span style="font-size:10px;color:var(--text3);white-space:nowrap">depuis ${createdLabel}</span>`:''}
           ${totalCA>0?`<span style="font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;padding:3px 8px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:4px">${fmt(totalCA)} HT</span>`:''}
-          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();toggleClient(${c.id})" style="padding:4px 10px;font-size:10px">${isOpen?'✕ Fermer':'✏ Modifier'}</button>
+          <button onclick="event.stopPropagation();toggleClient(${c.id})" style="padding:4px 12px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">${isOpen?'Fermer':'Modifier'}</button>
           <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})" style="padding:4px 10px;font-size:10px">+ Prestation</button>
         </div>
       </div>
@@ -8066,7 +8070,7 @@ function renderSuppliers(){
         ${s.address?`<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 ${escHtml(s.address)}</div>`:''}
       </div>
       <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
-        <button class="btn btn-sm btn-primary" onclick="editSupplier(${s.id})" style="font-size:11px;padding:5px 10px">Modifier</button>
+        <button onclick="editSupplier(${s.id})" style="padding:5px 12px;font-size:11px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.04em;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Modifier</button>
         <button class="btn btn-sm btn-gold" style="margin-left:auto;font-size:11px;padding:5px 10px;white-space:nowrap" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` <span style="background:rgba(0,0,0,.25);border-radius:8px;padding:1px 5px;font-size:9px">${orderCount}</span>`:''}</button>
       </div>
     </div>`;
