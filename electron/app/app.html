@@ -2594,6 +2594,31 @@ function updStaff(id,k,v){
   }
 }
 
+function addStaffCustomRoleInline(staffId){
+  const inp=document.getElementById('new-role-inp-'+staffId);
+  if(!inp)return;
+  const val=(inp.value||'').trim();
+  if(!val)return;
+  if(!state.staffCustomRoles)state.staffCustomRoles=[];
+  if(!state.staffCustomRoles.includes(val))state.staffCustomRoles.push(val);
+  const s=state.staffItems.find(x=>x.id===staffId);
+  if(s)s.type=val;
+  save();renderStaff();
+}
+function delStaffCustomRoleByIdx(idx){
+  if(!state.staffCustomRoles)return;
+  state.staffCustomRoles.splice(idx,1);
+  save();renderStaff();
+}
+function onStaffRoleChange(staffId,val){
+  if(val==='__new__'){
+    const inp=document.getElementById('new-role-inp-'+staffId);
+    if(inp){inp.style.display='';inp.focus();}
+  } else {
+    updStaff(staffId,'type',val);
+  }
+}
+
 function showStaffTab(tab){
   if(tab==='staff'){
     document.getElementById('staff-section').style.display='block';
@@ -2670,22 +2695,23 @@ function renderStaff(){
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-          <button class="btn btn-sm btn-ghost" onclick="toggleStaff(${s.id})" style="padding:4px 10px;font-size:10px">${isOpen?'✕ Fermer':'✏ Modifier'}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;order:-1;margin-right:4px" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-ghost" onclick="toggleStaff(${s.id})" style="padding:4px 10px;font-size:10px">${isOpen?'Fermer':'Modifier'}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Identité</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:6px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 80px;gap:8px;margin-bottom:8px">
           <div class="field"><label>Nom / Prénom</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
-          <div class="field"><label>Rôle</label><select onchange="updStaff(${s.id},'type',this.value)">${STAFF_ROLES.map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}</select></div>
+          <div class="field"><label>Rôle</label><select onchange="onStaffRoleChange(${s.id},this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}<option value="__new__">+ Nouveau rôle...</option></select></div>
+          <div class="field"><label style="opacity:0">.</label><input id="new-role-inp-${s.id}" placeholder="Nom du rôle" style="display:none" onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRoleInline(${s.id})}"/></div>
           <div class="field"><label>Âge</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
         </div>
-        <div class="g2" style="margin-bottom:10px">
+        ${(state.staffCustomRoles||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${(state.staffCustomRoles||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--text3)">${escHtml(r)}<button onclick="event.stopPropagation();delStaffCustomRoleByIdx(${i})" style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:12px;line-height:1;padding:0">×</button></span>`).join('')}</div>`:''}
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
           <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
           <div class="field"><label>Email</label><input type="email" value="${escHtml(s.email||'')}" onchange="updStaff(${s.id},'email',this.value)" placeholder="jean@mail.com"/></div>
+          <div class="field"><label>Adresse</label><input value="${escHtml(s.address||'')}" onchange="updStaff(${s.id},'address',this.value)" placeholder="Adresse complète"/></div>
         </div>
-        <div class="field" style="margin-bottom:12px"><label>Adresse</label><input value="${escHtml(s.address||'')}" onchange="updStaff(${s.id},'address',this.value)" placeholder="Adresse complète"/></div>
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Mensurations & Physique</div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px">
           <div class="field"><label>Taille (cm)</label><input type="number" value="${escHtml(s.tailleCm||'')}" onchange="updStaff(${s.id},'tailleCm',this.value)" placeholder="175"/></div>
@@ -2699,11 +2725,11 @@ function renderStaff(){
           <div class="field"><label>Langues parlées</label><input value="${escHtml(s.langues||'')}" onchange="updStaff(${s.id},'langues',this.value)" placeholder="FR, EN, IT, ES..."/></div>
         </div>
         ${canCost?`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Tarifs</div>
-        <div class="g2" style="margin-bottom:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:12px">
           <div class="field"><label>Coût HT (€/h)</label><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
           <div class="field"><label>Facturé HT (€/h)</label><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Marge : <span style="color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:500">${margin>0?'+':''}${margin.toFixed(2)}€/h</span> — facturation <strong>par heure</strong></div>`:''}
+          <div style="padding-bottom:6px;white-space:nowrap;font-size:11px;color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:500">Marge ${margin>0?'+':''}${margin.toFixed(2)}€/h</div>
+        </div>`:''}
         <div class="field" style="margin-bottom:10px"><label>Infos supplémentaires</label><input value="${escHtml(s.infosSupp||s.notes||'')}" onchange="updStaff(${s.id},'infosSupp',this.value)" placeholder="Disponibilité, véhiculé, spécialités, allergies..."/></div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">Supprimer</button>
