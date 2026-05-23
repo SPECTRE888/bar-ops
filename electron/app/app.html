@@ -4088,12 +4088,12 @@ function recalcAllCocktailsIce(){
     // 4. Recalc glass cost
     if(glass) c.glassCost=parseFloat((glass.priceBilledHT||glass.priceHT||0).toFixed(3));
 
-    // 5. Update totalCost
-    c.totalCost=parseFloat((ingCost+consoCost+(c.iceVal||0)+(c.glassCost||0)).toFixed(4));
+    // 5. Update totalCost — coût de production SANS le verre
+    c.totalCost=parseFloat((ingCost+consoCost+(c.iceVal||0)).toFixed(4));
 
-    // 6. Recalc price HT using stored multiplier
+    // 6. Recalc price HT using stored multiplier — verre ajouté APRÈS le multiplicateur
     if(c.mult&&c.mult>0&&c.totalCost>0){
-      c.priceHT=parseFloat((c.totalCost*c.mult).toFixed(2));
+      c.priceHT=parseFloat((c.totalCost*c.mult+(c.glassCost||0)).toFixed(2));
     } else if(!c.priceHT){
       noPrice.push(c.name);
     }
@@ -4114,21 +4114,23 @@ function updCRecap(){
   ingRows().forEach(r=>{const v=calcIC(r.id);ingCost+=v;total+=v;});
   consoRows().forEach(r=>{total+=calcIC(r.id);});
   total+=parseFloat(document.getElementById('cf-ice')?.value)||0;
-  total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
+  // Coût verre séparé — s'ajoute APRÈS le multiplicateur
+  const glassCostVal=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
 
   const hasUnp=[...ingRows(),...consoRows()].some(r=>{const p=rowProduct(r.id);const ptype=r.dataset.ptype||r.querySelector('.ss-input')?.value||'';return ptype&&(!p||!p.priceHT);});
   const w=document.getElementById('ing-warn');if(w)w.className='warn'+(hasUnp?'':' hide');
 
+  // Coût de production affiché (SANS verre)
   const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
 
-  // Prix conseillé adapté par catégorie
+  // Prix conseillé = prod × multiplicateur + verre
   const cat=document.getElementById('cf-cat')?.value||'Cocktail Signature';
   let mult=4;
   if(cat.includes('Classique'))mult=3.5;
   else if(cat.includes('Signature'))mult=4.5;
-  if(cat.includes('Mocktail'))mult=mult*0.9; // Mocktail -10% vs cocktail
+  if(cat.includes('Mocktail'))mult=mult*0.9;
 
-  const suggested=total*mult;
+  const suggested=total*mult+glassCostVal;
   const sugEl=document.getElementById('r-suggested');if(sugEl)sugEl.textContent=total>0?suggested.toFixed(2)+'€':'—';
 
   // Auto-fill Prix vente avec Prix conseillé (modifiable)
@@ -4142,7 +4144,7 @@ function updCRecap(){
   const ht=prixVente*(1+loss);
   const htFinalEl=document.getElementById('r-ht-final');if(htFinalEl)htFinalEl.textContent=prixVente>0?ht.toFixed(2)+'€':'—';
   if(prixVente>0&&total>0){
-    const mg=prixVente-total,mgPct=mg/prixVente*100;
+    const mg=prixVente-(total+glassCostVal),mgPct=mg/prixVente*100;
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
 
@@ -4171,8 +4173,8 @@ async function saveCocktail(){
   const name=document.getElementById('cf-name')?.value.trim();
   if(!name){await alertModal('Please enter a cocktail name.');return;}
   const existingC=editCId?state.cocktails.find(x=>x.id===editCId):null;
+  // totalCost = coût de production SANS le verre (le verre s'ajoute après le multiplicateur)
   let total=parseFloat(document.getElementById('cf-ice')?.value)||0;
-  total+=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
   ingRows().forEach(r=>{total+=calcIC(r.id);});
   consoRows().forEach(r=>{total+=calcIC(r.id);});
   const glassInp=document.querySelector('#cf-glass-sel .ss-input');
@@ -4780,8 +4782,8 @@ function renderEvPicker(){
     // Sync into sel for calc
     sel[c.id].glassCostHT=glassCostHT;
 
-    // Cost WITHOUT glass (totalCost includes original glass cost)
-    const ingCostUnit=(c.totalCost||0)-(c.glassCost||0)+glassCostHT;
+    // c.totalCost = prod sans verre ; on ajoute le verre de l'event
+    const ingCostUnit=(c.totalCost||0)+glassCostHT;
     const totalCostUnit=ingCostUnit;
     const adjustedPriceHT=(c.priceHT||0)-(c.glassCost||0)+glassCostHT;
     const totalCost=qty?(qty*totalCostUnit).toFixed(2):null;
@@ -4880,7 +4882,7 @@ function updEvCGlass(cid, glassIdStr){
   // Update unit cost display immediately
   const cocktail=state.cocktails.find(x=>x.id===cid);
   if(cocktail){
-    const totalCostUnit=(cocktail.totalCost||0)-(cocktail.glassCost||0)+sel[cid].glassCostHT;
+    const totalCostUnit=(cocktail.totalCost||0)+sel[cid].glassCostHT;
     const unitCostEl=document.getElementById('unit-cost-'+cid);
     if(unitCostEl) unitCostEl.textContent=totalCostUnit.toFixed(3)+'€';
   }
@@ -5196,7 +5198,8 @@ function updEvCalc(){
     const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
     const qty=cfg.qty||0;
     const gc=cfg.glassCostHT||0;
-    ingCost+=qty*((c.totalCost||0)-(c.glassCost||0)+gc);
+    // c.totalCost = prod sans verre ; on ajoute le verre de l'event (gc)
+    ingCost+=qty*((c.totalCost||0)+gc);
     const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
     revenue+=qty*adjustedPrice;
     glassCost+=qty*gc;
