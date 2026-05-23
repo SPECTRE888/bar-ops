@@ -9834,19 +9834,40 @@ function _renderSuiviOld_unused(){
           <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Quantités non consommées — produits du devis</div>
           <div id="stock-retour-${ev.id}" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
             ${rows.map(([key,{label,unit,needed}])=>{
-              const bottlesUsed=(needed/(state.products.find(p=>label.includes(p.productType))?.qty||1));
+              const [kb,kp]=key.split('||');
+              const prod=state.products.find(p=>p.productType===kp&&(p.brand||'')===(kb||''))||state.products.find(p=>p.productType===kp);
+              const volUnit=unit||prod?.unit||'cl';
+              const isBtl=['cl','ml','L'].includes(volUnit);
+              const isWeight=['g','kg'].includes(volUnit);
+              const retourUnit=isBtl?'Btl':isWeight?'kg':'Unité';
+              const bottleSize=isBtl?(prod?.qty||75):1;
+              const usedQty=isBtl?needed/bottleSize:needed;
               const savedVal=(ev.stockRetour||{})[key]||'';
               return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
                 <span style="flex:1;color:var(--text2)">${label}</span>
-                <span style="color:var(--text3);font-size:10px">utilisé ~${bottlesUsed.toFixed(1)} btl</span>
-                <input type="number" min="0" step="0.1" placeholder="retour btl" value="${savedVal}"
-                  style="width:90px;padding:3px 6px;font-size:11px"
+                <span style="color:var(--text3);font-size:10px">utilisé ~${usedQty.toFixed(1)} ${retourUnit.toLowerCase()}</span>
+                <span style="font-size:10px;color:var(--text4);white-space:nowrap">${retourUnit}</span>
+                <input type="number" min="0" step="0.1" placeholder="0" value="${savedVal}"
+                  style="width:70px;padding:3px 6px;font-size:11px"
                   onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
               </div>`;
             }).join('')}
           </div>
+          ${(ev.stockRetourCatalogueItems||[]).length>0?`
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:4px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Ajouts catalogue</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              ${(ev.stockRetourCatalogueItems||[]).map((item,idx)=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                  <span style="flex:1;color:var(--text2)">${item.brand?escHtml(item.brand)+' — ':''} ${escHtml(item.productType)}</span>
+                  <span style="font-size:10px;color:var(--text4)">${escHtml(item.retourUnit||'Btl')}</span>
+                  <input type="number" min="0" step="0.1" value="${item.qty||1}"
+                    style="width:70px;padding:3px 6px;font-size:11px"
+                    onchange="updStockRetourCatalogueItem(${ev.id},${idx},parseFloat(this.value)||0)"/>
+                  <button class="btn" style="font-size:10px;padding:2px 7px" onclick="removeStockRetourCatalogueItem(${ev.id},${idx})">✕</button>
+                </div>`).join('')}
+            </div>
+          `:''}
           ${customItems.length>0?`
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:4px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Produits hors devis</div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:4px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Produits hors catalogue</div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
               ${customItems.map((item,idx)=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
                   <span style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(item.nom)}${item.detail?`<span style="color:var(--text4);margin-left:5px">${escHtml(item.detail)}</span>`:''}${item.cout?`<span style="color:var(--gold);margin-left:6px;font-size:10px">${item.cout}€/u</span>`:''}${item.unite?`<span style="color:var(--text4);margin-left:4px;font-size:10px">${escHtml(item.unite)}</span>`:''}</span>
@@ -9857,14 +9878,26 @@ function _renderSuiviOld_unused(){
                 </div>`).join('')}
             </div>
           `:''}
-          <div id="stock-retour-add-form-${ev.id}" style="display:none;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:8px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);margin-bottom:6px">Produit récupéré hors devis</div>
+          <div id="stock-retour-add-cat-form-${ev.id}" style="display:none;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:6px">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);margin-bottom:6px">Produit du catalogue</div>
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+              <div style="flex:1;min-width:180px" id="src-cat-ss-${ev.id}"></div>
+              <input id="src-cat-brand-${ev.id}" type="text" placeholder="Marque (optionnel)" style="flex:1;min-width:130px;padding:5px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="src-cat-qty-${ev.id}" type="number" step="0.1" min="0.1" value="1" style="width:70px;padding:5px 8px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-ghost" style="flex:1" onclick="toggleAddStockRetourCat(${ev.id})">Annuler</button>
+              <button class="btn btn-sm btn-gold" style="flex:1" onclick="addStockRetourFromCatalogue(${ev.id})">Ajouter</button>
+            </div>
+          </div>
+          <div id="stock-retour-add-form-${ev.id}" style="display:none;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:6px">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text4);margin-bottom:6px">Produit hors catalogue</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
               ${inp(`src-nom-${ev.id}`,'text','Produit (ex: Vin rouge)')}
               ${inp(`src-detail-${ev.id}`,'text','Détail (ex: Morgon 2022)')}
             </div>
             <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:6px;margin-bottom:8px">
-              ${inp(`src-unite-${ev.id}`,'text','Unité (btl, kg...)')}
+              ${inp(`src-unite-${ev.id}`,'text','Unité (Btl, kg...)')}
               ${inp(`src-cout-${ev.id}`,'number','Coût €','step="0.01" min="0"')}
               ${inp(`src-qty-${ev.id}`,'number','Qté','step="0.1" min="0.1" value="1"')}
             </div>
@@ -9873,7 +9906,10 @@ function _renderSuiviOld_unused(){
               <button class="btn btn-sm btn-gold" style="flex:1" onclick="addStockRetourCustom(${ev.id})">Ajouter</button>
             </div>
           </div>
-          <button class="btn btn-sm btn-ghost" style="width:100%;text-align:left;margin-bottom:6px" onclick="toggleAddStockRetour(${ev.id})">+ Produit hors devis</button>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <button class="btn btn-sm btn-ghost" style="flex:1" onclick="toggleAddStockRetourCat(${ev.id})">+ Du catalogue</button>
+            <button class="btn btn-sm btn-ghost" style="flex:1" onclick="toggleAddStockRetour(${ev.id})">+ Hors catalogue</button>
+          </div>
           <button class="btn btn-sm btn-gold" onclick="injectStockRetour(${ev.id})" ${alreadyDone?'style="opacity:.5"':''}>
             ${alreadyDone?'Réinjecter à nouveau':'Réinjecter en stock'}
           </button>
@@ -9953,16 +9989,15 @@ function injectStockRetour(evId){
       count++;
     });
   }
-  // Produits hors devis — injecter si trouvé en catalogue, sinon juste comptabiliser
-  (ev.stockRetourCustomItems||[]).forEach(item=>{
+  // Ajouts catalogue
+  (ev.stockRetourCatalogueItems||[]).forEach(item=>{
     if(!item.qty) return;
-    const prod=state.products.find(p=>
-      p.productType?.toLowerCase()===item.nom?.toLowerCase()||
-      p.name?.toLowerCase()===item.nom?.toLowerCase()
-    );
-    if(prod){prod.stock=(prod.stock||0)+item.qty;}
-    count++;
+    const prod=state.products.find(p=>p.productType===item.productType&&(p.brand||'')===(item.brand||''))
+              ||state.products.find(p=>p.productType===item.productType);
+    if(prod){prod.stock=(prod.stock||0)+item.qty;count++;}
   });
+  // Produits hors catalogue — juste comptabilisés
+  (ev.stockRetourCustomItems||[]).forEach(item=>{if(item.qty)count++;});
   ev.stockRetourDone=true;
   save();cloudPush();
   toast(`${count} produit(s) réinjecté(s) en stock`);
@@ -9970,10 +10005,68 @@ function injectStockRetour(evId){
 }
 
 function toggleAddStockRetour(evId){
-  const el=document.getElementById('stock-retour-add-form-'+evId);
-  if(!el) return;
-  el.style.display=el.style.display==='none'?'block':'none';
-  if(el.style.display==='block') setTimeout(()=>document.getElementById('src-nom-'+evId)?.focus(),0);
+  const form=document.getElementById('stock-retour-add-form-'+evId);
+  const catForm=document.getElementById('stock-retour-add-cat-form-'+evId);
+  if(!form) return;
+  const open=form.style.display!=='none';
+  form.style.display=open?'none':'block';
+  if(catForm) catForm.style.display='none';
+  if(!open) setTimeout(()=>document.getElementById('src-nom-'+evId)?.focus(),0);
+}
+
+function toggleAddStockRetourCat(evId){
+  const form=document.getElementById('stock-retour-add-cat-form-'+evId);
+  const freeForm=document.getElementById('stock-retour-add-form-'+evId);
+  if(!form) return;
+  const open=form.style.display!=='none';
+  form.style.display=open?'none':'block';
+  if(freeForm) freeForm.style.display='none';
+  if(!open){
+    setTimeout(()=>{
+      const wrap=document.getElementById('src-cat-ss-'+evId);
+      if(!wrap||wrap.dataset.initialized) return;
+      wrap.dataset.initialized='true';
+      const opts=[...new Set(state.products.map(p=>p.productType).filter(Boolean))].sort();
+      mkSS('src-cat-ss-'+evId,opts,'Produit...', v=>{
+        document.getElementById('src-cat-brand-'+evId).value='';
+        wrap.dataset.selected=v;
+      },'',true);
+    },0);
+  }
+}
+
+function addStockRetourFromCatalogue(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const wrap=document.getElementById('src-cat-ss-'+evId);
+  const productType=(wrap?.dataset.selected||'').trim()||(wrap?.querySelector('input')?.value||'').trim();
+  const brand=(document.getElementById('src-cat-brand-'+evId)?.value||'').trim();
+  const qty=parseFloat(document.getElementById('src-cat-qty-'+evId)?.value)||0;
+  if(!productType||qty<=0){toast('Sélectionnez un produit et une quantité','var(--red)');return;}
+  const prod=state.products.find(p=>p.productType===productType&&(p.brand||'')===(brand||''))
+            ||state.products.find(p=>p.productType===productType);
+  const volUnit=prod?.unit||'cl';
+  const isBtl=['cl','ml','L'].includes(volUnit);
+  const retourUnit=isBtl?'Btl':['g','kg'].includes(volUnit)?'kg':'Unité';
+  if(!ev.stockRetourCatalogueItems) ev.stockRetourCatalogueItems=[];
+  ev.stockRetourCatalogueItems.push({productType,brand,qty,retourUnit});
+  // reset
+  if(wrap){wrap.dataset.selected='';const inp=wrap.querySelector('input');if(inp)inp.value='';}
+  document.getElementById('src-cat-brand-'+evId).value='';
+  document.getElementById('src-cat-qty-'+evId).value='1';
+  document.getElementById('stock-retour-add-cat-form-'+evId).style.display='none';
+  save();toast(`${brand?brand+' ':''}${productType} ajouté (${qty} ${retourUnit})`);renderSuivi();
+}
+
+function updStockRetourCatalogueItem(evId,idx,qty){
+  const ev=state.events.find(x=>x.id===evId);if(!ev||!ev.stockRetourCatalogueItems)return;
+  if(ev.stockRetourCatalogueItems[idx]) ev.stockRetourCatalogueItems[idx].qty=qty;
+  save();
+}
+
+function removeStockRetourCatalogueItem(evId,idx){
+  const ev=state.events.find(x=>x.id===evId);if(!ev||!ev.stockRetourCatalogueItems)return;
+  ev.stockRetourCatalogueItems.splice(idx,1);
+  save();renderSuivi();
 }
 
 function addStockRetourCustom(evId){
