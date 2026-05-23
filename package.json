@@ -1,6 +1,6 @@
 {
   "name": "bar-ops",
-  "version": "1.5.44",
+  "version": "1.5.45",
   "description": "Bar Ops — gestion d'événements bar",
   "main": "electron/main.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "appId": "com.barops.app",
     "productName": "Bar Ops",
     "afterPack": "scripts/afterPack.js",
-"directories": {
+    "directories": {
       "output": "dist"
     },
     "files": [
