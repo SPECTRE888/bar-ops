@@ -9564,11 +9564,21 @@ function showInviteAgentForm(){
   if(f) f.style.display=f.style.display==='none'?'block':'none';
 }
 
+async function _agentsFetch(body){
+  const token=extractToken(cloudUser);
+  if(!token) return null;
+  try{
+    const r=await fetch(API_BASE+'/api/agents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){return null;}
+}
+
 async function loadAgentsList(){
   const wrap=document.getElementById('agents-list-wrap');
   if(!wrap) return;
   try{
-    const res=await cloudRequest('/api/agents',{method:'POST',body:{type:'manage',action:'list'}});
+    const res=await _agentsFetch({type:'manage',action:'list'});
     const agents=res?.agents||[];
     const invitations=res?.invitations||[];
     const maxAgents=res?.company?.max_agents??2;
@@ -9632,7 +9642,8 @@ async function submitInviteAgent(){
     document.querySelectorAll('.agent-perm-cb').forEach(cb=>{perms[cb.dataset.perm]=cb.checked;});
   }
   try{
-    await cloudRequest('/api/agents',{method:'POST',body:{type:'invite',email,role:preset,permissions:perms}});
+    const r=await _agentsFetch({type:'invite',email,role:preset,permissions:perms});
+    if(!r) throw new Error('Erreur serveur');
     showToast('Invitation envoyée à '+email);
     document.getElementById('invite-agent-form').style.display='none';
     document.getElementById('agent-invite-email').value='';
@@ -9644,7 +9655,7 @@ async function submitInviteAgent(){
 
 async function agentAction(agentId,action){
   try{
-    await cloudRequest('/api/agents',{method:'POST',body:{type:'manage',action,agentId}});
+    await _agentsFetch({type:'manage',action,agentId});
     loadAgentsList();
   }catch(e){
     showToast(e?.message||'Erreur','error');
@@ -9653,7 +9664,10 @@ async function agentAction(agentId,action){
 
 async function buyAgentSeat(){
   try{
-    const res=await cloudRequest('/api/billing',{method:'POST',body:{action:'add-seat'}});
+    const token=extractToken(cloudUser);
+    if(!token){showToast('Non connecté','error');return;}
+    const r=await fetch(API_BASE+'/api/billing',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'add-seat'})});
+    const res=await r.json();
     if(res?.url) window.location.href=res.url;
     else showToast('Erreur lors de la création du lien de paiement','error');
   }catch(e){
