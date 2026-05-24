@@ -8013,26 +8013,27 @@ function renderSuppliers(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
     return;
   }
-  const ROW='display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr auto;column-gap:16px;align-items:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;transition:.15s';
+  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 224px';
+  const HDR_STYLE=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px`;
+  const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;transition:.15s`;
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">
-    <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr auto;column-gap:16px;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <div>Fournisseur</div><div>Contact</div><div>Téléphone</div><div>Email</div><div></div>
+    <div style="${HDR_STYLE}">
+      <div>Fournisseur</div><div>Catégories livrées</div><div>Contact</div><div>Téléphone</div><div>Email</div><div></div>
     </div>
     ${state.suppliers.map(s=>{
       const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
       const tutoieBadge=s.tutoie?` <span style="font-size:9px;color:var(--text3);opacity:.7">(tutoiement)</span>`:'';
+      const cats=s.categories?.length?s.categories:s.speciality?[s.speciality]:[];
       return`<div style="${ROW}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
         <div style="min-width:0">
           <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}${tutoieBadge}</div>
-          ${s.categories?.length?`<div style="font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.04em">${s.categories.map(escHtml).join(' · ')}</div>`:s.speciality?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${escHtml(s.speciality)}</div>`:''}
         </div>
+        <div style="font-size:11px;color:var(--text3);letter-spacing:.03em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cats.length?cats.map(escHtml).join(' · '):'—'}</div>
         <div style="font-size:12px;color:${s.contact?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.contact||'—')}</div>
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.phone)}</a>`:'—'}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.email)}</a>`:'—'}</div>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-          <button data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap;width:110px;text-align:center">
-            Commander${orderCount?` (${orderCount})`:''}
-          </button>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
+          <button data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap;width:110px;text-align:center">Commander${orderCount?` (${orderCount})`:''}</button>
           <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
           <button onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:14px;transition:.15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>

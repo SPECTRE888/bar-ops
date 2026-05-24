@@ -1,6 +1,6 @@
 {
   "name": "bar-ops",
-  "version": "1.5.54",
+  "version": "1.5.55",
   "description": "Bar Ops — gestion d'événements bar",
   "main": "electron/main.js",
   "scripts": {
