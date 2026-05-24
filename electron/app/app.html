@@ -11752,17 +11752,26 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
     // Vérif localStorage
     if (localStorage.getItem(OB_KEY) === '1') return;
 
-    // Attend que le paywall soit résolu (max 3s)
+    // Attend que le paywall soit résolu (max 15s)
     let tries = 0;
     const interval = setInterval(() => {
       tries++;
-      // Si demo ou user connecté → show
       if (window._isDemo === true || window._paywallDone === true) {
         clearInterval(interval);
-        obShow();
+        // Laisser 2s pour que cloudPull charge les données, puis vérifier
+        setTimeout(function() {
+          if (!window._isDemo && typeof state !== 'undefined') {
+            const hasData = (state.ingredients && state.ingredients.length > 0)
+              || (state.events && state.events.length > 0)
+              || (state.cocktails && state.cocktails.length > 0)
+              || (state.companyName && state.companyName.trim().length > 0);
+            if (hasData) { localStorage.setItem(OB_KEY, '1'); return; }
+          }
+          obShow();
+        }, 2000);
       }
-      // Timeout fallback
-      if (tries > 30) { clearInterval(interval); obShow(); }
+      // Timeout fallback (15s) — ne rien faire si paywall non résolu
+      if (tries > 150) { clearInterval(interval); }
     }, 100);
   }
 
