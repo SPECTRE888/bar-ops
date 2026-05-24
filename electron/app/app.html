@@ -38,7 +38,7 @@ const API_BASE='https://bar-ops-v2.vercel.app';
       document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">Impossible de joindre le serveur de configuration.</p><button onclick="location.reload()" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
       return;
     }
-    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'sb-session'}});
     window._sb=sb;
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='auth.html';return;}
@@ -752,7 +752,7 @@ async function openBillingPortal(){
 }
 
 async function sidebarLogout(){
-  const sb=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
+  const sb=window._sb||window.supabase?.createClient?.(SUPA_URL,SUPA_KEY,{auth:{storageKey:'sb-session'}});
   if(sb)await sb.auth.signOut();
   window.location.href='auth.html';
 }
