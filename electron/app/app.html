@@ -40,8 +40,11 @@ const API_BASE='https://bar-ops-v2.vercel.app';
     }
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'sb-session'}});
     window._sb=sb;
-    const{data:{session}}=await sb.auth.getSession();
+    let {data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='auth.html';return;}
+    // Rafraîchir le token pour s'assurer qu'il est valide
+    try{const{data:{session:fresh}}=await sb.auth.refreshSession();if(fresh)session=fresh;}catch(e){}
+    if(!session?.access_token){window.location.href='auth.html';return;}
 
     // Vérification d'accès centralisée (admin → son abo, agent → abo de l'owner)
     let access=null;
@@ -55,7 +58,7 @@ const API_BASE='https://bar-ops-v2.vercel.app';
       }catch(fe){console.warn('[check-access] fetch error',fe.message);access=null;}
       console.log('[check-access] attempt',i,access);
       if(access?.allowed)break;
-      if(access?.reason==='suspended'||access?.reason==='auth_required'||access?.reason==='invalid_token'||access?.reason==='no_company')break;
+      if(access?.reason==='suspended'||access?.reason==='auth_required'||access?.reason==='invalid_token'||access?.reason==='no_company'||access?.reason==='no_active_subscription')break;
       // reason=no_active_subscription → peut être webhook encore en transit
       if(i===0){
         document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Vérification de votre abonnement…</p><p style="font-size:12px;color:#585450">Cela peut prendre quelques secondes après le paiement.</p></div></div>`;
@@ -66,8 +69,14 @@ const API_BASE='https://bar-ops-v2.vercel.app';
       // null = erreur réseau/serveur ; objet = refus métier
       if(access===null){
         document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Impossible de joindre le serveur.</p><p style="font-size:12px;color:#585450;margin-bottom:24px">Vérifiez votre connexion internet puis réessayez.</p><button onclick="location.reload()" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
+      }else if(access?.reason==='invalid_token'||access?.reason==='auth_required'){
+        // Token expiré ou invalide → vider la session et forcer la reconnexion
+        try{await sb.auth.signOut();}catch(e){}
+        window.location.href='auth.html';
+        return;
       }else{
-        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Accès non autorisé.</p><p style="font-size:12px;color:#585450;margin-bottom:24px">${access.reason==='no_active_subscription'?'Aucun abonnement actif sur ce compte.':access.reason==='suspended'?'Ce compte a été suspendu.':'Contactez le support.'}</p><button onclick="window.location.href='auth.html'" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button></div></div>`;
+        const msg=access.reason==='no_active_subscription'?'Aucun abonnement actif sur ce compte.':access.reason==='suspended'?'Ce compte a été suspendu.':access.reason==='no_company'?'Profil introuvable — contactez le support.':'Accès refusé.';
+        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Accès non autorisé.</p><p style="font-size:12px;color:#585450;margin-bottom:24px">${msg}</p><button onclick="window.location.href='auth.html'" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button></div></div>`;
       }
       return;
     }
