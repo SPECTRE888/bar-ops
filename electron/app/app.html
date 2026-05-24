@@ -3509,13 +3509,18 @@ function updIceCost(){
     let shakerCost = 0;
     let shakerText = '';
 
-    // Add shaker ice: 250g (12 glaçons) of default shaker ice type
+    // Add technique ice (shaker or mixing glass)
     if(technique==='shaken'){
       const shakerIce=state.iceTypes.find(i=>i.isForShaker);
       if(shakerIce){
-        // 12 glaçons = 250g = 0.25 kg (assuming kg unit)
         shakerCost = (shakerIce.priceHT||0) * 0.25;
         shakerText = ` + Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
+      }
+    } else if(technique==='stirred'){
+      const mixIce=state.iceTypes.find(i=>i.isForShaker)||state.iceTypes[0];
+      if(mixIce){
+        shakerCost = (mixIce.priceHT||0) * 0.2;
+        shakerText = ` + Mélangeur ${mixIce.name} : <strong>200g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
       }
     }
 
@@ -3540,13 +3545,18 @@ function updIceCost(){
     let shakerText = '';
     let shakerIce = null;
 
-    // Add shaker ice: 250g (12 glaçons) of default shaker ice type
+    // Add technique ice (shaker or mixing glass)
     if(technique==='shaken'){
       shakerIce=state.iceTypes.find(i=>i.isForShaker);
       if(shakerIce){
-        // 12 glaçons = 250g = 0.25 kg (assuming kg unit)
         shakerCost = (shakerIce.priceHT||0) * 0.25;
         shakerText = ` + Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
+      }
+    } else if(technique==='stirred'){
+      const mixIce=state.iceTypes.find(i=>i.isForShaker)||state.iceTypes[0];
+      if(mixIce){
+        shakerCost = (mixIce.priceHT||0) * 0.2;
+        shakerText = ` + Mélangeur ${mixIce.name} : <strong>200g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
       }
     }
 
@@ -3576,15 +3586,20 @@ function updIceCost(){
   const vol = glass.volumeCl;
   const cpclHT = priceHT/100;
 
-  // Shaker ice: 250g (12 glaçons) si technique est shaken
+  // Technique ice: shaker (shaken) ou verre mélangeur (stirred)
   let shakerCost = 0;
   let shakerText = '';
   if(technique==='shaken'){
     const shakerIce=state.iceTypes.find(i=>i.isForShaker);
     if(shakerIce){
-      // 12 glaçons = 250g = 0.25 kg (assuming kg unit)
       shakerCost = (shakerIce.priceHT||0) * 0.25;
       shakerText = `Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace jetée)</span>`;
+    }
+  } else if(technique==='stirred'){
+    const mixIce=state.iceTypes.find(i=>i.isForShaker)||state.iceTypes[0];
+    if(mixIce){
+      shakerCost = (mixIce.priceHT||0) * 0.2;
+      shakerText = `Verre mélangeur ${mixIce.name} : <strong>200g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace filtrée)</span>`;
     }
   }
 
