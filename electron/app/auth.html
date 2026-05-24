@@ -38,6 +38,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;margin-
 
   <div id="view-login">
     <button class="btn fill" onclick="googleAuthLogin()">Se connecter avec Google</button>
+    <button class="btn gold" onclick="openPasskeyWindow()">Connexion avec clé d'accès</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
 
@@ -156,6 +157,12 @@ async function openOAuth(action){
 }
 async function googleAuthLogin()  { await openOAuth('login');  }
 async function googleAuthSignup() { await openOAuth('signup'); }
+
+function openPasskeyWindow(){
+  const url='https://bar-ops-v2.vercel.app/auth.html?electron=1';
+  if(window.electronBridge?.openOAuthWindow) window.electronBridge.openOAuthWindow(url);
+  else window.open(url,'_blank');
+}
 </script>
 </body>
 </html>

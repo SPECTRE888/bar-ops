@@ -38,6 +38,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;margin-
 
   <div id="view-login">
     <button class="btn fill" onclick="googleAuthLogin()">Se connecter avec Google</button>
+    <button class="btn gold" id="btnPasskey" onclick="passkeyAuth()" style="display:none">Connexion avec clé d'accès</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
 
@@ -96,6 +97,17 @@ async function googleAuthSignup(){
 }
 
 async function redirect(userId){
+  // Mode Electron : rediriger vers le callback local avec les tokens
+  const isElectron=new URLSearchParams(window.location.search).get('electron')==='1';
+  if(isElectron){
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){
+      const h=`#access_token=${session.access_token}&refresh_token=${session.refresh_token}&token_type=bearer&expires_in=3600`;
+      window.location.href=`http://127.0.0.1:59876/callback?action=login${h}`;
+      return;
+    }
+  }
+
   // Charger le profil pour connaître le rôle et le company owner
   let profile=null;
   try{
@@ -128,6 +140,15 @@ async function redirect(userId){
   window.location.href='paying.html';
 }
 
+async function passkeyAuth(){
+  const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
+  try{
+    const{data,error}=await s.auth.signInWithPasskey();
+    if(error)return msg(error.message,'err');
+    if(data?.session)await redirect(data.session.user.id);
+  }catch(e){msg(e.message||'Clé d\'accès non supportée dans ce contexte','err');}
+}
+
 // Flow acceptation d'invitation
 async function handleInvite(session){
   const token=session.access_token;
@@ -145,6 +166,14 @@ async function handleInvite(session){
     window.location.href='app.html';
   }catch(e){msg(e.message,'err');}
 }
+
+// Afficher le bouton passkey si supporté
+(async()=>{
+  try{
+    const ok=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(ok)document.getElementById('btnPasskey').style.display='block';
+  }catch(e){}
+})();
 
 // Redirect after Google OAuth callback
 (async()=>{
