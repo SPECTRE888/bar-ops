@@ -2432,13 +2432,14 @@ function renderCatPage(cat){
         <col style="width:130px"/><!-- Type -->
         <col style="width:120px"/><!-- Marque -->
         <col style="width:68px"/> <!-- Prix HT -->
-        <col style="width:58px"/> <!-- Contenance -->
-        <col style="width:58px"/> <!-- Unité -->
-        <col style="width:100px"/><!-- Total HT/U -->
+        <col style="width:56px"/> <!-- Contenance -->
+        <col style="width:56px"/> <!-- Unité -->
+        <col style="width:96px"/> <!-- Total HT/U -->
         <col style="width:120px"/><!-- Fournisseur -->
-        <col style="width:95px"/> <!-- Code -->
-        <col style="width:82px"/> <!-- Stock -->
-        <col style="width:58px"/> <!-- Alerte -->
+        <col style="width:90px"/> <!-- Code -->
+        <col style="width:76px"/> <!-- Stock -->
+        <col style="width:54px"/> <!-- Alerte -->
+        <col style="width:190px"/><!-- Actions -->
         <col/>                    <!-- Actions -->
       </colgroup>
       <thead><tr>
@@ -2451,7 +2452,7 @@ function renderCatPage(cat){
         <th>${t('cat_supplier')}</th>
         <th>${t('cat_code')}</th>
         <th style="color:var(--gold)">${t('cat_stock')}</th>
-        <th style="color:var(--text3);font-size:8px">Alerte ≤</th>
+        <th style="color:var(--text3);font-size:8px;white-space:nowrap">Alerte</th>
         <th></th>
       </tr></thead>
       <tbody>`;
