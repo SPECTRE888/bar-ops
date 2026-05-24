@@ -79,18 +79,27 @@ async function waitForSb(){
   return sb;
 }
 
-async function googleAuthLogin(){
+async function openOAuth(action){
   const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
+  // S'assurer que le serveur local est bien démarré (robustesse reconnexion)
+  if(window.electronBridge) await window.electronBridge.restartAuthServer();
   await s.auth.signOut();
-  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'http://127.0.0.1:59876/callback?action=login',queryParams:{prompt:'select_account'}}});
-  if(error)msg(error.message,'err');
+  const{data,error}=await s.auth.signInWithOAuth({
+    provider:'google',
+    options:{
+      redirectTo:'http://127.0.0.1:59876/callback?action='+action,
+      queryParams:{prompt:'select_account'},
+      skipBrowserRedirect:true   // récupère l'URL sans naviguer la page Electron
+    }
+  });
+  if(error)return msg(error.message,'err');
+  if(!data?.url)return msg('Impossible de générer l\'URL OAuth','err');
+  // Ouvre Safari via IPC (pas via will-navigate) → fiable à chaque tentative
+  if(window.electronBridge) window.electronBridge.openExternal(data.url);
+  else window.open(data.url,'_blank');
 }
-async function googleAuthSignup(){
-  const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
-  await s.auth.signOut();
-  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'http://127.0.0.1:59876/callback?action=signup',queryParams:{prompt:'select_account'}}});
-  if(error)msg(error.message,'err');
-}
+async function googleAuthLogin()  { await openOAuth('login');  }
+async function googleAuthSignup() { await openOAuth('signup'); }
 
 async function redirect(userId){
   try{

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, dialog } = require('electron')
+const { app, BrowserWindow, shell, dialog, ipcMain } = require('electron')
 const http = require('http')
 const path = require('path')
 const url  = require('url')
@@ -9,8 +9,17 @@ const AUTH_FILE = path.join(__dirname, 'app', 'auth.html')
 let mainWin   = null
 let authServer = null
 
+// ─── IPC handlers ────────────────────────────────────────────────────────────
+ipcMain.handle('open-external', (_e, u) => shell.openExternal(u))
+ipcMain.handle('restart-auth-server', () => {
+  if (authServer?.listening) return 'already-running'
+  startAuthServer()
+  return 'restarted'
+})
+
 // ─── Local OAuth callback server ─────────────────────────────────────────────
 function startAuthServer() {
+  if (authServer?.listening) return           // already up, skip
   authServer = http.createServer((req, res) => {
     const parsed = url.parse(req.url, true)
 
@@ -70,7 +79,11 @@ function startAuthServer() {
     res.writeHead(404); res.end()
   })
 
-  authServer.on('error', (e) => console.error('[authServer] error:', e.message))
+  authServer.on('error', (e) => {
+    console.error('[authServer] error:', e.message)
+    authServer = null   // allow restart on next attempt
+  })
+  authServer.on('close', () => { authServer = null })
   authServer.listen(AUTH_PORT, '127.0.0.1', () => {
     console.log(`Auth server listening on http://127.0.0.1:${AUTH_PORT}`)
   })
