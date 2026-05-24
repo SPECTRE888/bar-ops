@@ -141,8 +141,8 @@ input:checked + .slider:before{transform:translateX(16px);background:#080808}
 <nav>
   <span class="logo">Bar Ops</span>
   <div class="links">
-    <a href="/app.html">← Application</a>
-    <a href="/company-admin.html" class="active">Collaborateurs</a>
+    <a href="./app.html">← Application</a>
+    <a href="./company-admin.html" class="active">Collaborateurs</a>
     <div class="avatar" id="navAvatar">?</div>
   </div>
 </nav>
@@ -305,10 +305,10 @@ async function boot() {
   // Load Supabase client from config endpoint
   const cfg = await fetch(API_BASE+'/api/config').then(r => r.json()).catch(() => ({}));
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseKey || cfg.supabaseAnonKey);
+  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseKey || cfg.supabaseAnonKey, {auth:{storageKey:'sb-session',persistSession:true,autoRefreshToken:true}});
 
   const { data: { session } } = await _supabase.auth.getSession();
-  if (!session) { window.location = '/auth.html?next=/company-admin.html'; return; }
+  if (!session) { window.location.href = './auth.html'; return; }
   _session = session;
 
   // Load profile
