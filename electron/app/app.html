@@ -9502,8 +9502,161 @@ function renderProfile(){
 
     </div>
 
+    <!-- ROW 3: Collaborateurs (admin uniquement) -->
+    ${isConnected&&(typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin())?`
+    <div style="margin-top:14px">
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="ctitle" style="margin:0">Équipe — Collaborateurs</div>
+          <button class="btn btn-gold btn-sm" onclick="showInviteAgentForm()" id="btn-invite-agent" style="font-size:10px;padding:4px 12px">+ Inviter</button>
+        </div>
+        <!-- Formulaire invitation (masqué par défaut) -->
+        <div id="invite-agent-form" style="display:none;background:var(--surface2);border-radius:6px;padding:12px;border:1px solid var(--border)">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Nouvel accès collaborateur</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Email</div>
+              <input id="agent-invite-email" type="email" placeholder="prenom@email.com" style="width:100%;font-size:11px"/>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Profil</div>
+              <select id="agent-invite-preset" style="width:100%;font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text)">
+                <option value="commercial">Commercial — clients &amp; événements</option>
+                <option value="barman">Barman — catalogue &amp; fournisseurs</option>
+                <option value="custom">Personnalisé</option>
+              </select>
+            </div>
+          </div>
+          <div id="agent-invite-custom-perms" style="display:none;margin-bottom:8px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Permissions</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px">
+              ${Object.entries({canViewRevenue:'Voir le CA total',canViewAnalytics:'Voir les analyses',canViewEventMargin:'Voir les marges',canViewCosts:'Voir les coûts',canManageClients:'Gérer les clients',canCreateEvents:'Créer des événements',canEditProjects:'Modifier les événements',canManageCatalogue:'Gérer le catalogue',canManageStaff:'Gérer l\'équipe',canManageSuppliers:'Gérer les fournisseurs',canExportData:'Exporter'}).map(([k,lbl])=>`
+                <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);cursor:pointer">
+                  <input type="checkbox" class="agent-perm-cb" data-perm="${k}" style="accent-color:var(--gold)"> ${lbl}
+                </label>`).join('')}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('invite-agent-form').style.display='none'">Annuler</button>
+            <button class="btn btn-gold btn-sm" onclick="submitInviteAgent()">Envoyer l'invitation</button>
+          </div>
+        </div>
+        <!-- Liste collaborateurs -->
+        <div id="agents-list-wrap" style="font-size:12px;color:var(--text2)">Chargement…</div>
+      </div>
+    </div>`:''}
+
   </div>`;
   loadSessionsList();
+  if(isConnected&&(typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin())) loadAgentsList();
+  setTimeout(()=>{
+    const sel=document.getElementById('agent-invite-preset');
+    if(sel) sel.addEventListener('change',()=>{
+      document.getElementById('agent-invite-custom-perms').style.display=sel.value==='custom'?'block':'none';
+    });
+  },0);
+}
+
+function showInviteAgentForm(){
+  const f=document.getElementById('invite-agent-form');
+  if(f) f.style.display=f.style.display==='none'?'block':'none';
+}
+
+async function loadAgentsList(){
+  const wrap=document.getElementById('agents-list-wrap');
+  if(!wrap) return;
+  try{
+    const res=await cloudRequest('/api/agents',{method:'POST',body:{type:'manage',action:'list'}});
+    const agents=res?.agents||[];
+    const invitations=res?.invitations||[];
+    const maxAgents=res?.company?.max_agents??2;
+    const limitReached=agents.length>=maxAgents;
+    let html='';
+    if(!agents.length&&!invitations.length){
+      html='<div style="color:var(--text3);font-size:11px;padding:4px 0">Aucun collaborateur pour l\'instant.</div>';
+    } else {
+      const statusColor={active:'var(--gold)',suspended:'var(--text3)',pending:'var(--text2)'};
+      const statusLabel={active:'Actif',suspended:'Suspendu',pending:'En attente'};
+      html='<div style="display:flex;flex-direction:column;gap:6px">';
+      for(const a of agents){
+        const st=a.status||'active';
+        html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border)">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gold);flex-shrink:0">${(a.email||'?').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.email||'—'}</div>
+            <div style="font-size:10px;color:var(--text3)">${a.role||'—'}</div>
+          </div>
+          <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid ${statusColor[st]};color:${statusColor[st]}">${statusLabel[st]||st}</span>
+          ${st==='active'?`<button onclick="agentAction('${a.id}','suspend')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;padding:2px 6px;border-radius:3px" title="Suspendre">⏸</button>`:''}
+          ${st==='suspended'?`<button onclick="agentAction('${a.id}','reactivate')" style="background:none;border:none;cursor:pointer;color:var(--gold);font-size:10px;padding:2px 6px;border-radius:3px" title="Réactiver">▶</button>`:''}
+          <button onclick="agentAction('${a.id}','remove')" style="background:none;border:none;cursor:pointer;color:#dc6464;font-size:11px;padding:2px 6px;border-radius:3px" title="Retirer">✕</button>
+        </div>`;
+      }
+      for(const inv of invitations){
+        html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border);opacity:.7">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--surface);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);flex-shrink:0">?</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${inv.email||'—'}</div>
+            <div style="font-size:10px;color:var(--text3)">Invitation en attente</div>
+          </div>
+          <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--text3)">En attente</span>
+        </div>`;
+      }
+      html+='</div>';
+    }
+    if(limitReached){
+      html+=`<div style="margin-top:10px;padding:10px 12px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="font-size:11px;color:var(--gold)">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''})</div>
+        <button class="btn btn-gold btn-sm" onclick="buyAgentSeat()" style="font-size:10px;padding:4px 12px;white-space:nowrap">+ 1 siège — 29€/mois</button>
+      </div>`;
+    }
+    wrap.innerHTML=html;
+  }catch(e){
+    if(wrap) wrap.innerHTML='<div style="color:var(--text3);font-size:11px">Erreur de chargement.</div>';
+  }
+}
+
+async function submitInviteAgent(){
+  const email=(document.getElementById('agent-invite-email')?.value||'').trim();
+  if(!email){showToast('Saisissez un email');return;}
+  const preset=document.getElementById('agent-invite-preset')?.value||'commercial';
+  const ROLE_PRESETS_APP={
+    commercial:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:true,canViewCosts:false,canManageClients:true,canCreateEvents:true,canEditProjects:true,canManageCatalogue:false,canManageStaff:false,canManageSuppliers:false,canExportData:false},
+    barman:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:false,canViewCosts:false,canManageClients:false,canCreateEvents:false,canEditProjects:false,canManageCatalogue:true,canManageStaff:false,canManageSuppliers:true,canExportData:false},
+    custom:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:false,canViewCosts:false,canManageClients:false,canCreateEvents:false,canEditProjects:false,canManageCatalogue:false,canManageStaff:false,canManageSuppliers:false,canExportData:false}
+  };
+  let perms={...ROLE_PRESETS_APP[preset]||ROLE_PRESETS_APP.commercial};
+  if(preset==='custom'){
+    document.querySelectorAll('.agent-perm-cb').forEach(cb=>{perms[cb.dataset.perm]=cb.checked;});
+  }
+  try{
+    await cloudRequest('/api/agents',{method:'POST',body:{type:'invite',email,role:preset,permissions:perms}});
+    showToast('Invitation envoyée à '+email);
+    document.getElementById('invite-agent-form').style.display='none';
+    document.getElementById('agent-invite-email').value='';
+    loadAgentsList();
+  }catch(e){
+    showToast(e?.message||'Erreur lors de l\'invitation','error');
+  }
+}
+
+async function agentAction(agentId,action){
+  try{
+    await cloudRequest('/api/agents',{method:'POST',body:{type:'manage',action,agentId}});
+    loadAgentsList();
+  }catch(e){
+    showToast(e?.message||'Erreur','error');
+  }
+}
+
+async function buyAgentSeat(){
+  try{
+    const res=await cloudRequest('/api/billing',{method:'POST',body:{action:'add-seat'}});
+    if(res?.url) window.location.href=res.url;
+    else showToast('Erreur lors de la création du lien de paiement','error');
+  }catch(e){
+    showToast(e?.message||'Erreur','error');
+  }
 }
 
 function updProfile(k,v){
