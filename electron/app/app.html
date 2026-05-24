@@ -8030,7 +8030,7 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.phone)}</a>`:'—'}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.email)}</a>`:'—'}</div>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-          <button data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap">
+          <button data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap;width:110px;text-align:center">
             Commander${orderCount?` (${orderCount})`:''}
           </button>
           <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>

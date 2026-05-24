@@ -8006,7 +8006,7 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${escHtml(s.phone||'—')}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.email||'—')}</div>
         <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-          <button onclick="openSupplierOrder(${JSON.stringify(s.name)})" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap">
+          <button onclick="openSupplierOrder(${JSON.stringify(s.name)})" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap;width:110px;text-align:center">
             Commander${orderCount?` (${orderCount})`:''}
           </button>
           <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
