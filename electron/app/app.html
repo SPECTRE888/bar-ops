@@ -3509,18 +3509,12 @@ function updIceCost(){
     let shakerCost = 0;
     let shakerText = '';
 
-    // Add technique ice (shaker or mixing glass)
+    // Shaker uniquement (pas de calcul volumétrique pour glace en pièce)
     if(technique==='shaken'){
       const shakerIce=state.iceTypes.find(i=>i.isForShaker);
       if(shakerIce){
         shakerCost = (shakerIce.priceHT||0) * 0.25;
         shakerText = ` + Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
-      }
-    } else if(technique==='stirred'){
-      const mixIce=state.iceTypes.find(i=>i.isForShaker)||state.iceTypes[0];
-      if(mixIce){
-        shakerCost = (mixIce.priceHT||0) * 0.2;
-        shakerText = ` + Mélangeur ${mixIce.name} : <strong>200g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
       }
     }
 
@@ -3545,18 +3539,12 @@ function updIceCost(){
     let shakerText = '';
     let shakerIce = null;
 
-    // Add technique ice (shaker or mixing glass)
+    // Shaker uniquement (pas de calcul volumétrique pour glace en pièce)
     if(technique==='shaken'){
       shakerIce=state.iceTypes.find(i=>i.isForShaker);
       if(shakerIce){
         shakerCost = (shakerIce.priceHT||0) * 0.25;
         shakerText = ` + Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
-      }
-    } else if(technique==='stirred'){
-      const mixIce=state.iceTypes.find(i=>i.isForShaker)||state.iceTypes[0];
-      if(mixIce){
-        shakerCost = (mixIce.priceHT||0) * 0.2;
-        shakerText = ` + Mélangeur ${mixIce.name} : <strong>200g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong>`;
       }
     }
 
@@ -3596,11 +3584,10 @@ function updIceCost(){
       shakerText = `Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace jetée)</span>`;
     }
   } else if(technique==='stirred'){
-    const mixIce=state.iceTypes.find(i=>i.isForShaker)||state.iceTypes[0];
-    if(mixIce){
-      shakerCost = (mixIce.priceHT||0) * 0.2;
-      shakerText = `Verre mélangeur ${mixIce.name} : <strong>200g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace filtrée)</span>`;
-    }
+    const techMult = ICE_TECHNIQUE.stirred.mult; // 1.5
+    const techVol  = vol * techMult;
+    shakerCost = techVol * cpclHT;
+    shakerText = `Verre mélangeur ${iceType.name||''} : ${vol}cl × ${techMult} = <strong>${techVol.toFixed(1)}cl</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace filtrée)</span>`;
   }
 
   // Service ice: still based on glass volume (how much ice goes in the glass)
