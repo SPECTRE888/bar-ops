@@ -2478,7 +2478,7 @@ function renderCatPage(cat){
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="${INP};color:var(--text3)"/></td>
       <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="width:38px;${INP};text-align:center"/>
+        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};width:38px;text-align:center"/>
         <button class="btn" style="font-size:9px;padding:4px 7px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addToOrderList(${p.id})">+ Commande</button>
         <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button>
       </div></td>
@@ -2721,6 +2721,7 @@ function renderStaff(){
             <label>Rôle</label>
             <select id="role-sel-${s.id}" onchange="onStaffRoleChange(${s.id},this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}<option value="__new__">+ Nouveau rôle...</option></select>
             <input id="new-role-inp-${s.id}" placeholder="Nom du rôle → Entrée" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;padding:0 8px;border:1px solid var(--gold-border);border-radius:4px;background:var(--surface);color:var(--text);font-size:12px;z-index:2" onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRoleInline(${s.id})}else if(event.key==='Escape'){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}" onblur="if(!this.value.trim()){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}"/>
+            ${(state.staffCustomRoles||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(state.staffCustomRoles||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 8px;border:1px solid var(--border2);border-radius:20px;font-size:10px;color:var(--text3)">${escHtml(r)}<button onclick="event.stopPropagation();delStaffCustomRoleByIdx(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0;margin-left:2px;line-height:1;opacity:.7" title="Supprimer ce rôle">✕</button></span>`).join('')}</div>`:''}
           </div>
           <div class="field"><label>Âge</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
           <div></div>
@@ -3758,18 +3759,53 @@ function showSingleEventSuivi(eventId){
         return`<div style="margin-top:8px;padding:10px 14px;border-top:1px solid var(--border)">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:600;margin-bottom:8px">Stock retour</div>
           ${rows.length?`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
-            ${rows.map(([key,{label,unit}])=>`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
-              <span style="flex:1;color:var(--text2)">${label}</span>
-              <input type="number" min="0" step="0.1" placeholder="0" value="${(ev.stockRetour||{})[key]||''}"
-                style="width:75px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right"
-                onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
-              <span style="font-size:10px;color:var(--text3);width:22px">${unit}</span>
+            ${rows.map(([key,{label,unit,needed}])=>{
+              const [kb,kp]=key.split('||');
+              const prod=state.products.find(p=>p.productType===kp&&(p.brand||'')===(kb||''))||state.products.find(p=>p.productType===kp);
+              const volUnit=unit||prod?.unit||'cl';
+              const isBtl=['cl','ml','L'].includes(volUnit);
+              const isWeight=['g','kg'].includes(volUnit);
+              const retourUnit=isBtl?'Btl':isWeight?'kg':'Unité';
+              const bottleSize=isBtl?(prod?.qty||75):1;
+              const usedQty=isBtl?(needed/bottleSize):needed;
+              return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                <span style="flex:1;color:var(--text2)">${label}</span>
+                <span style="font-size:10px;color:var(--text3)">prévu ~${usedQty.toFixed(1)}</span>
+                <input type="number" min="0" step="0.1" placeholder="0" value="${(ev.stockRetour||{})[key]||''}"
+                  style="width:65px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right"
+                  onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
+                <span style="font-size:10px;color:var(--text3);width:26px">${retourUnit}</span>
+              </div>`;
+            }).join('')}
+          </div>`:''}
+          ${(ev.stockRetourCustomItems||[]).length?`<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;padding-top:6px;border-top:1px solid var(--border)">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px">Hors presta / catalogue</div>
+            ${(ev.stockRetourCustomItems||[]).map((item,idx)=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px">
+              <span style="flex:1;color:var(--text2)">${escHtml(item.nom)}${item.detail?` <span style="color:var(--text3);font-size:10px">${escHtml(item.detail)}</span>`:''}</span>
+              <input type="number" min="0" step="0.1" value="${item.qty||1}" style="width:55px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right" onchange="updStockRetourCustomItem(${ev.id},${idx},parseFloat(this.value)||0)"/>
+              <span style="font-size:10px;color:var(--text3);width:26px">${escHtml(item.unite||'Unité')}</span>
+              <button onclick="removeStockRetourCustomItem(${ev.id},${idx})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0">✕</button>
             </div>`).join('')}
           </div>`:''}
-          <button class="btn btn-sm btn-ghost" style="width:100%;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="suiviReinject(${ev.id})">
-            Réinjecter en stock
-          </button>
-          ${!ev.paid?'<div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:center">Marquez la prestation comme payée pour valider</div>':''}
+          <div id="suivi-hors-cat-form-${ev.id}" style="display:none;margin-bottom:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+              <input id="shc-nom-${ev.id}" placeholder="Produit (ex: Vin rouge)" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-detail-${ev.id}" placeholder="Détail (ex: Morgon)" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 60px;gap:6px;margin-bottom:6px">
+              <input id="shc-unite-${ev.id}" placeholder="Unité (Btl, kg, Unité...)" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-qty-${ev.id}" type="number" value="1" min="0.1" step="0.1" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:center"/>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm btn-ghost" style="flex:1" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='none'">Annuler</button>
+              <button class="btn btn-sm btn-gold" style="flex:1" onclick="addSuiviHorsCat(${ev.id})">Ajouter</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <button class="btn btn-sm btn-ghost" style="flex:1;font-size:10px" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='block'">+ Hors presta</button>
+            <button class="btn btn-sm btn-ghost" style="flex:2;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="suiviReinject(${ev.id})">Réinjecter en stock</button>
+          </div>
+          ${!ev.paid?'<div style="font-size:10px;color:var(--text3);text-align:center">Marquez la prestation comme payée pour valider</div>':''}
         </div>`;
       })():''}`;
     })()}
@@ -9996,6 +10032,20 @@ function injectStockRetour(evId){
   save();cloudPush();
   toast(`${count} produit(s) réinjecté(s) en stock`);
   renderSuivi();renderDashboard();
+}
+
+function addSuiviHorsCat(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const nom=(document.getElementById('shc-nom-'+evId)?.value||'').trim();
+  if(!nom){toast('Saisir un nom de produit');return;}
+  const detail=(document.getElementById('shc-detail-'+evId)?.value||'').trim();
+  const unite=(document.getElementById('shc-unite-'+evId)?.value||'Unité').trim();
+  const qty=parseFloat(document.getElementById('shc-qty-'+evId)?.value)||1;
+  if(!ev.stockRetourCustomItems) ev.stockRetourCustomItems=[];
+  ev.stockRetourCustomItems.push({nom,detail,unite,qty});
+  save();
+  document.getElementById('suivi-hors-cat-form-'+evId).style.display='none';
+  showSingleEventSuivi(evId);
 }
 
 function toggleAddStockRetour(evId){
