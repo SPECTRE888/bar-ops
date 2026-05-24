@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('electronConfig', {
 contextBridge.exposeInMainWorld('electronBridge', {
   openExternal:      (u) => ipcRenderer.invoke('open-external', u),
   restartAuthServer: ()  => ipcRenderer.invoke('restart-auth-server'),
+  openOAuthWindow:   (u) => ipcRenderer.invoke('open-oauth-window', u),
 });

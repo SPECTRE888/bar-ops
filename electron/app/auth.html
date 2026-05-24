@@ -54,10 +54,12 @@ h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;margin-
 
 <script>
 let sb=null;
-// Config injectée par Electron via preload.js (window.electronConfig)
 (function(){
-  const cfg = window.electronConfig || {};
-  if(window.supabase) sb=window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey,{auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true}});
+  const cfg=window.electronConfig||{};
+  if(window.supabase) sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{
+    auth:{flowType:'implicit',detectSessionInUrl:true,persistSession:true,
+          storageKey:'sb-session',autoRefreshToken:true}
+  });
 })();
 
 function show(v){
@@ -79,9 +81,62 @@ async function waitForSb(){
   return sb;
 }
 
+async function redirect(userId){
+  try{
+    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
+    if(data&&new Date(data.expires_at)>new Date()){window.location.href='app.html';return;}
+  }catch(e){}
+  window.location.href='app.html';
+}
+
+// ── Vérification session existante au démarrage ──────────────────────────────
+// Si déjà connecté (session Supabase valide), on passe directement à app.html
+(async()=>{
+  const params=new URLSearchParams(window.location.search);
+  const action=params.get('action');
+
+  await waitForSb();
+
+  // Cas 1 : retour OAuth (callback avec tokens dans le hash)
+  if(action){
+    const hash=window.location.hash.slice(1);
+    if(hash){
+      const hp=new URLSearchParams(hash);
+      const accessToken=hp.get('access_token');
+      const refreshToken=hp.get('refresh_token');
+      if(accessToken&&refreshToken){
+        const{data,error}=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
+        if(!error&&data?.session){await redirect(data.session.user.id);return;}
+      }
+    }
+    const{data:{session}}=await sb.auth.getSession();
+    if(session){await redirect(session.user.id);return;}
+    sb.auth.onAuthStateChange(async(e,s)=>{if(e==='SIGNED_IN'&&s)await redirect(s.user.id);});
+    return;
+  }
+
+  // Cas 2 : page chargée normalement → tenter de récupérer la session existante
+  try{
+    // Essaie de rafraîchir le token (silencieux si pas de session)
+    const{data:{session}}=await sb.auth.getSession();
+    if(session&&session.user){
+      // Session valide → aller directement à l'app sans demander de connexion
+      await redirect(session.user.id);
+      return;
+    }
+    // Tente un refresh si on a un refresh_token stocké
+    const{data:{session:refreshed}}=await sb.auth.refreshSession();
+    if(refreshed&&refreshed.user){
+      await redirect(refreshed.user.id);
+      return;
+    }
+  }catch(e){}
+  // Pas de session → afficher le formulaire de connexion normalement
+})();
+
+// ── OAuth via fenêtre interne Electron ──────────────────────────────────────
 async function openOAuth(action){
   const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
-  // S'assurer que le serveur local est bien démarré (robustesse reconnexion)
   if(window.electronBridge) await window.electronBridge.restartAuthServer();
   await s.auth.signOut();
   const{data,error}=await s.auth.signInWithOAuth({
@@ -89,56 +144,18 @@ async function openOAuth(action){
     options:{
       redirectTo:'http://127.0.0.1:59876/callback?action='+action,
       queryParams:{prompt:'select_account'},
-      skipBrowserRedirect:true   // récupère l'URL sans naviguer la page Electron
+      skipBrowserRedirect:true
     }
   });
   if(error)return msg(error.message,'err');
   if(!data?.url)return msg('Impossible de générer l\'URL OAuth','err');
-  // Ouvre Safari via IPC (pas via will-navigate) → fiable à chaque tentative
-  if(window.electronBridge) window.electronBridge.openExternal(data.url);
+  // Fenêtre Electron interne — plus de Safari/navigateur externe
+  if(window.electronBridge?.openOAuthWindow) window.electronBridge.openOAuthWindow(data.url);
+  else if(window.electronBridge?.openExternal) window.electronBridge.openExternal(data.url);
   else window.open(data.url,'_blank');
 }
 async function googleAuthLogin()  { await openOAuth('login');  }
 async function googleAuthSignup() { await openOAuth('signup'); }
-
-async function redirect(userId){
-  try{
-    const{data}=await sb.from('subscriptions').select('status,expires_at').eq('user_id',userId).single();
-    if(data&&new Date(data.expires_at)>new Date()){window.location.href='app.html';return;}
-  }catch(e){}
-  // paying.html n'existe pas dans l'app Electron — envoyer vers app.html directement
-  window.location.href='app.html';
-}
-
-// Redirect after Google OAuth callback
-(async()=>{
-  const params=new URLSearchParams(window.location.search);
-  const action=params.get('action');
-  if(!action)return;
-
-  await waitForSb();
-
-  // Extraire les tokens directement du hash (#access_token=...&refresh_token=...)
-  const hash=window.location.hash.slice(1);
-  if(hash){
-    const hp=new URLSearchParams(hash);
-    const accessToken=hp.get('access_token');
-    const refreshToken=hp.get('refresh_token');
-    if(accessToken&&refreshToken){
-      const{data,error}=await sb.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
-      if(!error&&data?.session){await redirect(data.session.user.id);return;}
-    }
-  }
-
-  // Fallback: session déjà établie par detectSessionInUrl
-  const{data:{session}}=await sb.auth.getSession();
-  if(session){await redirect(session.user.id);return;}
-
-  // Dernier recours: écouter l'événement
-  sb.auth.onAuthStateChange(async(e,s)=>{
-    if(e==='SIGNED_IN'&&s) await redirect(s.user.id);
-  });
-})();
 </script>
 </body>
 </html>
