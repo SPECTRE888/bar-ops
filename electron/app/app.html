@@ -2499,18 +2499,41 @@ function renderKrafter(){
     const synced=p.catalogueProductId&&state.products.find(pr=>pr.id===p.catalogueProductId);
     const isOpen=_openPreps.has(p.id);
     return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;margin-bottom:10px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px">
-        <input id="prep-name-${p.id}" value="${escHtml(p.name)}" onchange="updPrep(${p.id},'name',this.value)" style="flex:2;font-size:13px;font-weight:600;background:transparent;border:none;color:var(--text);outline:none;min-width:0" placeholder="Nom recette"/>
-        <input value="${escHtml(p.catalogueName||'')}" onchange="updPrep(${p.id},'catalogueName',this.value)" placeholder="Nom catalogue" style="flex:1;height:26px;padding:0 8px;font-size:11px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text2);min-width:0"/>
-        <select onchange="updPrep(${p.id},'category',this.value)" style="font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text2);padding:3px 6px;height:26px;flex-shrink:0">
+      <!-- Ligne principale -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
+        <!-- Nom recette -->
+        <input id="prep-name-${p.id}" value="${escHtml(p.name)}" onchange="updPrep(${p.id},'name',this.value)"
+          style="font-size:14px;font-weight:700;color:var(--text);background:transparent;border:none;border-bottom:1px solid transparent;outline:none;flex:1;min-width:120px;padding:0"
+          placeholder="Nom recette"
+          onfocus="this.style.borderBottomColor='var(--gold)'"
+          onblur="this.style.borderBottomColor='transparent'"/>
+        <!-- Catégorie badge -->
+        <select onchange="updPrep(${p.id},'category',this.value)"
+          style="font-size:9px;letter-spacing:.07em;text-transform:uppercase;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text3);padding:3px 8px;height:22px;flex-shrink:0;cursor:pointer">
           ${PREP_CATEGORIES.map(c=>`<option${c===p.category?' selected':''}>${c}</option>`).join('')}
         </select>
-        <span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0">Coût : <strong style="color:var(--gold)" id="prep-cost-total-${p.id}">${fmt(total)}</strong></span>
-        <span style="font-size:11px;color:var(--text2);white-space:nowrap;flex-shrink:0"><strong id="prep-cost-ppu-${p.id}">${fmt(ppu)} / ${escHtml(p.yieldUnit||'unité')}</strong></span>
-        ${synced?`<span style="font-size:9px;background:#1a7a1a;color:#6fcf6f;padding:2px 6px;border-radius:3px;letter-spacing:.06em;flex-shrink:0">CATALOGUE ✓</span>`:''}
-        <button class="btn-edit" onclick="openPrepFiche(${p.id})" title="Fiche technique">Fiche</button>
-        <button id="prep-toggle-${p.id}" class="btn-edit" onclick="togglePrepForm(${p.id})">${isOpen?'▲ Réduire':'▼ Détails'}</button>
-        <button class="btn btn-sm btn-danger" onclick="delPrep(${p.id})">×</button>
+        ${synced?`<span style="font-size:9px;background:#1a3a1a;color:#6fcf6f;border:1px solid #2d6a2d;padding:2px 7px;border-radius:10px;letter-spacing:.06em;flex-shrink:0;white-space:nowrap">✓ Catalogue</span>`:''}
+        <!-- Coûts -->
+        <div style="text-align:right;flex-shrink:0;line-height:1.4">
+          <div style="font-size:12px;color:var(--gold);font-weight:700" id="prep-cost-total-${p.id}">${fmt(total)}</div>
+          <div style="font-size:10px;color:var(--text3)" id="prep-cost-ppu-${p.id}">${fmt(ppu)} / ${escHtml(p.yieldUnit||'unité')}</div>
+        </div>
+        <!-- Actions -->
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn-edit" onclick="openPrepFiche(${p.id})">Fiche</button>
+          <button id="prep-toggle-${p.id}" class="btn-edit" onclick="togglePrepForm(${p.id})">${isOpen?'▲':'▼'}</button>
+          <button class="btn btn-sm btn-danger" onclick="delPrep(${p.id})">×</button>
+        </div>
+      </div>
+      <!-- Ligne secondaire : nom catalogue -->
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 14px;background:var(--surface2)">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);white-space:nowrap;flex-shrink:0">Nom catalogue :</span>
+        <input value="${escHtml(p.catalogueName||'')}" onchange="updPrep(${p.id},'catalogueName',this.value)"
+          placeholder="Nom tel qu'il apparaîtra dans le catalogue…"
+          style="flex:1;font-size:11px;color:var(--text2);background:transparent;border:none;outline:none;min-width:0;padding:0"
+          onfocus="this.style.borderBottom='1px solid var(--gold)'"
+          onblur="this.style.borderBottom='none'"/>
+        <button class="btn btn-sm btn-gold" onclick="sendPrepToCatalogue(${p.id})" style="flex-shrink:0;font-size:9px">${synced?'↻ Maj catalogue':'→ Catalogue'}</button>
       </div>
       <div id="prep-detail-${p.id}" style="display:${isOpen?'block':'none'};padding:14px;border-top:1px solid var(--border2)">
         <div style="display:grid;grid-template-columns:1fr 120px 120px;gap:8px;margin-bottom:14px">
@@ -2548,8 +2571,7 @@ function renderKrafter(){
           </table>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px;border-top:1px solid var(--border2)">
-          <button class="btn btn-ghost" onclick="togglePrepForm(${p.id})">Réduire</button>
-          <button class="btn btn-gold" onclick="sendPrepToCatalogue(${p.id})">${synced?'Mettre à jour le catalogue':'→ Envoyer au catalogue'}</button>
+          <button class="btn btn-ghost" onclick="togglePrepForm(${p.id})">▲ Réduire</button>
         </div>
       </div>
     </div>`;
