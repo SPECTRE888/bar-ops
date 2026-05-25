@@ -5413,7 +5413,7 @@ function epSearch(i,val){
   if(!types.length){sugg.style.display='none';return;}
   sugg.style.display='block';
   sugg.innerHTML=types.slice(0,8).map(type=>
-    `<div onmousedown="epSelectType(${i},${JSON.stringify(type)})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${escHtml(type)}</strong></div>`
+    `<div onmousedown='epSelectType(${i},${JSON.stringify(type)})' style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${escHtml(type)}</strong></div>`
   ).join('');
 }
 
@@ -5438,7 +5438,7 @@ function epBrandSearch(i,val){
   sugg.style.display='block';
   sugg.innerHTML=matches.slice(0,8).map(pr=>{
     const unit=pr.unit||'pc';const qty=pr.qty||0;
-    return`<div onmousedown="epSelectBrand(${i},${JSON.stringify(pr.brand||'')},${JSON.stringify(unit)},${(pr.priceHT||0).toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    return`<div onmousedown='epSelectBrand(${i},${JSON.stringify(pr.brand||'')},${JSON.stringify(unit)},${(pr.priceHT||0).toFixed(2)},${qty})' style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       <strong>${escHtml(pr.brand||'—')}</strong><span style="color:var(--text3);font-size:10px;margin-left:6px">${qty}${escHtml(unit)}</span>
     </div>`;
   }).join('');
