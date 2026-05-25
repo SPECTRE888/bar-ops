@@ -2426,15 +2426,15 @@ function renderCatPage(cat){
       <colgroup>
         <col style="width:130px"/><!-- Type -->
         <col style="width:120px"/><!-- Marque -->
-        <col style="width:68px"/> <!-- Prix HT -->
-        <col style="width:64px"/> <!-- Contenance -->
-        <col style="width:60px"/> <!-- Unité -->
-        <col style="width:96px"/> <!-- Total HT/U -->
+        <col style="width:72px"/> <!-- Prix HT -->
+        <col style="width:72px"/> <!-- Contenance -->
+        <col style="width:72px"/> <!-- Unité -->
+        <col style="width:90px"/> <!-- Total HT/U -->
         <col style="width:120px"/><!-- Fournisseur -->
         <col style="width:90px"/> <!-- Code -->
-        <col style="width:76px"/> <!-- Stock -->
-        <col style="width:54px"/> <!-- Alerte -->
-        <col style="width:190px"/><!-- Actions -->
+        <col style="width:72px"/> <!-- Stock -->
+        <col style="width:72px"/> <!-- Alerte -->
+        <col style="width:180px"/><!-- Actions -->
       </colgroup>
       <thead><tr>
         <th>${arr('type',t('cat_type'))}</th>
@@ -2472,7 +2472,7 @@ function renderCatPage(cat){
       <td><input value="${escHtml(p.supplierCode||'')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="${INP};font-family:monospace"/></td>
       <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:2px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
-        style="${INP};width:${stockLow?'52px':'62px'};border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"/>
+        style="${INP};border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"/>
       </td>
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
