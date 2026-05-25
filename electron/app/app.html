@@ -2326,12 +2326,11 @@ function addPrep(){
   save();renderKrafter();
   setTimeout(()=>{const el=document.getElementById('prep-name-'+id);if(el){el.focus();el.select();}},100);
 }
-function delPrep(id){
-  showConfirm('Supprimer cette recette ?','#dc3545',()=>{
-    state.preparations=state.preparations.filter(p=>p.id!==id);
-    _openPreps.delete(id);
-    save();renderKrafter();
-  });
+async function delPrep(id){
+  if(!await confirmModal('Supprimer cette recette ?'))return;
+  state.preparations=state.preparations.filter(p=>p.id!==id);
+  _openPreps.delete(id);
+  save();renderKrafter();
 }
 function updPrep(id,k,v){
   const p=state.preparations.find(p=>p.id===id);if(!p)return;
