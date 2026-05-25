@@ -60,16 +60,17 @@ h1{font-family:var(--font-display);font-size:28px;font-weight:300;margin-bottom:
 .invite-form .field.grow{flex:1;min-width:200px}
 
 /* BUTTONS */
-.btn{padding:8px 16px;border-radius:3px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:none;color:var(--text2);transition:all .15s;font-family:var(--font-body)}
+.btn{padding:8px 16px;border-radius:4px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:none;color:var(--text2);transition:all .2s;font-family:var(--font-body);display:inline-flex;align-items:center;gap:6px;line-height:1;white-space:nowrap}
 .btn:hover{border-color:var(--gold);color:var(--gold)}
 .btn-primary{background:var(--gold);color:#080808;border-color:var(--gold);font-weight:600}
-.btn-primary:hover{background:var(--gold2);border-color:var(--gold2)}
+.btn-primary:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(196,164,107,.2)}
+.btn-primary:active{transform:scale(.98)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.07)}
 .btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
-.btn-danger:hover{opacity:.8}
-.btn-sm{padding:5px 10px;font-size:9px}
+.btn-danger:hover{border-color:var(--danger);opacity:.85}
+.btn-sm{padding:5px 11px;font-size:9px}
 
 /* SEAT BANNER */
 .seat-banner{background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
