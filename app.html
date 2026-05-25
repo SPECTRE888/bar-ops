@@ -518,7 +518,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
   <div class="content">
     <div id="glass-tb-wrap"><table class="ptable"><thead><tr><th>Par défaut</th><th>Type</th><th>Gamme</th><th>${t('cat_glass_price')}</th><th>${t('cat_glass_vol')}</th><th>${t('cat_glass_ht')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="glass-tb"></tbody></table></div>
     <div id="glass-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucun verre</p></div>
-    <table class="ptable" style="margin-top:16px"><thead><tr><th style="min-width:80px;font-size:10px">Glace à shaker</th><th>Type de glace</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="ice-tb"></tbody></table>
+    <table class="ptable" style="margin-top:16px"><thead><tr><th style="min-width:60px">Shaker</th><th>Type de glace</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="ice-tb"></tbody></table>
     <div id="ice-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucune glace</p></div>
   </div>
 </div>
@@ -2057,7 +2057,7 @@ function renderCatalogue(){
       <div class="card">
         <div class="ctitle"> Glace</div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table class="ptable"><thead><tr><th style="min-width:80px;font-size:10px">Glace à shaker</th><th>Type</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead>
+          <table class="ptable"><thead><tr><th style="min-width:60px">Shaker</th><th>Type</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead>
           <tbody id="ice-tb"></tbody></table>
         </div>
         <div id="ice-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucune glace</p></div>
@@ -2434,7 +2434,7 @@ function renderCatPage(cat){
         <col style="width:90px"/> <!-- Code -->
         <col style="width:72px"/> <!-- Stock -->
         <col style="width:72px"/> <!-- Alerte -->
-        <col style="width:180px"/><!-- Actions -->
+        <col style="width:210px"/><!-- Actions -->
       </colgroup>
       <thead><tr>
         <th>${arr('type',t('cat_type'))}</th>
@@ -2477,10 +2477,10 @@ function renderCatPage(cat){
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="${INP};color:var(--text3)"/></td>
-      <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};width:38px;text-align:center"/>
-        <button class="btn" style="font-size:9px;padding:4px 7px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addToOrderList(${p.id})">+ Commande</button>
-        <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button>
+      <td><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};width:48px;text-align:center"/>
+        <button class="btn" style="font-size:9px;padding:4px 10px;white-space:nowrap;height:28px;display:flex;align-items:center" onclick="addToOrderList(${p.id})">+ Commande</button>
+        <button class="btn btn-sm btn-danger" style="padding:4px 8px;height:28px" onclick="delProduct(${p.id})">×</button>
       </div></td>
     </tr>`;
   });
