@@ -9384,42 +9384,8 @@ function renderProfile(){
     ${isConnected&&(typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin())?`
     <div style="margin-top:14px">
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div class="ctitle" style="margin:0">Équipe — Collaborateurs</div>
-          <button class="btn btn-gold btn-sm" onclick="showInviteAgentForm()" id="btn-invite-agent" style="font-size:10px;padding:4px 12px">+ Inviter</button>
-        </div>
-        <!-- Formulaire invitation (masqué par défaut) -->
-        <div id="invite-agent-form" style="display:none;background:var(--surface2);border-radius:6px;padding:12px;border:1px solid var(--border)">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Nouvel accès collaborateur</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-            <div>
-              <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Email</div>
-              <input id="agent-invite-email" type="email" placeholder="prenom@email.com" style="width:100%;font-size:11px"/>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Profil</div>
-              <select id="agent-invite-preset" style="width:100%;font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text)">
-                <option value="commercial">Commercial — clients &amp; événements</option>
-                <option value="barman">Barman — catalogue &amp; fournisseurs</option>
-                <option value="custom">Personnalisé</option>
-              </select>
-            </div>
-          </div>
-          <div id="agent-invite-custom-perms" style="display:none;margin-bottom:8px">
-            <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Permissions</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px">
-              ${Object.entries({canViewRevenue:'Voir le CA total',canViewAnalytics:'Voir les analyses',canViewEventMargin:'Voir les marges',canViewCosts:'Voir les coûts',canManageClients:'Gérer les clients',canCreateEvents:'Créer des événements',canEditProjects:'Modifier les événements',canManageCatalogue:'Gérer le catalogue',canManageStaff:'Gérer l\'équipe',canManageSuppliers:'Gérer les fournisseurs',canExportData:'Exporter'}).map(([k,lbl])=>`
-                <label style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);cursor:pointer">
-                  <input type="checkbox" class="agent-perm-cb" data-perm="${k}" style="accent-color:var(--gold)"> ${lbl}
-                </label>`).join('')}
-            </div>
-          </div>
-          <div style="display:flex;gap:6px;justify-content:flex-end">
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('invite-agent-form').style.display='none'">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="submitInviteAgent()">Envoyer l'invitation</button>
-          </div>
-        </div>
-        <!-- Liste collaborateurs -->
+        <div class="ctitle" style="margin:0 0 4px 0">Collaborateurs</div>
+        <!-- Tout le contenu est géré par loadAgentsList() -->
         <div id="agents-list-wrap" style="font-size:12px;color:var(--text2)">Chargement…</div>
       </div>
     </div>`:''}
