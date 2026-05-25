@@ -282,7 +282,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn-gold:active{transform:scale(.98)}
 .btn-ghost{border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;letter-spacing:.09em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;background:transparent;cursor:pointer;font-family:var(--font-body);line-height:1}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.07)}
-.btn-edit{padding:7px 14px;font-size:10px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.09em;transition:.2s;line-height:1;font-family:var(--font-body);text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-edit{padding:5px 11px;font-size:9px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.08em;transition:.2s;line-height:1;font-family:var(--font-body);text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn-edit:hover{border-color:var(--gold-border);color:var(--gold)}
 .btn-sm{padding:5px 11px!important;font-size:9px!important;letter-spacing:.08em;height:auto!important}
 .btn-ghost.btn-sm{padding:5px 11px;font-size:9px;height:auto;border-radius:4px}
@@ -6315,7 +6315,7 @@ function renderShopping(){
         <input type="checkbox" id="${stockOkId}" data-ev="${evId}" data-item="${item.itemKey}" data-unit="${item.unit}" data-input="${qtyInputId}" ${allocQty>0?'checked':''} onchange="onShopStockOkChange(this)" style="cursor:pointer;width:18px;height:18px"/>
       </td>
       <td style="padding:10px;text-align:center"><input type="number" id="${qtyInputId}" value="${pQty}" min="1" style="width:60px;padding:4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center"/></td>
-      <td style="padding:10px;text-align:center"><button class="btn-profile" onclick="addToSupplierBasket(${evId},${JSON.stringify(item.productType)},${JSON.stringify(item.brand)},${JSON.stringify(item.unit)},document.getElementById('${qtyInputId}').value,${JSON.stringify(item.supplierEmail)},${JSON.stringify(item.supplierName)},${JSON.stringify(item.supplierCode)})" style="padding:6px 12px;font-size:11px;margin:0;white-space:nowrap;background:var(--gold);color:#0d0d0d;border:none;border-radius:6px;cursor:pointer;font-weight:500">+ Commander</button></td>
+      <td style="padding:10px;text-align:center"><button class="btn btn-sm btn-gold" onclick="addToSupplierBasket(${evId},${JSON.stringify(item.productType)},${JSON.stringify(item.brand)},${JSON.stringify(item.unit)},document.getElementById('${qtyInputId}').value,${JSON.stringify(item.supplierEmail)},${JSON.stringify(item.supplierName)},${JSON.stringify(item.supplierCode)})">+ Commander</button></td>
     </tr>`;
   });
   html+=`</tbody></table>
@@ -7760,7 +7760,7 @@ function renderClients(){
           ${createdLabel?`<span style="font-size:10px;color:var(--text3);white-space:nowrap">depuis ${createdLabel}</span>`:''}
           ${totalCA>0?`<span style="font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;padding:3px 8px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:4px">${fmt(totalCA)} HT</span>`:''}
           <button class="btn-edit" onclick="event.stopPropagation();toggleClient(${c.id})">${isOpen?'Fermer':'Modifier'}</button>
-          <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})" style="padding:4px 10px;font-size:10px">+ Prestation</button>
+          <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})">+ Prestation</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -8159,9 +8159,9 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${escHtml(s.phone||'—')}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.email||'—')}</div>
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
-          <button onclick="openSupplierOrder(${JSON.stringify(s.name)})" style="padding:4px 10px;font-size:10px;background:var(--gold);color:#0d0d0d;border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap;width:110px;text-align:center">Commander${orderCount?` (${orderCount})`:''}</button>
+          <button class="btn btn-sm btn-gold" onclick="openSupplierOrder(${JSON.stringify(s.name)})">Commander${orderCount?` (${orderCount})`:''}</button>
           <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
-          <button onclick="delSupplier(${s.id})" style="width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:14px;transition:.15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
+          <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})">×</button>
         </div>
       </div>`;
     }).join('')}
