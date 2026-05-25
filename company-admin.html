@@ -333,17 +333,7 @@ async function boot() {
   // UI init
   document.getElementById('navAvatar').textContent = (session.user.email || '?')[0].toUpperCase();
 
-  // Plan : lire la subscription Stripe active
-  let planLabel = {'solo':'Early Access','pro':'Pro','business':'Business'}[profile.companies?.plan] || (profile.companies?.plan || 'Standard');
-  try {
-    const { data: sub } = await _supabase
-      .from('subscriptions')
-      .select('status, plan, expires_at')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-    if (sub?.plan) planLabel = {'solo':'Early Access','pro':'Pro','business':'Business'}[sub.plan] || sub.plan;
-    else if (sub?.status === 'active') planLabel = 'Actif';
-  } catch(e) {}
+  const planLabel = {'solo':'Early Access','pro':'Pro','business':'Business'}[profile.companies?.plan] || (profile.companies?.plan || 'Standard');
   document.getElementById('companySubtitle').textContent =
     `${profile.companies?.name || 'Votre entreprise'} — ${planLabel}`;
 
