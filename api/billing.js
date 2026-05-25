@@ -68,5 +68,22 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ url: session.url });
   }
 
+  // ── SUBSCRIBE (depuis paying.html) ────────────────────────
+  if (action === 'subscribe') {
+    const { plan, period, priceInCents } = req.body;
+    if (!plan || !priceInCents) return res.status(400).json({ error: 'Plan ou prix manquant' });
+    const interval = period === 'yearly' ? 'year' : 'month';
+    const planLabels = { solo: 'Bar Ops Solo', pro: 'Bar Ops Pro', business: 'Bar Ops Business' };
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price_data: { currency: 'eur', recurring: { interval }, product_data: { name: planLabels[plan] || 'Bar Ops' }, unit_amount: Math.round(priceInCents) }, quantity: 1 }],
+      metadata: { type: 'subscription', user_id: user.id, plan },
+      success_url: `${APP_URL}/app.html`,
+      cancel_url: `${APP_URL}/paying.html`,
+    });
+    return res.status(200).json({ sessionId: session.id, url: session.url });
+  }
+
   return res.status(400).json({ error: 'Action inconnue' });
 };
