@@ -304,10 +304,12 @@ async function boot() {
   // Load Supabase client from config endpoint
   const cfg = await fetch('/api/config').then(r => r.json()).catch(() => ({}));
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseKey || cfg.supabaseAnonKey);
+  _supabase = createClient(cfg.supabaseUrl, cfg.supabaseKey || cfg.supabaseAnonKey, {
+    auth: { storageKey: 'sb-session', persistSession: true, autoRefreshToken: true }
+  });
 
   const { data: { session } } = await _supabase.auth.getSession();
-  if (!session) { window.location = '/auth.html?next=/company-admin.html'; return; }
+  if (!session) { window.location.href = '/auth.html'; return; }
   _session = session;
 
   // Load profile
