@@ -5401,6 +5401,7 @@ function epAutoPrice(i){
 
 function epSearch(i,val){
   updExtraProd(i,'productType',val);
+  updExtraProd(i,'name',val); // saisie libre : name = ce que l'utilisateur tape
   const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
   if(!val.trim()){sugg.style.display='none';return;}
   const q=val.toLowerCase();
@@ -5419,6 +5420,7 @@ function epSearch(i,val){
 function epSelectType(i,type){
   const sugg=document.getElementById('ep-sugg-'+i);if(sugg)sugg.style.display='none';
   updExtraProd(i,'productType',type);
+  updExtraProd(i,'name',type);
   updExtraProd(i,'brand','');
   updExtraProd(i,'costHT',0);
   updExtraProd(i,'volume','');
@@ -5446,7 +5448,9 @@ function epSelectBrand(i,brand,unit,costPerUnit,qty){
   if(!window._evExtraProducts[i])return;
   const sugg=document.getElementById('ep-brand-sugg-'+i);if(sugg)sugg.style.display='none';
   const volume=qty?qty+unit:unit;
-  Object.assign(window._evExtraProducts[i],{brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1});
+  const type=window._evExtraProducts[i].productType||'';
+  const fullName=(brand?brand+' — ':'')+type||brand;
+  Object.assign(window._evExtraProducts[i],{brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1,name:fullName||brand||type});
   _renderExtraProds();
   epAutoPrice(i);
   setTimeout(()=>{const m=document.getElementById('ep-mult-'+i);if(m){m.focus();m.select();}},50);
@@ -5586,7 +5590,7 @@ async function saveEv(){
     remisePct:parseFloat(document.getElementById('ef-remise-pct')?.value)||0,
     remiseHT:parseFloat(document.getElementById('ef-remise-ht')?.value)||0,
     cocktails:Object.entries(sel).map(([id,cfg])=>({id:parseInt(id),qty:cfg.qty,pct:cfg.pct||0,glass:cfg.glass||'',glassId:cfg.glassId||null,glassCostHT:cfg.glassCostHT||0,iceTypeId:cfg.iceTypeId??null,serviceIce:cfg.serviceIce??null})),
-    extraProducts:(window._evExtraProducts||[]).filter(p=>p.name&&p.qty),
+    extraProducts:(window._evExtraProducts||[]).filter(p=>(p.name||p.productType)&&p.qty).map(p=>({...p,name:p.name||p.productType})),
     exchanges:document.getElementById('ef-exchanges')?.value||'',
     exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||'',
     dryIce:document.getElementById('ef-dryice')?.checked||false,
