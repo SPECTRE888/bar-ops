@@ -2730,6 +2730,10 @@ function renderStaff(){
           <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
           <div class="field"><label>Email</label><input type="email" value="${escHtml(s.email||'')}" onchange="updStaff(${s.id},'email',this.value)" placeholder="jean@mail.com"/></div>
           <div class="field"><label>Adresse</label><input value="${escHtml(s.address||'')}" onchange="updStaff(${s.id},'address',this.value)" placeholder="Adresse complète"/></div>
+          <div class="field"><label>Zone géographique</label><select onchange="updStaff(${s.id},'zone',this.value)">
+            <option value="">— Sélectionner —</option>
+            ${['Paris & Île-de-France','Côte d\'Azur','Lyon & Rhône-Alpes','Bordeaux & Aquitaine','Marseille & PACA','Toulouse & Occitanie','Nantes & Pays de la Loire','Strasbourg & Alsace','Lille & Nord','Normandie','Bretagne','Montpellier','Grenoble & Alpes','Réunion','Martinique','Guadeloupe','Autre'].map(z=>`<option value="${z}"${s.zone===z?' selected':''}>${z}</option>`).join('')}
+          </select></div>
         </div>
         <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Mensurations & Physique</div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px">
