@@ -282,11 +282,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn-gold:active{transform:scale(.98)}
 .btn-ghost{border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;letter-spacing:.09em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;background:transparent;cursor:pointer;font-family:var(--font-body);line-height:1}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.07)}
-.btn-edit{padding:5px 11px;font-size:9px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.08em;transition:.2s;line-height:1;font-family:var(--font-body);text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-edit{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.08em;transition:.2s;line-height:1;font-family:var(--font-body);text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn-edit:hover{border-color:var(--gold-border);color:var(--gold)}
-.btn-sm{padding:5px 11px!important;font-size:9px!important;letter-spacing:.08em;height:auto!important}
-.btn-ghost.btn-sm{padding:5px 11px;font-size:9px;height:auto;border-radius:4px}
-.btn-danger.btn-sm{padding:5px 11px;font-size:9px;height:auto;border-radius:4px}
+.btn-sm{padding:0 11px!important;height:28px!important;box-sizing:border-box!important;font-size:9px!important;letter-spacing:.08em}
+.btn-ghost.btn-sm{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;border-radius:4px}
+.btn-danger.btn-sm{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;border-radius:4px}
 .btn-danger{color:var(--red);border-color:var(--border2);background:var(--red-bg)}
 .btn-danger:hover{border-color:var(--red);background:rgba(196,112,112,0.14)}
 .btn-logout{border-color:var(--border2);color:var(--text3);font-size:10px}
@@ -299,8 +299,8 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn-primary:hover{background:#7abc94;border-color:#7abc94}
 .btn-blue{background:var(--blue);color:#f5f3ef;border:1px solid var(--blue);font-weight:600;padding:8px 18px;border-radius:4px;font-size:10px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:.2s;font-family:var(--font-body);text-transform:uppercase;letter-spacing:.09em;line-height:1}
 .btn-blue:hover{background:#7a98d4;border-color:#7a98d4}
-.btn-blue.btn-sm{padding:5px 11px;height:auto;font-size:9px}
-.btn-gold.btn-sm{padding:5px 11px;height:auto;font-size:9px}
+.btn-blue.btn-sm{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px}
+.btn-gold.btn-sm{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px}
 
 /* ── PRODUCT TABLE ── */
 .ptable{width:100%;border-collapse:collapse}
@@ -309,7 +309,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .ptable tr:last-child td{border-bottom:none}
 .ptable td input,.ptable td select{padding:3px 6px!important;font-size:11px!important;height:28px!important;box-sizing:border-box!important;-webkit-appearance:menulist-button}
 .ptable td input{-webkit-appearance:none}
-.ptable td button{height:28px!important;padding-top:0!important;padding-bottom:0!important;box-sizing:border-box!important}
+.ptable td button{height:28px!important;box-sizing:border-box!important}
 .cpu{font-size:10px;padding:3px 8px;border-radius:3px;white-space:nowrap;display:inline-block;letter-spacing:.04em}
 .cpu-ok{background:var(--green-bg);border:1px solid rgba(90,144,112,0.2);color:var(--green)}
 .cpu-warn{background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold)}
@@ -2640,7 +2640,7 @@ function renderCatPage(cat){
         <th style="white-space:nowrap">${t('cat_code')}</th>
         <th style="color:var(--gold)">${t('cat_stock')}</th>
         <th style="color:var(--text3);font-size:8px;white-space:nowrap">Alerte</th>
-        <th style="color:var(--text3);font-size:8px">Qté</th>
+        <th style="color:var(--text3);font-size:8px;padding-left:16px;border-left:1px solid var(--border2)">Qté</th>
         <th></th>
         <th></th>
       </tr></thead>
@@ -2672,7 +2672,7 @@ function renderCatPage(cat){
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="${INP};color:var(--text3)"/></td>
-      <td><input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};text-align:center"/></td>
+      <td style="padding-left:16px;border-left:1px solid var(--border2)"><input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};text-align:center"/></td>
       <td><button class="btn btn-sm" style="width:100%" onclick="addToOrderList(${p.id})">+ Commande</button></td>
       <td style="text-align:center"><button class="btn btn-sm btn-danger" style="width:100%" onclick="delProduct(${p.id})">×</button></td>
     </tr>`;
