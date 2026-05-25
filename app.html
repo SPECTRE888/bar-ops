@@ -2296,7 +2296,7 @@ function updateBadges(){
 // KRAFTER — Recettes & préparations maison
 // ════════════════════════════════════════════════════════
 const PREP_CATEGORIES=['Sirop','Infusion','Teinture','Purée','Shrub','Bitters','Autre'];
-const PREP_UNITS=['ml','cl','L','g','kg','Pièce','c.s.','c.c.'];
+const _openPreps=new Set(); // track which prep forms are expanded
 
 function calcPrepCost(prep){
   return (prep.ingredients||[]).reduce((s,i)=>s+(parseFloat(i.qty)||0)*(parseFloat(i.pricePerUnit)||0),0);
@@ -2309,12 +2309,14 @@ function calcPrepPricePerUnit(prep){
 function addPrep(){
   const id=Date.now();
   state.preparations.push({id,name:'Nouvelle recette',category:'Sirop',description:'',yieldQty:1,yieldUnit:'L',cookTime:'',cookNotes:'',ingredients:[],catalogueProductId:null});
+  _openPreps.add(id);
   save();renderKrafter();
   setTimeout(()=>{const el=document.getElementById('prep-name-'+id);if(el){el.focus();el.select();}},100);
 }
 function delPrep(id){
   showConfirm('Supprimer cette recette ?','#dc3545',()=>{
     state.preparations=state.preparations.filter(p=>p.id!==id);
+    _openPreps.delete(id);
     save();renderKrafter();
   });
 }
@@ -2324,7 +2326,7 @@ function updPrep(id,k,v){
 }
 function addPrepIng(prepId){
   const p=state.preparations.find(p=>p.id===prepId);if(!p)return;
-  p.ingredients.push({id:Date.now(),name:'',qty:0,unit:'g',pricePerUnit:0});
+  p.ingredients.push({id:Date.now(),name:'',qty:'',unit:'',pricePerUnit:''});
   save();renderPrepIngList(prepId);
 }
 function delPrepIng(prepId,ingId){
@@ -2346,30 +2348,47 @@ function updatePrepCostDisplay(prepId){
   if(elTotal)elTotal.textContent=fmt(total);
   if(elPpu)elPpu.textContent=fmt(ppu)+' / '+(p.yieldUnit||'unité');
 }
-function renderPrepIngs(p){
-  const rows=(p.ingredients||[]).map(i=>`
-  <tr>
-    <td><input value="${escHtml(i.name)}" placeholder="Ingrédient" onchange="updPrepIng(${p.id},${i.id},'name',this.value)" style="width:100%;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/></td>
-    <td><input type="number" value="${i.qty||''}" min="0" step="any" placeholder="0" onchange="updPrepIng(${p.id},${i.id},'qty',this.value)" style="width:100%;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:right"/></td>
-    <td><select onchange="updPrepIng(${p.id},${i.id},'unit',this.value)" style="width:100%;height:28px;padding:3px 4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box">
-      ${PREP_UNITS.map(u=>`<option${u===i.unit?' selected':''}>${u}</option>`).join('')}
-    </select></td>
-    <td><input type="number" value="${i.pricePerUnit||''}" min="0" step="any" placeholder="0.00" onchange="updPrepIng(${p.id},${i.id},'pricePerUnit',this.value)" style="width:100%;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:right"/></td>
-    <td style="text-align:center"><button class="btn btn-sm btn-danger" onclick="delPrepIng(${p.id},${i.id})">×</button></td>
-  </tr>`).join('');
-  return rows||`<tr><td colspan="5" style="text-align:center;color:var(--text3);font-size:11px;padding:8px">Aucun ingrédient — cliquez "+ Ingrédient"</td></tr>`;
-}
+function _ingStyle(){return 'width:100%;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box';}
 function renderPrepIngList(prepId){
-  const p=state.preparations.find(p=>p.id===prepId);if(!p)return;
-  const tbody=document.getElementById('prep-ing-tbody-'+prepId);
-  if(tbody)tbody.innerHTML=renderPrepIngs(p);
+  const p=state.preparations.find(pr=>pr.id===prepId);if(!p)return;
+  const tbody=document.getElementById('prep-ing-tbody-'+prepId);if(!tbody)return;
+  const ings=p.ingredients||[];
+  if(!ings.length){
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun ingrédient — cliquez "+ Ingrédient"</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=ings.map(i=>`<tr id="kr-ing-row-${prepId}-${i.id}">
+    <td style="overflow:visible;min-width:160px"><div id="kr-ing-ss-${prepId}-${i.id}"></div></td>
+    <td><input id="kr-ing-qty-${prepId}-${i.id}" type="number" value="${i.qty||''}" min="0" step="any" placeholder="0" onchange="updPrepIng(${prepId},${i.id},'qty',this.value)" style="${_ingStyle()};text-align:right"/></td>
+    <td><input id="kr-ing-unit-${prepId}-${i.id}" value="${escHtml(i.unit||'')}" placeholder="g, cl, L…" onchange="updPrepIng(${prepId},${i.id},'unit',this.value)" style="${_ingStyle()}"/></td>
+    <td><input id="kr-ing-price-${prepId}-${i.id}" type="number" value="${i.pricePerUnit||''}" min="0" step="any" placeholder="0.000" onchange="updPrepIng(${prepId},${i.id},'pricePerUnit',this.value)" style="${_ingStyle()};text-align:right"/></td>
+    <td style="text-align:center"><button class="btn btn-sm btn-danger" onclick="delPrepIng(${prepId},${i.id})">×</button></td>
+  </tr>`).join('');
+  // Init searchable selects from catalogue
+  ings.forEach(i=>{
+    const prodOpts=[...new Set(state.products.map(pr=>pr.productType+(pr.brand?' — '+pr.brand:'')).filter(Boolean))].sort();
+    mkSS(`kr-ing-ss-${prepId}-${i.id}`, prodOpts, 'Produit catalogue…', (val)=>{
+      const parts=val.split(' — ');const type=parts[0];const brand=parts[1]||'';
+      const prod=state.products.find(pr=>pr.productType===type&&(!brand||pr.brand===brand))||state.products.find(pr=>pr.productType===type);
+      const ing=p.ingredients.find(x=>x.id===i.id);if(!ing)return;
+      ing.name=val;
+      if(prod){
+        ing.unit=prod.unit||'';
+        ing.pricePerUnit=prod.qty?Math.round(prod.priceHT/prod.qty*10000)/10000:0;
+        const unitEl=document.getElementById(`kr-ing-unit-${prepId}-${i.id}`);
+        const priceEl=document.getElementById(`kr-ing-price-${prepId}-${i.id}`);
+        if(unitEl)unitEl.value=ing.unit;
+        if(priceEl)priceEl.value=ing.pricePerUnit||'';
+      }
+      save();updatePrepCostDisplay(prepId);
+    }, i.name||'', true);
+  });
   updatePrepCostDisplay(prepId);
 }
 function sendPrepToCatalogue(prepId){
   const p=state.preparations.find(pr=>pr.id===prepId);if(!p)return;
   const costHT=calcPrepPricePerUnit(p);
   if(!p.name.trim()){alert('Donnez un nom à la recette avant de l\'envoyer au catalogue.');return;}
-  // Update existing catalogue product or create new
   if(p.catalogueProductId){
     const prod=state.products.find(pr=>pr.id===p.catalogueProductId);
     if(prod){prod.costHT=Math.round(costHT*100)/100;prod.name=p.name;save();renderKrafter();alert('Produit catalogue mis à jour.');return;}
@@ -2381,12 +2400,13 @@ function sendPrepToCatalogue(prepId){
   alert('Recette ajoutée au catalogue !');
 }
 function togglePrepForm(id){
-  const el=document.getElementById('prep-detail-'+id);
-  if(!el)return;
+  const el=document.getElementById('prep-detail-'+id);if(!el)return;
   const open=el.style.display==='none'||!el.style.display;
   el.style.display=open?'block':'none';
   const btn=document.getElementById('prep-toggle-'+id);
   if(btn)btn.textContent=open?'▲ Réduire':'▼ Détails';
+  if(open){_openPreps.add(id);renderPrepIngList(id);}
+  else _openPreps.delete(id);
 }
 function renderKrafter(){
   const content=document.getElementById('krafter-content');if(!content)return;
@@ -2408,80 +2428,70 @@ function renderKrafter(){
   });
 
   if(!(state.preparations||[]).length){
-    content.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text3)">
-      <div style="font-size:32px;margin-bottom:12px">🧪</div>
-      <div style="font-size:14px;margin-bottom:6px">Aucune recette maison</div>
-      <div style="font-size:12px">Créez votre première préparation avec le bouton ci-dessus</div>
-    </div>`;
+    content.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:32px;margin-bottom:12px">🧪</div><div style="font-size:14px;margin-bottom:6px">Aucune recette maison</div><div style="font-size:12px">Créez votre première préparation avec le bouton ci-dessus</div></div>`;
     return;
   }
   if(!preps.length){
-    content.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text3)">
-      <div style="font-size:14px">Aucune recette ne correspond à votre recherche</div>
-    </div>`;
+    content.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text3)"><div style="font-size:14px">Aucune recette ne correspond à votre recherche</div></div>`;
     return;
   }
+
+  const INP2='height:28px;padding:3px 8px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;width:100%';
+
   content.innerHTML=preps.map(p=>{
     const total=calcPrepCost(p);
     const ppu=calcPrepPricePerUnit(p);
     const synced=p.catalogueProductId&&state.products.find(pr=>pr.id===p.catalogueProductId);
-    return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;margin-bottom:12px;overflow:hidden">
-      <!-- Header -->
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
+    const isOpen=_openPreps.has(p.id);
+    return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;margin-bottom:10px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px">
         <input id="prep-name-${p.id}" value="${escHtml(p.name)}" onchange="updPrep(${p.id},'name',this.value)" style="flex:1;font-size:13px;font-weight:600;background:transparent;border:none;color:var(--text);outline:none;min-width:0"/>
         <select onchange="updPrep(${p.id},'category',this.value)" style="font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text2);padding:3px 6px;height:26px">
           ${PREP_CATEGORIES.map(c=>`<option${c===p.category?' selected':''}>${c}</option>`).join('')}
         </select>
-        <span style="font-size:11px;color:var(--text3);white-space:nowrap">Coût total : <strong style="color:var(--gold)" id="prep-cost-total-${p.id}">${fmt(total)}</strong></span>
-        <span style="font-size:11px;color:var(--text3);white-space:nowrap"><strong id="prep-cost-ppu-${p.id}">${fmt(ppu)} / ${escHtml(p.yieldUnit||'unité')}</strong></span>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">Coût : <strong style="color:var(--gold)" id="prep-cost-total-${p.id}">${fmt(total)}</strong></span>
+        <span style="font-size:11px;color:var(--text2);white-space:nowrap"><strong id="prep-cost-ppu-${p.id}">${fmt(ppu)} / ${escHtml(p.yieldUnit||'unité')}</strong></span>
         ${synced?`<span style="font-size:9px;background:#1a7a1a;color:#6fcf6f;padding:2px 6px;border-radius:3px;letter-spacing:.06em">CATALOGUE ✓</span>`:''}
-        <button id="prep-toggle-${p.id}" class="btn-edit" onclick="togglePrepForm(${p.id})">▼ Détails</button>
+        <button id="prep-toggle-${p.id}" class="btn-edit" onclick="togglePrepForm(${p.id})">${isOpen?'▲ Réduire':'▼ Détails'}</button>
         <button class="btn btn-sm btn-danger" onclick="delPrep(${p.id})">×</button>
       </div>
-      <!-- Detail form (hidden by default) -->
-      <div id="prep-detail-${p.id}" style="display:none;padding:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 80px 80px;gap:8px;margin-bottom:12px">
+      <div id="prep-detail-${p.id}" style="display:${isOpen?'block':'none'};padding:14px;border-top:1px solid var(--border2)">
+        <!-- Infos -->
+        <div style="display:grid;grid-template-columns:1fr 120px 120px;gap:8px;margin-bottom:14px">
           <div>
-            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Description</label>
-            <input value="${escHtml(p.description||'')}" placeholder="Notes, usage…" onchange="updPrep(${p.id},'description',this.value)" style="width:100%;height:28px;padding:3px 8px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;margin-top:4px"/>
+            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Technique &amp; méthode</label>
+            <textarea rows="3" placeholder="Libre : cuisson à 70°C, sous vide 4h, infusion froide 24h, macération…" onchange="updPrep(${p.id},'cookNotes',this.value)" style="margin-top:4px;${INP2};height:auto;resize:vertical;line-height:1.5;padding:6px 8px">${escHtml(p.cookNotes||'')}</textarea>
           </div>
           <div>
-            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Notes de cuisson</label>
-            <input value="${escHtml(p.cookNotes||'')}" placeholder="Température, technique…" onchange="updPrep(${p.id},'cookNotes',this.value)" style="width:100%;height:28px;padding:3px 8px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;margin-top:4px"/>
-          </div>
-          <div>
-            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Temps (min)</label>
-            <input type="number" value="${p.cookTime||''}" min="0" placeholder="30" onchange="updPrep(${p.id},'cookTime',this.value)" style="width:100%;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:center;margin-top:4px"/>
+            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Durée</label>
+            <input value="${escHtml(p.cookTime||'')}" placeholder="ex : 30 min, 2h…" onchange="updPrep(${p.id},'cookTime',this.value)" style="margin-top:4px;${INP2}"/>
           </div>
           <div>
             <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Rendement</label>
             <div style="display:flex;gap:4px;margin-top:4px">
-              <input type="number" value="${p.yieldQty||1}" min="0.01" step="any" onchange="updPrep(${p.id},'yieldQty',this.value);updatePrepCostDisplay(${p.id})" style="width:50%;height:28px;padding:3px 4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:right"/>
-              <select onchange="updPrep(${p.id},'yieldUnit',this.value)" style="width:50%;height:28px;padding:3px 2px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box">
-                ${PREP_UNITS.map(u=>`<option${u===p.yieldUnit?' selected':''}>${u}</option>`).join('')}
-              </select>
+              <input type="number" value="${p.yieldQty||1}" min="0.01" step="any" onchange="updPrep(${p.id},'yieldQty',this.value);updatePrepCostDisplay(${p.id})" style="width:55%;height:28px;padding:3px 4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:right"/>
+              <input value="${escHtml(p.yieldUnit||'L')}" placeholder="L, cl…" onchange="updPrep(${p.id},'yieldUnit',this.value);updatePrepCostDisplay(${p.id})" style="width:45%;height:28px;padding:3px 4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/>
             </div>
           </div>
         </div>
-        <!-- Ingredients -->
+        <!-- Ingrédients -->
         <div style="margin-bottom:10px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Ingrédients</span>
             <button class="btn btn-sm" onclick="addPrepIng(${p.id})">+ Ingrédient</button>
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:11px">
-            <colgroup><col style="width:auto"/><col style="width:80px"/><col style="width:72px"/><col style="width:90px"/><col style="width:36px"/></colgroup>
+            <colgroup><col style="width:auto"/><col style="width:72px"/><col style="width:70px"/><col style="width:100px"/><col style="width:36px"/></colgroup>
             <thead><tr style="border-bottom:1px solid var(--border2)">
-              <th style="text-align:left;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:500">Ingrédient</th>
-              <th style="text-align:right;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:500">Qté</th>
-              <th style="text-align:center;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:500">Unité</th>
-              <th style="text-align:right;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:500">Prix/unité (€ HT)</th>
+              <th style="text-align:left;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Produit catalogue ou libre</th>
+              <th style="text-align:right;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Qté</th>
+              <th style="padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Unité</th>
+              <th style="text-align:right;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Prix / unité (€ HT)</th>
               <th></th>
             </tr></thead>
-            <tbody id="prep-ing-tbody-${p.id}">${renderPrepIngs(p)}</tbody>
+            <tbody id="prep-ing-tbody-${p.id}"></tbody>
           </table>
         </div>
-        <!-- Actions -->
         <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px;border-top:1px solid var(--border2)">
           <button class="btn btn-ghost" onclick="togglePrepForm(${p.id})">Réduire</button>
           <button class="btn btn-gold" onclick="sendPrepToCatalogue(${p.id})">${synced?'Mettre à jour le catalogue':'→ Envoyer au catalogue'}</button>
@@ -2489,6 +2499,9 @@ function renderKrafter(){
       </div>
     </div>`;
   }).join('');
+
+  // Restore open forms + init ingredient SS
+  preps.forEach(p=>{if(_openPreps.has(p.id)) renderPrepIngList(p.id);});
 }
 
 // ════════════════════════════════════════════════════════
