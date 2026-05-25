@@ -3852,18 +3852,14 @@ function showSingleEventSuivi(eventId){
               <button onclick="removeStockRetourCustomItem(${ev.id},${idx})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0">✕</button>
             </div>`).join('')}
           </div>`:''}
-          <div id="suivi-hors-cat-form-${ev.id}" style="display:none;margin-bottom:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-              <input id="shc-nom-${ev.id}" placeholder="Produit (ex: Vin rouge)" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
-              <input id="shc-detail-${ev.id}" placeholder="Détail (ex: Morgon)" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 60px;gap:6px;margin-bottom:6px">
-              <input id="shc-unite-${ev.id}" placeholder="Unité (Btl, kg, Unité...)" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
-              <input id="shc-qty-${ev.id}" type="number" value="1" min="0.1" step="0.1" style="padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:center"/>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-sm btn-ghost" style="flex:1" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='none'">Annuler</button>
-              <button class="btn btn-sm btn-gold" style="flex:1" onclick="addSuiviHorsCat(${ev.id})">Ajouter</button>
+          <div id="suivi-hors-cat-form-${ev.id}" style="display:none;margin-bottom:8px;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px">
+            <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap">
+              <input id="shc-nom-${ev.id}" placeholder="Produit" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-detail-${ev.id}" placeholder="Marque / Détail" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-unite-${ev.id}" placeholder="Unité" style="flex:1;min-width:55px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-qty-${ev.id}" type="number" value="1" min="0.1" step="0.1" style="width:52px;flex-shrink:0;padding:4px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:center"/>
+              <button class="btn btn-sm btn-gold" style="flex-shrink:0" onclick="addSuiviHorsCat(${ev.id})">Ajouter</button>
+              <button class="btn btn-sm btn-ghost" style="flex-shrink:0" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='none'">✕</button>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
