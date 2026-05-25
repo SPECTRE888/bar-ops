@@ -9464,7 +9464,22 @@ async function confirmBuySeat(){
     barman:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:false,canViewCosts:false,canManageClients:false,canCreateEvents:false,canEditProjects:false,canManageCatalogue:true,canManageStaff:false,canManageSuppliers:true,canExportData:false}
   };
   const perms=ROLE_PRESETS_APP[role]||ROLE_PRESETS_APP.commercial;
-  await buyAgentSeat({pendingEmail:email,pendingRole:role,pendingPermissions:perms});
+  // Si sous la limite → invitation gratuite directe
+  const maxAgents=window._agentsMaxCache??2;
+  const currentCount=window._agentsCountCache??0;
+  if(currentCount<maxAgents){
+    try{
+      const r=await _agentsFetch({type:'invite',email,role,permissions:perms});
+      if(r?.error) throw new Error(r.error);
+      showToast('Invitation envoyée à '+email);
+      document.getElementById('seat-invite-email').value='';
+      document.getElementById('add-member-form').style.display='none';
+      loadAgentsList();
+    }catch(e){showToast(e?.message||'Erreur','error');}
+  } else {
+    // Limite atteinte → achat siège Stripe (invitation auto après paiement)
+    await buyAgentSeat({pendingEmail:email,pendingRole:role,pendingPermissions:perms});
+  }
 }
 
 async function loadAgentsList(){
@@ -9476,8 +9491,12 @@ async function loadAgentsList(){
     const invitations=res?.invitations||[];
     const maxAgents=res?.company?.max_agents??2;
     const limitReached=agents.length>=maxAgents;
+    // Cache pour confirmBuySeat
+    window._agentsMaxCache=maxAgents;
+    window._agentsCountCache=agents.length;
     let html='';
-    if(!agents.length&&!invitations.length){
+    const totalMembers=agents.length+invitations.length;
+    if(!totalMembers){
       html='<div style="color:var(--text3);font-size:11px;padding:4px 0">Aucun collaborateur pour l\'instant.</div>';
     } else {
       const statusColor={active:'var(--gold)',suspended:'var(--text3)',pending:'var(--text2)'};
@@ -9485,11 +9504,12 @@ async function loadAgentsList(){
       html='<div style="display:flex;flex-direction:column;gap:6px">';
       for(const a of agents){
         const st=a.status||'active';
+        const roleLabel=a.role==='COMPANY_ADMIN'?'Administrateur':'Collaborateur';
         html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border)">
           <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gold);flex-shrink:0">${(a.email||'?').charAt(0).toUpperCase()}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.email||'—'}</div>
-            <div style="font-size:10px;color:var(--text3)">${a.role||'—'}</div>
+            <div style="font-size:10px;color:var(--text3)">${roleLabel}</div>
           </div>
           <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid ${statusColor[st]};color:${statusColor[st]}">${statusLabel[st]||st}</span>
           ${st==='active'?`<button onclick="agentAction('${a.id}','suspend')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;padding:2px 6px;border-radius:3px" title="Suspendre">⏸</button>`:''}
@@ -9505,42 +9525,46 @@ async function loadAgentsList(){
             <div style="font-size:10px;color:var(--text3)">Invitation en attente</div>
           </div>
           <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--text3)">En attente</span>
+          <button onclick="cancelInvite('${inv.id}')" style="background:none;border:none;cursor:pointer;color:#dc6464;font-size:11px;padding:2px 6px;border-radius:3px" title="Annuler">✕</button>
         </div>`;
       }
       html+='</div>';
     }
-    if(limitReached){
-      html+=`<div style="margin-top:10px;padding:12px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
-          <div style="font-size:11px;color:var(--gold);font-weight:500">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''})</div>
-          <button class="btn btn-gold btn-sm" onclick="showBuySeatForm()" id="btn-buy-seat" style="font-size:10px;padding:4px 12px;white-space:nowrap">+ Ajouter un membre</button>
-        </div>
-        <div id="buy-seat-form" style="display:none;border-top:1px solid var(--gold-border);padding-top:10px">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Nouveau membre — 29€/mois supplémentaire</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-            <div>
-              <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Email</div>
-              <input id="seat-invite-email" type="email" placeholder="prenom@email.com" style="width:100%;font-size:11px;box-sizing:border-box"/>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Profil</div>
-              <select id="seat-invite-preset" style="width:100%;font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text)">
-                <option value="commercial">Commercial — clients &amp; événements</option>
-                <option value="barman">Barman — catalogue &amp; fournisseurs</option>
-              </select>
-            </div>
+    // Formulaire "Ajouter un collaborateur" — toujours visible
+    const btnLabel=limitReached?'Payer 29€/mois et inviter →':'Inviter →';
+    const infoLabel=limitReached
+      ?`<div style="font-size:10px;color:var(--gold);margin-bottom:6px">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''}) — un siège supplémentaire sera facturé 29€/mois.</div>`
+      :`<div style="font-size:10px;color:var(--text3);margin-bottom:6px">${agents.length}/${maxAgents} collaborateur${maxAgents>1?'s':''} utilisé${maxAgents>1?'s':''}</div>`;
+    html+=`<div id="add-member-section" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:500;color:var(--text)">Ajouter un collaborateur</div>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-member-form').style.display=document.getElementById('add-member-form').style.display==='none'?'block':'none'" style="font-size:10px;padding:3px 10px">+ Nouveau</button>
+      </div>
+      <div id="add-member-form" style="display:none">
+        ${infoLabel}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Email</div>
+            <input id="seat-invite-email" type="email" placeholder="prenom@email.com" style="width:100%;font-size:11px;box-sizing:border-box"/>
           </div>
-          <div style="display:flex;gap:6px;justify-content:flex-end">
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('buy-seat-form').style.display='none'">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="confirmBuySeat()">Payer 29€/mois et inviter →</button>
+          <div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Profil</div>
+            <select id="seat-invite-preset" style="width:100%;font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text)">
+              <option value="commercial">Commercial — clients &amp; événements</option>
+              <option value="barman">Barman — catalogue &amp; fournisseurs</option>
+            </select>
           </div>
         </div>
-      </div>`;
-    }
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-member-form').style.display='none'">Annuler</button>
+          <button class="btn btn-gold btn-sm" onclick="confirmBuySeat()">${btnLabel}</button>
+        </div>
+      </div>
+    </div>`;
     wrap.innerHTML=html;
-    // Masquer le bouton "+ Inviter" si limite atteinte
+    // Masquer l'ancien bouton "+ Inviter" (remplacé par le nouveau formulaire intégré)
     const btnInvite=document.getElementById('btn-invite-agent');
-    if(btnInvite) btnInvite.style.display=limitReached?'none':'inline-flex';
+    if(btnInvite) btnInvite.style.display='none';
   }catch(e){
     if(wrap) wrap.innerHTML='<div style="color:var(--text3);font-size:11px">Erreur de chargement.</div>';
   }
@@ -9583,7 +9607,16 @@ async function submitInviteAgent(){
 
 async function agentAction(agentId,action){
   try{
-    await _agentsFetch({type:'manage',action,agentId});
+    const body=action==='remove'?{type:'manage',action,targetUserId:agentId}:{type:'manage',action,targetUserId:agentId};
+    await _agentsFetch(body);
+    loadAgentsList();
+  }catch(e){
+    showToast(e?.message||'Erreur','error');
+  }
+}
+async function cancelInvite(invitationId){
+  try{
+    await _agentsFetch({type:'manage',action:'cancel_invite',invitationId});
     loadAgentsList();
   }catch(e){
     showToast(e?.message||'Erreur','error');
