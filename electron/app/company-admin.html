@@ -153,8 +153,8 @@ input:checked + .slider:before{transform:translateX(16px);background:#080808}
 
   <!-- STATS -->
   <div class="stats">
-    <div class="stat"><div class="stat-val" id="statAgents">–</div><div class="stat-lbl">Agents actifs</div></div>
-    <div class="stat"><div class="stat-val" id="statMax">–</div><div class="stat-lbl">Membres max (plan actuel)</div></div>
+    <div class="stat"><div class="stat-val" id="statAgents">–</div><div class="stat-lbl">Collaborateurs actifs</div></div>
+    <div class="stat"><div class="stat-val" id="statMax">–</div><div class="stat-lbl">Collaborateurs max (plan actuel)</div></div>
     <div class="stat"><div class="stat-val" id="statPending">–</div><div class="stat-lbl">Invitations en attente</div></div>
   </div>
 
@@ -413,7 +413,7 @@ function renderAgents(agents) {
       <div class="agent-info">
         <div class="agent-email">${a.email || a.id}</div>
         <div class="agent-meta">
-          <span class="badge badge-${a.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}">${a.role === 'COMPANY_ADMIN' ? 'Admin' : 'Agent'}</span>
+          <span class="badge badge-${a.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}">${a.role === 'COMPANY_ADMIN' ? 'Administrateur' : 'Collaborateur'}</span>
           ${presetBadge}
           ${a.status === 'suspended' ? '<span class="badge badge-suspended" style="margin-left:4px">Suspendu</span>' : ''}
         </div>
@@ -442,7 +442,7 @@ function renderInvitations(invitations) {
         <div class="agent-email">${inv.email}</div>
         <div class="agent-meta">
           <span class="badge badge-pending">En attente</span>
-          <span class="badge badge-${inv.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}" style="margin-left:4px">${inv.role === 'COMPANY_ADMIN' ? 'Admin' : 'Agent'}</span>
+          <span class="badge badge-${inv.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}" style="margin-left:4px">${inv.role === 'COMPANY_ADMIN' ? 'Administrateur' : 'Collaborateur'}</span>
           &nbsp;· expire ${new Date(inv.expires_at).toLocaleDateString('fr-FR')}
         </div>
       </div>
@@ -471,9 +471,9 @@ async function loadAuditLog() {
     invite_accepted:   'Invitation acceptée',
     permission_updated:'Permissions modifiées',
     role_updated:      'Rôle modifié',
-    agent_suspended:   'Agent suspendu',
-    agent_reactivated: 'Agent réactivé',
-    agent_removed:     'Agent retiré',
+    agent_suspended:   'Collaborateur suspendu',
+    agent_reactivated: 'Collaborateur réactivé',
+    agent_removed:     'Collaborateur retiré',
   };
 
   el.innerHTML = logs.map(l => `
