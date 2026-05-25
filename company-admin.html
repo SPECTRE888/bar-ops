@@ -177,6 +177,10 @@ input:checked + .slider:before{transform:translateX(16px);background:#080808}
         <button class="btn btn-primary" id="btnInvite" onclick="sendInvite()">Envoyer l'invitation</button>
       </div>
     </div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="font-size:12px;color:var(--text-muted)" id="seatInfo">–</div>
+      <button class="btn btn-ghost" id="btnAddSeat" onclick="addSeat()" style="font-size:11px;white-space:nowrap">+ Ajouter un siège — 29€/mois</button>
+    </div>
     <div style="margin-top:14px">
       <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px">Profil de permissions</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
@@ -328,8 +332,20 @@ async function boot() {
 
   // UI init
   document.getElementById('navAvatar').textContent = (session.user.email || '?')[0].toUpperCase();
+
+  // Plan : lire la subscription Stripe active
+  let planLabel = {'solo':'Early Access','pro':'Pro','business':'Business'}[profile.companies?.plan] || (profile.companies?.plan || 'Standard');
+  try {
+    const { data: sub } = await _supabase
+      .from('subscriptions')
+      .select('status, plan, expires_at')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+    if (sub?.plan) planLabel = {'solo':'Early Access','pro':'Pro','business':'Business'}[sub.plan] || sub.plan;
+    else if (sub?.status === 'active') planLabel = 'Actif';
+  } catch(e) {}
   document.getElementById('companySubtitle').textContent =
-    `${profile.companies?.name || 'Votre entreprise'} — ${{'solo':'Early Access','pro':'Pro','business':'Business'}[profile.companies?.plan] || (profile.companies?.plan || '?')}`;
+    `${profile.companies?.name || 'Votre entreprise'} — ${planLabel}`;
 
   buildInvitePermGrid();
   await loadData();
@@ -355,29 +371,8 @@ function renderStats(agents, invitations) {
   document.getElementById('statMax').textContent = maxAgents;
   document.getElementById('statPending').textContent = (invitations || []).length;
   document.getElementById('agentCount').textContent = (agents || []).length;
-
-  // Afficher le bouton "Ajouter un siège" si limite atteinte
-  const limitReached = active >= maxAgents;
-  let seatBanner = document.getElementById('seatBanner');
-  if (limitReached) {
-    if (!seatBanner) {
-      seatBanner = document.createElement('div');
-      seatBanner.id = 'seatBanner';
-      seatBanner.style.cssText = 'margin-bottom:16px';
-      seatBanner.className = 'seat-banner';
-      seatBanner.innerHTML = `
-        <div>
-          <div style="font-size:12px;font-weight:500;color:var(--gold);margin-bottom:3px">Limite de collaborateurs atteinte</div>
-          <div style="font-size:11px;color:var(--text2)">Ajoutez un siège pour inviter un collaborateur supplémentaire.</div>
-        </div>
-        <button class="btn btn-primary" onclick="addSeat()" style="white-space:nowrap;flex-shrink:0">
-          + 1 siège — 29€/mois
-        </button>`;
-      document.querySelector('.page').insertBefore(seatBanner, document.querySelector('.card'));
-    }
-  } else if (seatBanner) {
-    seatBanner.remove();
-  }
+  const seatInfo = document.getElementById('seatInfo');
+  if (seatInfo) seatInfo.textContent = `${active} / ${maxAgents} siège${maxAgents > 1 ? 's' : ''} utilisé${active > 1 ? 's' : ''}`;
 }
 
 async function addSeat(opts = {}) {
