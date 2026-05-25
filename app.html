@@ -43,7 +43,7 @@ fetch(API_BASE+'/api/config')
       document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#c4a46b;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">Impossible de joindre le serveur de configuration.</p><button onclick="location.reload()" style="background:#c4a46b;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
       return;
     }
-    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'sb-session'}});
     window._sb=sb;
     const{data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
@@ -433,7 +433,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
         <circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/>
         <path d="M13 8v4M11 10h4" stroke-width="1.4"/>
       </svg>
-      Équipe
+      Collaborateurs
     </a>
 
   </nav>
