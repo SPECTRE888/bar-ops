@@ -395,6 +395,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 2h10L8 9v5M5 14h6"/></svg>
       Cocktails <span class="nb" id="nb-c">0</span>
     </div>
+    <div class="nav-item" onclick="goPage('krafter')" id="nav-krafter">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 12l3-3 2 2 3-5 4 4"/><circle cx="13" cy="3" r="2"/><path d="M1 15h14"/></svg>
+      Krafter <span class="nb" id="nb-kr" style="display:none">0</span>
+    </div>
 
     <div class="nav-sec">ÉQUIPE</div>
     <div class="nav-item" onclick="goPage('staff')" id="nav-staff" data-perm="canManageStaff">
@@ -562,6 +566,15 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <div id="dc-list"></div>
     </div>
   </div>
+</div>
+
+<!-- ═══ KRAFTER ═══ -->
+<div id="page-krafter" class="page">
+  <div class="topbar">
+    <div class="topbar-left"><h2>Krafter</h2><p>Recettes &amp; préparations maison</p></div>
+    <div class="topbar-actions"><button class="btn btn-gold" onclick="addPrep()">+ Nouvelle recette</button></div>
+  </div>
+  <div class="content" id="krafter-content"></div>
 </div>
 
 <!-- ═══ COCKTAILS ═══ -->
@@ -1463,7 +1476,7 @@ const APP_CHANGELOG=[
 const CURRENT_VERSION=APP_CHANGELOG[0].version;
 
 function freshState(){
-  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], customCategories:[], staffCustomRoles:[], orders:{}, submittedOrders:{}, profile:{}, _v:3};
+  return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], preparations:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], customCategories:[], staffCustomRoles:[], orders:{}, submittedOrders:{}, profile:{}, _v:3};
 }
 
 // ════════════════════════════════════════════════════════
@@ -2260,6 +2273,7 @@ function goPage(p,_evId){
   else if(p==='historique') renderHistorique();
   else if(p==='suivi') renderSuivi();
   else if(p==='planning') renderPlanning();
+  else if(p==='krafter') renderKrafter();
   updateBadges();
 }
 
