@@ -38,7 +38,6 @@ h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;margin-
 
   <div id="view-login">
     <button class="btn fill" onclick="googleAuthLogin()">Se connecter avec Google</button>
-    <button class="btn gold" id="btnPasskey" onclick="passkeyAuth()" style="display:none">Connexion avec clé d'accès</button>
     <div class="toggle">Pas de compte ? <button onclick="show('signup')">S'inscrire</button></div>
   </div>
 
@@ -140,15 +139,6 @@ async function redirect(userId){
   window.location.href='paying.html';
 }
 
-async function passkeyAuth(){
-  const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
-  try{
-    const{data,error}=await s.auth.signInWithPasskey();
-    if(error)return msg(error.message,'err');
-    if(data?.session)await redirect(data.session.user.id);
-  }catch(e){msg(e.message||'Clé d\'accès non supportée dans ce contexte','err');}
-}
-
 // Flow acceptation d'invitation
 async function handleInvite(session){
   const token=session.access_token;
@@ -166,14 +156,6 @@ async function handleInvite(session){
     window.location.href='app.html';
   }catch(e){msg(e.message,'err');}
 }
-
-// Afficher le bouton passkey si supporté
-(async()=>{
-  try{
-    const ok=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-    if(ok)document.getElementById('btnPasskey').style.display='block';
-  }catch(e){}
-})();
 
 // Redirect after Google OAuth callback
 (async()=>{
