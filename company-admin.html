@@ -350,7 +350,7 @@ function renderStats(agents, invitations) {
   const active = (agents || []).filter(a => a.status === 'active').length;
   const maxAgents = _profile.companies?.max_agents ?? 2;
   document.getElementById('statAgents').textContent = active;
-  document.getElementById('statMax').textContent = maxAgents + 1;
+  document.getElementById('statMax').textContent = maxAgents;
   document.getElementById('statPending').textContent = (invitations || []).length;
   document.getElementById('agentCount').textContent = (agents || []).length;
 
@@ -378,19 +378,23 @@ function renderStats(agents, invitations) {
   }
 }
 
-async function addSeat() {
-  const btn = event.target;
-  btn.disabled = true; btn.textContent = 'Chargement…';
+async function addSeat(opts = {}) {
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Chargement…'; }
   try {
+    const body = { action: 'add-seat', quantity: 1 };
+    if (opts.pendingEmail) body.pendingEmail = opts.pendingEmail;
+    if (opts.pendingRole) body.pendingRole = opts.pendingRole;
+    if (opts.pendingPermissions) body.pendingPermissions = opts.pendingPermissions;
     const r = await fetch('/api/billing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_session.access_token}` },
-      body: JSON.stringify({ action: 'add-seat', quantity: 1 }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
-    if (!r.ok) { toast(d.error || 'Erreur', true); btn.disabled = false; btn.textContent = '+ 1 siège — 29€/mois'; return; }
+    if (!r.ok) { toast(d.error || 'Erreur', true); if (btn) { btn.disabled = false; btn.textContent = '+ 1 siège — 29€/mois'; } return; }
     window.location.href = d.url;
-  } catch(e) { toast(e.message, true); btn.disabled = false; btn.textContent = '+ 1 siège — 29€/mois'; }
+  } catch(e) { toast(e.message, true); if (btn) { btn.disabled = false; btn.textContent = '+ 1 siège — 29€/mois'; } }
 }
 
 function detectPreset(perms) {
@@ -566,7 +570,19 @@ async function sendInvite() {
   const res = await apiFetch('invite-agent', { email, role, permissions, fromEmail, fromName, sendgridApiKey }, _session.access_token);
   btn.disabled = false; btn.textContent = 'Envoyer l\'invitation';
 
-  if (!res.ok) { toast(res.data.error || 'Erreur', true); return; }
+  if (!res.ok) {
+    const errMsg = res.data?.error || 'Erreur';
+    // Si limite atteinte → proposer achat de siège avec email pré-rempli
+    if (errMsg.toLowerCase().includes('limit') || errMsg.toLowerCase().includes('siège') || errMsg.toLowerCase().includes('max')) {
+      if (confirm(`Limite de collaborateurs atteinte.\n\nAjouter un siège supplémentaire pour ${email} ? (29€/mois)\nL'invitation sera envoyée automatiquement après paiement.`)) {
+        await addSeat({ pendingEmail: email, pendingRole: role, pendingPermissions: permissions });
+      }
+    } else {
+      toast(errMsg, true);
+    }
+    btn.disabled = false; btn.textContent = 'Envoyer l\'invitation';
+    return;
+  }
 
   document.getElementById('invEmail').value = '';
   if (res.data.emailSent) {
