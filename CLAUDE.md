@@ -174,6 +174,9 @@ git tag v1.X.Y && git push origin v1.X.Y
 | `artifactName` avec `BarOps-` (sans espace) | Espaces dans les noms d'artefacts |
 | Tagger APRÈS avoir poussé le commit | Tagger avant le push |
 | Vérifier le CI avant de valider | Changer les noms de fichiers sans mettre à jour `build.yml` ET `main.js` |
+| **Toujours bumper `package.json` version à chaque commit** | Oublier de bumper avant de committer |
+
+> ⚠️ **RÈGLE ABSOLUE** : À chaque commit sur ce repo, Claude doit systématiquement bumper la version dans `package.json` (patch +1) ET pousser le tag correspondant pour déclencher le build Electron. Pas d'exception.
 
 ---
 
