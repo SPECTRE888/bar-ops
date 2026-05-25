@@ -5399,9 +5399,15 @@ function epAutoPrice(i){
   if(inp&&document.activeElement!==inp) inp.value=auto||'';
 }
 
+function _epPositionSugg(inputEl,sugg){
+  // position:fixed pour éviter tout clipping par overflow parent
+  const r=inputEl.getBoundingClientRect();
+  sugg.style.cssText+=';position:fixed !important;top:'+(r.bottom+2)+'px;left:'+r.left+'px;width:'+r.width+'px;right:auto;z-index:99999';
+}
+
 function epSearch(i,val){
   updExtraProd(i,'productType',val);
-  updExtraProd(i,'name',val); // saisie libre : name = ce que l'utilisateur tape
+  updExtraProd(i,'name',val);
   const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
   if(!val.trim()){sugg.style.display='none';return;}
   const q=val.toLowerCase();
@@ -5411,6 +5417,8 @@ function epSearch(i,val){
     if(!seen.has(p.productType)){seen.add(p.productType);types.push(p.productType);}
   });
   if(!types.length){sugg.style.display='none';return;}
+  const inp=document.getElementById('ep-search-'+i);
+  if(inp) _epPositionSugg(inp,sugg);
   sugg.style.display='block';
   sugg.innerHTML=types.slice(0,8).map(type=>
     `<div onmousedown='epSelectType(${i},${JSON.stringify(type)})' style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${escHtml(type)}</strong></div>`
@@ -5435,6 +5443,8 @@ function epBrandSearch(i,val){
   const sugg=document.getElementById('ep-brand-sugg-'+i);if(!sugg)return;
   const matches=state.products.filter(pr=>pr.productType===type&&(!val||(pr.brand||'').toLowerCase().includes(val.toLowerCase())));
   if(!matches.length){sugg.style.display='none';return;}
+  const brandInp=document.getElementById('ep-brand-'+i);
+  if(brandInp) _epPositionSugg(brandInp,sugg);
   sugg.style.display='block';
   sugg.innerHTML=matches.slice(0,8).map(pr=>{
     const unit=pr.unit||'pc';const qty=pr.qty||0;
