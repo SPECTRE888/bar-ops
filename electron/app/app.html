@@ -3583,20 +3583,18 @@ function updIceCost(){
   const vol = glass.volumeCl;
   const cpclHT = priceHT/100;
 
-  // Technique ice: shaker (shaken) ou verre mélangeur (stirred)
+  // Technique ice: poids fixes réels (shaker=150g, verre à mélange=110g)
+  // priceHT est en €/kg → coût = grammes/1000 * priceHT
   let shakerCost = 0;
   let shakerText = '';
   if(technique==='shaken'){
-    const shakerIce=state.iceTypes.find(i=>i.isForShaker);
-    if(shakerIce){
-      shakerCost = (shakerIce.priceHT||0) * 0.25;
-      shakerText = `Shaker ${shakerIce.name} : <strong>250g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace jetée)</span>`;
-    }
+    const shakerIce=state.iceTypes.find(i=>i.isForShaker)||iceType;
+    const iceP=shakerIce.priceHT||0;
+    shakerCost = iceP * 0.150; // 150g
+    shakerText = `Shaker ${shakerIce.name||''} : <strong>150g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace jetée)</span>`;
   } else if(technique==='stirred'){
-    const techMult = ICE_TECHNIQUE.stirred.mult; // 1.5
-    const techVol  = vol * techMult;
-    shakerCost = techVol * cpclHT;
-    shakerText = `Verre mélangeur ${iceType.name||''} : ${vol}cl × ${techMult} = <strong>${techVol.toFixed(1)}cl</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace filtrée)</span>`;
+    shakerCost = priceHT * 0.110; // 110g
+    shakerText = `Verre à mélange ${iceType.name||''} : <strong>110g</strong> → <strong style="color:var(--gold)">${shakerCost.toFixed(3)}€ HT</strong> <span style="color:var(--text3)">(glace filtrée)</span>`;
   }
 
   // Service ice: still based on glass volume (how much ice goes in the glass)
