@@ -5407,14 +5407,12 @@ function _renderExtraProds(){
     const total=qty*price;
     return`<div style="background:var(--surface2);border-radius:var(--radius);padding:8px;margin-bottom:6px;display:grid;grid-template-columns:1.2fr 85px 65px 70px 24px 55px 24px 70px 24px 55px 55px 28px;gap:6px;align-items:center;font-size:11px">
       <!-- Produit (avec autocomplete) -->
-      <div style="position:relative;min-width:0">
+      <div style="min-width:0">
         <input id="ep-search-${i}" value="${escHtml(p.productType||'')}" placeholder="Vodka, Champagne..." style="width:100%;font-size:11px;font-weight:500;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 8px;color:var(--text);box-sizing:border-box" oninput="epSearch(${i},this.value)"/>
-        <div id="ep-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>
       </div>
       <!-- Marque (autocomplete par type) -->
-      <div style="position:relative;min-width:0">
+      <div style="min-width:0">
         <input id="ep-brand-${i}" value="${escHtml(p.brand||'')}" placeholder="Marque..." style="width:100%;font-size:11px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text2);box-sizing:border-box" oninput="updExtraProd(${i},'brand',this.value);epBrandSearch(${i},this.value)" onfocus="epBrandSearch(${i},this.value)"/>
-        <div id="ep-brand-sugg-${i}" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:99;max-height:140px;overflow-y:auto;font-size:10px;box-shadow:0 4px 12px rgba(0,0,0,.25)"></div>
       </div>
       <!-- Format -->
       <div style="background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius);padding:5px 6px;color:var(--text3);text-align:center;font-weight:500">${vol||'—'}</div>
@@ -5446,29 +5444,63 @@ function epAutoPrice(i){
   if(inp&&document.activeElement!==inp) inp.value=auto||'';
 }
 
+// ── Portail suggestion produits supplémentaires ──────────────────────────────
+let _epPortal=null;
+function _getEpPortal(){
+  if(!_epPortal){
+    _epPortal=document.createElement('div');
+    _epPortal.style.cssText='display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:999999;max-height:200px;overflow-y:auto;font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+    document.body.appendChild(_epPortal);
+  }
+  return _epPortal;
+}
+function _epHidePortal(){const p=_getEpPortal();p.style.display='none';p.innerHTML='';}
+function _epShowPortal(anchorEl,rows){
+  const p=_getEpPortal();
+  p.innerHTML='';
+  rows.forEach(({label,onSelect})=>{
+    const d=document.createElement('div');
+    d.style.cssText='padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)';
+    d.innerHTML=label;
+    d.addEventListener('mousedown',e=>{
+      e.preventDefault();
+      _epHidePortal();
+      onSelect();
+    });
+    d.addEventListener('mouseover',()=>d.style.background='var(--surface2)');
+    d.addEventListener('mouseout',()=>d.style.background='');
+    p.appendChild(d);
+  });
+  const r=anchorEl.getBoundingClientRect();
+  p.style.left=r.left+'px';
+  p.style.top=(r.bottom+2)+'px';
+  p.style.width=r.width+'px';
+  p.style.display='block';
+}
+
 function epSearch(i,val){
   updExtraProd(i,'productType',val);
-  const sugg=document.getElementById('ep-sugg-'+i);if(!sugg)return;
-  if(!val.trim()){sugg.style.display='none';return;}
+  updExtraProd(i,'name',val);
+  _epHidePortal();
+  if(!val.trim())return;
   const q=val.toLowerCase();
-  const seen=new Set();
-  const types=[];
+  const seen=new Set();const types=[];
   state.products.filter(p=>(p.productType||'').toLowerCase().includes(q)).forEach(p=>{
     if(!seen.has(p.productType)){seen.add(p.productType);types.push(p.productType);}
   });
-  if(!types.length){sugg.style.display='none';return;}
-  sugg.style.display='block';
-  sugg.innerHTML=types.slice(0,8).map(type=>
-    `<div onmousedown="epSelectType(${i},${JSON.stringify(type)})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><strong>${escHtml(type)}</strong></div>`
-  ).join('');
+  if(!types.length)return;
+  const inp=document.getElementById('ep-search-'+i);if(!inp)return;
+  _epShowPortal(inp,types.slice(0,8).map(type=>({
+    label:`<strong>${escHtml(type)}</strong>`,
+    onSelect:()=>epSelectType(i,type)
+  })));
 }
 
 function epSelectType(i,type){
-  const sugg=document.getElementById('ep-sugg-'+i);if(sugg)sugg.style.display='none';
+  _epHidePortal();
   updExtraProd(i,'productType',type);
-  updExtraProd(i,'brand','');
-  updExtraProd(i,'costHT',0);
-  updExtraProd(i,'volume','');
+  updExtraProd(i,'name',type);
+  updExtraProd(i,'brand','');updExtraProd(i,'costHT',0);updExtraProd(i,'volume','');
   const inp=document.getElementById('ep-search-'+i);if(inp)inp.value=type;
   const brandInp=document.getElementById('ep-brand-'+i);if(brandInp){brandInp.value='';brandInp.focus();}
   epBrandSearch(i,'');
@@ -5477,21 +5509,22 @@ function epSelectType(i,type){
 function epBrandSearch(i,val){
   const p=window._evExtraProducts?.[i];if(!p)return;
   const type=p.productType||'';
-  const sugg=document.getElementById('ep-brand-sugg-'+i);if(!sugg)return;
+  _epHidePortal();
   const matches=state.products.filter(pr=>pr.productType===type&&(!val||(pr.brand||'').toLowerCase().includes(val.toLowerCase())));
-  if(!matches.length){sugg.style.display='none';return;}
-  sugg.style.display='block';
-  sugg.innerHTML=matches.slice(0,8).map(pr=>{
+  if(!matches.length)return;
+  const brandInp=document.getElementById('ep-brand-'+i);if(!brandInp)return;
+  _epShowPortal(brandInp,matches.slice(0,8).map(pr=>{
     const unit=pr.unit||'pc';const qty=pr.qty||0;
-    return`<div onmousedown="epSelectBrand(${i},${JSON.stringify(pr.brand||'')},${JSON.stringify(unit)},${(pr.priceHT||0).toFixed(2)},${qty})" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <strong>${escHtml(pr.brand||'—')}</strong><span style="color:var(--text3);font-size:10px;margin-left:6px">${qty}${escHtml(unit)}</span>
-    </div>`;
-  }).join('');
+    return{
+      label:`<strong>${escHtml(pr.brand||'—')}</strong><span style="color:var(--text3);font-size:10px;margin-left:6px">${qty}${escHtml(unit)}</span>`,
+      onSelect:()=>epSelectBrand(i,pr.brand||'',unit,pr.priceHT||0,qty)
+    };
+  }));
 }
 
 function epSelectBrand(i,brand,unit,costPerUnit,qty){
   if(!window._evExtraProducts[i])return;
-  const sugg=document.getElementById('ep-brand-sugg-'+i);if(sugg)sugg.style.display='none';
+  _epHidePortal();
   const volume=qty?qty+unit:unit;
   Object.assign(window._evExtraProducts[i],{brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1});
   _renderExtraProds();
