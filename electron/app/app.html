@@ -517,9 +517,9 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <div id="page-spices" class="page" style="display:none"><div class="content"><div id="body-spices"></div></div></div>
 <div id="page-glassware" class="page" style="display:none">
   <div class="content">
-    <div id="glass-tb-wrap"><table class="ptable"><thead><tr><th>Par défaut</th><th>Type</th><th>Gamme</th><th>${t('cat_glass_price')}</th><th>${t('cat_glass_vol')}</th><th>${t('cat_glass_ht')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="glass-tb"></tbody></table></div>
+    <div id="glass-tb-wrap"><table class="ptable"><thead><tr><th>Par défaut</th><th>Type</th><th>Gamme</th><th>${t('cat_glass_price')}</th><th>${t('cat_glass_vol')}</th><th>${t('cat_glass_ht')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th style="color:var(--text3);font-size:8px">% Casse</th><th style="color:var(--text3);font-size:8px">Qté</th><th></th><th></th></tr></thead><tbody id="glass-tb"></tbody></table></div>
     <div id="glass-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucun verre</p></div>
-    <table class="ptable" style="margin-top:16px"><thead><tr><th style="min-width:60px">Shaker</th><th>Type de glace</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead><tbody id="ice-tb"></tbody></table>
+    <table class="ptable" style="margin-top:16px"><thead><tr><th style="min-width:60px">Shaker</th><th>Type de glace</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th style="color:var(--text3);font-size:8px">Qté cmd</th><th></th><th></th></tr></thead><tbody id="ice-tb"></tbody></table>
     <div id="ice-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucune glace</p></div>
   </div>
 </div>
@@ -2055,7 +2055,7 @@ function renderCatalogue(){
       <div class="card">
         <div class="ctitle"> Verrerie</div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table class="ptable"><thead><tr><th>Par défaut</th><th>${t('cat_type')}</th><th>Gamme</th><th style="color:var(--text3);font-size:9px">Prix achat HT</th><th style="color:var(--text3);font-size:9px">Prix vente HT</th><th>${t('cat_glass_vol')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th style="color:var(--text3);font-size:8px">% Casse</th><th></th></tr></thead>
+          <table class="ptable"><thead><tr><th>Par défaut</th><th>${t('cat_type')}</th><th>Gamme</th><th style="color:var(--text3);font-size:9px">Prix achat HT</th><th style="color:var(--text3);font-size:9px">Prix vente HT</th><th>${t('cat_glass_vol')}</th><th>${t('cat_supplier')}</th><th>Notes</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th style="color:var(--text3);font-size:8px">% Casse</th><th style="color:var(--text3);font-size:8px">Qté</th><th></th><th></th></tr></thead>
           <tbody id="glass-tb"></tbody></table>
         </div>
         <div id="glass-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucun verre</p></div>
@@ -2069,7 +2069,7 @@ function renderCatalogue(){
       <div class="card">
         <div class="ctitle"> Glace</div>
         <div class="card" style="padding:0;overflow:hidden">
-          <table class="ptable"><thead><tr><th style="min-width:60px">Shaker</th><th>Type</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th></th></tr></thead>
+          <table class="ptable"><thead><tr><th style="min-width:60px">Shaker</th><th>Type</th><th>Prix HT</th><th>Qté</th><th>Unité</th><th>Total HT/Unité</th><th>Min. commande</th><th>${t('cat_supplier')}</th><th>Stock</th><th style="color:var(--text3);font-size:8px">Alerte</th><th style="color:var(--text3);font-size:8px">Qté cmd</th><th></th><th></th></tr></thead>
           <tbody id="ice-tb"></tbody></table>
         </div>
         <div id="ice-empty" class="empty" style="display:none"><div class="empty-icon"></div><p>Aucune glace</p></div>
@@ -2446,7 +2446,9 @@ function renderCatPage(cat){
         <col style="width:90px"/> <!-- Code -->
         <col style="width:72px"/> <!-- Stock -->
         <col style="width:72px"/> <!-- Alerte -->
-        <col style="width:210px"/><!-- Actions -->
+        <col style="width:72px"/> <!-- Qté commande -->
+        <col style="width:120px"/><!-- + Commande -->
+        <col style="width:50px"/> <!-- Supprimer -->
       </colgroup>
       <thead><tr>
         <th>${arr('type',t('cat_type'))}</th>
@@ -2459,6 +2461,8 @@ function renderCatPage(cat){
         <th style="white-space:nowrap">${t('cat_code')}</th>
         <th style="color:var(--gold)">${t('cat_stock')}</th>
         <th style="color:var(--text3);font-size:8px;white-space:nowrap">Alerte</th>
+        <th style="color:var(--text3);font-size:8px">Qté</th>
+        <th></th>
         <th></th>
       </tr></thead>
       <tbody>`;
@@ -2489,11 +2493,9 @@ function renderCatPage(cat){
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="${INP};color:var(--text3)"/></td>
-      <td><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
-        <input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};width:48px;text-align:center"/>
-        <button class="btn btn-sm" onclick="addToOrderList(${p.id})">+ Commande</button>
-        <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">×</button>
-      </div></td>
+      <td><input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};text-align:center"/></td>
+      <td><button class="btn btn-sm" style="width:100%" onclick="addToOrderList(${p.id})">+ Commande</button></td>
+      <td style="text-align:center"><button class="btn btn-sm btn-danger" style="width:100%" onclick="delProduct(${p.id})">×</button></td>
     </tr>`;
   });
   html+=`</tbody></table></div>`;
@@ -2539,11 +2541,9 @@ function renderGlassware(){
       <td><input type="number" value="${g.stock||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${g.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updGlass(${g.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
       <td><select onchange="updGlass(${g.id},'breakagePercent',this.value)" style="width:70px;height:30px;padding:4px 6px;font-size:10px"><option value="5" ${g.breakagePercent==='5'||g.breakagePercent==5||!g.breakagePercent?'selected':''}>5%</option><option value="10" ${g.breakagePercent==='10'||g.breakagePercent==10?'selected':''}>10%</option><option value="15" ${g.breakagePercent==='15'||g.breakagePercent==15?'selected':''}>15%</option></select></td>
-      <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
-        <button class="btn btn-sm" onclick="addIceOrGlassToOrder(${g.id},'glass',${JSON.stringify(g.name||'')},${JSON.stringify(g.supplier||'')})">+ Commande</button>
-        <button class="btn btn-sm btn-danger" onclick="delGlass(${g.id})">×</button>
-      </div></td>
+      <td><input type="number" id="order_glass_${g.id}" min="1" placeholder="Qté" style="height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;width:100%;text-align:center"/></td>
+      <td><button class="btn btn-sm" style="width:100%" onclick="addIceOrGlassToOrder(${g.id},'glass',${JSON.stringify(g.name||'')},${JSON.stringify(g.supplier||'')})">+ Commande</button></td>
+      <td style="text-align:center"><button class="btn btn-sm btn-danger" style="width:100%" onclick="delGlass(${g.id})">×</button></td>
     </tr>`;
   }).join('');
   state.glasses.forEach(g=>mkSS('gs-'+g.id,GLASS_TYPES,'Glass type...',(v)=>updGlass(g.id,'name',v),g.name||''));
@@ -2566,11 +2566,9 @@ function renderGlassware(){
       <td><select onchange="updIce(${i.id},'supplier',this.value)" style="min-width:110px"><option value="">— Fournisseur —</option>${(state.suppliers||[]).map(s=>`<option value="${escHtml(s.name)}"${i.supplier===s.name?' selected':''}>${escHtml(s.name)}</option>`).join('')}</select></td>
       <td><input type="number" value="${i.stock||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stock',this.value===''?null:parseFloat(this.value))" style="width:55px"/></td>
       <td><input type="number" value="${i.stockAlert||''}" min="0" step="1" placeholder="—" onchange="updIce(${i.id},'stockAlert',parseFloat(this.value)||0)" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;color:var(--text3)"/></td>
-      <td><div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-        <input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="width:45px;height:30px;padding:4px 6px;font-size:10px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);text-align:center;box-sizing:border-box"/>
-        <button class="btn btn-sm" onclick="addIceOrGlassToOrder(${i.id},'ice',${JSON.stringify(i.name||'')},${JSON.stringify(i.supplier||'')})">+ Commande</button>
-        <button class="btn btn-sm btn-danger" onclick="delIce(${i.id})">×</button>
-      </div></td>
+      <td><input type="number" id="order_ice_${i.id}" min="1" placeholder="Qté" style="height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;width:100%;text-align:center"/></td>
+      <td><button class="btn btn-sm" style="width:100%" onclick="addIceOrGlassToOrder(${i.id},'ice',${JSON.stringify(i.name||'')},${JSON.stringify(i.supplier||'')})">+ Commande</button></td>
+      <td style="text-align:center"><button class="btn btn-sm btn-danger" style="width:100%" onclick="delIce(${i.id})">×</button></td>
     </tr>`;
 
   }).join('');}
