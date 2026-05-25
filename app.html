@@ -568,8 +568,29 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ KRAFTER ═══ -->
 <div id="page-krafter" class="page">
   <div class="topbar">
-    <div class="topbar-left"><h2>Krafter</h2><p>Recettes &amp; préparations maison</p></div>
-    <div class="topbar-actions"><button class="btn btn-gold" onclick="addPrep()">+ Nouvelle recette</button></div>
+    <div style="display:flex;gap:8px;align-items:center;flex:1">
+      <input id="kr-search" placeholder="Rechercher..." oninput="renderKrafter()" class="input-md"/>
+      <select id="kr-cat" onchange="renderKrafter()" class="input-md">
+        <option value="">Toutes catégories</option>
+        <option>Sirop</option>
+        <option>Infusion</option>
+        <option>Teinture</option>
+        <option>Purée</option>
+        <option>Shrub</option>
+        <option>Bitters</option>
+        <option>Autre</option>
+      </select>
+      <select id="kr-sort" onchange="renderKrafter()" class="input-md">
+        <option value="name-asc">Nom A→Z</option>
+        <option value="name-desc">Nom Z→A</option>
+        <option value="cat">Catégorie</option>
+        <option value="cost-asc">Coût ↑</option>
+        <option value="cost-desc">Coût ↓</option>
+      </select>
+    </div>
+    <div class="topbar-actions no-print" style="flex:0">
+      <button class="btn btn-gold" onclick="addPrep()">+ Nouvelle recette</button>
+    </div>
   </div>
   <div class="content" id="krafter-content"></div>
 </div>
@@ -2368,13 +2389,35 @@ function togglePrepForm(id){
   if(btn)btn.textContent=open?'▲ Réduire':'▼ Détails';
 }
 function renderKrafter(){
-  const preps=state.preparations||[];
   const content=document.getElementById('krafter-content');if(!content)return;
-  if(!preps.length){
+  const search=(document.getElementById('kr-search')?.value||'').toLowerCase().trim();
+  const catF=document.getElementById('kr-cat')?.value||'';
+  const sort=document.getElementById('kr-sort')?.value||'name-asc';
+
+  let preps=(state.preparations||[]).filter(p=>{
+    if(catF&&p.category!==catF) return false;
+    if(search&&!p.name.toLowerCase().includes(search)&&!(p.description||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  preps=[...preps].sort((a,b)=>{
+    if(sort==='name-desc') return b.name.localeCompare(a.name);
+    if(sort==='cat') return (a.category||'').localeCompare(b.category||'');
+    if(sort==='cost-asc') return calcPrepCost(a)-calcPrepCost(b);
+    if(sort==='cost-desc') return calcPrepCost(b)-calcPrepCost(a);
+    return a.name.localeCompare(b.name);
+  });
+
+  if(!(state.preparations||[]).length){
     content.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text3)">
       <div style="font-size:32px;margin-bottom:12px">🧪</div>
       <div style="font-size:14px;margin-bottom:6px">Aucune recette maison</div>
       <div style="font-size:12px">Créez votre première préparation avec le bouton ci-dessus</div>
+    </div>`;
+    return;
+  }
+  if(!preps.length){
+    content.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:14px">Aucune recette ne correspond à votre recherche</div>
     </div>`;
     return;
   }
