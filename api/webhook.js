@@ -54,11 +54,36 @@ module.exports = async function handler(req, res) {
     const session = stripeEvent.data.object;
 
     if (session.metadata?.type === 'seat') {
-      const { company_id, seats } = session.metadata;
+      const { company_id, seats, user_id: seat_user_id, pending_invite_email, pending_invite_role, pending_invite_perms } = session.metadata;
       const toAdd = parseInt(seats) || 1;
       const { data: company } = await supabase.from('companies').select('max_agents').eq('id', company_id).single();
       const current = company?.max_agents ?? 2;
       await supabase.from('companies').update({ max_agents: current + toAdd }).eq('id', company_id);
+
+      // Si une invitation était en attente, l'envoyer automatiquement
+      if (pending_invite_email && seat_user_id) {
+        try {
+          let perms = {};
+          try { perms = JSON.parse(pending_invite_perms || '{}'); } catch (_) {}
+          const ROLE_PRESETS = {
+            commercial: { canViewRevenue: false, canViewAnalytics: false, canViewEventMargin: true, canViewCosts: false, canManageClients: true, canCreateEvents: true, canEditProjects: true, canManageCatalogue: false, canManageStaff: false, canManageSuppliers: false, canExportData: false },
+            barman: { canViewRevenue: false, canViewAnalytics: false, canViewEventMargin: false, canViewCosts: false, canManageClients: false, canCreateEvents: false, canEditProjects: false, canManageCatalogue: true, canManageStaff: false, canManageSuppliers: true, canExportData: false },
+          };
+          const finalPerms = Object.keys(perms).length > 0 ? perms : (ROLE_PRESETS[pending_invite_role] || ROLE_PRESETS.commercial);
+          const { data: adminProfile } = await supabase.from('profiles').select('company_id').eq('id', seat_user_id).maybeSingle();
+          if (adminProfile?.company_id) {
+            await supabase.from('agent_invitations').insert([{
+              company_id: adminProfile.company_id,
+              invited_by: seat_user_id,
+              email: pending_invite_email,
+              role: pending_invite_role || 'commercial',
+              permissions: finalPerms,
+              status: 'pending',
+            }]);
+          }
+        } catch (inviteErr) { console.error('Auto-invite after seat error:', inviteErr.message); }
+      }
+
       return res.status(200).send('seat_ok');
     }
 

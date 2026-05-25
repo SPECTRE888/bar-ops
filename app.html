@@ -9460,11 +9460,14 @@ async function loadAgentsList(){
     }
     if(limitReached){
       html+=`<div style="margin-top:10px;padding:10px 12px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:6px;display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <div style="font-size:11px;color:var(--gold)">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''})</div>
+        <div style="font-size:11px;color:var(--gold)">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''})<br><span style="color:var(--text3);font-size:10px">Ajoutez un siège pour inviter un collaborateur supplémentaire.</span></div>
         <button class="btn btn-gold btn-sm" onclick="buyAgentSeat()" style="font-size:10px;padding:4px 12px;white-space:nowrap">+ 1 siège — 29€/mois</button>
       </div>`;
     }
     wrap.innerHTML=html;
+    // Masquer le bouton "+ Inviter" si limite atteinte
+    const btnInvite=document.getElementById('btn-invite-agent');
+    if(btnInvite) btnInvite.style.display=limitReached?'none':'inline-flex';
   }catch(e){
     if(wrap) wrap.innerHTML='<div style="color:var(--text3);font-size:11px">Erreur de chargement.</div>';
   }
@@ -9486,6 +9489,16 @@ async function submitInviteAgent(){
   try{
     const r=await _agentsFetch({type:'invite',email,role:preset,permissions:perms});
     if(!r) throw new Error('Erreur serveur');
+    // Vérifier si l'erreur est liée à la limite de sièges
+    if(r.error&&(r.error.includes('limit')||r.error.includes('siège')||r.error.includes('max'))){
+      // Proposer d'acheter un siège ET d'envoyer l'invitation en même temps
+      const ok=await confirmModal(
+        `Limite de collaborateurs atteinte.\n\nPour inviter <strong>${email}</strong>, un siège supplémentaire est nécessaire (29€/mois).\nL'invitation sera envoyée automatiquement après paiement.`,
+        false
+      );
+      if(ok) await buyAgentSeat({pendingEmail:email,pendingRole:preset,pendingPermissions:perms});
+      return;
+    }
     showToast('Invitation envoyée à '+email);
     document.getElementById('invite-agent-form').style.display='none';
     document.getElementById('agent-invite-email').value='';
@@ -9504,11 +9517,15 @@ async function agentAction(agentId,action){
   }
 }
 
-async function buyAgentSeat(){
+async function buyAgentSeat(opts={}){
   try{
     const token=extractToken(cloudUser);
     if(!token){showToast('Non connecté','error');return;}
-    const r=await fetch(API_BASE+'/api/billing',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'add-seat'})});
+    const body={action:'add-seat',quantity:1};
+    if(opts.pendingEmail) body.pendingEmail=opts.pendingEmail;
+    if(opts.pendingRole) body.pendingRole=opts.pendingRole;
+    if(opts.pendingPermissions) body.pendingPermissions=opts.pendingPermissions;
+    const r=await fetch(API_BASE+'/api/billing',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
     const res=await r.json();
     if(res?.url) window.location.href=res.url;
     else showToast('Erreur lors de la création du lien de paiement','error');
@@ -9516,6 +9533,27 @@ async function buyAgentSeat(){
     showToast(e?.message||'Erreur','error');
   }
 }
+
+// Gestion du retour depuis Stripe après achat de siège
+(function _handleSeatReturn(){
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('seat')==='success'){
+    setTimeout(()=>{
+      showToast(p.get('seat_invite')==='1'
+        ? '✅ Siège ajouté — invitation envoyée automatiquement !'
+        : '✅ Siège collaborateur ajouté à votre abonnement !','success');
+      // Naviguer vers la section Compte / Collaborateurs
+      if(typeof navigate==='function') navigate('profile');
+    },800);
+    // Nettoyer l'URL
+    const url=new URL(window.location.href);url.searchParams.delete('seat');url.searchParams.delete('seat_invite');
+    window.history.replaceState({},'',url.toString());
+  } else if(p.get('seat')==='cancelled'){
+    setTimeout(()=>showToast('Achat de siège annulé.'),400);
+    const url=new URL(window.location.href);url.searchParams.delete('seat');
+    window.history.replaceState({},'',url.toString());
+  }
+})();
 
 function updProfile(k,v){
   if(!state.profile) state.profile={};

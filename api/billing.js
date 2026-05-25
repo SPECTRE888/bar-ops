@@ -36,15 +36,35 @@ module.exports = async function handler(req, res) {
     const { data: profile } = await supabase.from('profiles').select('company_id, role, companies(name, max_agents)').eq('id', user.id).maybeSingle();
     if (!['COMPANY_ADMIN', 'SUPER_ADMIN'].includes(profile?.role)) return res.status(403).json({ error: 'Réservé aux administrateurs' });
 
-    const { quantity = 1 } = req.body;
+    const { quantity = 1, pendingEmail, pendingRole, pendingPermissions } = req.body;
     const seats = Math.max(1, Math.min(10, parseInt(quantity) || 1));
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription', payment_method_types: ['card'],
+
+    // Rattacher au customer Stripe existant si possible
+    let existingCustomer = null;
+    try {
+      const { data: sub } = await supabase.from('subscriptions').select('stripe_subscription_id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single();
+      if (sub?.stripe_subscription_id) {
+        const subscription = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+        existingCustomer = subscription.customer;
+      }
+    } catch (_) {}
+
+    // Encoder les données d'invitation en attente pour les récupérer au retour
+    const pendingMeta = pendingEmail ? { pending_invite_email: pendingEmail, pending_invite_role: pendingRole || 'commercial', pending_invite_perms: JSON.stringify(pendingPermissions || {}) } : {};
+
+    const sessionParams = {
+      mode: 'subscription',
+      payment_method_types: ['card'],
       line_items: [{ price_data: { currency: 'eur', recurring: { interval: 'month' }, product_data: { name: `Siège collaborateur supplémentaire × ${seats}` }, unit_amount: 2900 }, quantity: seats }],
-      metadata: { type: 'seat', user_id: user.id, company_id: profile.company_id, seats: String(seats) },
-      success_url: `${APP_URL}/company-admin.html?seat=success`,
-      cancel_url: `${APP_URL}/company-admin.html?seat=cancelled`,
-    });
+      metadata: { type: 'seat', user_id: user.id, company_id: profile.company_id, seats: String(seats), ...pendingMeta },
+      success_url: `${APP_URL}/app.html?seat=success${pendingEmail ? '&seat_invite=1' : ''}`,
+      cancel_url: `${APP_URL}/app.html?seat=cancelled`,
+    };
+
+    // Lier au customer existant pour cohérence dans le portail Stripe
+    if (existingCustomer) sessionParams.customer = existingCustomer;
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     return res.status(200).json({ url: session.url });
   }
 
