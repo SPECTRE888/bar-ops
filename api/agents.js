@@ -102,7 +102,8 @@ module.exports = async function handler(req, res) {
       const { data: { user: au } } = await supabase.auth.admin.getUserById(a.id);
       return { ...a, email: au?.email };
     }));
-    return res.status(200).json({ agents: enriched, invitations: invitations || [] });
+    const { data: companyData } = await supabase.from('companies').select('max_agents, plan').eq('id', callerProfile.company_id).single();
+    return res.status(200).json({ agents: enriched, invitations: invitations || [], company: { max_agents: companyData?.max_agents ?? 2 } });
   }
 
   if (action === 'update_permissions') {
