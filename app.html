@@ -1474,7 +1474,7 @@ const GLASS_TYPES=['Rocks','Highball','Verre','Martini','Coupe','Collins','Flût
 // ════════════════════════════════════════════════════════
 let state = {};
 let now = 0;
-let editCId=null, editEvId=null, irc=0;
+let editCId=null, editEvId=null, irc=0, _evActiveDateIdx=0;
 
 // ════════════════════════════════════════════════════════
 // VERSIONING & CHANGELOG
@@ -4746,11 +4746,25 @@ function filterEvList(){
   }).join('')+'</div>';
 }
 
+function _renderEvDateTabs(){
+  const wrap=document.getElementById('ev-date-tabs-wrap');if(!wrap)return;
+  const dates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);
+  if(dates.length<=1){wrap.innerHTML='';return;}
+  const tabs=dates.map((d,i)=>{
+    const label=d?new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'}):'Date '+(i+1);
+    const active=i===_evActiveDateIdx;
+    return`<button class="ev-date-tab" onclick="switchEvDateTab(${i})" style="padding:7px 16px;font-size:11px;background:none;border:none;border-bottom:2px solid ${active?'var(--gold)':'transparent'};color:${active?'var(--gold)':'var(--text3)'};font-weight:${active?700:400};cursor:pointer;white-space:nowrap;margin-bottom:-1px;letter-spacing:.03em;transition:color .15s">${label}</button>`;
+  }).join('');
+  wrap.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:0 14px;display:flex;align-items:center;gap:0;overflow-x:auto;margin-bottom:4px">
+    <span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-right:12px;white-space:nowrap;flex-shrink:0">Prestation</span>
+    ${tabs}
+  </div>`;
+}
 function _addEvDate(){
   const list=document.getElementById('ef-dates-list');if(!list)return;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:4px;align-items:center';
-  div.innerHTML=`<input type="date" class="ef-date-item" style="flex:1"/><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
+  div.innerHTML=`<input type="date" class="ef-date-item" style="flex:1" onchange="_renderEvDateTabs()"/><button type="button" onclick="this.parentElement.remove();_renderEvDateTabs()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
   list.appendChild(div);
   div.querySelector('input').focus();
 }
@@ -4928,6 +4942,8 @@ function showEvForm(ev){
     </div>
 
     </div><!-- end client+event grid -->
+
+    <div id="ev-date-tabs-wrap"></div>
 
     <!-- SECTION 2: HORAIRES & SETUP -->
     <div class="card" style="padding:10px 14px">
@@ -5144,8 +5160,76 @@ function showEvForm(ev){
   if(ev.notes){const notesEl=document.getElementById('ef-notes');if(notesEl)notesEl.value=ev.notes;}
   // Restore custom billing amount
   if(ev.customBillHT){const customRevEl=document.getElementById('ef-rev-custom');if(customRevEl)customRevEl.value=ev.customBillHT;}
+  _evActiveDateIdx=0;
+  if(editEvId){const _ev=state.events.find(x=>x.id===editEvId);if(_ev)_initDateConfigs(_ev);}
   migrateOldStaffData(ev);renderEvPicker();updBarOptions();renderStaffList(ev.id);updEvCalc();_renderExtraProds();
+  _renderEvDateTabs();
 }
+
+// ── MULTI-DATE TABS ──────────────────────────────────────
+function _initDateConfigs(ev){
+  const dates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
+  if(!dates.length)return;
+  if(!ev.dateConfigs)ev.dateConfigs=[];
+  dates.forEach((d,i)=>{
+    if(!ev.dateConfigs[i]){
+      ev.dateConfigs[i]={
+        date:d,
+        setup:i===0?ev.setup||'':'',start:i===0?ev.start||'':'',
+        end:i===0?ev.end||'':'',breakdown:i===0?ev.breakdown||'':'',
+        assignedStaff:i===0?[...(ev.assignedStaff||[])]:([...(ev.assignedStaff||[])]),
+        staffRoles:i===0?{...(ev.staffRoles||{})}:{...(ev.staffRoles||{})},
+        staffTimes:i===0?{...(ev.staffTimes||{})}:{...(ev.staffTimes||{})},
+        staffAssignments:i===0?[...(ev.staffAssignments||[])]:[],
+        cocktails:JSON.parse(JSON.stringify(ev.cocktails||[]))
+      };
+    }else{ev.dateConfigs[i].date=d;}
+  });
+  ev.dateConfigs=ev.dateConfigs.slice(0,dates.length);
+}
+function _saveCurDateCfg(){
+  if(!editEvId)return;
+  const ev=state.events.find(x=>x.id===editEvId);
+  if(!ev||!ev.dateConfigs||!ev.dateConfigs[_evActiveDateIdx])return;
+  const cfg=ev.dateConfigs[_evActiveDateIdx];
+  cfg.setup=document.getElementById('ef-setup')?.value||'';
+  cfg.start=document.getElementById('ef-start')?.value||'';
+  cfg.end=document.getElementById('ef-end')?.value||'';
+  cfg.breakdown=document.getElementById('ef-breakdown')?.value||'';
+  cfg.assignedStaff=[...(ev.assignedStaff||[])];
+  cfg.staffRoles={...(ev.staffRoles||{})};
+  cfg.staffTimes={...(ev.staffTimes||{})};
+  cfg.staffAssignments=[...(ev.staffAssignments||[])];
+  const sel=document.getElementById('ev-content')?._sel||{};
+  cfg.cocktails=Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}));
+}
+function switchEvDateTab(idx){
+  _saveCurDateCfg();
+  _evActiveDateIdx=idx;
+  if(!editEvId)return;
+  const ev=state.events.find(x=>x.id===editEvId);
+  if(!ev||!ev.dateConfigs)return;
+  const cfg=ev.dateConfigs[idx];if(!cfg)return;
+  const setSel=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  setSel('ef-setup',cfg.setup);setSel('ef-start',cfg.start);setSel('ef-end',cfg.end);setSel('ef-breakdown',cfg.breakdown);
+  ev.assignedStaff=[...(cfg.assignedStaff||[])];
+  ev.staffRoles={...(cfg.staffRoles||{})};
+  ev.staffTimes={...(cfg.staffTimes||{})};
+  ev.staffAssignments=[...(cfg.staffAssignments||[])];
+  const evContent=document.getElementById('ev-content');
+  if(evContent){
+    evContent._sel={};
+    (cfg.cocktails||[]).forEach(c=>{evContent._sel[c.id]={qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};});
+  }
+  renderStaffList(ev.id);renderEvPicker();updEvCalc();
+  document.querySelectorAll('.ev-date-tab').forEach((t,i)=>{
+    const a=i===idx;
+    t.style.borderBottomColor=a?'var(--gold)':'transparent';
+    t.style.color=a?'var(--gold)':'var(--text3)';
+    t.style.fontWeight=a?'700':'400';
+  });
+}
+// ── END MULTI-DATE TABS ──────────────────────────────────
 
 function renderEvPicker(){
   const el=document.getElementById('ev-picker');if(!el)return;
@@ -5865,6 +5949,8 @@ function removeExtraProd(i){
 }
 
 async function saveEv(){
+  // Save current date tab before reading form
+  _saveCurDateCfg();
   const name=document.getElementById('ef-name')?.value.trim();
   if(!name){await alertModal('Please enter an event name.');return;}
   const sel=document.getElementById('ev-content')?._sel||{};
@@ -5990,7 +6076,11 @@ async function saveEv(){
     exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||'',
     dryIce:document.getElementById('ef-dryice')?.checked||false,
     customBillHT:parseFloat(document.getElementById('ef-rev-custom')?.value)||0,
-    totalRevHT:totalRevHT
+    totalRevHT:totalRevHT,
+    dateConfigs:(()=>{
+      const _existing=editEvId?state.events.find(x=>x.id===editEvId):null;
+      return _existing?.dateConfigs||null;
+    })()
   };
   if(editEvId)state.events=state.events.map(e=>e.id===editEvId?{...e,...ev}:e);
   else state.events.push(ev);
