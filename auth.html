@@ -84,14 +84,14 @@ async function waitForSb(){
 async function googleAuthLogin(){
   const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
   await s.auth.signOut();
-  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://bar-ops-v2.vercel.app/auth.html?action=login',queryParams:{prompt:'select_account'}}});
+  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://bar-ops-v2.vercel.app/auth.html?action=login',queryParams:{prompt:'select_account login'}}});
   if(error)msg(error.message,'err');
 }
 
 async function googleAuthSignup(){
   const s=await waitForSb();if(!s)return msg('Erreur de configuration','err');
   await s.auth.signOut();
-  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://bar-ops-v2.vercel.app/auth.html?action=signup',queryParams:{prompt:'select_account'}}});
+  const{error}=await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:'https://bar-ops-v2.vercel.app/auth.html?action=signup',queryParams:{prompt:'select_account login'}}});
   if(error)msg(error.message,'err');
 }
 
@@ -190,7 +190,7 @@ async function handleInvite(session){
     msg('Connectez-vous avec le compte Gmail invité…','ok');
     await sb.auth.signInWithOAuth({provider:'google',options:{
       redirectTo:'https://bar-ops-v2.vercel.app/auth.html?action=accept-invite&token='+invToken,
-      queryParams:{prompt:'select_account'}
+      queryParams:{prompt:'select_account login'}
     }});
     return;
   }

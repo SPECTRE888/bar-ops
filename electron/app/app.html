@@ -4737,61 +4737,68 @@ function _renderEvDateTabs(){
     ${tabs}
   </div>`;
 }
-function _initDateConfigs(ev){
-  const dates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
-  if(!dates.length)return;
-  if(!ev.dateConfigs)ev.dateConfigs=[];
-  dates.forEach((d,i)=>{
-    if(!ev.dateConfigs[i]){
-      ev.dateConfigs[i]={
-        date:d,
-        setup:i===0?ev.setup||'':'',start:i===0?ev.start||'':'',
-        end:i===0?ev.end||'':'',breakdown:i===0?ev.breakdown||'':'',
-        assignedStaff:i===0?[...(ev.assignedStaff||[])]:([...(ev.assignedStaff||[])]),
-        staffRoles:i===0?{...(ev.staffRoles||{})}:{...(ev.staffRoles||{})},
-        staffTimes:i===0?{...(ev.staffTimes||{})}:{...(ev.staffTimes||{})},
-        staffAssignments:i===0?[...(ev.staffAssignments||[])]:[],
-        cocktails:JSON.parse(JSON.stringify(ev.cocktails||[]))
-      };
-    }else{ev.dateConfigs[i].date=d;}
-  });
-  ev.dateConfigs=ev.dateConfigs.slice(0,dates.length);
+let _evDateConfigs=[];
+
+function _ensureDateCfg(idx){
+  const dates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);
+  if(idx>=dates.length)return null;
+  if(!_evDateConfigs[idx]){
+    const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+    const isFirst=idx===0;
+    const sel=document.getElementById('ev-content')?._sel||{};
+    _evDateConfigs[idx]={
+      date:dates[idx],
+      setup:isFirst?document.getElementById('ef-setup')?.value||'':'',
+      start:isFirst?document.getElementById('ef-start')?.value||'':'',
+      end:isFirst?document.getElementById('ef-end')?.value||'':'',
+      breakdown:isFirst?document.getElementById('ef-breakdown')?.value||'':'',
+      assignedStaff:isFirst?[...(curEv?.assignedStaff||[])]:[],
+      staffRoles:isFirst?{...(curEv?.staffRoles||{})}:{},
+      staffAssignments:JSON.parse(JSON.stringify(isFirst?curEv?.staffAssignments||[]:[])),
+      cocktails:isFirst
+        ?Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}))
+        :JSON.parse(JSON.stringify(curEv?.cocktails||[]))
+    };
+  } else {
+    _evDateConfigs[idx].date=dates[idx];
+  }
+  return _evDateConfigs[idx];
 }
 function _saveCurDateCfg(){
-  if(!editEvId)return;
-  const ev=state.events.find(x=>x.id===editEvId);
-  if(!ev||!ev.dateConfigs||!ev.dateConfigs[_evActiveDateIdx])return;
-  const cfg=ev.dateConfigs[_evActiveDateIdx];
+  if(!_ensureDateCfg(_evActiveDateIdx))return;
+  const cfg=_evDateConfigs[_evActiveDateIdx];if(!cfg)return;
   cfg.setup=document.getElementById('ef-setup')?.value||'';
   cfg.start=document.getElementById('ef-start')?.value||'';
   cfg.end=document.getElementById('ef-end')?.value||'';
   cfg.breakdown=document.getElementById('ef-breakdown')?.value||'';
-  cfg.assignedStaff=[...(ev.assignedStaff||[])];
-  cfg.staffRoles={...(ev.staffRoles||{})};
-  cfg.staffTimes={...(ev.staffTimes||{})};
-  cfg.staffAssignments=[...(ev.staffAssignments||[])];
+  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+  cfg.assignedStaff=[...(curEv?.assignedStaff||[])];
+  cfg.staffRoles={...(curEv?.staffRoles||{})};
+  cfg.staffAssignments=JSON.parse(JSON.stringify(curEv?.staffAssignments||[]));
   const sel=document.getElementById('ev-content')?._sel||{};
   cfg.cocktails=Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}));
 }
 function switchEvDateTab(idx){
   _saveCurDateCfg();
   _evActiveDateIdx=idx;
-  if(!editEvId)return;
-  const ev=state.events.find(x=>x.id===editEvId);
-  if(!ev||!ev.dateConfigs)return;
-  const cfg=ev.dateConfigs[idx];if(!cfg)return;
+  const cfg=_ensureDateCfg(idx);
+  if(!cfg)return;
   const setSel=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
   setSel('ef-setup',cfg.setup);setSel('ef-start',cfg.start);setSel('ef-end',cfg.end);setSel('ef-breakdown',cfg.breakdown);
-  ev.assignedStaff=[...(cfg.assignedStaff||[])];
-  ev.staffRoles={...(cfg.staffRoles||{})};
-  ev.staffTimes={...(cfg.staffTimes||{})};
-  ev.staffAssignments=[...(cfg.staffAssignments||[])];
+  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+  if(curEv){
+    curEv.assignedStaff=[...(cfg.assignedStaff||[])];
+    curEv.staffRoles={...(cfg.staffRoles||{})};
+    curEv.staffAssignments=JSON.parse(JSON.stringify(cfg.staffAssignments||[]));
+  }
   const evContent=document.getElementById('ev-content');
   if(evContent){
     evContent._sel={};
     (cfg.cocktails||[]).forEach(c=>{evContent._sel[c.id]={qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};});
   }
-  renderStaffList(ev.id);renderEvPicker();updEvCalc();
+  if(curEv)renderStaffList(curEv.id);
+  else{const l=document.getElementById('ev-staff-list');if(l)l.innerHTML='<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun staff — sauvegardez d\'abord l\'événement</div>';}
+  renderEvPicker();updEvCalc();
   document.querySelectorAll('.ev-date-tab').forEach((t,i)=>{
     const a=i===idx;
     t.style.borderBottomColor=a?'var(--gold)':'transparent';
@@ -5201,7 +5208,9 @@ function showEvForm(ev){
   // Restore custom billing amount
   if(ev.customBillHT){const customRevEl=document.getElementById('ef-rev-custom');if(customRevEl)customRevEl.value=ev.customBillHT;}
   _evActiveDateIdx=0;
-  if(editEvId){const _ev=state.events.find(x=>x.id===editEvId);if(_ev)_initDateConfigs(_ev);}
+  _evDateConfigs=[];
+  const _existingForTabs=editEvId?state.events.find(x=>x.id===editEvId):null;
+  if(_existingForTabs?.dateConfigs?.length) _evDateConfigs=JSON.parse(JSON.stringify(_existingForTabs.dateConfigs));
   migrateOldStaffData(ev);renderEvPicker();updBarOptions();renderStaffList(ev.id);updEvCalc();_renderExtraProds();
   _renderEvDateTabs();
 }
@@ -6046,10 +6055,7 @@ async function saveEv(){
     dryIce:document.getElementById('ef-dryice')?.checked||false,
     customBillHT:parseFloat(document.getElementById('ef-rev-custom')?.value)||0,
     totalRevHT:totalRevHT,
-    dateConfigs:(()=>{
-      const _existing=editEvId?state.events.find(x=>x.id===editEvId):null;
-      return _existing?.dateConfigs||null;
-    })()
+    dateConfigs:_evDateConfigs.length>1?JSON.parse(JSON.stringify(_evDateConfigs)):null
   };
   if(editEvId)state.events=state.events.map(e=>e.id===editEvId?{...e,...ev}:e);
   else state.events.push(ev);
