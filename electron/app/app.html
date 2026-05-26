@@ -2498,80 +2498,88 @@ function renderKrafter(){
     const ppu=calcPrepPricePerUnit(p);
     const synced=p.catalogueProductId&&state.products.find(pr=>pr.id===p.catalogueProductId);
     const isOpen=_openPreps.has(p.id);
-    return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;margin-bottom:10px;overflow:hidden">
-      <!-- Ligne principale -->
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
-        <!-- Nom recette -->
+    const F='height:28px;padding:3px 8px;font-size:11px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text);box-sizing:border-box;width:100%';
+    return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;margin-bottom:10px">
+
+      <!-- ── LIGNE 1 : nom + actions ── -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 12px">
         <input id="prep-name-${p.id}" value="${escHtml(p.name)}" onchange="updPrep(${p.id},'name',this.value)"
-          style="font-size:14px;font-weight:700;color:var(--text);background:transparent;border:none;border-bottom:1px solid transparent;outline:none;flex:1;min-width:120px;padding:0"
-          placeholder="Nom recette"
-          onfocus="this.style.borderBottomColor='var(--gold)'"
-          onblur="this.style.borderBottomColor='transparent'"/>
-        <!-- Catégorie badge -->
+          style="flex:1;min-width:0;font-size:13px;font-weight:700;color:var(--text);background:transparent;border:none;border-bottom:1.5px solid transparent;outline:none;padding:0 2px;transition:border-color .15s"
+          placeholder="Nom de la recette"
+          onfocus="this.style.borderBottomColor='var(--gold)'" onblur="this.style.borderBottomColor='transparent'"/>
+        <button class="btn btn-sm" onclick="openPrepFiche(${p.id})" style="flex-shrink:0">Fiche</button>
+        <button id="prep-toggle-${p.id}" class="btn btn-sm btn-ghost" onclick="togglePrepForm(${p.id})" style="flex-shrink:0;min-width:28px">${isOpen?'▲':'▼'}</button>
+        <button class="btn btn-sm btn-danger" onclick="delPrep(${p.id})" style="flex-shrink:0">×</button>
+      </div>
+
+      <!-- ── LIGNE 2 : catégorie + coûts ── -->
+      <div style="display:flex;align-items:center;gap:10px;padding:0 12px 8px">
         <select onchange="updPrep(${p.id},'category',this.value)"
-          style="font-size:9px;letter-spacing:.07em;text-transform:uppercase;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text3);padding:3px 8px;height:22px;flex-shrink:0;cursor:pointer">
+          style="font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text2);padding:2px 6px;height:24px;cursor:pointer;flex-shrink:0">
           ${PREP_CATEGORIES.map(c=>`<option${c===p.category?' selected':''}>${c}</option>`).join('')}
         </select>
-        ${synced?`<span style="font-size:9px;background:#1a3a1a;color:#6fcf6f;border:1px solid #2d6a2d;padding:2px 7px;border-radius:10px;letter-spacing:.06em;flex-shrink:0;white-space:nowrap">✓ Catalogue</span>`:''}
-        <!-- Coûts -->
-        <div style="text-align:right;flex-shrink:0;line-height:1.4">
-          <div style="font-size:12px;color:var(--gold);font-weight:700" id="prep-cost-total-${p.id}">${fmt(total)}</div>
-          <div style="font-size:10px;color:var(--text3)" id="prep-cost-ppu-${p.id}">${fmt(ppu)} / ${escHtml(p.yieldUnit||'unité')}</div>
-        </div>
-        <!-- Actions -->
-        <div style="display:flex;gap:5px;flex-shrink:0">
-          <button class="btn-edit" onclick="openPrepFiche(${p.id})">Fiche</button>
-          <button id="prep-toggle-${p.id}" class="btn-edit" onclick="togglePrepForm(${p.id})">${isOpen?'▲':'▼'}</button>
-          <button class="btn btn-sm btn-danger" onclick="delPrep(${p.id})">×</button>
-        </div>
+        ${synced?`<span style="font-size:9px;background:#1a3a1a;color:#6fcf6f;border:1px solid #2d6a2d;padding:2px 7px;border-radius:10px;white-space:nowrap">✓ Catalogue</span>`:''}
+        <div style="flex:1"></div>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">Coût total : <strong id="prep-cost-total-${p.id}" style="color:var(--gold)">${fmt(total)}</strong></span>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">soit <strong id="prep-cost-ppu-${p.id}" style="color:var(--text2)">${fmt(ppu)}</strong> / ${escHtml(p.yieldUnit||'unité')}</span>
       </div>
-      <!-- Ligne secondaire : nom catalogue -->
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 14px;background:var(--surface2)">
-        <span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);white-space:nowrap;flex-shrink:0">Nom catalogue :</span>
+
+      <!-- ── LIGNE 3 : nom catalogue + bouton ── -->
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--surface2);border-top:1px solid var(--border2);border-bottom:${isOpen?'1px solid var(--border2)':'none'}">
+        <span style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);white-space:nowrap;flex-shrink:0">Nom catalogue</span>
         <input value="${escHtml(p.catalogueName||'')}" onchange="updPrep(${p.id},'catalogueName',this.value)"
           placeholder="Nom tel qu'il apparaîtra dans le catalogue…"
-          style="flex:1;font-size:11px;color:var(--text2);background:transparent;border:none;outline:none;min-width:0;padding:0"
-          onfocus="this.style.borderBottom='1px solid var(--gold)'"
-          onblur="this.style.borderBottom='none'"/>
-        <button class="btn btn-sm btn-gold" onclick="sendPrepToCatalogue(${p.id})" style="flex-shrink:0;font-size:9px">${synced?'↻ Maj catalogue':'→ Catalogue'}</button>
+          style="flex:1;min-width:0;font-size:11px;color:var(--text2);background:transparent;border:none;outline:none;padding:0 4px;border-left:2px solid var(--border2)"
+          onfocus="this.style.borderLeftColor='var(--gold)'" onblur="this.style.borderLeftColor='var(--border2)'"/>
+        <button class="btn btn-sm btn-gold" onclick="sendPrepToCatalogue(${p.id})" style="flex-shrink:0">${synced?'↻ Mettre à jour':'→ Catalogue'}</button>
       </div>
-      <div id="prep-detail-${p.id}" style="display:${isOpen?'block':'none'};padding:14px;border-top:1px solid var(--border2)">
-        <div style="display:grid;grid-template-columns:1fr 120px 120px;gap:8px;margin-bottom:14px">
+
+      <!-- ── DÉTAIL (dépliable) ── -->
+      <div id="prep-detail-${p.id}" style="display:${isOpen?'block':'none'};padding:14px">
+
+        <!-- Technique / Durée / Rendement -->
+        <div style="display:grid;grid-template-columns:1fr 140px 160px;gap:10px;margin-bottom:14px">
           <div>
-            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Technique &amp; méthode</label>
-            <textarea rows="3" placeholder="Libre : cuisson à 70°C, sous vide 4h, infusion froide 24h, macération…" onchange="updPrep(${p.id},'cookNotes',this.value)" style="margin-top:4px;${INP2};height:auto;resize:vertical;line-height:1.5;padding:6px 8px">${escHtml(p.cookNotes||'')}</textarea>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Technique &amp; méthode</div>
+            <textarea rows="3" placeholder="Cuisson 70°C, sous vide 4h, macération 48h…" onchange="updPrep(${p.id},'cookNotes',this.value)"
+              style="${F};height:auto;resize:vertical;line-height:1.5;padding:5px 8px">${escHtml(p.cookNotes||'')}</textarea>
           </div>
           <div>
-            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Durée</label>
-            <input value="${escHtml(p.cookTime||'')}" placeholder="ex : 30 min, 2h…" onchange="updPrep(${p.id},'cookTime',this.value)" style="margin-top:4px;${INP2}"/>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Durée</div>
+            <input value="${escHtml(p.cookTime||'')}" placeholder="30 min, 2h…" onchange="updPrep(${p.id},'cookTime',this.value)" style="${F}"/>
           </div>
           <div>
-            <label style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Rendement</label>
-            <div style="display:flex;gap:4px;margin-top:4px">
-              <input type="number" value="${p.yieldQty||1}" min="0.01" step="any" onchange="updPrep(${p.id},'yieldQty',this.value);updatePrepCostDisplay(${p.id})" style="width:55%;height:28px;padding:3px 4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:right"/>
-              <input value="${escHtml(p.yieldUnit||'L')}" placeholder="L, cl…" onchange="updPrep(${p.id},'yieldUnit',this.value);updatePrepCostDisplay(${p.id})" style="width:45%;height:28px;padding:3px 4px;font-size:11px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text);box-sizing:border-box"/>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Rendement</div>
+            <div style="display:flex;gap:4px">
+              <input type="number" value="${p.yieldQty||1}" min="0.01" step="any" onchange="updPrep(${p.id},'yieldQty',this.value);updatePrepCostDisplay(${p.id})"
+                style="width:60px;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text);box-sizing:border-box;text-align:right"/>
+              <input value="${escHtml(p.yieldUnit||'L')}" placeholder="L, cl…" onchange="updPrep(${p.id},'yieldUnit',this.value);updatePrepCostDisplay(${p.id})"
+                style="flex:1;height:28px;padding:3px 6px;font-size:11px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text);box-sizing:border-box"/>
             </div>
           </div>
         </div>
-        <div style="margin-bottom:10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Ingrédients</span>
+
+        <!-- Ingrédients -->
+        <div style="border:1px solid var(--border2);border-radius:6px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-bottom:1px solid var(--border2)">
+            <span style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600">Ingrédients</span>
             <button class="btn btn-sm" onclick="addPrepIng(${p.id})">+ Ingrédient</button>
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:11px">
-            <colgroup><col style="width:auto"/><col style="width:72px"/><col style="width:70px"/><col style="width:100px"/><col style="width:36px"/></colgroup>
-            <thead><tr style="border-bottom:1px solid var(--border2)">
-              <th style="text-align:left;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Produit catalogue ou libre</th>
-              <th style="text-align:right;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Qté</th>
-              <th style="padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Unité</th>
-              <th style="text-align:right;padding:4px 6px;font-size:10px;color:var(--text3);font-weight:400">Prix / unité (€ HT)</th>
-              <th></th>
+            <thead style="background:var(--surface2)"><tr>
+              <th style="text-align:left;padding:5px 10px;font-size:9px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border2)">Produit / Ingrédient</th>
+              <th style="text-align:right;padding:5px 8px;font-size:9px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border2);width:70px">Qté</th>
+              <th style="padding:5px 8px;font-size:9px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border2);width:65px">Unité</th>
+              <th style="text-align:right;padding:5px 8px;font-size:9px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border2);width:95px">Prix/unité HT</th>
+              <th style="width:32px;border-bottom:1px solid var(--border2)"></th>
             </tr></thead>
             <tbody id="prep-ing-tbody-${p.id}"></tbody>
           </table>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:8px;border-top:1px solid var(--border2)">
-          <button class="btn btn-ghost" onclick="togglePrepForm(${p.id})">▲ Réduire</button>
+
+        <!-- Footer détail -->
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="btn btn-ghost btn-sm" onclick="togglePrepForm(${p.id})">▲ Réduire</button>
         </div>
       </div>
     </div>`;
