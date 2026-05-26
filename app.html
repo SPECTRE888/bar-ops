@@ -3363,7 +3363,6 @@ async function createClientFromForm(){
   const name=(fname+' '+lname).trim();
   const email=(document.getElementById('ef-client-email')?.value||'').trim();
   const phone=(document.getElementById('ef-client-phone')?.value||'').trim();
-  const whatsapp=(document.getElementById('ef-client-whatsapp')?.value||'').trim();
   const company=(document.getElementById('ef-client-company')?.value||'').trim();
   const address=(document.getElementById('ef-client-address')?.value||'').trim();
   const notes=(document.getElementById('ef-client-notes')?.value||'').trim();
@@ -3387,7 +3386,6 @@ async function createClientFromForm(){
     name,
     email:email||'',
     phone:phone||'',
-    whatsapp:whatsapp||'',
     company:company||'',
     address:address||'',
     notes:notes||'',
@@ -3397,9 +3395,14 @@ async function createClientFromForm(){
   save();
   
   window._selectedClientId=newClient.id;
-  document.getElementById('ef-client-search').value=name;
   document.getElementById('ef-client-form').style.display='none';
   linkClientToEvent(newClient.id);
+  // Auto-fill fields after form re-render
+  setTimeout(()=>{
+    if(document.getElementById('ef-client-search')) document.getElementById('ef-client-search').value=name;
+    if(document.getElementById('ef-email')) document.getElementById('ef-email').value=email||'';
+    if(document.getElementById('ef-phone')) document.getElementById('ef-phone').value=phone||'';
+  }, 0);
   log('✓ Client créé: '+name);
 }
 
@@ -4866,9 +4869,6 @@ function showEvForm(ev){
           </div>
           <div class="field"><label>Téléphone</label>
             <input id="ef-client-phone" placeholder="+33 6..."/>
-          </div>
-          <div class="field"><label>WhatsApp (pour envoyer briefs)</label>
-            <input id="ef-client-whatsapp" placeholder="+33 6..."/>
           </div>
         </div>
         <div class="field" style="margin-bottom:10px"><label>Adresse</label>
@@ -6942,7 +6942,8 @@ async function sendBriefWA(evId,sid){
 async function sendBriefFromClient(evId){
   const ev=state.events.find(x=>x.id===evId);
   const client=state.clients.find(x=>x.id===ev?.clientId);
-  if(!ev||!client||!client.whatsapp){await alertModal('WhatsApp du client manquant');return;}
+  const briefPhone=client.whatsapp||client.phone;
+  if(!ev||!client||!briefPhone){await alertModal('Numéro de téléphone du client manquant');return;}
   
   const staffNames=(ev.assignedStaff||[]).map(sid=>{
     const s=state.staffItems.find(x=>x.id===sid);
@@ -6967,7 +6968,7 @@ async function sendBriefFromClient(evId){
     '_Envoyé via BAR OPS_'
   ];
   const msg=lines.filter(l=>l!==undefined).join('\n');
-  window.open('https://web.whatsapp.com/send?phone='+waPhone(client.whatsapp)+'&text='+encodeURIComponent(msg),'_blank');
+  window.open('https://web.whatsapp.com/send?phone='+waPhone(briefPhone)+'&text='+encodeURIComponent(msg),'_blank');
 }
 
 function buildDispoMsg(ev, s){
