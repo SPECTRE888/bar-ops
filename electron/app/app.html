@@ -4644,7 +4644,7 @@ function showEvList(){
   const pageEvs=sorted.slice(pg*PAGE,(pg+1)*PAGE);
   const totalPg=Math.ceil(sorted.length/PAGE);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+    <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 85px 175px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
       <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:center">Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${pageEvs.map(ev=>{
@@ -4655,8 +4655,9 @@ function showEvList(){
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
+      const _nd=evDatesCount(ev);
       const isPast=(()=>{const _ld=evLastDate(ev);return _ld&&_ld<new Date();})();
-      return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 85px 175px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4665,7 +4666,10 @@ function showEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
         <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
-        <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
+        <div style="text-align:right;line-height:1.3">
+          <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'}">${rev?fmt(rev):'—'}</div>
+          ${_nd>1?`<div style="font-size:9px;color:var(--text3)">${_nd}j · ${rev?fmt(Math.round(rev/_nd)):'—'}/j</div>`:''}
+        </div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
           <button class="btn-edit" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">Suivi</button>
@@ -4696,7 +4700,7 @@ function filterEvList(){
     return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
-    <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
+    <div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 85px 175px;column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
       <div>Date</div><div>Événement</div><div>Client</div><div>Lieu</div><div style="text-align:right">Pax</div><div style="text-align:right">Cocktails</div><div style="text-align:right">Équipe</div><div style="text-align:center">Statut</div><div style="text-align:right">CA HT</div><div></div>
     </div>
     ${sorted.map(ev=>{
@@ -4707,8 +4711,9 @@ function filterEvList(){
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
+      const _nd=evDatesCount(ev);
       const isPast=(()=>{const _ld=evLastDate(ev);return _ld&&_ld<new Date();})();
-      return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
+      return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 85px 175px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
         <div style="font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(clientName)}</div>
@@ -4717,7 +4722,10 @@ function filterEvList(){
         <div style="font-size:12px;color:var(--text2);text-align:right">${tot||'—'}</div>
         <div style="font-size:12px;color:${confirmed>0&&confirmed===assigned?'#4ade80':assigned>0?'var(--gold)':'var(--text3)'};text-align:right">${assigned?confirmed+'/'+assigned:'—'}</div>
         <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
-        <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
+        <div style="text-align:right;line-height:1.3">
+          <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'}">${rev?fmt(rev):'—'}</div>
+          ${_nd>1?`<div style="font-size:9px;color:var(--text3)">${_nd}j · ${rev?fmt(Math.round(rev/_nd)):'—'}/j</div>`:''}
+        </div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
           <button class="btn-edit" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">Suivi</button>
@@ -5760,11 +5768,9 @@ function updEvCalc(){
   if(remisePct>0&&remiseHT===0){const e=document.getElementById('ef-remise-ht');if(e&&document.activeElement!==e)e.placeholder=remiseMontant.toFixed(0);}
   if(remiseHT>0&&remisePct===0){const e=document.getElementById('ef-remise-pct');if(e&&document.activeElement!==e)e.placeholder=revenueBeforeRemise>0?(remiseHT/revenueBeforeRemise*100).toFixed(1):0;}
   // Custom billing amount (formule/devis convenu)
-  const _nbDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean).length||1;
   const customRevenue=parseFloat(document.getElementById('ef-rev-custom')?.value)||0;
-  const displayRevenue=(customRevenue>0?customRevenue:totalRevenue)*_nbDates;
-  const tcTotal=tc*_nbDates;
-  const finalMg=displayRevenue-tcTotal;
+  const displayRevenue=customRevenue>0?customRevenue:totalRevenue;
+  const finalMg=displayRevenue-tc;
 
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
   const revTTC=displayRevenue*(1+avgVat/100);
@@ -5773,7 +5779,7 @@ function updEvCalc(){
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts')||BarOpsAuth.can('canViewEventMargin');
   const hidden='—';
   set('es-ckt',total||'—');
-  set('es-total',canCost&&tcTotal>0?tcTotal.toFixed(0)+'€':canCost?'—':hidden);
+  set('es-total',canCost&&tc>0?tc.toFixed(0)+'€':canCost?'—':hidden);
   set('es-rev',canRev&&displayRevenue>0?displayRevenue.toFixed(0)+'€':canRev?'—':hidden);
   set('es-ing',canCost&&ingCost>0?ingCost.toFixed(0)+'€':'');
   set('es-staff',canCost&&staffCost>0?staffCost.toFixed(0)+'€':'—');
