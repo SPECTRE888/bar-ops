@@ -1565,13 +1565,18 @@ function migrateEvRevHT(){
       if(isMulti)cktRev*=dates.length;
     }
     // Staff
+    // Staff root (fallback)
+    let rootStaffRev=0;
+    (ev.staffAssignments||[]).forEach(s=>{rootStaffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);});
     let staffRev=0;
     if(configs){
-      configs.forEach(dc=>(dc.staffAssignments||[]).forEach(s=>{staffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);}));
-      if(staffRev===0)(ev.staffAssignments||[]).forEach(s=>{staffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);});
+      // Par date : utiliser dc.staffAssignments si configuré, sinon root
+      configs.forEach(dc=>{
+        const dcS=(dc.staffAssignments||[]).reduce((a,s)=>a+(s.billHT||0)*_h(s.arrivalTime,s.departureTime),0);
+        staffRev+=dcS>0?dcS:rootStaffRev;
+      });
     }else{
-      (ev.staffAssignments||[]).forEach(s=>{staffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);});
-      if(isMulti&&staffRev>0)staffRev*=dates.length;
+      staffRev=isMulti?rootStaffRev*dates.length:rootStaffRev;
     }
     const extraProd=(ev.extraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
     const total=cktRev+staffRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0)+(ev.barPrice||0)+extraProd;
@@ -6113,18 +6118,14 @@ async function saveEv(){
         const gc=cfg.glassCostHT||0;
         sumRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+gc);
       });
-      // Staff assignments par jour
-      (dc.staffAssignments||[]).forEach(s=>{
-        const [ah,am]=(s.arrivalTime||'00:00').split(':').map(Number);
-        const [dh,dm]=(s.departureTime||'00:00').split(':').map(Number);
-        let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;
-        sumRev+=(s.billHT||0)*(mins/60);
-      });
+      // Staff par date : si configuré utiliser dc.staffAssignments, sinon fallback root
+      const dcStaff=dc.staffAssignments||[];
+      if(dcStaff.length>0){
+        dcStaff.forEach(s=>{const[ah,am]=(s.arrivalTime||'00:00').split(':').map(Number);const[dh,dm]=(s.departureTime||'00:00').split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;sumRev+=(s.billHT||0)*(m/60);});
+      }else{
+        sumRev+=staffRevenue; // fallback : staff root pour cette date
+      }
     });
-    // Si aucun staffAssignment configuré par date, utiliser le modèle form × nb dates
-    if(!_evDateConfigs.slice(0,_allDates.length).some(dc=>(dc.staffAssignments||[]).length>0)){
-      sumRev+=staffRevenue*_allDates.length;
-    }
     // Coûts partagés (livraison, bar, extras) — une seule fois
     sumRev+=extraBill+deliveryBill+barPrice;
     totalRevHT=sumRev-remiseMontant;
