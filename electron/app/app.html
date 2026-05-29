@@ -4027,9 +4027,7 @@ function showSingleEventSuivi(eventId){
     </div>
 
     ${(()=>{
-      const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);
-      const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-      const total=rev-remise;
+      const total=ev.totalRevHT||(()=>{const r=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);const rm=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?r*ev.remisePct/100:0);return r-rm;})();
       const defautAcompte=state.profile?.acomptePercent?total*state.profile.acomptePercent/100:0;
       const acompte=ev.acompte>0?ev.acompte:defautAcompte;
       const acompteRecu=ev.acompte>0;
@@ -4670,6 +4668,7 @@ function showEvList(){
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
+          <button class="btn-edit" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">Suivi</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
@@ -4721,6 +4720,7 @@ function filterEvList(){
         <div style="font-size:12px;font-weight:${rev?'600':'400'};color:${rev?'var(--gold)':'var(--text3)'};text-align:right">${rev?fmt(rev):'—'}</div>
         <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
           <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
+          <button class="btn-edit" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">Suivi</button>
           <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:24px;height:24px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
         </div>
       </div>`;
@@ -5760,9 +5760,11 @@ function updEvCalc(){
   if(remisePct>0&&remiseHT===0){const e=document.getElementById('ef-remise-ht');if(e&&document.activeElement!==e)e.placeholder=remiseMontant.toFixed(0);}
   if(remiseHT>0&&remisePct===0){const e=document.getElementById('ef-remise-pct');if(e&&document.activeElement!==e)e.placeholder=revenueBeforeRemise>0?(remiseHT/revenueBeforeRemise*100).toFixed(1):0;}
   // Custom billing amount (formule/devis convenu)
+  const _nbDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean).length||1;
   const customRevenue=parseFloat(document.getElementById('ef-rev-custom')?.value)||0;
-  const displayRevenue=customRevenue>0?customRevenue:totalRevenue;
-  const finalMg=displayRevenue-tc;
+  const displayRevenue=(customRevenue>0?customRevenue:totalRevenue)*_nbDates;
+  const tcTotal=tc*_nbDates;
+  const finalMg=displayRevenue-tcTotal;
 
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
   const revTTC=displayRevenue*(1+avgVat/100);
@@ -5771,7 +5773,7 @@ function updEvCalc(){
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts')||BarOpsAuth.can('canViewEventMargin');
   const hidden='—';
   set('es-ckt',total||'—');
-  set('es-total',canCost&&tc>0?tc.toFixed(0)+'€':canCost?'—':hidden);
+  set('es-total',canCost&&tcTotal>0?tcTotal.toFixed(0)+'€':canCost?'—':hidden);
   set('es-rev',canRev&&displayRevenue>0?displayRevenue.toFixed(0)+'€':canRev?'—':hidden);
   set('es-ing',canCost&&ingCost>0?ingCost.toFixed(0)+'€':'');
   set('es-staff',canCost&&staffCost>0?staffCost.toFixed(0)+'€':'—');
@@ -10618,12 +10620,7 @@ function _renderSuiviOld_unused(){
 
       <!-- Paiement -->
       ${(()=>{
-        const rev=(ev.cocktails||[]).reduce((s,cfg)=>{
-          const c=state.cocktails.find(x=>x.id===cfg.id);
-          return s+(c?cfg.qty*(c.priceHT||0):0);
-        },0)+(ev.deliveryBillHT||0);
-        const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-        const total=rev-remise;
+        const total=ev.totalRevHT||(()=>{const r=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);const rm=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?r*ev.remisePct/100:0);return r-rm;})();
         const defautAcompte=state.profile?.acomptePercent?total*state.profile.acomptePercent/100:0;
         const acompte=ev.acompte>0?ev.acompte:defautAcompte;
         const acompteRecu=ev.acompte>0;

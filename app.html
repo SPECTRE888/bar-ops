@@ -4123,9 +4123,7 @@ function showSingleEventSuivi(eventId){
     </div>
 
     ${(()=>{
-      const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);
-      const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-      const total=rev-remise;
+      const total=ev.totalRevHT||(()=>{const r=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);const rm=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?r*ev.remisePct/100:0);return r-rm;})();
       const defautAcompte=state.profile?.acomptePercent?total*state.profile.acomptePercent/100:0;
       const acompte=ev.acompte>0?ev.acompte:defautAcompte;
       const acompteRecu=ev.acompte>0;
@@ -5826,9 +5824,11 @@ function updEvCalc(){
   if(remisePct>0&&remiseHT===0){const e=document.getElementById('ef-remise-ht');if(e&&document.activeElement!==e)e.placeholder=remiseMontant.toFixed(0);}
   if(remiseHT>0&&remisePct===0){const e=document.getElementById('ef-remise-pct');if(e&&document.activeElement!==e)e.placeholder=revenueBeforeRemise>0?(remiseHT/revenueBeforeRemise*100).toFixed(1):0;}
   // Custom billing amount (formule/devis convenu)
+  const _nbDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean).length||1;
   const customRevenue=parseFloat(document.getElementById('ef-rev-custom')?.value)||0;
-  const displayRevenue=customRevenue>0?customRevenue:totalRevenue;
-  const finalMg=displayRevenue-tc;
+  const displayRevenue=(customRevenue>0?customRevenue:totalRevenue)*_nbDates;
+  const tcTotal=tc*_nbDates;
+  const finalMg=displayRevenue-tcTotal;
 
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
   const revTTC=displayRevenue*(1+avgVat/100);
@@ -5837,7 +5837,7 @@ function updEvCalc(){
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts')||BarOpsAuth.can('canViewEventMargin');
   const hidden='—';
   set('es-ckt',total||'—');
-  set('es-total',canCost&&tc>0?tc.toFixed(0)+'€':canCost?'—':hidden);
+  set('es-total',canCost&&tcTotal>0?tcTotal.toFixed(0)+'€':canCost?'—':hidden);
   set('es-rev',canRev&&displayRevenue>0?displayRevenue.toFixed(0)+'€':canRev?'—':hidden);
   set('es-ing',canCost&&ingCost>0?ingCost.toFixed(0)+'€':'');
   set('es-staff',canCost&&staffCost>0?staffCost.toFixed(0)+'€':'—');
@@ -10641,12 +10641,7 @@ function _renderSuiviOld_unused(){
 
       <!-- Paiement -->
       ${(()=>{
-        const rev=(ev.cocktails||[]).reduce((s,cfg)=>{
-          const c=state.cocktails.find(x=>x.id===cfg.id);
-          return s+(c?cfg.qty*(c.priceHT||0):0);
-        },0)+(ev.deliveryBillHT||0);
-        const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?rev*ev.remisePct/100:0);
-        const total=rev-remise;
+        const total=ev.totalRevHT||(()=>{const r=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*(c.priceHT||0):0);},0)+(ev.deliveryBillHT||0);const rm=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?r*ev.remisePct/100:0);return r-rm;})();
         const defautAcompte=state.profile?.acomptePercent?total*state.profile.acomptePercent/100:0;
         const acompte=ev.acompte>0?ev.acompte:defautAcompte;
         const acompteRecu=ev.acompte>0;
