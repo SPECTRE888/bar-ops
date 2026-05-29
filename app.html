@@ -6049,27 +6049,18 @@ async function saveEv(){
   const extraBill=parseFloat(document.getElementById('ef-extra-bill')?.value)||0;
   const deliveryBill=parseFloat(document.getElementById('ef-delivery-bill')?.value)||0;
   
+  // Staff revenue : utiliser staffAssignments (modèle actuel) en priorité
   let staffRevenue=0;
-  // Get bill rates per role from staffItems matching type
-  const staffBillPerRole={
-    brt: state.staffItems?.find(s=>s.type==='Bartender')?.billHT||40,
-    wtr: state.staffItems?.find(s=>s.type==='Serveur')?.billHT||32,
-    mgr: state.staffItems?.find(s=>s.type==='Bar Manager')?.billHT||55
-  };
-  
-  const calcHours=(arrId,depId)=>{
-    const arr=document.getElementById(arrId)?.value||'';
-    const dep=document.getElementById(depId)?.value||'';
-    if(!arr||!dep)return 0;
-    const [ah,am]=arr.split(':').map(Number);
-    const [dh,dm]=dep.split(':').map(Number);
-    let h=(dh*60+dm)-(ah*60+am);if(h<0)h+=24*60;
-    return h/60;
-  };
-  
-  staffRevenue=nB*calcHours('ef-arrbrt','ef-depbrt')*staffBillPerRole.brt+
-               nW*calcHours('ef-arrwtr','ef-depwtr')*staffBillPerRole.wtr+
-               nM*calcHours('ef-arrmgr','ef-depmgr')*staffBillPerRole.mgr;
+  const _curEvSave=editEvId?state.events.find(x=>x.id===editEvId):null;
+  const _calcHrsMin=(arr,dep)=>{if(!arr||!dep)return 0;const [ah,am]=arr.split(':').map(Number);const [dh,dm]=dep.split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;return m/60;};
+  if((_curEvSave?.staffAssignments||[]).length>0){
+    (_curEvSave.staffAssignments).forEach(s=>{staffRevenue+=(s.billHT||0)*_calcHrsMin(s.arrivalTime,s.departureTime);});
+  }else{
+    // Fallback ancien modèle (nB/nW/nM × tarif rôle)
+    const staffBillPerRole={brt:state.staffItems?.find(s=>s.type==='Bartender')?.billHT||40,wtr:state.staffItems?.find(s=>s.type==='Serveur')?.billHT||32,mgr:state.staffItems?.find(s=>s.type==='Bar Manager')?.billHT||55};
+    const calcHoursForm=(arrId,depId)=>{const a=document.getElementById(arrId)?.value||'';const d=document.getElementById(depId)?.value||'';return _calcHrsMin(a,d);};
+    staffRevenue=nB*calcHoursForm('ef-arrbrt','ef-depbrt')*staffBillPerRole.brt+nW*calcHoursForm('ef-arrwtr','ef-depwtr')*staffBillPerRole.wtr+nM*calcHoursForm('ef-arrmgr','ef-depmgr')*staffBillPerRole.mgr;
+  }
 
   const barPrice=parseFloat(document.getElementById('ef-bar-price')?.value)||0;
   const revenueBeforeRemise=revenue+staffRevenue+extraBill+deliveryBill+barPrice;
