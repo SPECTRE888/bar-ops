@@ -1394,6 +1394,7 @@ async function doCloudLogin(){
       injectDemoData();
       await cloudPush(); // push demo data to cloud
     }
+    migrateEvRevHT();
     document.getElementById('cloud-modal')?.remove();
     updateCloudStatus();
     renderDashboard();
@@ -1548,6 +1549,37 @@ function load(){
       else c.glass=c.glass.split(' — ')[0].trim();
     }
   });
+}
+
+function migrateEvRevHT(){
+  const _h=(a,d)=>{if(!a||!d)return 0;const[ah,am]=a.split(':').map(Number);const[dh,dm]=d.split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;return m/60;};
+  let changed=false;
+  (state.events||[]).forEach(ev=>{
+    const dates=(ev.dates&&ev.dates.length>1)?ev.dates:[ev.date].filter(Boolean);
+    const isMulti=dates.length>1;
+    const configs=isMulti&&(ev.dateConfigs||[]).length>0?ev.dateConfigs:null;
+    let cktRev=0;
+    if(configs){
+      configs.forEach(dc=>(dc.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));}));
+    }else{
+      (ev.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));});
+      if(isMulti)cktRev*=dates.length;
+    }
+    let staffRev=0;
+    if(configs){
+      configs.forEach(dc=>(dc.staffAssignments||[]).forEach(s=>{staffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);}));
+      if(staffRev===0)(ev.staffAssignments||[]).forEach(s=>{staffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);});
+    }else{
+      (ev.staffAssignments||[]).forEach(s=>{staffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);});
+      if(isMulti&&staffRev>0)staffRev*=dates.length;
+    }
+    const extraProd=(ev.extraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
+    const total=cktRev+staffRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0)+(ev.barPrice||0)+extraProd;
+    const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?total*ev.remisePct/100:0);
+    const computed=Math.round((total-remise)*100)/100;
+    if(computed>0&&Math.abs((ev.totalRevHT||0)-computed)>0.5){ev.totalRevHT=computed;changed=true;}
+  });
+  if(changed)localStorage.setItem(SK,JSON.stringify(state));
 }
 
 function showChangelogIfNew(){
@@ -11612,6 +11644,7 @@ updateCloudStatus();
       // Push ce qu'on a en local vers le cloud
       if(cloudUser) await cloudPush();
     }
+    migrateEvRevHT();
     const evContent=document.getElementById('ev-content');
     if(evContent&&evContent._clientId){
       const client=state.clients.find(x=>x.id===evContent._clientId);
