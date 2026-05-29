@@ -4802,11 +4802,20 @@ function _renderEvDateTabs(){
     ${tabs}
   </div>`;
 }
+function _removeEvDate(btn){
+  const list=document.getElementById('ef-dates-list');if(!list)return;
+  const items=[...list.children];
+  const idx=items.indexOf(btn.parentElement);
+  if(idx>=0&&idx<_evDateConfigs.length) _evDateConfigs.splice(idx,1);
+  if(_evActiveDateIdx>=idx&&_evActiveDateIdx>0) _evActiveDateIdx--;
+  btn.parentElement.remove();
+  _renderEvDateTabs();
+}
 function _addEvDate(){
   const list=document.getElementById('ef-dates-list');if(!list)return;
   const div=document.createElement('div');
   div.style.cssText='display:flex;gap:4px;align-items:center';
-  div.innerHTML=`<input type="date" class="ef-date-item" style="flex:1" onchange="_renderEvDateTabs()"/><button type="button" onclick="this.parentElement.remove();_renderEvDateTabs()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
+  div.innerHTML=`<input type="date" class="ef-date-item" style="flex:1" onchange="_renderEvDateTabs()"/><button type="button" onclick="_removeEvDate(this)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`;
   list.appendChild(div);
   div.querySelector('input').focus();
 }
@@ -6002,8 +6011,10 @@ function removeExtraProd(i){
 }
 
 async function saveEv(){
-  // Save current date tab before reading form
   _saveCurDateCfg();
+  // Ensure all date tabs have a config entry (even if never visited)
+  const _allDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);
+  _allDates.forEach((_,i)=>_ensureDateCfg(i));
   const name=document.getElementById('ef-name')?.value.trim();
   if(!name){await alertModal('Please enter an event name.');return;}
   const sel=document.getElementById('ev-content')?._sel||{};
@@ -6130,7 +6141,7 @@ async function saveEv(){
     dryIce:document.getElementById('ef-dryice')?.checked||false,
     customBillHT:parseFloat(document.getElementById('ef-rev-custom')?.value)||0,
     totalRevHT:totalRevHT,
-    dateConfigs:_evDateConfigs.length>1?JSON.parse(JSON.stringify(_evDateConfigs)):null
+    dateConfigs:_allDates.length>1?JSON.parse(JSON.stringify(_evDateConfigs.slice(0,_allDates.length))):null
   };
   if(editEvId)state.events=state.events.map(e=>e.id===editEvId?{...e,...ev}:e);
   else state.events.push(ev);
