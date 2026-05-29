@@ -5216,6 +5216,17 @@ function showEvForm(ev){
   if(_existingForTabs?.dateConfigs?.length) _evDateConfigs=JSON.parse(JSON.stringify(_existingForTabs.dateConfigs));
   migrateOldStaffData(ev);renderEvPicker();updBarOptions();renderStaffList(ev.id);updEvCalc();_renderExtraProds();
   _renderEvDateTabs();
+  // Sync form to date 0's per-date config so _saveCurDateCfg() never overwrites it with root values
+  if(_evDateConfigs.length>1&&_evDateConfigs[0]){
+    const _c0=_evDateConfigs[0];
+    const _sv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+    _sv('ef-setup',_c0.setup);_sv('ef-start',_c0.start);_sv('ef-end',_c0.end);_sv('ef-breakdown',_c0.breakdown);
+    const _ce=editEvId?state.events.find(x=>x.id===editEvId):null;
+    if(_ce){_ce.assignedStaff=[...(_c0.assignedStaff||[])];_ce.staffRoles={...(_c0.staffRoles||{})};_ce.staffAssignments=JSON.parse(JSON.stringify(_c0.staffAssignments||[]));renderStaffList(_ce.id);}
+    const _evc=document.getElementById('ev-content');
+    if(_evc){_evc._sel={};(_c0.cocktails||[]).forEach(c=>{_evc._sel[c.id]={qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};});}
+    renderEvPicker();updEvCalc();
+  }
 }
 
 // ── MULTI-DATE TABS ──────────────────────────────────────
@@ -9297,7 +9308,7 @@ function buildEventSummaryHTML(ev){
       const delivery=ev.deliveryBillHT||0;
       const extra=ev.extraBillHT||0;
       const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?(cktRev+delivery+extra)*ev.remisePct/100:0);
-      const totalRev=cktRev+delivery+extra-remise;
+      const totalRev=ev.totalRevHT||(cktRev+delivery+extra-remise);
       const tva=totalRev*0.2;
       const totalTTC=totalRev+tva;
       // Coût ingrédients réel (retour déduit)
