@@ -4119,7 +4119,7 @@ function showSingleEventSuivi(eventId){
       ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
       ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
       ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-      ${col(coursesDone,'Stock','')}
+      ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
     </div>
 
     ${(()=>{
@@ -4155,10 +4155,8 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="markPaidSuivi(${ev.id},!${ev.paid})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
-          <button class="btn-edit" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">🔗 Lien client</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Copier lien portail client</button>
         </div>
       </div>
       ${(isPast&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0)?(()=>{
