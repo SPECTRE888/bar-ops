@@ -4119,7 +4119,7 @@ function showSingleEventSuivi(eventId){
       ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
       ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
       ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-      ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
+      ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">État des stocks</button>`)}
     </div>
 
     ${(()=>{
@@ -9057,7 +9057,8 @@ function buildEventSummaryHTML(ev){
   const rev=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0)):0);},0)+(ev.deliveryBillHT||0)+(ev.extraBillHT||0);
   const cost=(ev.cocktails||[]).reduce((s,cfg)=>{const c=state.cocktails.find(x=>x.id===cfg.id);return s+(c?cfg.qty*c.totalCost:0);},0)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0);
   const mg=rev-cost;
-  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'—';
+  const fmtDate=fmtEvDates(ev);
+  const isMultiDate=(ev.dates&&ev.dates.length>1);
   const cl=state.clients.find(c=>c.id===ev.clientId);
 
   // Aggregate totals across all cocktails
@@ -9200,7 +9201,21 @@ function buildEventSummaryHTML(ev){
       </div>
     </div>
 
-    <div class="planning">
+    ${isMultiDate&&(ev.dateConfigs||[]).length?(()=>{
+      const sorted=[...ev.dateConfigs].sort((a,b)=>a.date>b.date?1:-1);
+      return`<div style="margin:20px 0">
+        <h3 style="margin:0 0 10px;font-size:15px;color:#333">Calendrier multi-dates (${sorted.length} jours)</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr style="background:#f0f0f0"><th style="padding:8px;text-align:left;border-bottom:2px solid #ddd">Date</th><th style="padding:8px;text-align:left;border-bottom:2px solid #ddd">Ouverture</th><th style="padding:8px;text-align:left;border-bottom:2px solid #ddd">Fermeture</th><th style="padding:8px;text-align:right;border-bottom:2px solid #ddd">Cocktails</th><th style="padding:8px;text-align:right;border-bottom:2px solid #ddd">Staff</th></tr>
+          ${sorted.map(dc=>{
+            const dFmt=new Date(dc.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+            const nbCkts=(dc.cocktails||[]).reduce((s,c)=>s+(c.qty||0),0);
+            const nbStaff=(dc.assignedStaff||[]).length;
+            return`<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:500">${dFmt}</td><td style="padding:8px;border-bottom:1px solid #eee">${dc.start||'—'}</td><td style="padding:8px;border-bottom:1px solid #eee">${dc.end||'—'}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${nbCkts||'—'}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${nbStaff||'—'}</td></tr>`;
+          }).join('')}
+        </table>
+      </div>`;
+    })():`<div class="planning">
       <div class="planning-item">
         <div class="planning-label">Montage</div>
         <div class="planning-time">${ev.setup||'—'}</div>
@@ -9217,7 +9232,7 @@ function buildEventSummaryHTML(ev){
         <div class="planning-label">Fin prestation</div>
         <div class="planning-time">${ev.breakdown||'—'}</div>
       </div>
-    </div>
+    </div>`}
 
     <h3 style="margin-top:25px;margin-bottom:15px">Cocktails & Recettes</h3>
     <div style="background:#f9f9f9;padding:15px;border-radius:6px;margin-bottom:20px">
@@ -10610,7 +10625,7 @@ function _renderSuiviOld_unused(){
         ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
         ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
         ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-        ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
+        ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">État des stocks</button>`)}
       </div>
 
       <!-- Paiement -->
