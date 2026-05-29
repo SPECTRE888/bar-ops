@@ -108,9 +108,10 @@ Event       { id, name, date, location, clientId,
 ## Principes de développement
 
 1. **PATCH ONLY** — jamais réécrire un fichier complet, modifications minimales et ciblées
-2. **Simplicité > richesse** — UX intuitive, pas de features fragiles
-3. **Cohérence CA** — toujours utiliser `ev.totalRevHT` (valeur stockée), jamais recalculer à la volée pour l'affichage
-4. **Collaborateurs** — ce mot n'apparaît QUE dans la section "Compte" de la sidebar ; partout ailleurs c'est "Équipe"
+2. **DOUBLE PATCH OBLIGATOIRE** — toute modification de `app.html` DOIT être appliquée simultanément sur `electron/app/app.html`. Ce sont deux fichiers distincts. L'Electron app charge exclusivement `electron/app/app.html`. Ne jamais patcher l'un sans l'autre.
+3. **Simplicité > richesse** — UX intuitive, pas de features fragiles
+4. **Cohérence CA** — toujours utiliser `ev.totalRevHT` (valeur stockée), jamais recalculer à la volée pour l'affichage
+5. **Collaborateurs** — ce mot n'apparaît QUE dans la section "Compte" de la sidebar ; partout ailleurs c'est "Équipe"
 
 ---
 
