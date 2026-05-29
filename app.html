@@ -5837,33 +5837,30 @@ function updEvCalc(){
   // Custom billing amount (formule/devis convenu)
   const customRevenue=parseFloat(document.getElementById('ef-rev-custom')?.value)||0;
   const displayRevenue=customRevenue>0?customRevenue:totalRevenue;
-  // Multi-date: total revenue = per-date × nb dates (cohérent avec totalRevHT stocké)
-  const _nbDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean).length||1;
-  const totalDisplayRevenue=displayRevenue*_nbDates;
-  const finalMg=totalDisplayRevenue-tc;
+  const finalMg=displayRevenue-tc;
 
   const avgVat=state.cocktails.length?state.cocktails.reduce((s,c)=>s+(c.vat||20),0)/state.cocktails.length:10;
-  const revTTC=totalDisplayRevenue*(1+avgVat/100);
+  const revTTC=displayRevenue*(1+avgVat/100);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const canRev=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewRevenue')||BarOpsAuth.can('canViewEventMargin');
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts')||BarOpsAuth.can('canViewEventMargin');
   const hidden='—';
   set('es-ckt',total||'—');
   set('es-total',canCost&&tc>0?tc.toFixed(0)+'€':canCost?'—':hidden);
-  set('es-rev',canRev&&totalDisplayRevenue>0?totalDisplayRevenue.toFixed(0)+'€':canRev?'—':hidden);
+  set('es-rev',canRev&&displayRevenue>0?displayRevenue.toFixed(0)+'€':canRev?'—':hidden);
   set('es-ing',canCost&&ingCost>0?ingCost.toFixed(0)+'€':'');
   set('es-staff',canCost&&staffCost>0?staffCost.toFixed(0)+'€':'—');
   set('es-staffbill',canRev&&staffRevenue>0?staffRevenue.toFixed(0)+'€':'—');
   set('es-rev-cock',canRev&&revenue>0?revenue.toFixed(0)+'€':'—');
   const mgEl=document.getElementById('es-mg');
   if(mgEl){
-    if(canRev&&canCost){mgEl.textContent=totalDisplayRevenue>0?finalMg.toFixed(0)+'€':'—';mgEl.style.color=finalMg>0?'var(--green)':finalMg<0?'var(--red)':'var(--text)';}
+    if(canRev&&canCost){mgEl.textContent=displayRevenue>0?finalMg.toFixed(0)+'€':'—';mgEl.style.color=finalMg>0?'var(--green)':finalMg<0?'var(--red)':'var(--text)';}
     else{mgEl.textContent='—';mgEl.style.color='';}
   }
-  const finalMgp=totalDisplayRevenue>0?finalMg/totalDisplayRevenue*100:0;
-  set('es-mgp',(canRev&&canCost&&totalDisplayRevenue>0)?finalMgp.toFixed(1)+'%':'—');
+  const finalMgp=displayRevenue>0?finalMg/displayRevenue*100:0;
+  set('es-mgp',(canRev&&canCost&&displayRevenue>0)?finalMgp.toFixed(1)+'%':'—');
   const ttcEl=document.getElementById('es-ttc');
-  if(ttcEl) ttcEl.textContent=canRev&&revTTC>0?`soit ${revTTC.toFixed(0)}€ TTC${_nbDates>1?` · ${displayRevenue.toFixed(0)}€/j`:''}`:'';
+  if(ttcEl) ttcEl.textContent=canRev&&revTTC>0?'soit '+revTTC.toFixed(0)+'€ TTC':'';
 }
 
 window._evExtraProducts=window._evExtraProducts||[];
@@ -6079,8 +6076,34 @@ async function saveEv(){
   const remisePct=parseFloat(document.getElementById('ef-remise-pct')?.value)||0;
   const remiseHT=parseFloat(document.getElementById('ef-remise-ht')?.value)||0;
   const remiseMontant=remiseHT>0?remiseHT:(remisePct>0?revenueBeforeRemise*remisePct/100:0);
-  const _nbDates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean).length||1;
-  const totalRevHT=(revenueBeforeRemise-remiseMontant)*_nbDates;
+  let totalRevHT;
+  if(_allDates.length>1){
+    // Sommer chaque jour individuellement depuis _evDateConfigs
+    let sumRev=0;
+    _evDateConfigs.slice(0,_allDates.length).forEach(dc=>{
+      (dc.cocktails||[]).forEach(cfg=>{
+        const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;
+        const gc=cfg.glassCostHT||0;
+        sumRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+gc);
+      });
+      // Staff assignments par jour
+      (dc.staffAssignments||[]).forEach(s=>{
+        const [ah,am]=(s.arrivalTime||'00:00').split(':').map(Number);
+        const [dh,dm]=(s.departureTime||'00:00').split(':').map(Number);
+        let mins=(dh*60+dm)-(ah*60+am);if(mins<0)mins+=24*60;
+        sumRev+=(s.billHT||0)*(mins/60);
+      });
+    });
+    // Si aucun staffAssignment configuré par date, utiliser le modèle form × nb dates
+    if(!_evDateConfigs.slice(0,_allDates.length).some(dc=>(dc.staffAssignments||[]).length>0)){
+      sumRev+=staffRevenue*_allDates.length;
+    }
+    // Coûts partagés (livraison, bar, extras) — une seule fois
+    sumRev+=extraBill+deliveryBill+barPrice;
+    totalRevHT=sumRev-remiseMontant;
+  }else{
+    totalRevHT=revenueBeforeRemise-remiseMontant;
+  }
 
   // Calc TTC (same logic as buildDevisHTML)
   const cocktailTotalTTC=(sel&&Object.entries(sel)||[]).reduce((s,[cid,cfg])=>{const c=state.cocktails.find(x=>x.id==cid);return s+(c&&cfg.qty?cfg.qty*c.priceHT*(1+(c.vat||20)/100):0);},0);
