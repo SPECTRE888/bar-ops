@@ -2285,7 +2285,7 @@ function updateBadges(){
   }
   const now=new Date();
   const ongoingEvents=state.events.filter(ev=>{
-    const isPast=ev.date&&new Date(ev.date)<now;
+    const _ld=evLastDate(ev);const isPast=_ld&&_ld<now;
     if(isPast&&ev.paid&&ev.stockRetourDone) return false;
     return true;
   });
@@ -4032,15 +4032,23 @@ function showSingleEventSuivi(eventId){
 
   const now=new Date();
   const total=evTot(ev);
-  const evDate=ev.date?new Date(ev.date):null;
-  const isPast=evDate&&evDate<now;
-  const isToday=evDate&&evDate.toDateString()===now.toDateString();
-  const fmtDate=evDate?evDate.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'}):'-';
+  // Multi-date support
+  const evDates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
+  const isMultiDate=evDates.length>1;
+  const lastEvDate=evDates.length?new Date([...evDates].sort().pop()):null;
+  const isPast=lastEvDate&&lastEvDate<now;
+  const isToday=evDates.some(d=>new Date(d).toDateString()===now.toDateString());
+  const fmtDate=fmtEvDates(ev);
 
-  const hasCocktails=(ev.cocktails||[]).length>0;
+  // Checks multi-date aware
+  const hasCocktails=ev.dateConfigs
+    ?ev.dateConfigs.every(dc=>(dc.cocktails||[]).length>0)
+    :(ev.cocktails||[]).length>0;
   const assigned=(ev.assignedStaff||[]).length;
   const needed=(ev.nBartenders||0)+(ev.nWaiters||0)+(ev.nManagers||0);
-  const hasStaff=assigned>0&&(needed===0||assigned>=needed);
+  const hasStaff=ev.dateConfigs
+    ?ev.dateConfigs.every(dc=>(dc.assignedStaff||[]).length>0)
+    :assigned>0&&(needed===0||assigned>=needed);
   const confirmed=(ev.staffConfirmed||[]).length;
   const allConfirmed=assigned>0&&confirmed>=assigned;
   const briefSent=confirmed>0;
@@ -4064,7 +4072,10 @@ function showSingleEventSuivi(eventId){
   const html=`<div class="card" style="border-left:3px solid ${borderColor};padding:10px 14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div style="min-width:0;flex:1">
-        <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}</div>
+        <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">
+          ${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}
+          ${isMultiDate?`<span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:1px 6px;margin-left:4px;color:var(--text3)">${evDates.length} dates</span>`:''}
+        </div>
         <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
         <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
       </div>
@@ -4076,6 +4087,32 @@ function showSingleEventSuivi(eventId){
     <div style="height:2px;background:var(--surface3);border-radius:2px;margin-bottom:8px">
       <div style="width:${pct}%;height:100%;background:${statusColor};border-radius:2px;transition:.4s"></div>
     </div>
+
+    ${isMultiDate&&ev.dateConfigs?(()=>{
+      return`<div style="border:1px solid var(--border2);border-radius:6px;overflow:hidden;margin-bottom:10px">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;padding:5px 10px;background:var(--surface2);border-bottom:1px solid var(--border2)">Calendrier prestation</div>
+        ${ev.dateConfigs.map(dc=>{
+          const dObj=new Date(dc.date);
+          const dFmt=dObj.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'});
+          const dPast=dObj<now;
+          const dToday=dObj.toDateString()===now.toDateString();
+          const dStaff=(dc.assignedStaff||[]).length;
+          const dCocktails=(dc.cocktails||[]).reduce((s,c)=>s+(c.qty||0),0);
+          const horaires=(dc.start||dc.end)?`${dc.start||'?'} – ${dc.end||'?'}`:'';
+          return`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border2);${dToday?'background:rgba(var(--gold-rgb),.05)':''}">
+            <div style="width:80px;flex-shrink:0">
+              <span style="font-size:11px;font-weight:600;color:${dToday?'var(--gold)':dPast?'var(--text3)':'var(--text)'}">${dFmt}</span>
+              ${dToday?'<span style="font-size:9px;color:var(--gold);margin-left:3px">●</span>':''}
+            </div>
+            <div style="flex:1;font-size:10px;color:var(--text3)">${horaires||'—'}</div>
+            <div style="display:flex;gap:8px;flex-shrink:0;font-size:10px">
+              <span style="color:${dStaff>0?'var(--green)':'var(--text3)'}">👥 ${dStaff}</span>
+              <span style="color:${dCocktails>0?'var(--text2)':'var(--text3)'}">🍸 ${dCocktails||'—'}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    })():''}
 
     <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px">
       ${col(hasCocktails,'Cocktails',!hasCocktails?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Config</button>`:'')}
@@ -4280,7 +4317,7 @@ function renderDashboard(){
     alerts.push({type:'stock',severity:'high',product:p,text:`${p.brand?p.brand+' ':''}${p.productType} (${p.stock}/${p.stockAlert})`});
   });
   // Tâche: stock retour à faire pour events passés
-  const pastNoRetour=state.events.filter(ev=>ev.date&&new Date(ev.date)<now&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0);
+  const pastNoRetour=state.events.filter(ev=>{const _ld=evLastDate(ev);return _ld&&_ld<now&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0;});
   pastNoRetour.forEach(ev=>{
     alerts.push({type:'stock_retour',severity:'high',event:ev,text:`Stock retour à saisir — ${ev.name}`});
   });
@@ -4685,11 +4722,10 @@ function showEvList(){
   const now=new Date();
   const sorted=[...state.events]
     .filter(ev=>{
-      const isPast=ev.date&&new Date(ev.date)<now;
-      if(isPast&&ev.paid&&ev.stockRetourDone) return false;
+      const _ld=evLastDate(ev);if(_ld&&_ld<now&&ev.paid&&ev.stockRetourDone) return false;
       return true;
     })
-    .sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    .sort((a,b)=>(evLastDate(b)||0)-(evLastDate(a)||0));
   el.innerHTML='<div class="c-grid">'+sorted.map(ev=>{
     const tot=evTot(ev);
     const fmtDate=fmtEvDates(ev);
@@ -4776,6 +4812,7 @@ function _addEvDate(){
 }
 
 function evDatesCount(ev){return(ev.dates&&ev.dates.length>1)?ev.dates.length:1;}
+function evLastDate(ev){const ds=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);return ds.length?new Date([...ds].sort().pop()):null;}
 
 function fmtEvDates(ev){
   const dates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
@@ -6741,10 +6778,8 @@ function renderPrestEvSel(){
   const sel=document.getElementById('prest-ev-sel');
   const now=new Date();
   const active=state.events.filter(ev=>{
-    if(!ev.date) return true;
-    const evDate=new Date(ev.date);
-    const isPast=evDate<now;
-    const inHistory=isPast&&ev.stockRetourDone;
+    const evDate=evLastDate(ev);
+    const inHistory=evDate&&evDate<now&&ev.stockRetourDone;
     return !inHistory;
   });
   sel.innerHTML='<option value="">— Sélectionner un événement —</option>'+
@@ -6977,9 +7012,13 @@ async function sendBriefWA(evId,sid){
   const ev=state.events.find(x=>x.id===evId);
   const s=state.staffItems.find(x=>x.id===sid);
   if(!ev||!s||!s.phone){await alertModal('Numero manquant pour ce staff.');return;}
-  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const role=(ev.staffRoles||{})[sid]||s.type||'';
   const tenue=(ev.dressCodes||[]).map(dcId=>{const dc=state.dressCodes.find(x=>x.id===dcId);return dc?dc.name:dcId;}).join(', ')||'Non précisée';
+
+  // Multi-date support
+  const evDates=(ev.dates&&ev.dates.length>1)?ev.dates:[ev.date].filter(Boolean);
+  const isMulti=evDates.length>1;
+  const dateConfigs=ev.dateConfigs||[];
 
   let arr='?',dep='?';
   if(role==='Bartender'){arr=ev.arrBrt||'?';dep=ev.depBrt||'?';}
@@ -6987,7 +7026,25 @@ async function sendBriefWA(evId,sid){
   else if(role==='Bar Manager'){arr=ev.arrMgr||'?';dep=ev.depMgr||'?';}
   else if(role==='Manutentionnaire'){arr=ev.arrMan||'?';dep=ev.depMan||'?';}
 
-  const cktDetails=(ev.cocktails||[]).map(cfg=>{
+  // Horaires section : par date si multi
+  const horairesPart=isMulti
+    ?evDates.map((d,i)=>{
+        const cfg=dateConfigs[i]||{};
+        const assignedThisDay=!cfg.assignedStaff?.length||(cfg.assignedStaff||[]).includes(sid);
+        if(!assignedThisDay)return null;
+        const dFmt=new Date(d).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long'});
+        const setup=cfg.setup||'?';
+        const start=cfg.start||'?';
+        const end=cfg.end||'?';
+        const breakdown=cfg.breakdown||'?';
+        return`📅 ${dFmt}\n   Setup ${setup} | Bar ${start}-${end} | Fin ${breakdown}\n   Ton arrivée (${role}): ${arr} | Départ: ${dep}`;
+      }).filter(Boolean).join('\n\n')
+    :`Setup: ${ev.setup||'?'}\nBar: ${ev.start||'?'} - ${ev.end||'?'}\nTon horaire (${role}): ${arr} - ${dep}\nFin: ${ev.breakdown||'?'}`;
+
+  // Cocktails : toutes dates confondues (première date ou global)
+  const cktSource=dateConfigs[0]?.cocktails?.length?dateConfigs[0].cocktails:ev.cocktails||[];
+
+  const cktDetails=cktSource.map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);if(!c||!cfg.qty)return'';
     let detail='• '+c.name+' (x'+cfg.qty+')\n';
     detail+='  Verre: '+(c.glass||'—')+'\n';
@@ -7010,6 +7067,7 @@ async function sendBriefWA(evId,sid){
   const contact=ev.contact||client?.contact||'—';
   const contactPhone=ev.contactPhone||client?.phone||'';
 
+  const fmtDateBrief=fmtEvDates(ev);
   const lines=[
     '*BRIEF*',
     '*'+ev.name+'*',
@@ -7017,14 +7075,12 @@ async function sendBriefWA(evId,sid){
     'Client: '+clientName,
     'Contact: '+contact+(contactPhone?' / '+contactPhone:''),
     '',
-    'Date: '+fmtDate,
+    isMulti?('Dates: '+fmtDateBrief):('Date: '+fmtDateBrief),
     'Lieu: '+(ev.address||'?')+(ev.access?' ('+ev.access+')':''),
     'Convives: '+(ev.pax||'?'),
     '',
-    'Setup: '+(ev.setup||'?'),
-    'Bar: '+(ev.start||'?')+' - '+(ev.end||'?'),
-    'Ton horaire ('+role+'): '+arr+' - '+dep,
-    'Fin: '+(ev.breakdown||'?'),
+    isMulti?'HORAIRES:':null,
+    horairesPart,
     '',
     'Tenue: '+tenue,
     '',
@@ -7075,16 +7131,18 @@ async function sendBriefFromClient(evId){
 }
 
 function buildDispoMsg(ev, s){
-  const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
+  const fmtDate=fmtEvDates(ev);
   const role=(ev.staffRoles||{})[s.id]||s.type||'';
+  const evDates=(ev.dates&&ev.dates.length>1)?ev.dates:[ev.date].filter(Boolean);
+  const isMulti=evDates.length>1;
   let msg=`Bonjour ${s.name||''}`;
   msg+=`\n\nJ'espere que tu vas bien.`;
   msg+=`\n\nJe t'ecris pour savoir si tu es disponible pour la presta suivante :`;
   msg+=`\n\n*${ev.name}*`;
-  if(fmtDate) msg+=`\n${fmtDate}`;
+  if(fmtDate) msg+=`\n${isMulti?'Dates':'Date'} : ${fmtDate}`;
   if(ev.address) msg+=`\nLieu : ${ev.address}`;
   if(role) msg+=`\nPoste : ${role}`;
-  if(ev.start||ev.end) msg+=`\nHoraires : ${ev.start||'?'} - ${ev.end||'?'}`;
+  if(!isMulti&&(ev.start||ev.end)) msg+=`\nHoraires : ${ev.start||'?'} - ${ev.end||'?'}`;
   msg+=`\n\nEst-ce que tu es dispo ? Reponds OUI ou NON.`;
   msg+=`\n\nMerci !`;
   msg+=`\n\n_BAR OPS by Intelligence Spotlighted_`;
@@ -9269,8 +9327,8 @@ function renderHistorique(){
   const el=document.getElementById('historique-content');if(!el)return;
   const now=new Date();
   const past=[...state.events]
-    .filter(ev=>ev.date&&new Date(ev.date)<now&&ev.stockRetourDone)
-    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    .filter(ev=>{const _ld=evLastDate(ev);return _ld&&_ld<now&&ev.stockRetourDone;})
+    .sort((a,b)=>(evLastDate(b)||0)-(evLastDate(a)||0));
 
   if(!past.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><p>Aucune prestation passée pour l'instant.</p></div>`;
@@ -10410,12 +10468,15 @@ function renderSuivi(){
     return;
   }
 
+  // Tri par dernière date (multi-date aware)
+  function _evLastDate(ev){const ds=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);return ds.length?new Date([...ds].sort().pop()):null;}
+
   const sorted=[...filtered]
     .filter(ev=>{
-      const isPast=ev.date&&new Date(ev.date)<now;
+      const lastDate=_evLastDate(ev);
+      const isPast=lastDate&&lastDate<now;
       if(!isPast) return true;
-      // Si passé: inclure seulement si au moins une des conditions n'est pas remplie
-      const hasCocktails=(ev.cocktails||[]).length>0;
+      const hasCocktails=(ev.dateConfigs?ev.dateConfigs.some(dc=>(dc.cocktails||[]).length>0):false)||(ev.cocktails||[]).length>0;
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const allConfirmed=assigned>0&&confirmed>=assigned;
@@ -10424,18 +10485,23 @@ function renderSuivi(){
       const allDone=hasCocktails&&allConfirmed&&hasAcompte&&ev.paid&&hasStockRetour;
       return !allDone;
     })
-    .sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+    .sort((a,b)=>(_evLastDate(a)||0)-(_evLastDate(b)||0));
 
   el.innerHTML=sorted.map(ev=>{
-    const evDate=ev.date?new Date(ev.date):null;
-    const isPast=evDate&&evDate<now;
-    const isToday=evDate&&evDate.toDateString()===now.toDateString();
-    const fmtDate=evDate?evDate.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):'-';
+    const evDates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
+    const lastEvDate=evDates.length?new Date([...evDates].sort().pop()):null;
+    const firstEvDate=evDates.length?new Date(evDates[0]):null;
+    const isPast=lastEvDate&&lastEvDate<now;
+    const isToday=evDates.some(d=>new Date(d).toDateString()===now.toDateString());
+    const isMulti=evDates.length>1;
+    const fmtDate=fmtEvDates(ev);
 
-    const hasCocktails=(ev.cocktails||[]).length>0;
+    const hasCocktails=(ev.dateConfigs?ev.dateConfigs.every(dc=>(dc.cocktails||[]).length>0):false)||(ev.cocktails||[]).length>0;
     const assigned=(ev.assignedStaff||[]).length;
     const needed=(ev.nBartenders||0)+(ev.nWaiters||0)+(ev.nManagers||0);
-    const hasStaff=assigned>0&&(needed===0||assigned>=needed);
+    const hasStaff=ev.dateConfigs
+      ?ev.dateConfigs.every(dc=>(dc.assignedStaff||[]).length>0)
+      :assigned>0&&(needed===0||assigned>=needed);
     const confirmed=(ev.staffConfirmed||[]).length;
     const allConfirmed=assigned>0&&confirmed>=assigned;
     const briefSent=confirmed>0;
@@ -10451,7 +10517,10 @@ function renderSuivi(){
     return`<div class="card" style="margin-bottom:6px;border-left:3px solid ${borderColor};padding:8px 10px;cursor:pointer" onclick="showSingleEventSuivi(${ev.id})">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${escHtml(ev.name)}</div>
-        <div style="font-size:12px;font-weight:600;color:${statusColor};flex-shrink:0;margin-left:8px">${pct}%</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
+          ${isMulti?`<span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:1px 6px;color:var(--text3)">${evDates.length}j</span>`:''}
+          <span style="font-size:12px;font-weight:600;color:${statusColor}">${pct}%</span>
+        </div>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-bottom:6px">${fmtDate}${isToday?' · <span style="color:var(--gold)">Aujourd\'hui</span>':''}</div>
       <div style="height:3px;background:var(--surface3);border-radius:2px">
