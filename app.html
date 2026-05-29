@@ -4746,6 +4746,7 @@ function showEvList(){
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn-edit" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
+        <button class="btn-edit" onclick="goToEventSuivi(${ev.id})" style="flex:1">Suivi</button>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -4784,6 +4785,7 @@ function filterEvList(){
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn-edit" onclick="editEv(${ev.id})" style="flex:1">Modifier</button>
+        <button class="btn-edit" onclick="goToEventSuivi(${ev.id})" style="flex:1">Suivi</button>
       </div>`;
   }).join('')+'</div>';
 }
