@@ -2298,7 +2298,7 @@ function updateBadges(){
   }
   const now=new Date();
   const ongoingEvents=state.events.filter(ev=>{
-    const isPast=ev.date&&new Date(ev.date)<now;
+    const _ld=evLastDate(ev);const isPast=_ld&&_ld<now;
     if(isPast&&ev.paid&&ev.stockRetourDone) return false;
     return true;
   });
@@ -4023,7 +4023,7 @@ function showSingleEventSuivi(eventId){
       ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
       ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
       ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-      ${col(coursesDone,'Stock','')}
+      ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
     </div>
 
     ${(()=>{
@@ -4059,10 +4059,8 @@ function showSingleEventSuivi(eventId){
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="markPaidSuivi(${ev.id},!${ev.paid})">
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
-          <button class="btn-edit" onclick="goEvTab(${ev.id},'prestation')">Modifier</button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">🔗 Lien client</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Signature électronique</button>
         </div>
       </div>
       ${(isPast&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0)?(()=>{
@@ -4236,7 +4234,7 @@ function renderDashboard(){
     alerts.push({type:'stock',severity:'high',product:p,text:`${p.brand?p.brand+' ':''}${p.productType} (${p.stock}/${p.stockAlert})`});
   });
   // Tâche: stock retour à faire pour events passés
-  const pastNoRetour=state.events.filter(ev=>ev.date&&new Date(ev.date)<now&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0);
+  const pastNoRetour=state.events.filter(ev=>{const _ld=evLastDate(ev);return _ld&&_ld<now&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0;});
   pastNoRetour.forEach(ev=>{
     alerts.push({type:'stock_retour',severity:'high',event:ev,text:`Stock retour à saisir — ${ev.name}`});
   });
@@ -4639,11 +4637,10 @@ function showEvList(){
   const now=new Date();
   const sorted=[...state.events]
     .filter(ev=>{
-      const isPast=ev.date&&new Date(ev.date)<now;
-      if(isPast&&ev.paid&&ev.stockRetourDone) return false;
+      const _ld=evLastDate(ev);if(_ld&&_ld<now&&ev.paid&&ev.stockRetourDone) return false;
       return true;
     })
-    .sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    .sort((a,b)=>(evLastDate(b)||0)-(evLastDate(a)||0));
   const PAGE=16;
   const pg=window._evPg||0;
   const pageEvs=sorted.slice(pg*PAGE,(pg+1)*PAGE);
@@ -4660,7 +4657,7 @@ function showEvList(){
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
-      const isPast=ev.date&&new Date(ev.date)<new Date();
+      const isPast=(()=>{const _ld=evLastDate(ev);return _ld&&_ld<new Date();})();
       return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
@@ -4711,7 +4708,7 @@ function filterEvList(){
       const assigned=(ev.assignedStaff||[]).length;
       const confirmed=(ev.staffConfirmed||[]).length;
       const rev=ev.totalRevHT;
-      const isPast=ev.date&&new Date(ev.date)<new Date();
+      const isPast=(()=>{const _ld=evLastDate(ev);return _ld&&_ld<new Date();})();
       return`<div style="display:grid;grid-template-columns:100px 2fr 1.2fr 1fr 55px 80px 72px 100px 95px 115px;column-gap:12px;padding:11px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;transition:.15s;cursor:pointer" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" ondblclick="editEv(${ev.id})">
         <div style="font-size:11px;color:${isPast?'var(--text3)':'var(--text2)'}">${fmtDate}</div>
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name||'—')}</div>
@@ -4824,6 +4821,7 @@ function _addEvDate(){
 }
 
 function evDatesCount(ev){return(ev.dates&&ev.dates.length>1)?ev.dates.length:1;}
+function evLastDate(ev){const ds=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);return ds.length?new Date([...ds].sort().pop()):null;}
 
 function fmtEvDates(ev){
   const dates=(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);
@@ -7456,7 +7454,7 @@ async function copyPortalLink(evId){
     const data=await r.json();
     if(!r.ok){await alertModal('Erreur serveur ('+r.status+'): '+(data?.error||'inconnue'));return;}
     const portalToken=data.token;
-    const url=location.origin+'/portal.html?token='+encodeURIComponent(portalToken);
+    const url='https://bar-ops-v2.vercel.app/portal.html?token='+encodeURIComponent(portalToken);
     await navigator.clipboard.writeText(url).catch(()=>{});
     await alertModal('✓ Lien copié !\n\nPartagez ce lien avec votre client pour qu\'il puisse consulter et signer le devis en ligne.');
   }catch(e){
@@ -9285,8 +9283,8 @@ function renderHistorique(){
   const el=document.getElementById('historique-content');if(!el)return;
   const now=new Date();
   const past=[...state.events]
-    .filter(ev=>ev.date&&new Date(ev.date)<now&&ev.stockRetourDone)
-    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    .filter(ev=>{const _ld=evLastDate(ev);return _ld&&_ld<now&&ev.stockRetourDone;})
+    .sort((a,b)=>(evLastDate(b)||0)-(evLastDate(a)||0));
 
   if(!past.length){
     el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><p>Aucune prestation passée pour l'instant.</p></div>`;
@@ -10588,6 +10586,8 @@ function _renderSuiviOld_unused(){
         ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
         ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
         ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
+        ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">Courses</button>`)}
+      </div>
 
       <!-- Paiement -->
       ${(()=>{
@@ -10627,9 +10627,8 @@ function _renderSuiviOld_unused(){
             <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'paid',!${ev.paid?'true':'false'});renderSuivi()">
               ${ev.paid?'✓ Prestation payée':'Prestation payée'}
             </button>
-            <button class="btn-edit" onclick="goPage('prestation',${ev.id})">Modifier</button>
             <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-            <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'shopping')">Courses</button>
+            <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Signature électronique</button>
           </div>
         </div>`;
       })()}
