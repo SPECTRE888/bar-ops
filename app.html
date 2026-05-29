@@ -4156,7 +4156,7 @@ function showSingleEventSuivi(eventId){
             ${ev.paid?'✓ Prestation payée':'Prestation payée'}
           </button>
           <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Copier lien portail client</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Signature électronique</button>
         </div>
       </div>
       ${(isPast&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0)?(()=>{
@@ -7544,7 +7544,7 @@ async function copyPortalLink(evId){
     const data=await r.json();
     if(!r.ok){await alertModal('Erreur serveur ('+r.status+'): '+(data?.error||'inconnue'));return;}
     const portalToken=data.token;
-    const url=location.origin+'/portal.html?token='+encodeURIComponent(portalToken);
+    const url='https://bar-ops-v2.vercel.app/portal.html?token='+encodeURIComponent(portalToken);
     await navigator.clipboard.writeText(url).catch(()=>{});
     await alertModal('✓ Lien copié !\n\nPartagez ce lien avec votre client pour qu\'il puisse consulter et signer le devis en ligne.');
   }catch(e){
@@ -10652,7 +10652,7 @@ function _renderSuiviOld_unused(){
               ${ev.paid?'✓ Prestation payée':'Prestation payée'}
             </button>
             <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-            <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Copier lien portail client</button>
+            <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Signature électronique</button>
           </div>
         </div>`;
       })()}
