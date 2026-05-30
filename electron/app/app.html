@@ -4841,7 +4841,9 @@ function switchEvDateTab(idx){
   if(curEv){
     curEv.assignedStaff=[...(cfg.assignedStaff||[])];
     curEv.staffRoles={...(cfg.staffRoles||{})};
-    curEv.staffAssignments=JSON.parse(JSON.stringify(cfg.staffAssignments||[]));
+    const _destStaff=(cfg.staffAssignments&&cfg.staffAssignments.length>0)?cfg.staffAssignments:curEv.staffAssignments;
+    curEv.staffAssignments=JSON.parse(JSON.stringify(_destStaff));
+    if(!cfg.staffAssignments||!cfg.staffAssignments.length)cfg.staffAssignments=JSON.parse(JSON.stringify(_destStaff));
   }
   const evContent=document.getElementById('ev-content');
   if(evContent){
@@ -5281,7 +5283,11 @@ function showEvForm(ev){
     const _sv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
     _sv('ef-setup',_c0.setup);_sv('ef-start',_c0.start);_sv('ef-end',_c0.end);_sv('ef-breakdown',_c0.breakdown);
     const _ce=editEvId?state.events.find(x=>x.id===editEvId):null;
-    if(_ce){_ce.assignedStaff=[...(_c0.assignedStaff||[])];_ce.staffRoles={...(_c0.staffRoles||{})};_ce.staffAssignments=JSON.parse(JSON.stringify(_c0.staffAssignments||[]));renderStaffList(_ce.id);}
+    if(_ce){_ce.assignedStaff=[...(_c0.assignedStaff||[])];_ce.staffRoles={...(_c0.staffRoles||{})};
+      const _c0staff=(_c0.staffAssignments&&_c0.staffAssignments.length>0)?_c0.staffAssignments:(_existingForTabs?.staffAssignments||[]);
+      _ce.staffAssignments=JSON.parse(JSON.stringify(_c0staff));
+      if(_evDateConfigs[0]&&!(_c0.staffAssignments&&_c0.staffAssignments.length>0))_evDateConfigs[0].staffAssignments=JSON.parse(JSON.stringify(_c0staff));
+      renderStaffList(_ce.id);}
     const _evc=document.getElementById('ev-content');
     if(_evc){_evc._sel={};(_c0.cocktails||[]).forEach(c=>{_evc._sel[c.id]={qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};});}
     renderEvPicker();updEvCalc();
