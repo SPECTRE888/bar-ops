@@ -1551,7 +1551,6 @@ function migrateEvRevHT(){
   // Recalcule totalRevHT pour tous les events depuis les données stockées
   // (corrige les valeurs sauvegardées avec l'ancien modèle staff nB×tarif)
   const _h=(a,d)=>{if(!a||!d)return 0;const[ah,am]=a.split(':').map(Number);const[dh,dm]=d.split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;return m/60;};
-  const _brk=(cktList)=>{let b=0;(cktList||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;const g=state.glasses?.find(x=>x.name===c.glass);if(!g)return;const bc=(g.priceHT||0)*0.05;const bp=parseFloat(g.breakagePercent)||5;b+=(cfg.qty||0)*bc*(bp/100);});return b;};
   let changed=false;
   (state.events||[]).forEach(ev=>{
     const dates=(ev.dates&&ev.dates.length>1)?ev.dates:[ev.date].filter(Boolean);
@@ -1560,10 +1559,9 @@ function migrateEvRevHT(){
     // Cocktails
     let cktRev=0;
     if(configs){
-      configs.forEach(dc=>{(dc.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));});cktRev+=_brk(dc.cocktails);});
+      configs.forEach(dc=>(dc.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));}));
     }else{
       (ev.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));});
-      cktRev+=_brk(ev.cocktails);
       if(isMulti)cktRev*=dates.length;
     }
     // Staff
@@ -5808,20 +5806,6 @@ function updEvCalc(){
     glassCost+=qty*gc;
   });
 
-  // Casse verres: 5% du coût des verres × % configuré par verre
-  let billedBreakage=0;
-  Object.entries(sel).forEach(([cid,cfg])=>{
-    const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
-    const qty=cfg.qty||0;
-    const glassObj=state.glasses?.find(g=>g.name===c.glass);
-    if(glassObj){
-      const glassCost=glassObj.priceHT||0;
-      const breakageCost=glassCost*0.05;
-      const breakagePercent=parseFloat(glassObj.breakagePercent)||5;
-      billedBreakage+=qty*breakageCost*(breakagePercent/100);
-    }
-  });
-  revenue+=billedBreakage;
 
   // Staff — hours computed from arrival/departure per role
   function calcHours(arrId, depId, labelId){
@@ -6085,8 +6069,6 @@ async function saveEv(){
   const _clientId=parseInt(document.getElementById('ev-content')?._clientId||0)||existingEv?.clientId||null;
   
   // Recalc totalRevHT (même logique que updEvCalc)
-  // Helper casse verres facturée (5% × % par verre) — doit être inclus dans totalRevHT
-  const _calcBreakage=(cktList)=>{let b=0;(cktList||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;const glassObj=state.glasses?.find(g=>g.name===c.glass);if(!glassObj)return;const breakageCost=(glassObj.priceHT||0)*0.05;const breakagePercent=parseFloat(glassObj.breakagePercent)||5;b+=(cfg.qty||0)*breakageCost*(breakagePercent/100);});return b;};
   let ingCost=0,revenue=0;
   Object.entries(sel).forEach(([cid,cfg])=>{
     const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
@@ -6096,7 +6078,6 @@ async function saveEv(){
     const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
     revenue+=qty*adjustedPrice;
   });
-  revenue+=_calcBreakage(Object.entries(sel).map(([id,cfg])=>({id,qty:cfg.qty})));
   revenue+=(window._evExtraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
   
   const nB=parseInt(document.getElementById('ef-nbrt')?.value)||0;
@@ -6134,7 +6115,6 @@ async function saveEv(){
         const gc=cfg.glassCostHT||0;
         sumRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+gc);
       });
-      sumRev+=_calcBreakage(dc.cocktails);
       // Staff par date : si configuré utiliser dc.staffAssignments, sinon fallback root
       const dcStaff=dc.staffAssignments||[];
       if(dcStaff.length>0){
@@ -10803,6 +10783,39 @@ function _renderSuiviOld_unused(){
               </div>`;
             }).join('')}
           </div>
+          ${(()=>{
+            // Casse verres : agréger les verres utilisés (multi-date = somme par dateConfigs)
+            const glassQty={};
+            const allCkts=ev.dateConfigs?.length>1
+              ?ev.dateConfigs.flatMap(dc=>dc.cocktails||[])
+              :(ev.cocktails||[]);
+            allCkts.forEach(cfg=>{
+              const c=state.cocktails.find(x=>x.id==cfg.id);if(!c||!c.glass)return;
+              const g=state.glasses?.find(x=>x.name===c.glass);if(!g)return;
+              glassQty[c.glass]=(glassQty[c.glass]||{g,qty:0});
+              glassQty[c.glass].qty+=(cfg.qty||0);
+            });
+            const glassEntries=Object.entries(glassQty);
+            if(!glassEntries.length)return'';
+            return`<div style="padding-top:8px;border-top:1px solid var(--border);margin-bottom:10px">
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Casse verres — verres cassés réels</div>
+              <div style="font-size:10px;color:var(--text4);margin-bottom:8px">Tolérance offerte : <strong>${glassEntries.map(([name,{g,qty}])=>`${Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100)} ${name}`).join(', ')}</strong> — au-delà : prix achat HT par verre</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                ${glassEntries.map(([name,{g,qty}])=>{
+                  const tolerance=Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100);
+                  const savedBroken=(ev.breakageActual||{})[name]||'';
+                  return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                    <span style="flex:1;color:var(--text2)">${escHtml(name)}</span>
+                    <span style="color:var(--text3);font-size:10px">tolérance ${tolerance} • ${(g.priceHT||0).toFixed(2)}€/u HT</span>
+                    <span style="font-size:10px;color:var(--text4);white-space:nowrap">cassés</span>
+                    <input type="number" min="0" step="1" placeholder="0" value="${savedBroken}"
+                      style="width:70px;padding:3px 6px;font-size:11px"
+                      onchange="updBreakageActual(${ev.id},'${escHtml(name)}',parseInt(this.value)||0)"/>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>`;
+          })()}
           ${(ev.stockRetourCatalogueItems||[]).length>0?`
             <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:4px;margin-bottom:6px;padding-top:8px;border-top:1px solid var(--border)">Ajouts catalogue</div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
@@ -10923,6 +10936,12 @@ function updStockRetour(evId, key, val){
   ev.stockRetour[key]=val;
   save();
 }
+function updBreakageActual(evId, glassName, qty){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  if(!ev.breakageActual) ev.breakageActual={};
+  ev.breakageActual[glassName]=qty;
+  save();
+}
 
 function injectStockRetour(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
@@ -10948,6 +10967,28 @@ function injectStockRetour(evId){
   });
   // Produits hors catalogue — juste comptabilisés
   (ev.stockRetourCustomItems||[]).forEach(item=>{if(item.qty)count++;});
+  // Casse verres : facturer l'excédent au-delà de la tolérance
+  if(ev.breakageActual&&Object.keys(ev.breakageActual).length){
+    const allCkts=ev.dateConfigs?.length>1?ev.dateConfigs.flatMap(dc=>dc.cocktails||[]):(ev.cocktails||[]);
+    const glassQty={};
+    allCkts.forEach(cfg=>{
+      const c=state.cocktails.find(x=>x.id==cfg.id);if(!c||!c.glass)return;
+      const g=state.glasses?.find(x=>x.name===c.glass);if(!g)return;
+      glassQty[c.glass]=(glassQty[c.glass]||{g,qty:0});
+      glassQty[c.glass].qty+=(cfg.qty||0);
+    });
+    let extraCharge=0;
+    Object.entries(ev.breakageActual).forEach(([name,broken])=>{
+      const entry=glassQty[name];if(!entry)return;
+      const tolerance=Math.floor(entry.qty*(parseFloat(entry.g.breakagePercent)||5)/100);
+      const excess=Math.max(0,broken-tolerance);
+      extraCharge+=excess*(entry.g.priceHT||0);
+    });
+    if(extraCharge>0){
+      ev.totalRevHT=Math.round(((ev.totalRevHT||0)+extraCharge)*100)/100;
+      toast(`Casse : +${extraCharge.toFixed(2)}€ HT facturés (excédent tolérance)`);
+    }
+  }
   ev.stockRetourDone=true;
   save();cloudPush();
   toast(`${count} produit(s) réinjecté(s) en stock`);
