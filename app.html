@@ -1551,6 +1551,7 @@ function migrateEvRevHT(){
   // Recalcule totalRevHT pour tous les events depuis les données stockées
   // (corrige les valeurs sauvegardées avec l'ancien modèle staff nB×tarif)
   const _h=(a,d)=>{if(!a||!d)return 0;const[ah,am]=a.split(':').map(Number);const[dh,dm]=d.split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;return m/60;};
+  const _brk=(cktList)=>{let b=0;(cktList||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;const g=state.glasses?.find(x=>x.name===c.glass);if(!g)return;const bc=(g.priceHT||0)*0.05;const bp=parseFloat(g.breakagePercent)||5;b+=(cfg.qty||0)*bc*(bp/100);});return b;};
   let changed=false;
   (state.events||[]).forEach(ev=>{
     const dates=(ev.dates&&ev.dates.length>1)?ev.dates:[ev.date].filter(Boolean);
@@ -1559,9 +1560,10 @@ function migrateEvRevHT(){
     // Cocktails
     let cktRev=0;
     if(configs){
-      configs.forEach(dc=>(dc.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));}));
+      configs.forEach(dc=>{(dc.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));});cktRev+=_brk(dc.cocktails);});
     }else{
       (ev.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));});
+      cktRev+=_brk(ev.cocktails);
       if(isMulti)cktRev*=dates.length;
     }
     // Staff
@@ -6083,6 +6085,8 @@ async function saveEv(){
   const _clientId=parseInt(document.getElementById('ev-content')?._clientId||0)||existingEv?.clientId||null;
   
   // Recalc totalRevHT (même logique que updEvCalc)
+  // Helper casse verres facturée (5% × % par verre) — doit être inclus dans totalRevHT
+  const _calcBreakage=(cktList)=>{let b=0;(cktList||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;const glassObj=state.glasses?.find(g=>g.name===c.glass);if(!glassObj)return;const breakageCost=(glassObj.priceHT||0)*0.05;const breakagePercent=parseFloat(glassObj.breakagePercent)||5;b+=(cfg.qty||0)*breakageCost*(breakagePercent/100);});return b;};
   let ingCost=0,revenue=0;
   Object.entries(sel).forEach(([cid,cfg])=>{
     const c=state.cocktails.find(x=>x.id==cid);if(!c)return;
@@ -6092,6 +6096,7 @@ async function saveEv(){
     const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
     revenue+=qty*adjustedPrice;
   });
+  revenue+=_calcBreakage(Object.entries(sel).map(([id,cfg])=>({id,qty:cfg.qty})));
   revenue+=(window._evExtraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
   
   const nB=parseInt(document.getElementById('ef-nbrt')?.value)||0;
@@ -6129,6 +6134,7 @@ async function saveEv(){
         const gc=cfg.glassCostHT||0;
         sumRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+gc);
       });
+      sumRev+=_calcBreakage(dc.cocktails);
       // Staff par date : si configuré utiliser dc.staffAssignments, sinon fallback root
       const dcStaff=dc.staffAssignments||[];
       if(dcStaff.length>0){
