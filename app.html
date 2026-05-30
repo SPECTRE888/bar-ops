@@ -4242,6 +4242,25 @@ function showSingleEventSuivi(eventId){
               <button onclick="removeStockRetourCustomItem(${ev.id},${idx})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0">✕</button>
             </div>`).join('')}
           </div>`:''}
+          ${(()=>{
+            const glassQty={};
+            const allCkts=ev.dateConfigs?.length>1?ev.dateConfigs.flatMap(dc=>dc.cocktails||[]):(ev.cocktails||[]);
+            allCkts.forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c||!c.glass)return;const g=state.glasses?.find(x=>x.name===c.glass);if(!g)return;glassQty[c.glass]=(glassQty[c.glass]||{g,qty:0});glassQty[c.glass].qty+=(cfg.qty||0);});
+            const glassEntries=Object.entries(glassQty);
+            if(!glassEntries.length)return'';
+            return`<div style="padding:6px 0 8px;border-top:1px solid var(--border);margin-top:6px">
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:5px">Casse verres</div>
+              <div style="font-size:10px;color:var(--text4);margin-bottom:6px">Tolérance : ${glassEntries.map(([n,{g,qty}])=>`<strong>${Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100)}</strong> ${n}`).join(', ')} — excédent facturé à ${glassEntries.map(([n,{g}])=>`${(g.priceHT||0).toFixed(2)}€/u`).join(', ')}</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                ${glassEntries.map(([name,{g,qty}])=>{const tol=Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100);const saved=(ev.breakageActual||{})[name]||'';return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+                  <span style="flex:1;color:var(--text2)">${escHtml(name)}</span>
+                  <span style="font-size:10px;color:var(--text3)">tolérance ${tol}</span>
+                  <input type="number" min="0" step="1" placeholder="0" value="${saved}" style="width:65px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right" onchange="updBreakageActual(${ev.id},'${escHtml(name)}',parseInt(this.value)||0)"/>
+                  <span style="font-size:10px;color:var(--text3);width:40px">cassés</span>
+                </div>`}).join('')}
+              </div>
+            </div>`;
+          })()}
           <div id="suivi-hors-cat-form-${ev.id}" style="display:none;margin-bottom:8px;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px">
             <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap">
               <input id="shc-nom-${ev.id}" placeholder="Produit" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
