@@ -1579,9 +1579,11 @@ function migrateEvRevHT(){
       staffRev=isMulti?rootStaffRev*dates.length:rootStaffRev;
     }
     const extraProd=(ev.extraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
-    // Bar par date (même logique que saveEv multi-date), livraison/extras une seule fois
-    const barTotal=isMulti&&configs?(ev.barPrice||0)*configs.length:(ev.barPrice||0);
-    const total=cktRev+staffRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0)+barTotal+extraProd;
+    // Bar + livraison + extras : par date (cohérent avec updEvCalc par onglet)
+    const nDates=isMulti&&configs?configs.length:1;
+    const barTotal=(ev.barPrice||0)*nDates;
+    const sharedPerDate=((ev.extraBillHT||0)+(ev.deliveryBillHT||0))*nDates;
+    const total=cktRev+staffRev+sharedPerDate+barTotal+extraProd;
     const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?total*ev.remisePct/100:0);
     const computed=Math.round((total-remise)*100)/100;
     if(computed>0&&Math.abs((ev.totalRevHT||0)-computed)>0.5){ev.totalRevHT=computed;changed=true;}
@@ -6141,10 +6143,8 @@ async function saveEv(){
       }else{
         sumRev+=staffRevenue; // fallback : staff root pour cette date
       }
-      sumRev+=barPrice; // bar par date (affiché par onglet dans le formulaire)
+      sumRev+=barPrice+extraBill+deliveryBill; // par date (cohérent avec l'affichage updEvCalc par onglet)
     });
-    // Coûts partagés une seule fois (livraison, extras)
-    sumRev+=extraBill+deliveryBill;
     totalRevHT=sumRev-remiseMontant;
   }else{
     totalRevHT=revenueBeforeRemise-remiseMontant;
