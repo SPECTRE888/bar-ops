@@ -1579,7 +1579,9 @@ function migrateEvRevHT(){
       staffRev=isMulti?rootStaffRev*dates.length:rootStaffRev;
     }
     const extraProd=(ev.extraProducts||[]).reduce((s,p)=>s+(p.qty||0)*(p.priceHT||0),0);
-    const total=cktRev+staffRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0)+(ev.barPrice||0)+extraProd;
+    // Bar par date (même logique que saveEv multi-date), livraison/extras une seule fois
+    const barTotal=isMulti&&configs?(ev.barPrice||0)*configs.length:(ev.barPrice||0);
+    const total=cktRev+staffRev+(ev.extraBillHT||0)+(ev.deliveryBillHT||0)+barTotal+extraProd;
     const remise=ev.remiseHT>0?ev.remiseHT:(ev.remisePct>0?total*ev.remisePct/100:0);
     const computed=Math.round((total-remise)*100)/100;
     if(computed>0&&Math.abs((ev.totalRevHT||0)-computed)>0.5){ev.totalRevHT=computed;changed=true;}
@@ -5902,41 +5904,6 @@ function updEvCalc(){
   set('es-mgp',(canRev&&canCost&&displayRevenue>0)?finalMgp.toFixed(1)+'%':'—');
   const ttcEl=document.getElementById('es-ttc');
   if(ttcEl) ttcEl.textContent=canRev&&revTTC>0?'soit '+revTTC.toFixed(0)+'€ TTC':'';
-
-  // Multi-date : recalculer le total sur TOUTES les dates (même logique que saveEv)
-  const _allDatesCalc=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);
-  if(_allDatesCalc.length>1){
-    _saveCurDateCfg(); // synchroniser l'onglet actif dans _evDateConfigs
-    const _calcHrsCalc=(arr,dep)=>{if(!arr||!dep)return 0;const[ah,am]=arr.split(':').map(Number);const[dh,dm]=dep.split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;return m/60;};
-    let mdRev=0,mdCost=0;
-    _evDateConfigs.slice(0,_allDatesCalc.length).forEach(dc=>{
-      (dc.cocktails||[]).forEach(cfg=>{
-        const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;
-        const gc=cfg.glassCostHT||0;
-        mdRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+gc);
-        mdCost+=(cfg.qty||0)*(c.totalCost||0);
-      });
-      const dcStaff=dc.staffAssignments||[];
-      if(dcStaff.length>0){
-        dcStaff.forEach(s=>{const hrs=_calcHrsCalc(s.arrivalTime,s.departureTime);mdRev+=(s.billHT||0)*hrs;mdCost+=(s.costHT||0)*hrs;});
-      }else{
-        mdRev+=staffRevenue;mdCost+=staffCost;
-      }
-    });
-    mdRev+=extraBill+deliveryBill+barPrice;
-    mdCost+=extra+delivery;
-    const mdRemise=remiseHT>0?remiseHT:(remisePct>0?mdRev*remisePct/100:0);
-    const mdTotal=mdRev-mdRemise;
-    const mdMg=mdTotal-mdCost,mdMgP=mdTotal>0?mdMg/mdTotal*100:0;
-    const mdTTC=mdTotal*(1+avgVat/100);
-    set('es-rev',canRev&&mdTotal>0?mdTotal.toFixed(0)+'€':canRev?'—':hidden);
-    set('es-total',canCost&&mdCost>0?mdCost.toFixed(0)+'€':canCost?'—':hidden);
-    if(mgEl){
-      if(canRev&&canCost){mgEl.textContent=mdTotal>0?mdMg.toFixed(0)+'€':'—';mgEl.style.color=mdMg>0?'var(--green)':mdMg<0?'var(--red)':'var(--text)';}
-    }
-    set('es-mgp',(canRev&&canCost&&mdTotal>0)?mdMgP.toFixed(1)+'%':'—');
-    if(ttcEl) ttcEl.textContent=canRev&&mdTTC>0?'soit '+mdTTC.toFixed(0)+'€ TTC':'';
-  }
 }
 
 window._evExtraProducts=window._evExtraProducts||[];
@@ -6160,9 +6127,10 @@ async function saveEv(){
       }else{
         sumRev+=staffRevenue; // fallback : staff root pour cette date
       }
+      sumRev+=barPrice; // bar par date (affiché par onglet dans le formulaire)
     });
-    // Coûts partagés (livraison, bar, extras) — une seule fois
-    sumRev+=extraBill+deliveryBill+barPrice;
+    // Coûts partagés une seule fois (livraison, extras)
+    sumRev+=extraBill+deliveryBill;
     totalRevHT=sumRev-remiseMontant;
   }else{
     totalRevHT=revenueBeforeRemise-remiseMontant;
