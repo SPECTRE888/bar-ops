@@ -23,7 +23,15 @@ module.exports = async function handler(req, res) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: 'Token invalide ou expiré' });
 
-    const { plan, period, priceInCents } = req.body || {};
+    const { plan, period } = req.body || {};
+    // Table de prix server-side — source de vérité. Tout prix envoyé par le client est ignoré.
+    const PRICES = {
+      early: { monthly: 14900, yearly: 149000 },
+      pro:   { monthly: 19900, yearly: 199000 },
+    };
+    const periodKey = period === 'yearly' ? 'yearly' : 'monthly';
+    const priceInCents = PRICES[plan] && PRICES[plan][periodKey];
+    if (!priceInCents) return res.status(400).json({ error: 'Plan ou période invalide' });
     const userId = user.id;
     const userEmail = user.email;
 
