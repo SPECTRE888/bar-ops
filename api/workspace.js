@@ -8,9 +8,10 @@ const crypto = require('crypto');
 function b64urlEncode(str) {
   return Buffer.from(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
-function hmac(secret, uid, evId) {
-  return crypto.createHmac('sha256', secret).update(`${uid}:${evId}`).digest('hex').slice(0, 32);
+function hmac(secret, uid, evId, exp) {
+  return crypto.createHmac('sha256', secret).update(`${uid}:${evId}:${exp}`).digest('hex').slice(0, 32);
 }
+const PORTAL_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 jours
 
 module.exports = async function handler(req, res) {
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
@@ -33,9 +34,11 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     const { evId, theme } = req.body || {};
     if (!evId) return res.status(400).json({ error: 'missing_evId' });
-    const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
-    const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: String(evId), theme: theme || 'elegant' }));
-    const sig = hmac(secret, user.id, String(evId));
+    const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY;
+    if (!secret) return res.status(500).json({ error: 'server_misconfigured' });
+    const exp = Math.floor(Date.now() / 1000) + PORTAL_TOKEN_TTL_SECONDS;
+    const payload = b64urlEncode(JSON.stringify({ uid: user.id, evId: String(evId), theme: theme || 'elegant', exp }));
+    const sig = hmac(secret, user.id, String(evId), exp);
     return res.status(200).json({ token: `${payload}.${sig}` });
   }
 

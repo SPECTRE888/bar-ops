@@ -8,8 +8,8 @@ const crypto = require('crypto');
 function b64urlDecode(str) {
   return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
 }
-function hmacData(secret, uid, evId) {
-  return crypto.createHmac('sha256', secret).update(`${uid}:${evId}`).digest('hex').slice(0, 32);
+function hmacData(secret, uid, evId, exp) {
+  return crypto.createHmac('sha256', secret).update(`${uid}:${evId}:${exp}`).digest('hex').slice(0, 32);
 }
 function hmacSign(secret, data) {
   return crypto.createHmac('sha256', secret).update(data).digest('hex').slice(0, 32);
@@ -22,7 +22,8 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-  const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY || 'fallback';
+  const secret = process.env.PORTAL_HMAC_SECRET || process.env.STRIPE_SECRET_KEY;
+  if (!secret) return res.status(500).json({ error: 'server_misconfigured' });
 
   // ── PORTAL DATA (GET) ──────────────────────────────────────
   if (req.method === 'GET') {
@@ -37,9 +38,10 @@ module.exports = async function handler(req, res) {
     try { payload = JSON.parse(b64urlDecode(payloadB64)); }
     catch { return res.status(400).json({ error: 'invalid_payload' }); }
 
-    const { uid, evId } = payload;
-    if (!uid || !evId) return res.status(400).json({ error: 'invalid_token' });
-    if (hmacData(secret, uid, String(evId)) !== sig) return res.status(403).json({ error: 'bad_signature' });
+    const { uid, evId, exp } = payload;
+    if (!uid || !evId || !exp) return res.status(400).json({ error: 'invalid_token' });
+    if (hmacData(secret, uid, String(evId), exp) !== sig) return res.status(403).json({ error: 'bad_signature' });
+    if (exp < Math.floor(Date.now() / 1000)) return res.status(401).json({ error: 'token_expired' });
 
     const { data: ws } = await supabase.from('workspaces').select('data').eq('user_id', uid).maybeSingle();
     if (!ws?.data) return res.status(404).json({ error: 'workspace_not_found' });
@@ -75,8 +77,9 @@ module.exports = async function handler(req, res) {
     try { data = JSON.parse(b64urlDecode(payload)); }
     catch { return res.status(400).json({ error: 'invalid_payload' }); }
 
-    const { uid, evId } = data;
+    const { uid, evId, exp } = data;
     if (!uid || !evId) return res.status(400).json({ error: 'missing_uid_evId' });
+    if (exp && exp < Math.floor(Date.now() / 1000)) return res.status(401).json({ error: 'token_expired' });
 
     const { data: ws } = await supabase.from('workspaces').select('data').eq('user_id', uid).maybeSingle();
     if (!ws?.data) return res.status(404).json({ error: 'workspace_not_found' });
