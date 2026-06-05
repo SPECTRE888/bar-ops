@@ -7,3 +7,4 @@ node_modules/
 .github/
 !.github/workflows/
 dist/
+LICENSES-REPORT.csv
