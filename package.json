@@ -1,7 +1,10 @@
 {
   "name": "bar-ops",
-  "version": "1.5.145",
+  "version": "1.5.146",
   "description": "Bar Ops — gestion d'événements bar",
+  "author": "Jérôme Jarrige <Jarrige.jerome@hotmail.fr>",
+  "license": "UNLICENSED",
+  "private": true,
   "main": "electron/main.js",
   "scripts": {
     "electron": "electron .",

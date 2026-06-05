@@ -1,3 +1,10 @@
+/*!
+ * Bar Ops — Electron main process
+ * Copyright © 2026 Jérôme Jarrige. All rights reserved.
+ * Proprietary and confidential. See LICENSE file for terms.
+ * Unauthorized copying, modification, distribution, or use of this file,
+ * via any medium, is strictly prohibited.
+ */
 const { app, BrowserWindow, shell, dialog, ipcMain } = require('electron')
 const http = require('http')
 const path = require('path')

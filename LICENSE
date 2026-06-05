@@ -1,0 +1,70 @@
+PROPRIETARY SOFTWARE LICENSE — Bar Ops
+
+Copyright © 2026 Jérôme Jarrige. All rights reserved.
+Tous droits réservés.
+
+This software, including its source code, design, user interface, database
+schema, documentation, and all associated artifacts (collectively, the
+"Software"), is the exclusive property of Jérôme Jarrige (the "Owner").
+
+The Software is licensed, not sold. No rights are granted by implication,
+estoppel, or otherwise except as expressly set forth in a separate written
+agreement signed by the Owner.
+
+Unless a separate written license agreement is in force, the following
+prohibitions apply:
+
+1. NO USE — You may not use the Software for any commercial or non-commercial
+   purpose without prior written authorization from the Owner.
+
+2. NO COPYING — You may not copy, reproduce, mirror, fork, or otherwise
+   duplicate any part of the Software, in source or binary form.
+
+3. NO DISTRIBUTION — You may not distribute, sublicense, sell, rent, lease,
+   lend, or otherwise transfer the Software or any portion thereof to any
+   third party.
+
+4. NO MODIFICATION — You may not modify, adapt, translate, port,
+   reverse-engineer, disassemble, decompile, or create derivative works
+   based on the Software.
+
+5. NO PUBLIC PERFORMANCE — You may not publicly display, perform, or make
+   available the Software via any medium, including but not limited to web
+   hosting, mobile applications, SaaS offerings, or app stores.
+
+6. CONFIDENTIALITY — The Software contains trade secrets and proprietary
+   know-how of the Owner. You must treat the Software as confidential
+   information and protect it with at least the same degree of care that
+   you use to protect your own confidential information of similar value.
+
+7. INTELLECTUAL PROPERTY — All intellectual property rights in and to the
+   Software, including without limitation copyrights, trade secrets,
+   trademarks (including "Bar Ops"), and database rights, are and shall
+   remain the exclusive property of the Owner.
+
+DISCLAIMER OF WARRANTIES — THE SOFTWARE IS PROVIDED "AS IS" WITHOUT
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+NON-INFRINGEMENT.
+
+LIMITATION OF LIABILITY — IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY
+CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT,
+OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+GOVERNING LAW — This License shall be governed by and construed in
+accordance with the laws of France, without regard to its conflict of law
+provisions. Any dispute arising under or in connection with this License
+shall be subject to the exclusive jurisdiction of the competent courts of
+France.
+
+CONTACT — For licensing inquiries, partnership requests, or other matters
+related to the Software, contact: Jarrige.jerome@hotmail.fr
+
+────────────────────────────────────────────────────────────────────────
+THIRD-PARTY COMPONENTS — The Software incorporates third-party open source
+libraries (Electron, Supabase JS client, Stripe JS, html2pdf.js, electron-
+updater, electron-log, sharp, and others), each licensed under their
+respective terms (MIT, Apache-2.0, etc.). Such third-party licenses apply
+only to their respective components and do not affect the proprietary
+license of the Software as a whole.

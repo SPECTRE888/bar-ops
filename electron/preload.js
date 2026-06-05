@@ -1,3 +1,8 @@
+/*!
+ * Bar Ops — Electron preload bridge
+ * Copyright © 2026 Jérôme Jarrige. All rights reserved.
+ * Proprietary and confidential. See LICENSE.
+ */
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronConfig', {
