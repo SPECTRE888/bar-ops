@@ -707,7 +707,9 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
     </div>
-    <div class="topbar-actions no-print" style="flex:0;gap:6px">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost" id="tab-hist-prest" onclick="showHistTab('prestations')" style="background:var(--gold);color:#000">Prestations</button>
+      <button class="btn btn-ghost" id="tab-hist-devis" onclick="showHistTab('devis')">Devis</button>
     </div>
   </div>
   <div class="content" id="historique-content"></div>
@@ -8380,6 +8382,7 @@ function addToOrderList(pid){
 
 // Remplace openSupplierOrder et sendSupplierOrder
 function openSupplierOrder(supplierName){
+  window._curSupplierOrder=supplierName; // global safe — pas de quotes dans les onclick
   if(!state.orders)state.orders={};
   const sKey=supplierName||'__sans_fournisseur__';
   let items=state.orders[sKey]||[];
@@ -8387,18 +8390,17 @@ function openSupplierOrder(supplierName){
   items.forEach(i=>{const k=i.pid+'|'+i.unit;if(!deduped[k])deduped[k]={...i};else deduped[k].qty+=i.qty;});
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
-  const lines=items.map(i=>`${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${i.unit}`).join('\n');
-  const sJson=JSON.stringify(supplierName);
-  const html=items.map((i,idx)=>{const u=i.unit==='cl'?'btl':i.unit;return `<tr style="border-bottom:1px solid var(--border2)"><td style="padding:6px">${escHtml(i.name)}</td><td style="padding:6px">${escHtml(i.brand||'—')}</td><td style="padding:6px;font-family:monospace;font-size:11px">${escHtml(i.code||'—')}</td><td style="padding:6px"><input type="number" value="${i.qty}" min="1" style="width:55px;padding:3px 5px;font-size:12px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text)" onchange="updateSupplierOrderQty(${sJson},${idx},this.value)"/> ${escHtml(u)}</td><td style="padding:6px;text-align:center"><button onclick="removeSupplierOrderLine(${sJson},${idx})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕</button></td></tr>`}).join('');
+  const html=items.map((i,idx)=>{const u=i.unit==='cl'?'btl':i.unit;return `<tr style="border-bottom:1px solid var(--border2)"><td style="padding:6px">${escHtml(i.name)}</td><td style="padding:6px">${escHtml(i.brand||'—')}</td><td style="padding:6px;font-family:monospace;font-size:11px">${escHtml(i.code||'—')}</td><td style="padding:6px"><input type="number" value="${i.qty}" min="1" style="width:55px;padding:3px 5px;font-size:12px;border:1px solid var(--border2);border-radius:3px;background:var(--surface2);color:var(--text)" onchange="updateSupplierOrderQty(window._curSupplierOrder,${idx},this.value)"/> ${escHtml(u)}</td><td style="padding:6px;text-align:center"><button onclick="removeSupplierOrderLine(window._curSupplierOrder,${idx})" style="background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px">✕</button></td></tr>`}).join('');
+  document.querySelectorAll('#supplier-order-modal').forEach(m=>m.remove());
   const modal=document.createElement('div');
   modal.id='supplier-order-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px';
   const btns=[];
-  if(sup.email)btns.push('<button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder('+sJson+',\'email\')">Mail</button>');
-  if(sup.phone)btns.push('<button class="btn" style="flex:1;background:#25D366;color:white;border-color:#25D366;cursor:pointer" onclick="sendSupplierOrder('+sJson+',\'whatsapp\')">WhatsApp</button>');
-  btns.push('<button class="btn btn-danger" style="flex:1" onclick="clearSupplierOrder('+sJson+');this.closest(\'[style*=fixed]\').remove()"> Vider</button>');
+  if(sup.email)btns.push('<button class="btn btn-gold" style="flex:1" onclick="sendSupplierOrder(window._curSupplierOrder,\'email\')">Mail</button>');
+  if(sup.phone)btns.push('<button class="btn" style="flex:1;background:#25D366;color:white;border-color:#25D366;cursor:pointer" onclick="sendSupplierOrder(window._curSupplierOrder,\'whatsapp\')">WhatsApp</button>');
+  btns.push('<button class="btn btn-danger" style="flex:1" onclick="clearSupplierOrder(window._curSupplierOrder);this.closest(\'#supplier-order-modal\').remove()">Vider</button>');
   const content=!items.length?'<p style="color:var(--text3);font-size:13px">Aucun article en liste de course pour ce fournisseur.</p>':'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.1em"><th style="text-align:left;padding:4px 6px">Produit</th><th style="text-align:left;padding:4px 6px">Marque</th><th style="text-align:left;padding:4px 6px">Réf</th><th style="text-align:left;padding:4px 6px">Qté</th><th style="padding:4px 6px"></th></tr></thead><tbody>'+html+'</tbody></table><div style="display:flex;gap:8px;margin-top:12px">'+btns.join('')+'</div>';
-  modal.innerHTML='<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Commande — '+escHtml(supplierName)+'</div><button onclick="this.closest(\'[style*=fixed]\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button></div>'+content+'</div>';
+  modal.innerHTML='<div style="background:var(--surface);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:16px;font-weight:600">Commande — '+escHtml(supplierName)+'</div><button onclick="document.getElementById(\'supplier-order-modal\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">×</button></div>'+content+'</div>';
   document.body.appendChild(modal);
 }
 function removeSupplierOrderLine(supplierName,idx){
@@ -8714,7 +8716,7 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${escHtml(s.phone||'—')}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.email||'—')}</div>
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
-          <button class="btn btn-sm btn-gold" onclick="openSupplierOrder(${JSON.stringify(s.name)})">Commander${orderCount?` (${orderCount})`:''}</button>
+          <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
           <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
           <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})">×</button>
         </div>
@@ -9445,13 +9447,9 @@ function renderHistorique(){
   const searchFilter=document.getElementById('hist-search')?.value.toLowerCase()||'';
   const filtered=searchFilter?past.filter(ev=>ev.name.toLowerCase().includes(searchFilter)||ev.location?.toLowerCase().includes(searchFilter)):past;
 
-  const evRevenue=ev=>{
-    const c=(ev.cocktails||[]).reduce((s,cfg)=>{
-      const ck=state.cocktails.find(x=>x.id===cfg.id);
-      return s+(ck&&cfg.qty?cfg.qty*ck.priceHT:0);
-    },0);
-    return (c+(ev.extraBillHT||0)+(ev.deliveryBillHT||0))*evDatesCount(ev);
-  };
+  // CA canonique : utiliser ev.totalRevHT stocké (remise + nb dates inclus à la sauvegarde),
+  // ne JAMAIS recalculer à la volée pour l'affichage (cf. CLAUDE.md règle cohérence CA).
+  const evRevenue=ev=>ev.totalRevHT||0;
   const evCost=ev=>{
     // Si stock retour saisi, calcul coût réel = coût prévu - valeur des bouteilles retournées
     const ingredCost=(ev.cocktails||[]).reduce((s,cfg)=>{
@@ -9538,6 +9536,73 @@ function renderHistorique(){
     });
   });
 
+  el.innerHTML=html;
+}
+
+function showHistTab(tab){
+  const isPrest=tab==='prestations';
+  document.getElementById('tab-hist-prest').style.cssText=isPrest?'background:var(--gold);color:#000':'';
+  document.getElementById('tab-hist-devis').style.cssText=!isPrest?'background:var(--gold);color:#000':'';
+  document.getElementById('hist-search').style.display=isPrest?'':'none';
+  if(isPrest) renderHistorique(); else renderDevisArchive();
+}
+
+function renderDevisArchive(){
+  const el=document.getElementById('historique-content');if(!el)return;
+  const log=(state._devisLog||[]).slice().sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+  if(!log.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun devis émis pour l'instant.</p></div>`;
+    return;
+  }
+  // Regrouper par année
+  const byYear={};
+  log.forEach(d=>{
+    const y=d.year||new Date(d.createdAt||0).getFullYear();
+    if(!byYear[y])byYear[y]=[];
+    byYear[y].push(d);
+  });
+  let html=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:28px;font-size:12px;color:var(--text3);line-height:1.6">
+    <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px">Archivage légal des devis — Conformité droit français</div>
+    <div>• <strong style="color:var(--text2)">Conservation 5 ans</strong> — art. L.110-4 Code de commerce (prescription commerciale)</div>
+    <div>• <strong style="color:var(--text2)">Numérotation continue</strong> sans rupture — art. 286 I-3° CGI (conformité comptable)</div>
+    <div>• Tous les devis émis sont archivés ici de façon immuable, même après suppression de l'événement</div>
+    <div style="margin-top:8px;color:var(--text2)">${log.length} devis archivés · Préfixe : <strong>${escHtml(state._devisPrefix||'—')}</strong></div>
+  </div>`;
+  Object.entries(byYear).sort((a,b)=>b[0]-a[0]).forEach(([year,entries])=>{
+    html+=`<div style="display:flex;align-items:center;gap:10px;margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:500;color:var(--text)">${year}</div>
+      <div style="font-size:11px;color:var(--text3)">${entries.length} devis</div>
+    </div>`;
+    entries.forEach(d=>{
+      const ev=state.events.find(e=>e.id===d.eventId);
+      const client=ev?state.clients.find(c=>c.id===ev.clientId):null;
+      const clientName=client?.name||ev?.clientName||'—';
+      const rev=ev?.totalRevHT;
+      const emitDate=d.createdAt?new Date(d.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      const archiveUntil=d.createdAt?new Date(new Date(d.createdAt).setFullYear(new Date(d.createdAt).getFullYear()+5)).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      const evDate=ev?.date?new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      html+=`<div class="card" style="padding:16px 20px;margin-bottom:6px;display:flex;align-items:center;gap:16px">
+        <div style="min-width:130px;flex-shrink:0">
+          <div style="font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.04em">${escHtml(d.devisNum)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">Émis le ${emitDate}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${escHtml(d.eventName||'—')}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${escHtml(clientName)}${evDate!=='—'?' · Prestation : '+evDate:''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;min-width:90px">
+          ${rev?`<div style="font-size:14px;font-weight:600;color:var(--gold)">${fmt(rev)}</div>`:'<div style="font-size:11px;color:var(--text3)">Montant N/A</div>'}
+        </div>
+        <div style="min-width:100px;flex-shrink:0;font-size:10px;color:var(--text3);text-align:right">
+          <div>À conserver jusqu'au</div>
+          <div style="color:var(--text2);font-weight:500">${archiveUntil}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${ev?`<button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="generateDevis(${d.eventId})">Revoir</button>`:'<span style="font-size:10px;color:var(--text3);padding:0 4px">Événement supprimé</span>'}
+        </div>
+      </div>`;
+    });
+  });
   el.innerHTML=html;
 }
 
