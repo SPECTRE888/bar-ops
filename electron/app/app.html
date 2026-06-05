@@ -8837,26 +8837,39 @@ function showLegal(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:560px;width:92%;max-height:85vh;overflow-y:auto">
     <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold);margin-bottom:4px">BAR OPS</div>
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:20px">by Intelligence Spotlighted</div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:20px">Mentions légales · v${CURRENT_VERSION||'—'}</div>
 
     <div style="font-size:11px;color:var(--text2);line-height:1.8">
-      <p style="margin-bottom:6px"><strong style="color:var(--text)">© ${new Date().getFullYear()} Intelligence Spotlighted. Tous droits réservés.</strong></p>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">© ${new Date().getFullYear()} Jérôme Jarrige. Tous droits réservés.</strong></p>
+
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Éditeur</strong><br/>
+      Jérôme Jarrige — Entrepreneur individuel<br/>
+      Contact : <a href="mailto:Jarrige.jerome@hotmail.fr" style="color:var(--gold);text-decoration:none">Jarrige.jerome@hotmail.fr</a></p>
 
       <p style="margin-bottom:6px"><strong style="color:var(--text)">Propriété intellectuelle</strong><br/>
-      BAR OPS est une création originale d'Intelligence Spotlighted. Le code source, le design, les fonctionnalités, et les contenus de l'application sont protégés par le droit d'auteur français et les conventions internationales sur la propriété intellectuelle. Toute reproduction, copie, modification, distribution ou utilisation commerciale sans autorisation écrite est strictement interdite.</p>
+      BAR OPS est une œuvre originale dont Jérôme Jarrige est l'auteur et le titulaire exclusif des droits. Le code source, l'architecture logicielle, le design, les interfaces, les algorithmes, la base de données et l'ensemble des éléments de l'application sont protégés par le droit d'auteur français (CPI), le droit sui generis des bases de données et les conventions internationales. La marque BAR OPS est revendiquée. Toute reproduction, représentation, modification, traduction, distribution, ingénierie inverse ou utilisation à des fins commerciales sans autorisation écrite préalable est strictement interdite et constitue un acte de contrefaçon sanctionné par les articles L.335-2 et suivants du CPI. Voir fichier LICENSE pour les conditions complètes.</p>
 
       <p style="margin-bottom:6px"><strong style="color:var(--text)">Licence d'utilisation</strong><br/>
-      L'abonnement à BAR OPS confère une licence personnelle, non-exclusive et non-transférable d'utilisation de l'application. Cette licence est strictement limitée à un usage professionnel individuel. La revente, le partage de compte, ou la mise à disposition à des tiers est interdite.</p>
+      L'abonnement à BAR OPS confère une licence personnelle, non-exclusive, non-transférable et révocable d'utilisation de l'application, strictement limitée à un usage professionnel individuel ou à l'équipe de la société souscrivante dans la limite des sièges payés. La revente, le partage de compte hors équipe, la mise à disposition à des tiers, ou toute exploitation dérivée sont interdits.</p>
 
-      <p style="margin-bottom:6px"><strong style="color:var(--text)">Données utilisateur</strong><br/>
-      Les données saisies dans l'application (recettes, événements, contacts) sont stockées localement sur votre appareil (localStorage). Intelligence Spotlighted n'accède pas à ces données. L'utilisateur est seul responsable de la sauvegarde de ses données.</p>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Hébergement et traitement des données (RGPD)</strong><br/>
+      Les données saisies dans l'application (clients, événements, recettes, équipe, contacts) sont :<br/>
+      • stockées localement sur votre appareil (localStorage)<br/>
+      • synchronisées et hébergées sur Supabase (UE — Francfort), prestataire conforme RGPD<br/>
+      • les paiements transitent par Stripe (UE), aucune donnée de carte n'est stockée par BAR OPS<br/>
+      Le responsable de traitement est Jérôme Jarrige. Vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données ; pour l'exercer, contactez l'éditeur ou utilisez la fonction "Supprimer le compte" dans la section Compte.</p>
+
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Archivage légal</strong><br/>
+      Conformément à l'art. L.110-4 du Code de commerce et à l'art. 286 I-3° du CGI, les devis émis sont conservés 5 ans avec numérotation continue et immuable, consultables dans Historique → Devis.</p>
 
       <p style="margin-bottom:6px"><strong style="color:var(--text)">Limitation de responsabilité</strong><br/>
-      BAR OPS est fourni "tel quel". Intelligence Spotlighted ne saurait être tenu responsable de pertes de données, d'erreurs de calcul, ou de tout préjudice commercial résultant de l'utilisation de l'application.</p>
+      BAR OPS est fourni "en l'état" sans garantie d'aucune sorte. L'éditeur ne saurait être tenu responsable de pertes de données, erreurs de calcul, indisponibilité de service ou de tout préjudice direct ou indirect résultant de l'utilisation de l'application, dans les limites permises par le droit applicable.</p>
 
-      <p><strong style="color:var(--text)">Contact</strong><br/>
-      Intelligence Spotlighted<br/>
-      <a href="mailto:contact@intelligencespotlighted.com" style="color:var(--gold);text-decoration:none">contact@intelligencespotlighted.com</a></p>
+      <p style="margin-bottom:6px"><strong style="color:var(--text)">Composants tiers</strong><br/>
+      L'application utilise des bibliothèques open-source (Electron, Supabase JS, Stripe JS, html2pdf.js, electron-updater) sous leurs licences respectives (MIT, Apache-2.0). Ces licences ne s'appliquent qu'aux composants concernés et n'affectent pas la nature propriétaire de BAR OPS dans son ensemble.</p>
+
+      <p><strong style="color:var(--text)">Droit applicable</strong><br/>
+      Les présentes mentions sont régies par le droit français. Tout litige relève de la compétence exclusive des tribunaux français.</p>
     </div>
 
     <button onclick="this.closest('[style*=fixed]').remove()" style="margin-top:20px;padding:8px 18px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500">Fermer</button>
