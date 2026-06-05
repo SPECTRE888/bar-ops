@@ -1,10 +1,4 @@
-# Local Netlify folder
-.netlify
-
-# Config Electron local (clés API — ne jamais commiter)
-electron/config.js
-
-# Environment variables
+# Environment variables (clés serveur, secrets STRIPE_SECRET_KEY, SUPABASE_SERVICE_KEY)
 .env.local
 .env
 
