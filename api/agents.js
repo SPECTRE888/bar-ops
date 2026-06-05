@@ -142,9 +142,13 @@ module.exports = async function handler(req, res) {
   }
 
   if (action === 'remove') {
+    // Retirer un agent = révoquer tous ses privilèges (principe de moindre privilège).
+    // L'ex-agent garde son compte auth mais perd company_id ET role : il ne peut plus rien faire.
+    // S'il veut redevenir admin, il doit explicitement souscrire un nouvel abonnement Stripe
+    // (le webhook le promouvra alors COMPANY_ADMIN avec sa propre company_id).
     const { targetUserId } = body;
     await assertSameCompany(supabase, targetUserId, callerProfile.company_id);
-    await supabase.from('profiles').update({ company_id: null, role: 'COMPANY_ADMIN', status: 'active' }).eq('id', targetUserId);
+    await supabase.from('profiles').update({ company_id: null, role: null, status: 'active' }).eq('id', targetUserId);
     await audit(supabase, callerProfile.company_id, user.id, 'agent_removed', targetUserId);
     return res.status(200).json({ success: true });
   }
