@@ -184,11 +184,13 @@ const GH_OWNER = 'SPECTRE888'
 const GH_REPO  = 'bar-ops'
 
 function toast(msg) {
-  const safe = msg.replace(/\\/g, '\\\\').replace(/`/g, '\\`')
-  mainWin?.webContents.executeJavaScript(`
-    if(typeof showToast==='function') showToast(\`${safe}\`);
-    else console.warn('[updater]', \`${safe}\`);
-  `).catch(() => {})
+  // SÉCURITÉ : JSON.stringify produit un littéral JS toujours safe (échappe
+  // \, ", ${, sauts de ligne, etc.). NE PAS revenir à un template literal
+  // ` ... ${msg} ... ` qui exécuterait toute expression injectée dans msg.
+  const safe = JSON.stringify(String(msg ?? ''))
+  mainWin?.webContents.executeJavaScript(
+    `if(typeof showToast==='function') showToast(${safe}); else console.warn('[updater]', ${safe});`
+  ).catch(() => {})
 }
 
 function get(url) {
