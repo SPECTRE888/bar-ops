@@ -6,6 +6,10 @@
  */
 const { createClient } = require('@supabase/supabase-js');
 const sgMail = require('@sendgrid/mail');
+const { checkEmailRate, logEmailSent } = require('./_rate-limit');
+
+const RATE_INVITE = { perHour: 5, perDay: 20 };
+const RATE_RESEND = { perHour: 3, perDay: 10 };
 
 const DEFAULT_AGENT_PERMISSIONS = { canViewRevenue: false, canViewAnalytics: false, canManageClients: true, canEditProjects: true, canManageStaff: false, canManageSuppliers: false, canViewCosts: false, canExportData: false };
 
@@ -75,12 +79,21 @@ module.exports = async function handler(req, res) {
     const sender = fromEmail || process.env.FROM_EMAIL;
     let emailSent = false, emailError = null;
     if (sgKey && sender) {
-      try {
-        sgMail.setApiKey(sgKey);
-        const roleLabel = role === 'COMPANY_ADMIN' ? 'Administrateur' : 'Agent';
-        await sgMail.send({ to: email, from: { email: sender, name: fromName || company.name }, subject: `Invitation à rejoindre ${company.name} sur Bar Ops`, html: `<p><strong>${user.email}</strong> vous invite à rejoindre <strong>${company.name}</strong> en tant que <strong>${roleLabel}</strong>.</p><a href="${inviteUrl}">Accepter l'invitation</a><p style="color:#888;font-size:12px">Ce lien est valable 7 jours.</p>` });
-        emailSent = true;
-      } catch (e) { emailError = e.message; }
+      // Rate limit anti-abus (un admin malveillant pourrait spammer)
+      const rate = await checkEmailRate(supabase, user.id, RATE_INVITE);
+      if (!rate.allowed) {
+        emailError = rate.reason === 'hourly_limit_reached'
+          ? `Limite d'invitations atteinte (${RATE_INVITE.perHour}/heure)`
+          : `Limite quotidienne atteinte (${RATE_INVITE.perDay}/jour)`;
+      } else {
+        try {
+          sgMail.setApiKey(sgKey);
+          const roleLabel = role === 'COMPANY_ADMIN' ? 'Administrateur' : 'Agent';
+          await sgMail.send({ to: email, from: { email: sender, name: fromName || company.name }, subject: `Invitation à rejoindre ${company.name} sur Bar Ops`, html: `<p><strong>${user.email}</strong> vous invite à rejoindre <strong>${company.name}</strong> en tant que <strong>${roleLabel}</strong>.</p><a href="${inviteUrl}">Accepter l'invitation</a><p style="color:#888;font-size:12px">Ce lien est valable 7 jours.</p>` });
+          emailSent = true;
+          await logEmailSent(supabase, user.id, 'invite-agent');
+        } catch (e) { emailError = e.message; }
+      }
     } else { emailError = !sgKey ? 'Clé SendGrid manquante' : 'Adresse expéditeur manquante'; }
 
     await supabase.from('audit_logs').insert({ company_id: profile.company_id, actor_id: user.id, action: 'invite_sent', metadata: { email, role } });
@@ -164,12 +177,20 @@ module.exports = async function handler(req, res) {
     const { invitationId } = body;
     const { data: inv } = await supabase.from('invitations').select('*, companies(name)').eq('id', invitationId).eq('company_id', callerProfile.company_id).single();
     if (!inv) return res.status(404).json({ error: 'Invitation introuvable' });
+    // Rate limit anti-spam (un user mal intentionné pourrait re-trigger l'email en boucle)
+    const rate = await checkEmailRate(supabase, user.id, RATE_RESEND);
+    if (!rate.allowed) {
+      return res.status(429).json({ error: rate.reason === 'hourly_limit_reached'
+        ? `Limite de relances atteinte (${RATE_RESEND.perHour}/heure)`
+        : `Limite quotidienne de relances atteinte (${RATE_RESEND.perDay}/jour)` });
+    }
     await supabase.from('invitations').update({ expires_at: new Date(Date.now() + 7 * 86400 * 1000).toISOString() }).eq('id', invitationId);
     const appUrl = process.env.APP_URL || 'https://bar-ops-v2.vercel.app';
     const inviteUrl = `${appUrl}/auth.html?action=accept-invite&token=${inv.token}`;
     try {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
       await sgMail.send({ to: inv.email, from: { email: 'noreply@bar-ops.app', name: 'Bar Ops' }, subject: `Rappel : invitation à rejoindre ${inv.companies.name}`, html: `<p>Voici votre lien : <a href="${inviteUrl}">${inviteUrl}</a> (valable 7 jours)</p>` });
+      await logEmailSent(supabase, user.id, 'resend-invite');
     } catch (e) { console.error('SendGrid error:', e.message); }
     return res.status(200).json({ success: true, inviteUrl });
   }

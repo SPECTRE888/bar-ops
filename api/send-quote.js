@@ -1,5 +1,8 @@
 const sgMail = require('@sendgrid/mail');
 const { createClient } = require('@supabase/supabase-js');
+const { checkEmailRate, logEmailSent } = require('./_rate-limit');
+
+const RATE = { perHour: 30, perDay: 100 };
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -12,6 +15,15 @@ module.exports = async function handler(req, res) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: 'Token invalide ou expiré' });
 
+    // Rate limit anti-abus / anti-spam (protège la réputation SendGrid)
+    const rate = await checkEmailRate(supabase, user.id, RATE);
+    if (!rate.allowed) {
+      res.setHeader('Retry-After', String(rate.retryAfterSec || 3600));
+      return res.status(429).json({ error: rate.reason === 'hourly_limit_reached'
+        ? `Limite d'envoi atteinte (${RATE.perHour}/heure). Réessayez plus tard.`
+        : `Limite quotidienne atteinte (${RATE.perDay}/jour). Réessayez demain.` });
+    }
+
     const { to, subject, html, devisHTML, fromEmail, fromName, sendgridApiKey } = req.body || {};
     if (!to || !subject) return res.status(400).json({ error: 'Champs manquants (to, subject)' });
     if (!sendgridApiKey) return res.status(400).json({ error: 'Clé SendGrid manquante' });
@@ -19,6 +31,7 @@ module.exports = async function handler(req, res) {
 
     sgMail.setApiKey(sendgridApiKey);
     await sgMail.send({ to, from: { email: fromEmail, name: fromName || 'BAR OPS' }, subject, html: devisHTML || html });
+    await logEmailSent(supabase, user.id, 'send-quote');
     return res.status(200).json({ success: true });
   } catch (error) {
     const detail = error?.response?.body?.errors?.[0]?.message || error.message || 'Erreur inconnue';
