@@ -6848,8 +6848,8 @@ function renderShopping(){
     const pUnit=item.prod?.qty&&item.prod?.unit?(['cl','ml','L'].includes(item.prod.unit)?'btl':'unit'):'unit';
     const stockAfterAlloc=getStockAfterAllocations(item.productType,item.brand);
     html+=`<tr style="border-bottom:1px solid var(--border2);height:48px">
-      <td style="padding:10px">${item.productType}</td>
-      <td style="padding:10px"><strong>${item.brand}</strong>${item.supplierCode?` <span style="color:var(--text3);font-size:10px">#${item.supplierCode}</span>`:''}</td>
+      <td style="padding:10px">${escHtml(item.productType)}</td>
+      <td style="padding:10px"><strong>${escHtml(item.brand)}</strong>${item.supplierCode?` <span style="color:var(--text3);font-size:10px">#${escHtml(item.supplierCode)}</span>`:''}</td>
       <td style="padding:10px;text-align:right">${item.costTotal.toFixed(2)}€</td>
       <td style="padding:10px;text-align:center;font-weight:500">${pQty} ${pUnit}</td>
       <td style="padding:10px;text-align:center;color:${allocQty>0?'var(--green)':stockAfterAlloc>=pQty?'var(--green)':stockAfterAlloc>0?'var(--gold)':'var(--red)'};font-weight:500">${allocQty>0?allocQty:stockAfterAlloc}/${pQty} ${pUnit}${allocQty>0?' ✓':''}</td>
@@ -8862,7 +8862,7 @@ function showDresscodeModal(evId){
     const chk=(ev.dressCodes||[]).includes(dc.id);
     html+=`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px">
       <input type="checkbox" ${chk?'checked':''} data-dcid="${dc.id}" class="modal-dc-chk" style="width:auto;accent-color:var(--gold)"/>
-      <span>${dc.name}</span>
+      <span>${escHtml(dc.name)}</span>
     </label>`;
   });
   html+=`</div><div style="display:flex;gap:8px;justify-content:flex-end">
@@ -10192,7 +10192,7 @@ async function loadAgentsList(){
         html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border)">
           <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gold);flex-shrink:0">${(a.email||'?').charAt(0).toUpperCase()}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.email||'—'}</div>
+            <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(a.email||'—')}</div>
             <div style="font-size:10px;color:var(--text3)">${roleLabel}</div>
           </div>
           <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid ${statusColor[st]};color:${statusColor[st]}">${statusLabel[st]||st}</span>
@@ -10205,7 +10205,7 @@ async function loadAgentsList(){
         html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border);opacity:.7">
           <div style="width:28px;height:28px;border-radius:50%;background:var(--surface);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);flex-shrink:0">?</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${inv.email||'—'}</div>
+            <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(inv.email||'—')}</div>
             <div style="font-size:10px;color:var(--text3)">Invitation en attente</div>
           </div>
           <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--text3)">En attente</span>
