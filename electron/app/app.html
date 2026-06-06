@@ -4116,7 +4116,7 @@ function showSingleEventSuivi(eventId){
           const c=state.cocktails.find(x=>x.id===cfg.id);if(!c)return;
           (c.ingredients||[]).forEach(ing=>{
             const key=(ing.brand||'')+'||'+ing.productType;
-            if(!ingredients[key])ingredients[key]={label:`${ing.brand?ing.brand+' ':''}${ing.productType}`,unit:ing.unit||'cl'};
+            if(!ingredients[key])ingredients[key]={label:`${ing.brand?escHtml(ing.brand)+' ':''}${escHtml(ing.productType)}`,unit:ing.unit||'cl'};
             ingredients[key].needed=(ingredients[key].needed||0)+ing.qty*(cfg.qty||0);
           });
         });
@@ -4160,7 +4160,7 @@ function showSingleEventSuivi(eventId){
             if(!glassEntries.length)return'';
             return`<div style="padding:6px 0 8px;border-top:1px solid var(--border);margin-top:6px">
               <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:5px">Casse verres</div>
-              <div style="font-size:10px;color:var(--text4);margin-bottom:6px">Tolérance : ${glassEntries.map(([n,{g,qty}])=>`<strong>${Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100)}</strong> ${n}`).join(', ')} — excédent facturé à ${glassEntries.map(([n,{g}])=>`${(g.priceHT||0).toFixed(2)}€/u`).join(', ')}</div>
+              <div style="font-size:10px;color:var(--text4);margin-bottom:6px">Tolérance : ${glassEntries.map(([n,{g,qty}])=>`<strong>${Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100)}</strong> ${escHtml(n)}`).join(', ')} — excédent facturé à ${glassEntries.map(([n,{g}])=>`${(g.priceHT||0).toFixed(2)}€/u`).join(', ')}</div>
               <div style="display:flex;flex-direction:column;gap:5px">
                 ${glassEntries.map(([name,{g,qty}])=>{const tol=Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100);const saved=(ev.breakageActual||{})[name]||'';return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
                   <span style="flex:1;color:var(--text2)">${escHtml(name)}</span>
@@ -9143,37 +9143,37 @@ function buildEventSummaryHTML(ev){
 
   const fmt=(v)=>v%1===0?v:parseFloat(v.toFixed(2));
   const packRow=(label,v)=>{
-    if(!v.packQty) return`<tr><td>${label}</td><td style="text-align:right;font-weight:600">${fmt(v.total)} ${v.unit}</td></tr>`;
+    if(!v.packQty) return`<tr><td>${escHtml(label)}</td><td style="text-align:right;font-weight:600">${fmt(v.total)} ${escHtml(v.unit||'')}</td></tr>`;
     const units=Math.ceil(v.total/v.packQty);
-    return`<tr><td>${label}</td><td style="text-align:right;font-weight:600">${units} unité${units>1?'s':''} <span style="color:#999;font-weight:400;font-size:11px">(${fmt(v.packQty)}${v.packUnit}/u · besoin: ${fmt(v.total)}${v.unit})</span></td></tr>`;
+    return`<tr><td>${escHtml(label)}</td><td style="text-align:right;font-weight:600">${units} unité${units>1?'s':''} <span style="color:#999;font-weight:400;font-size:11px">(${fmt(v.packQty)}${escHtml(v.packUnit||'')}/u · besoin: ${fmt(v.total)}${escHtml(v.unit||'')})</span></td></tr>`;
   };
 
-  const glassRows=Object.entries(glassNeeds).map(([g,n])=>`<tr><td>${g}</td><td style="text-align:right;font-weight:600">${n} verres</td></tr>`).join('');
+  const glassRows=Object.entries(glassNeeds).map(([g,n])=>`<tr><td>${escHtml(g)}</td><td style="text-align:right;font-weight:600">${n} verres</td></tr>`).join('');
   const ingRows=Object.entries(ingNeeds).map(([n,v])=>packRow(n,v)).join('');
   const consRows=Object.entries(consNeeds).map(([n,v])=>packRow(n,v)).join('');
-  const extraRows=(ev.extraProducts||[]).filter(p=>p.name&&p.qty).map(p=>`<tr><td>${p.name}</td><td style="text-align:right;font-weight:600">${p.qty} ${p.unit}</td></tr>`).join('');
+  const extraRows=(ev.extraProducts||[]).filter(p=>p.name&&p.qty).map(p=>`<tr><td>${escHtml(p.name)}</td><td style="text-align:right;font-weight:600">${p.qty} ${escHtml(p.unit||'')}</td></tr>`).join('');
   const iceRows=Object.values(iceNeeds).map(v=>{
     const kg=parseFloat(v.kgTotal.toFixed(2));
     if(v.minOrder){
       const bags=Math.ceil(v.kgTotal/v.minOrder);
-      return`<tr><td>${v.name}</td><td style="text-align:right;font-weight:600">${bags} sac${bags>1?'s':''} <span style="color:#999;font-weight:400;font-size:11px">(${v.minOrder}kg/sac · besoin: ${kg}kg)</span></td></tr>`;
+      return`<tr><td>${escHtml(v.name)}</td><td style="text-align:right;font-weight:600">${bags} sac${bags>1?'s':''} <span style="color:#999;font-weight:400;font-size:11px">(${v.minOrder}kg/sac · besoin: ${kg}kg)</span></td></tr>`;
     }
-    return`<tr><td>${v.name}</td><td style="text-align:right;font-weight:600">${kg} kg</td></tr>`;
+    return`<tr><td>${escHtml(v.name)}</td><td style="text-align:right;font-weight:600">${kg} kg</td></tr>`;
   }).join('');
 
   const techLabel={none:'Direct',stirred:'Mélangé',shaken:'Shaké',blended:'Blendé'};
   const cktDetails=(ev.cocktails||[]).map(cfg=>{
     const c=state.cocktails.find(x=>x.id===cfg.id);
     if(!c)return'';
-    const ings=(c.ingredients||[]).map(i=>`<li style="margin:5px 0">${i.qty||''} ${i.unit||''} ${i.name||''}</li>`).join('');
-    const cons=(c.consumables||[]).map(i=>`<li style="margin:5px 0">${i.qty||''} ${i.unit||''} ${i.name||''}</li>`).join('');
+    const ings=(c.ingredients||[]).map(i=>`<li style="margin:5px 0">${i.qty||''} ${escHtml(i.unit||'')} ${escHtml(i.name||'')}</li>`).join('');
+    const cons=(c.consumables||[]).map(i=>`<li style="margin:5px 0">${i.qty||''} ${escHtml(i.unit||'')} ${escHtml(i.name||'')}</li>`).join('');
     return`<div style="margin-bottom:30px;padding-bottom:25px;border-bottom:1px solid #ddd">
-      <div style="font-weight:700;font-size:15px;color:#000;margin-bottom:12px">${c.name} <span style="color:#999;font-size:12px;font-weight:400">(x${cfg.qty})</span></div>
+      <div style="font-weight:700;font-size:15px;color:#000;margin-bottom:12px">${escHtml(c.name)} <span style="color:#999;font-size:12px;font-weight:400">(x${cfg.qty})</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:12px">
         <div>
-          ${c.glass?`<div style="margin-bottom:8px"><strong>Verre:</strong> ${c.glass}</div>`:''}
-          ${c.technique&&c.technique!=='none'?`<div style="margin-bottom:8px"><strong>Technique:</strong> ${techLabel[c.technique]||c.technique}</div>`:''}
-          ${c.description?`<div style="margin-bottom:8px;color:#555"><strong>Description:</strong><br>${c.description}</div>`:''}
+          ${c.glass?`<div style="margin-bottom:8px"><strong>Verre:</strong> ${escHtml(c.glass)}</div>`:''}
+          ${c.technique&&c.technique!=='none'?`<div style="margin-bottom:8px"><strong>Technique:</strong> ${escHtml(techLabel[c.technique]||c.technique)}</div>`:''}
+          ${c.description?`<div style="margin-bottom:8px;color:#555"><strong>Description:</strong><br>${escHtml(c.description)}</div>`:''}
         </div>
         <div>
           ${ings?`<div><strong>Ingrédients:</strong><ul style="margin:6px 0;padding-left:18px">${ings}</ul></div>`:''}
@@ -9221,15 +9221,15 @@ function buildEventSummaryHTML(ev){
       </div>
       <div class="header-item">
         <div class="header-label">Client</div>
-        <div class="header-value">${cl?cl.name:'—'}</div>
+        <div class="header-value">${cl?escHtml(cl.name):'—'}</div>
       </div>
       <div class="header-item">
         <div class="header-label">Lieu</div>
-        <div class="header-value">${ev.address||'—'}</div>
+        <div class="header-value">${ev.address?escHtml(ev.address):'—'}</div>
       </div>
       <div class="header-item">
         <div class="header-label">Contact</div>
-        <div class="header-value">${ev.contact||ev.contactEmail||ev.contactPhone||'—'}</div>
+        <div class="header-value">${escHtml(ev.contact||ev.contactEmail||ev.contactPhone||'—')}</div>
       </div>
       <div class="header-item">
         <div class="header-label">Pax</div>
@@ -9245,7 +9245,7 @@ function buildEventSummaryHTML(ev){
       </div>
       <div class="header-item">
         <div class="header-label">Email</div>
-        <div class="header-value" style="font-size:12px">${ev.email||'—'}</div>
+        <div class="header-value" style="font-size:12px">${ev.email?escHtml(ev.email):'—'}</div>
       </div>
     </div>
 
@@ -9289,8 +9289,8 @@ function buildEventSummaryHTML(ev){
 
     ${ev.barType?`<h3 style="margin-top:25px">Configuration bar</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:15px;background:#f9f9f9;border-radius:6px;margin-bottom:20px;font-size:12px">
-      <div><strong>Type de bar:</strong> ${ev.barType}</div>
-      <div><strong>Longueur:</strong> ${ev.barLength||'—'}m</div>
+      <div><strong>Type de bar:</strong> ${escHtml(ev.barType)}</div>
+      <div><strong>Longueur:</strong> ${escHtml(String(ev.barLength||'—'))}m</div>
     </div>`:''}
 
     ${(()=>{
@@ -9397,7 +9397,7 @@ function buildEventSummaryHTML(ev){
       </div>`;
     })()}
 
-    ${ev.notes?`<div style="margin-top:15px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${ev.notes}</div>`:''}
+    ${ev.notes?`<div style="margin-top:15px;padding:15px;background:#f9f9f9;border-radius:6px"><strong>Notes:</strong><br>${escHtml(ev.notes).replace(/\n/g,'<br>')}</div>`:''}
   </div>
 </body>
 </html>`;
@@ -10551,7 +10551,7 @@ function renderPlanningEmbed(){
               <div style="font-weight:600;font-size:14px;color:var(--gold);margin-bottom:6px">${day}</div>
               ${event?`
                 <div style="flex:1;background:var(--gold-bg);border-left:2px solid var(--gold);padding:4px 6px;border-radius:2px;cursor:pointer;overflow:hidden" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${event.id}';renderPrestation()},100)">
-                  <div style="font-size:10px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${event.name}</div>
+                  <div style="font-size:10px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(event.name)}</div>
                   <div style="font-size:9px;color:var(--text3)">${event.nGuests||'?'} pers</div>
                 </div>
               `:''}
