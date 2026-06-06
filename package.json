@@ -1,6 +1,6 @@
 {
   "name": "bar-ops",
-  "version": "1.5.151",
+  "version": "1.5.152",
   "description": "Bar Ops — gestion d'événements bar",
   "author": "Jérôme Jarrige <Jarrige.jerome@hotmail.fr>",
   "license": "UNLICENSED",
@@ -88,8 +88,8 @@
     "stripe": "^22.1.0"
   },
   "devDependencies": {
-    "electron": "^35.7.5",
-    "electron-builder": "^25.1.8",
+    "electron": "^39.8.10",
+    "electron-builder": "^26.15.0",
     "puppeteer": "^24.43.1",
     "sharp": "^0.34.5"
   }
