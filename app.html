@@ -2350,7 +2350,35 @@ function updateBadges(){
 // ════════════════════════════════════════════════════════
 // KRAFTER — Recettes & préparations maison
 // ════════════════════════════════════════════════════════
-const PREP_CATEGORIES=['Sirop','Infusion','Teinture','Purée','Shrub','Bitters','Autre'];
+const PREP_CATEGORIES_DEFAULT=['Sirop','Infusion','Teinture','Purée','Shrub','Bitters','Autre'];
+function getPrepCategories(){
+  const custom=Array.isArray(state.prepCategories)?state.prepCategories:[];
+  return [...new Set([...PREP_CATEGORIES_DEFAULT,...custom])];
+}
+function addPrepCategory(){
+  const name=(prompt('Nom de la nouvelle catégorie :','')||'').trim();
+  if(!name) return null;
+  if(!Array.isArray(state.prepCategories)) state.prepCategories=[];
+  if(getPrepCategories().includes(name)){alert('Cette catégorie existe déjà.');return null;}
+  state.prepCategories.push(name);
+  save();
+  return name;
+}
+function onPrepCategoryChange(prepId,sel){
+  if(sel.value==='__add__'){
+    const newCat=addPrepCategory();
+    if(newCat){
+      updPrep(prepId,'category',newCat);
+      renderKrafter();
+    } else {
+      const p=state.preparations.find(x=>x.id===prepId);
+      sel.value=p?.category||PREP_CATEGORIES_DEFAULT[0];
+    }
+    return;
+  }
+  updPrep(prepId,'category',sel.value);
+}
+const PREP_CATEGORIES=PREP_CATEGORIES_DEFAULT;
 const _openPreps=new Set(); // track which prep forms are expanded
 
 function calcPrepCost(prep){
@@ -2444,16 +2472,18 @@ function sendPrepToCatalogue(prepId){
   const costHT=calcPrepPricePerUnit(p);
   const catName=(p.catalogueName||p.name).trim();
   if(!catName){alert('Donnez un nom catalogue avant d\'envoyer.');return;}
+  const prepCat=(p.category||'').trim()||'Préparation maison';
   if(p.catalogueProductId){
     const prod=state.products.find(pr=>pr.id===p.catalogueProductId);
     if(prod){
       prod.costHT=Math.round(costHT*100)/100;
       prod.productType=catName;prod.name=catName;
+      prod.category=prepCat;
       save();renderKrafter();alert('Produit catalogue mis à jour.');return;
     }
   }
   const newId=Date.now();
-  state.products.push({id:newId,productType:catName,name:catName,unit:p.yieldUnit||'L',costHT:Math.round(costHT*100)/100,priceHT:0,qty:parseFloat(p.yieldQty)||1,brand:'Fait Maison',category:'Préparation maison',stock:parseFloat(p.yieldQty)||1,stockAlert:0,orderPending:false});
+  state.products.push({id:newId,productType:catName,name:catName,unit:p.yieldUnit||'L',costHT:Math.round(costHT*100)/100,priceHT:0,qty:parseFloat(p.yieldQty)||1,brand:'Fait Maison',category:prepCat,stock:parseFloat(p.yieldQty)||1,stockAlert:0,orderPending:false});
   p.catalogueProductId=newId;
   save();renderKrafter();
   alert('Recette ajoutée au catalogue !');
@@ -2508,8 +2538,15 @@ function togglePrepForm(id){
 }
 function renderKrafter(){
   const content=document.getElementById('krafter-content');if(!content)return;
+  const catSel=document.getElementById('kr-cat');
+  if(catSel){
+    const currentVal=catSel.value;
+    const usedInPreps=[...new Set((state.preparations||[]).map(p=>p.category).filter(Boolean))];
+    const allCats=[...new Set([...getPrepCategories(),...usedInPreps])];
+    catSel.innerHTML='<option value="">Toutes catégories</option>'+allCats.map(c=>`<option${c===currentVal?' selected':''}>${escHtml(c)}</option>`).join('');
+  }
   const search=(document.getElementById('kr-search')?.value||'').toLowerCase().trim();
-  const catF=document.getElementById('kr-cat')?.value||'';
+  const catF=catSel?.value||'';
   const sort=document.getElementById('kr-sort')?.value||'name-asc';
 
   let preps=(state.preparations||[]).filter(p=>{
@@ -2555,14 +2592,16 @@ function renderKrafter(){
         <button class="btn btn-sm btn-danger" onclick="delPrep(${p.id})" style="flex-shrink:0">×</button>
       </div>
 
-      <!-- ── LIGNE 2 : catégorie + coûts ── -->
-      <div style="display:flex;align-items:center;gap:10px;padding:0 12px 8px">
-        <select onchange="updPrep(${p.id},'category',this.value)"
-          style="font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text2);padding:2px 6px;height:24px;cursor:pointer;flex-shrink:0">
-          ${PREP_CATEGORIES.map(c=>`<option${c===p.category?' selected':''}>${c}</option>`).join('')}
+      <!-- ── LIGNE 2 : catégorie + coûts (responsive wrap) ── -->
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:0 12px 8px">
+        <select onchange="onPrepCategoryChange(${p.id},this)"
+          style="font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text2);padding:2px 6px;height:24px;cursor:pointer;flex-shrink:0;max-width:160px">
+          ${getPrepCategories().map(c=>`<option${c===p.category?' selected':''}>${escHtml(c)}</option>`).join('')}
+          ${p.category&&!getPrepCategories().includes(p.category)?`<option selected>${escHtml(p.category)}</option>`:''}
+          <option value="__add__" style="color:var(--gold);font-style:italic">+ Nouvelle catégorie…</option>
         </select>
-        ${synced?`<span style="font-size:9px;background:#1a3a1a;color:#6fcf6f;border:1px solid #2d6a2d;padding:2px 7px;border-radius:10px;white-space:nowrap">✓ Catalogue</span>`:''}
-        <div style="flex:1"></div>
+        ${synced?`<span style="font-size:9px;background:#1a3a1a;color:#6fcf6f;border:1px solid #2d6a2d;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0">✓ Catalogue</span>`:''}
+        <div style="flex:1;min-width:8px"></div>
         <span style="font-size:11px;color:var(--text3);white-space:nowrap">Coût total : <strong id="prep-cost-total-${p.id}" style="color:var(--gold)">${fmt(total)}</strong></span>
         <span style="font-size:11px;color:var(--text3);white-space:nowrap">soit <strong id="prep-cost-ppu-${p.id}" style="color:var(--text2)">${fmt(ppu)}</strong> / ${escHtml(p.yieldUnit||'unité')}</span>
       </div>
