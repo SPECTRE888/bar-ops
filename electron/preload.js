@@ -26,4 +26,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   openExternal:      (u) => ipcRenderer.invoke('open-external', u),
   restartAuthServer: ()  => ipcRenderer.invoke('restart-auth-server'),
   openOAuthWindow:   (u) => ipcRenderer.invoke('open-oauth-window', u),
+  getVersion:        ()  => ipcRenderer.invoke('get-version'),
+  checkForUpdates:   ()  => ipcRenderer.invoke('check-for-updates'),
+  onUpdateStatus:    (cb) => ipcRenderer.on('update-status', (_e, payload) => cb(payload)),
 });

@@ -286,12 +286,12 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .ss-opt.new-opt{color:var(--gold);border-top:1px solid var(--border);font-style:italic}
 
 /* ── BUTTONS ── */
-.btn{padding:8px 16px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font-body);font-weight:500;letter-spacing:.09em;text-transform:uppercase;transition:.2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;line-height:1}
+.btn{padding:8px 16px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font-body);font-weight:500;letter-spacing:.09em;text-transform:uppercase;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;line-height:1}
 .btn:hover{border-color:var(--text3);color:var(--text);background:var(--surface2)}
-.btn-gold{background:var(--gold);color:#080808;border:1px solid var(--gold);font-weight:600;letter-spacing:.09em;padding:8px 18px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;display:inline-flex;align-items:center;gap:6px;text-transform:uppercase;cursor:pointer;font-family:var(--font-body);line-height:1}
+.btn-gold{background:var(--gold);color:#080808;border:1px solid var(--gold);font-weight:600;letter-spacing:.09em;padding:8px 18px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-transform:uppercase;cursor:pointer;font-family:var(--font-body);line-height:1}
 .btn-gold:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(196,164,107,.2)}
 .btn-gold:active{transform:scale(.98)}
-.btn-ghost{border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;letter-spacing:.09em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;background:transparent;cursor:pointer;font-family:var(--font-body);line-height:1}
+.btn-ghost{border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;letter-spacing:.09em;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;cursor:pointer;font-family:var(--font-body);line-height:1}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.07)}
 .btn-edit{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.08em;transition:.2s;line-height:1;font-family:var(--font-body);text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn-edit:hover{border-color:var(--gold-border);color:var(--gold)}
@@ -375,6 +375,40 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @media print{.sidebar,.topbar,.no-print{display:none!important}.main{overflow:visible}body{background:#fff;color:#111}}
+
+/* ── MISE À JOUR (auto-updater Electron) ──
+   Bannière ancrée en bas de .sidebar (entre .nav et le bloc thème/langue, .sidebar étant déjà
+   flex-column) — reflète l'état envoyé par le process principal (update-status IPC). Totalement
+   absente tant qu'il n'y a rien à signaler (pas de dot permanent, pas de version affichée ici —
+   la version se consulte dans Profil) : n'apparaît (.show) que pendant un événement réel
+   (available/downloading/installing/ready), en évidence pour ne pas la manquer — important tant
+   que l'app est en dev et met à jour souvent. */
+.nav-update{display:none;align-items:center;gap:8px;padding:10px 12px;margin:0 4px 10px;border-radius:8px;border:1px solid var(--gold-border);background:var(--gold-bg);font-size:10.5px;color:var(--gold);font-weight:500}
+.nav-update.show{display:flex}
+.nav-update.ready{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+@keyframes nav-update-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.nav-update{animation:nav-update-in .25s ease-out}
+.nav-update-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:nav-update-pulse 1.2s ease-in-out infinite}
+.nav-update.ready .nav-update-dot{background:var(--green);animation:none}
+@keyframes nav-update-pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(217,166,55,.45)}50%{opacity:.55;box-shadow:0 0 0 4px rgba(217,166,55,0)}}
+.nav-update-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Popup central — non fermable (le process principal pilote toute la séquence jusqu'au
+   redémarrage automatique de l'app). */
+.upd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:none;align-items:center;justify-content:center}
+.upd-overlay.show{display:flex}
+.upd-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:34px 30px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.upd-ring{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;border:3px solid var(--gold-border);border-top-color:var(--gold);animation:upd-spin .9s linear infinite}
+.upd-ring.done{animation:none;border-color:var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--green)}
+@keyframes upd-spin{to{transform:rotate(360deg)}}
+.upd-title{font-family:var(--font-display);font-size:19px;color:var(--gold);letter-spacing:.03em;margin-bottom:4px}
+.upd-version{font-size:10.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
+.upd-bar{height:6px;border-radius:4px;background:var(--surface3);overflow:hidden;margin-bottom:8px}
+.upd-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold2));width:0%;transition:width .3s ease;border-radius:4px}
+.upd-state{font-size:11.5px;color:var(--text2)}
+/* Popup "nouveautés" — affiché une fois au redémarrage suivant une mise à jour de version
+   mineure (le X de 1.X.YYY) — comparaison faite côté client via localStorage._lastSeenVersion. */
+.wn-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold);border-radius:20px;padding:4px 14px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px}
+.wn-text{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:20px}
 </style>
 </head>
 <body>
@@ -454,6 +488,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
   </nav>
   <span id="save-dot" style="display:none"></span>
   <span id="save-text" style="display:none"></span>
+
+  <div class="nav-update" id="navUpdate">
+    <span class="nav-update-dot"></span>
+    <span class="nav-update-text" id="navUpdateText"></span>
+  </div>
 
   <!-- SIDEBAR BOTTOM -->
   <div style="margin-top:auto;border-top:1px solid var(--border);padding:14px 18px;display:flex;flex-direction:column;gap:10px">
@@ -751,6 +790,26 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
   <div id="save-pill" style="background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:5px 14px 5px 10px;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 10px rgba(0,0,0,.18)">
     <span id="save-icon" style="font-size:11px;line-height:1;color:var(--gold)">✓</span>
     <span id="save-time" style="font-size:9px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;white-space:nowrap">Sauvegardé</span>
+  </div>
+</div>
+
+<!-- MISE À JOUR — popup central (voir handleUpdateStatus) -->
+<div class="upd-overlay" id="updateModal">
+  <div class="upd-box">
+    <div class="upd-ring" id="updRing"></div>
+    <div class="upd-title" id="updTitle">Mise à jour disponible</div>
+    <div class="upd-version" id="updVersion"></div>
+    <div class="upd-bar"><div class="upd-bar-fill" id="updBarFill"></div></div>
+    <div class="upd-state" id="updState"></div>
+  </div>
+</div>
+<!-- "NOUVEAUTÉS" — popup au redémarrage suivant une mise à jour mineure -->
+<div class="upd-overlay" id="whatsNewModal" onclick="if(event.target===this) closeWhatsNewModal()">
+  <div class="upd-box">
+    <div class="wn-badge" id="wnBadge"></div>
+    <div class="upd-title" id="wnTitle">Nouveautés installées</div>
+    <div class="wn-text" id="wnText">Bar Ops vient d'être mis à jour avec des améliorations et des correctifs importants.</div>
+    <button class="btn btn-gold" style="width:100%" onclick="closeWhatsNewModal()" id="wnBtn">Parfait, on y va</button>
   </div>
 </div>
 
@@ -1489,32 +1548,6 @@ let state = {};
 let now = 0;
 let editCId=null, editEvId=null, irc=0, _evActiveDateIdx=0;
 
-// ════════════════════════════════════════════════════════
-// VERSIONING & CHANGELOG
-// ════════════════════════════════════════════════════════
-const APP_CHANGELOG=[
-  {version:'1.4.0',date:'2025-05-09',changes:[
-    '✓ Workflow commande amélioré : envoi instant + confirmation',
-    '✓ Affichage correct des unités (cl → btl)',
-    '✓ Mise à jour temps réel du badge fournisseur',
-    '✓ 5 secondes pour confirmer que le mail est envoyé'
-  ]},
-  {version:'1.3.0',date:'2025-05-09',changes:[
-    '✓ Historique de commande : retrouvez vos commandes passées',
-    '✓ Commandes en attente de réception : suivez vos livraisons',
-    '✓ Confirmation avant envoi : pas d\'erreur de commande',
-    '✓ Mise à jour automatique du stock à la réception',
-    '✓ Évite les doublons de commande'
-  ]},
-  {version:'1.2.0',date:'2025-05-09',changes:[
-    '✓ Système de suivi des commandes fournisseurs',
-    '✓ Commander depuis le stock faible',
-    '✓ Suivi des réceptions par produit',
-    '✓ Historique des commandes'
-  ]}
-];
-const CURRENT_VERSION=APP_CHANGELOG[0].version;
-
 function freshState(){
   return {products:[], glasses:[], iceTypes:[], barItems:[], staffItems:[], cocktails:[], preparations:[], events:[], contacts:[], dressCodes:[], clients:[], suppliers:[], customCategories:[], staffCustomRoles:[], orders:{}, submittedOrders:{}, profile:{}, _v:3};
 }
@@ -1597,33 +1630,6 @@ function migrateEvRevHT(){
     if(computed>0&&Math.abs((ev.totalRevHT||0)-computed)>0.5){ev.totalRevHT=computed;changed=true;}
   });
   if(changed)localStorage.setItem(SK,JSON.stringify(state));
-}
-
-function showChangelogIfNew(){
-  const lastSeenVersion=localStorage.getItem('_lastSeenVersion');
-  if(lastSeenVersion===CURRENT_VERSION) return;
-
-  const changelog=APP_CHANGELOG[0];
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px';
-  modal.innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);padding:32px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:20px;max-height:80vh;overflow-y:auto">
-    <div style="text-align:center">
-      <div style="font-size:24px;font-weight:600;margin-bottom:4px">Nouvelle mise à jour 🎉</div>
-      <div style="font-size:13px;color:var(--text3);letter-spacing:.05em">v${changelog.version}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      ${changelog.changes.map(c=>`<div style="display:flex;align-items:flex-start;gap:8px;font-size:13px">
-        <span style="color:var(--green);flex-shrink:0">${c.split(' ')[0]}</span>
-        <span style="color:var(--text2)">${c.substring(2)}</span>
-      </div>`).join('')}
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-ghost" style="flex:1" onclick="this.closest('[style*=fixed]').remove()">Fermer</button>
-      <button class="btn btn-gold" style="flex:1" onclick="localStorage.setItem('_lastSeenVersion','${CURRENT_VERSION}');this.closest('[style*=fixed]').remove()">Super !</button>
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
-  localStorage.setItem('_lastSeenVersion',CURRENT_VERSION);
 }
 
 // ════════════════════════════════════════════════════════
@@ -8882,7 +8888,7 @@ function showLegal(){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;max-width:560px;width:92%;max-height:85vh;overflow-y:auto">
     <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold);margin-bottom:4px">BAR OPS</div>
-    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:20px">Mentions légales · v${CURRENT_VERSION||'—'}</div>
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:20px">Mentions légales${appVersion?' · v'+appVersion:''}</div>
 
     <div style="font-size:11px;color:var(--text2);line-height:1.8">
       <p style="margin-bottom:6px"><strong style="color:var(--text)">© ${new Date().getFullYear()} Jérôme Jarrige. Tous droits réservés.</strong></p>
@@ -9918,6 +9924,13 @@ function renderProfile(){
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Appareils connectés</div>
             <div id="sessions-list" style="font-size:11px;color:var(--text2)">Chargement...</div>
           </div>
+          ${window.electronBridge?.getVersion?`
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('lbl_version_app')}</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${appVersion?'v'+appVersion:'—'}</div>
+            <button class="btn btn-ghost btn-sm" id="checkUpdatesBtn" onclick="manualCheckForUpdates()" style="width:100%">${t('btn_check_updates')}</button>
+          </div>
+          `:''}
         `:`
           <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Compte connecte au cloud</div>
@@ -11461,6 +11474,14 @@ const I18N={
     loading:'Chargement...',
     confirm_delete:'Supprimer',no_phone:'Pas de numéro',
     at:'à',from:'de',to:'à',and:'et',
+    // Mise à jour
+    nav_update_available:'Mise à jour disponible',nav_update_downloading:'Téléchargement…',
+    nav_update_installing:'Installation…',nav_update_ready:'Redémarrage…',nav_update_checking:'Vérification…',
+    upd_state_available:'Préparation du téléchargement…',upd_state_downloading:'Téléchargement…',
+    upd_state_installing:'Installation en cours…',upd_state_ready:'Prêt — redémarrage dans',
+    wn_title:'Nouveautés installées',wn_text:"Bar Ops vient d'être mis à jour avec des améliorations et des correctifs importants.",
+    wn_btn:'Parfait, on y va',wn_badge_version:'Version',
+    lbl_version_app:'Version',btn_check_updates:'Vérifier les mises à jour',
   },
   en:{
     nav_dashboard:'Dashboard',nav_catalogue:'Catalogue',nav_cocktails:'Cocktails',
@@ -11516,6 +11537,13 @@ const I18N={
     prest_select:'— Select an event —',prest_empty:'Select an event to generate the brief.',
     yes:'Yes',no:'No',unknown:'Unknown',guests:'guests',
     confirm_delete:'Delete',no_phone:'No number',at:'at',from:'from',to:'to',and:'and',
+    nav_update_available:'Update available',nav_update_downloading:'Downloading…',
+    nav_update_installing:'Installing…',nav_update_ready:'Restarting…',nav_update_checking:'Checking…',
+    upd_state_available:'Preparing download…',upd_state_downloading:'Downloading…',
+    upd_state_installing:'Installing…',upd_state_ready:'Ready — restarting in',
+    wn_title:'Update installed',wn_text:'Bar Ops was just updated with important improvements and fixes.',
+    wn_btn:"Great, let's go",wn_badge_version:'Version',
+    lbl_version_app:'Version',btn_check_updates:'Check for updates',
   },
   es:{
     nav_dashboard:'Dashboard',nav_catalogue:'Catálogo',nav_cocktails:'Cócteles',
@@ -11571,10 +11599,105 @@ const I18N={
     prest_select:'— Seleccionar evento —',prest_empty:'Selecciona un evento.',
     yes:'Sí',no:'No',unknown:'Desconocido',guests:'invitados',
     confirm_delete:'Eliminar',no_phone:'Sin número',at:'a las',from:'de',to:'a',and:'y',
+    nav_update_available:'Actualización disponible',nav_update_downloading:'Descargando…',
+    nav_update_installing:'Instalando…',nav_update_ready:'Reiniciando…',nav_update_checking:'Comprobando…',
+    upd_state_available:'Preparando la descarga…',upd_state_downloading:'Descargando…',
+    upd_state_installing:'Instalando…',upd_state_ready:'Listo — reinicio en',
+    wn_title:'Actualización instalada',wn_text:'Bar Ops se acaba de actualizar con mejoras y correcciones importantes.',
+    wn_btn:'Perfecto, vamos',wn_badge_version:'Versión',
+    lbl_version_app:'Versión',btn_check_updates:'Buscar actualizaciones',
   }
 };
 
 function t(key){return(I18N[lang]||I18N.fr)[key]||I18N.fr[key]||key;}
+
+// ════════════════════════════════════════════════════════
+// MISE À JOUR (auto-updater Electron) — bannière sidebar + popup central + "nouveautés"
+// ════════════════════════════════════════════════════════
+let appVersion=null;
+// Bannière visible uniquement pour un événement réel (dispo/téléchargement/installation/prêt) —
+// 'checking' et 'uptodate' ne l'affichent pas (sinon elle flasherait à chaque poll silencieux
+// toutes les 30 min sans rien à annoncer).
+const NAV_UPDATE_VISIBLE_STATES=['available','downloading','installing','ready'];
+function setNavUpdateState(state,text){
+  const el=document.getElementById('navUpdate');
+  if(!el) return;
+  const visible=NAV_UPDATE_VISIBLE_STATES.includes(state);
+  el.className='nav-update'+(visible?' show '+state:'');
+  const txt=document.getElementById('navUpdateText');
+  if(txt) txt.textContent=text;
+}
+function resetCheckUpdatesBtn(){
+  const btn=document.getElementById('checkUpdatesBtn');
+  if(btn){btn.disabled=false;btn.textContent=t('btn_check_updates');}
+}
+function handleUpdateStatus(payload){
+  const {state,version,pct,seconds}=payload||{};
+  const updateModal=document.getElementById('updateModal');
+  if(state==='available'){
+    setNavUpdateState('available',t('nav_update_available'));
+    document.getElementById('updVersion').textContent='v'+version;
+    document.getElementById('updRing').className='upd-ring';
+    document.getElementById('updBarFill').style.width='0%';
+    document.getElementById('updState').textContent=t('upd_state_available');
+    updateModal.classList.add('show');
+  } else if(state==='downloading'){
+    setNavUpdateState('downloading',t('nav_update_downloading')+' '+pct+'%');
+    document.getElementById('updBarFill').style.width=pct+'%';
+    document.getElementById('updState').textContent=t('upd_state_downloading')+' '+pct+'%';
+  } else if(state==='installing'){
+    setNavUpdateState('installing',t('nav_update_installing'));
+    document.getElementById('updBarFill').style.width='100%';
+    document.getElementById('updState').textContent=t('upd_state_installing');
+  } else if(state==='ready'){
+    setNavUpdateState('ready',t('nav_update_ready'));
+    const ring=document.getElementById('updRing');
+    ring.className='upd-ring done';ring.textContent='✓';
+    document.getElementById('updState').textContent=t('upd_state_ready')+' '+seconds+'s…';
+  } else if(state==='uptodate'){
+    updateModal.classList.remove('show');
+    setNavUpdateState('','');
+    resetCheckUpdatesBtn();
+  } else if(state==='error'){
+    updateModal.classList.remove('show');
+    setNavUpdateState('','');
+    resetCheckUpdatesBtn();
+  }
+}
+function manualCheckForUpdates(){
+  if(!window.electronBridge?.checkForUpdates) return;
+  const btn=document.getElementById('checkUpdatesBtn');
+  if(btn){btn.disabled=true;btn.textContent=t('nav_update_checking');}
+  window.electronBridge.checkForUpdates();
+}
+async function initUpdateSystem(){
+  if(!window.electronBridge?.getVersion) return;
+  appVersion=await window.electronBridge.getVersion();
+  setNavUpdateState('','');
+  window.electronBridge.onUpdateStatus?.(handleUpdateStatus);
+  checkWhatsNew(appVersion);
+}
+// "Nouveauté importante" : comparée au X de 1.X.YYY (pas le YYY, trop fréquent pour mériter un
+// popup dédié) vue au précédent démarrage, stockée dans localStorage (survit à la mise à jour du
+// binaire puisque userData n'est pas touché par le script d'install). Remplace l'ancien
+// APP_CHANGELOG/showChangelogIfNew (changelog curé à la main, à l'abandon depuis la v1.4.0).
+function checkWhatsNew(version){
+  const prev=localStorage.getItem('_lastSeenVersion');
+  localStorage.setItem('_lastSeenVersion',version);
+  if(!prev||prev===version) return;
+  const prevMinor=Number(prev.split('.')[1]);
+  const curMinor=Number(version.split('.')[1]);
+  if(!Number.isNaN(prevMinor)&&!Number.isNaN(curMinor)&&curMinor!==prevMinor){
+    document.getElementById('wnBadge').textContent=t('wn_badge_version')+' '+version;
+    document.getElementById('wnTitle').textContent=t('wn_title');
+    document.getElementById('wnText').textContent=t('wn_text');
+    document.getElementById('wnBtn').textContent=t('wn_btn');
+    document.getElementById('whatsNewModal').classList.add('show');
+  }
+}
+function closeWhatsNewModal(){
+  document.getElementById('whatsNewModal').classList.remove('show');
+}
 
 function setTheme(t){
   localStorage.setItem('bcp_theme',t);
@@ -11805,7 +11928,7 @@ updateCloudStatus();
   renderDashboard();
   applyTheme();
   if(typeof BarOpsAuth!=='undefined'){BarOpsAuth.applyToDOM();}
-  setTimeout(()=>showChangelogIfNew(),500);
+  initUpdateSystem();
   window.addEventListener('pageshow',()=>{
     const pending=sessionStorage.getItem('pendingSend');
     if(pending){
