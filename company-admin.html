@@ -10,7 +10,7 @@
 :root{
   --bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:#222;--border2:#2e2e2e;
   --text:#ede8e0;--text2:#a09890;--text3:#6a6460;
-  --gold:#c4a46b;--gold2:#d4b47a;--gold-bg:rgba(196,164,107,.08);--gold-border:rgba(196,164,107,.22);
+  --gold:#d9a637;--gold2:#eabc5c;--gold-bg:rgba(217,166,55,.08);--gold-border:rgba(217,166,55,.22);
   --danger:#c0392b;--danger-bg:rgba(192,57,43,.12);--danger-border:rgba(192,57,43,.3);
   --font-display:'Cormorant Garamond',serif;--font-body:'Jost',sans-serif;
 }
@@ -18,8 +18,8 @@
 [data-theme="light"]{
   --bg:#f5f3ef;--surface:#ffffff;--surface2:#f0ede8;--border:#ddd9d2;--border2:#ccc8c0;
   --text:#1a1814;--text2:#6b6560;--text3:#a09890;
-  --gold:#9a7a3a;--gold2:#b08840;--gold-bg:rgba(154,122,58,.08);--gold-border:rgba(154,122,58,.22);
-  --danger:#b84444;--danger-bg:rgba(184,68,68,.08);--danger-border:rgba(184,68,68,.25);
+  --gold:#a97f2e;--gold2:#c2953a;--gold-bg:rgba(169,127,46,.08);--gold-border:rgba(169,127,46,.22);
+  --danger:#c23a3a;--danger-bg:rgba(194,58,58,.08);--danger-border:rgba(194,58,58,.25);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -63,11 +63,11 @@ h1{font-family:var(--font-display);font-size:28px;font-weight:300;margin-bottom:
 .btn{padding:8px 16px;border-radius:4px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:none;color:var(--text2);transition:all .2s;font-family:var(--font-body);display:inline-flex;align-items:center;gap:6px;line-height:1;white-space:nowrap}
 .btn:hover{border-color:var(--gold);color:var(--gold)}
 .btn-primary{background:var(--gold);color:#080808;border-color:var(--gold);font-weight:600}
-.btn-primary:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(196,164,107,.2)}
+.btn-primary:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(217,166,55,.2)}
 .btn-primary:active{transform:scale(.98)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.07)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(217,166,55,.07)}
 .btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
 .btn-danger:hover{border-color:var(--danger);opacity:.85}
 .btn-sm{padding:5px 11px;font-size:9px}
@@ -391,7 +391,7 @@ function detectPreset(perms) {
 }
 
 const PRESET_COLORS = {
-  commercial: 'background:rgba(196,164,107,.15);color:#c4a46b;border:1px solid #4a3820',
+  commercial: 'background:rgba(217,166,55,.15);color:#d9a637;border:1px solid #4a3820',
   barman:     'background:rgba(100,180,120,.1);color:#7ab88a;border:1px solid #1a3a20',
   custom:     'background:rgba(255,255,255,.05);color:#7a7060;border:1px solid #2a2520',
 };
@@ -435,7 +435,7 @@ function renderInvitations(invitations) {
 
   document.getElementById('invList').innerHTML = invitations.map(inv => `
     <div class="agent-row">
-      <div class="agent-avatar" style="background:#1a1408;color:#c4a46b">@</div>
+      <div class="agent-avatar" style="background:#1a1408;color:#d9a637">@</div>
       <div class="agent-info">
         <div class="agent-email">${inv.email}</div>
         <div class="agent-meta">
