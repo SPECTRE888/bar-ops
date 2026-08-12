@@ -219,7 +219,7 @@ fetch(API_BASE+'/api/config')
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;font-weight:300;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--font-display)}
+h1,h2,h3{font-family:var(--font-body)}
 .shell{display:flex;height:100vh;overflow:hidden}
 
 /* ── SIDEBAR ── */
@@ -243,7 +243,7 @@ h1,h2,h3{font-family:var(--font-display)}
 /* ── MAIN ── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;padding-bottom:40px}
 .topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:0;gap:32px;background:linear-gradient(to bottom,var(--bg),var(--surface))}
-.topbar h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:.08em;color:var(--gold);margin:0;white-space:nowrap;text-transform:capitalize}
+.topbar h2{font-family:var(--font-body);font-size:28px;font-weight:300;letter-spacing:.08em;color:var(--gold);margin:0;white-space:nowrap;text-transform:capitalize}
 .topbar-rule{width:1px;height:16px;background:var(--border2);margin:0 4px}
 .topbar-actions{display:flex;gap:10px;align-items:center;overflow:visible;position:relative;z-index:20}
 .content{padding:24px 28px;flex:1}
@@ -332,7 +332,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 /* ── METRICS ── */
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .metric{background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--border)}
-.metric .val{font-size:20px;font-family:var(--font-display);margin-bottom:2px;font-weight:300}
+.metric .val{font-size:20px;font-family:var(--font-body);margin-bottom:2px;font-weight:300}
 .metric .lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.14em;font-weight:400}
 .ev-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .bar-wrap{height:1px;background:var(--surface3);border-radius:1px;overflow:hidden;margin-top:10px}
@@ -397,7 +397,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .upd-ring{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;border:3px solid var(--gold-border);border-top-color:var(--gold);animation:upd-spin .9s linear infinite}
 .upd-ring.done{animation:none;border-color:var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--green)}
 @keyframes upd-spin{to{transform:rotate(360deg)}}
-.upd-title{font-family:var(--font-display);font-size:19px;color:var(--gold);letter-spacing:.03em;margin-bottom:4px}
+.upd-title{font-family:var(--font-body);font-size:19px;color:var(--gold);letter-spacing:.03em;margin-bottom:4px}
 .upd-version{font-size:10.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
 .upd-bar{height:6px;border-radius:4px;background:var(--surface3);overflow:hidden;margin-bottom:8px}
 .upd-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold2));width:0%;transition:width .3s ease;border-radius:4px}
@@ -1410,7 +1410,7 @@ function showCloudModal(){
   modal.id='cloud-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:380px;width:92%">
-    <div style="font-size:20px;font-family:var(--font-display);margin-bottom:4px;color:var(--text)">BAR OPS</div>
+    <div style="font-size:20px;font-family:var(--font-body);margin-bottom:4px;color:var(--text)">BAR OPS</div>
     <div class="txs tm" style="margin-bottom:20px">Accède à tes données depuis n'importe quel appareil</div>
 
     ${cloudUser?`
@@ -4424,7 +4424,7 @@ function renderDashboard(){
     el.innerHTML=`
       <div style="max-width:580px;margin:0 auto;padding:20px 0">
         <div style="text-align:center;margin-bottom:32px">
-          <div style="font-size:32px;font-family:var(--font-display);color:var(--gold);margin-bottom:8px">Excellence événementielle avec BAR OPS</div>
+          <div style="font-size:32px;font-family:var(--font-body);color:var(--gold);margin-bottom:8px">Excellence événementielle avec BAR OPS</div>
           <div style="color:var(--text2);font-size:13px">Suis ces 3 étapes pour démarrer en moins de 5 minutes</div>
         </div>
 
@@ -4547,7 +4547,7 @@ function renderDashboard(){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA <span style="font-size:9px;color:var(--text3)">(HT)</span></div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${_canRevDB?fmt(caPayees)+'€':'—'}</div>
+      <div style="font-size:56px;font-family:var(--font-body);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${_canRevDB?fmt(caPayees)+'€':'—'}</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       ${_canRevDB?`<div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
         <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
@@ -4557,7 +4557,7 @@ function renderDashboard(){
     </div>
     <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
+      <div style="font-size:56px;font-family:var(--font-body);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:20px">
         <div>OK | ALERTE</div>
@@ -5291,13 +5291,13 @@ function showEvForm(ev){
       <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:6px">
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_cost')}</div>
-          <div style="font-size:32px;font-family:var(--font-display);color:var(--red);font-weight:600" id="es-total">—</div>
+          <div style="font-size:32px;font-family:var(--font-body);color:var(--red);font-weight:600" id="es-total">—</div>
           <div style="font-size:10px;color:var(--text3);margin-top:6px"><span id="es-ing">—</span> cocktails · <span id="es-staff">—</span> staff</div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_revenue')}</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:8px">
-            <div style="font-size:32px;font-family:var(--font-display);color:var(--green);font-weight:600" id="es-rev">—</div>
+            <div style="font-size:32px;font-family:var(--font-body);color:var(--green);font-weight:600" id="es-rev">—</div>
             <button style="background:none;border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-size:11px;cursor:pointer;color:var(--text2)" onclick="toggleRevEdit()" title="Modifer si formule/devis convenu">✎</button>
           </div>
           <input type="number" id="ef-rev-custom" style="display:none;width:120px;padding:8px;font-size:14px;margin-top:8px" placeholder="Montant facturé" oninput="updEvCalc()"/>
@@ -5305,7 +5305,7 @@ function showEvForm(ev){
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--gold-border)">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_margin')}</div>
-          <div style="font-size:32px;font-family:var(--font-display);font-weight:600" id="es-mg">—</div>
+          <div style="font-size:32px;font-family:var(--font-body);font-weight:600" id="es-mg">—</div>
           <div style="font-size:12px;color:var(--text2);margin-top:6px" id="es-mgp">—</div>
         </div>
       </div>
@@ -9755,7 +9755,7 @@ function mkImportModal(title, subtitle){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column">
     <div style="padding:20px 24px 0">
-      <div style="font-size:17px;font-family:var(--font-display);color:var(--text)">${title}</div>
+      <div style="font-size:17px;font-family:var(--font-body);color:var(--text)">${title}</div>
       <div id="import-subtitle" class="txs tm" style="margin-top:3px">${subtitle}</div>
     </div>
     <div id="import-body" style="padding:10px 24px;overflow-y:auto;flex:1"></div>
@@ -12544,7 +12544,7 @@ window.addSupplierFromOnboarding = function(supplier) {
   to   { transform: scale(1);   opacity:1 }
 }
 .ob-title {
-  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-family: var(--font-body, 'Jost', sans-serif);
   font-size: 26px;
   font-weight: 300;
   color: var(--text, #ede8e0);
