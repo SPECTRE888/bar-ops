@@ -222,7 +222,7 @@ const API_BASE='https://bar-ops-v2.vercel.app';
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;font-weight:300;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--font-display)}
+h1,h2,h3{font-family:var(--font-body)}
 .shell{display:flex;height:100vh;overflow:hidden}
 
 /* ── SIDEBAR ── */
@@ -246,7 +246,7 @@ h1,h2,h3{font-family:var(--font-display)}
 /* ── MAIN ── */
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;padding-bottom:40px}
 .topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--bg);margin-top:0;gap:32px;background:linear-gradient(to bottom,var(--bg),var(--surface))}
-.topbar h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:.08em;color:var(--gold);margin:0;white-space:nowrap;text-transform:capitalize}
+.topbar h2{font-family:var(--font-body);font-size:28px;font-weight:300;letter-spacing:.08em;color:var(--gold);margin:0;white-space:nowrap;text-transform:capitalize}
 .topbar-rule{width:1px;height:16px;background:var(--border2);margin:0 4px}
 .topbar-actions{display:flex;gap:10px;align-items:center;overflow:visible;position:relative;z-index:20}
 .content{padding:24px 28px;flex:1}
@@ -335,7 +335,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 /* ── METRICS ── */
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .metric{background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--border)}
-.metric .val{font-size:20px;font-family:var(--font-display);margin-bottom:2px;font-weight:300}
+.metric .val{font-size:20px;font-family:var(--font-body);margin-bottom:2px;font-weight:300}
 .metric .lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.14em;font-weight:400}
 .ev-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .bar-wrap{height:1px;background:var(--surface3);border-radius:1px;overflow:hidden;margin-top:10px}
@@ -400,7 +400,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .upd-ring{width:56px;height:56px;margin:0 auto 18px;border-radius:50%;border:3px solid var(--gold-border);border-top-color:var(--gold);animation:upd-spin .9s linear infinite}
 .upd-ring.done{animation:none;border-color:var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--green)}
 @keyframes upd-spin{to{transform:rotate(360deg)}}
-.upd-title{font-family:var(--font-display);font-size:19px;color:var(--gold);letter-spacing:.03em;margin-bottom:4px}
+.upd-title{font-family:var(--font-body);font-size:19px;color:var(--gold);letter-spacing:.03em;margin-bottom:4px}
 .upd-version{font-size:10.5px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
 .upd-bar{height:6px;border-radius:4px;background:var(--surface3);overflow:hidden;margin-bottom:8px}
 .upd-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold2));width:0%;transition:width .3s ease;border-radius:4px}
@@ -1088,6 +1088,28 @@ function alertModal(message){
     modal.onclick=(e)=>{if(e.target===modal){cleanup();resolve(true);}};
   });
 }
+// Popup "Info" en lecture seule (Fermer + Modifier), même système que Clients côté HelmOps :
+// une ligne compacte par entité (Clients/Fournisseurs/Équipe), le détail complet et l'édition
+// passent par ce popup plutôt que d'être affichés en permanence sur chaque ligne.
+function showInfoModal(title, rows, onEdit){
+  const modal=document.createElement('div');
+  modal.id='br-info-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+  const rowsHtml=rows.filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px"><span style="color:var(--text3)">${k}</span><span style="color:var(--text);text-align:right">${v}</span></div>`).join('');
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="font-size:15px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">${escHtml(title)}</div>
+    <div>${rowsHtml||'<div style="font-size:12px;color:var(--text3)">Aucune information.</div>'}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" id="br-info-close-btn">Fermer</button>
+      <button class="btn btn-gold" id="br-info-edit-btn">Modifier</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const cleanup=()=>modal.remove();
+  modal.querySelector('#br-info-close-btn').onclick=cleanup;
+  modal.querySelector('#br-info-edit-btn').onclick=()=>{cleanup();onEdit();};
+  modal.onclick=(e)=>{if(e.target===modal)cleanup();};
+}
 
 function deleteAccountModal(){
   showConfirmModal(
@@ -1390,7 +1412,7 @@ function showCloudModal(){
   modal.id='cloud-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:380px;width:92%">
-    <div style="font-size:20px;font-family:var(--font-display);margin-bottom:4px;color:var(--text)">BAR OPS</div>
+    <div style="font-size:20px;font-family:var(--font-body);margin-bottom:4px;color:var(--text)">BAR OPS</div>
     <div class="txs tm" style="margin-bottom:20px">Accède à tes données depuis n'importe quel appareil</div>
 
     ${cloudUser?`
@@ -3088,6 +3110,29 @@ function toggleStaff(id){
   s._open=!s._open;
   renderStaff();
 }
+function showStaffInfo(id){
+  const s=state.staffItems.find(x=>x.id===id);if(!s)return;
+  showInfoModal(s.name||'Sans nom', [
+    ['Rôle', s.type?escHtml(s.type):''],
+    ['Âge', s.age?escHtml(s.age)+' ans':''],
+    ['Téléphone', s.phone?escHtml(s.phone):''],
+    ['Email', s.email?escHtml(s.email):''],
+    ['Adresse', s.address?escHtml(s.address):''],
+    ['Zone géographique', s.zone?escHtml(s.zone):''],
+    ['Taille', s.tailleCm?escHtml(s.tailleCm)+' cm':''],
+    ['Haut', s.tailleHaut?escHtml(s.tailleHaut):''],
+    ['Pantalon', s.taillePantalon?escHtml(s.taillePantalon):''],
+    ['Pointure', s.pointure?escHtml(s.pointure):''],
+    ['Physique', s.physique?escHtml(s.physique):''],
+    ['Cheveux', s.couleurCheveux?escHtml(s.couleurCheveux):''],
+    ['Langues', s.langues?escHtml(s.langues):''],
+    ['Infos supp.', (s.infosSupp||s.notes)?escHtml(s.infosSupp||s.notes):''],
+  ], ()=>{
+    s._open=true;
+    renderStaff();
+    document.getElementById('staff-row-'+id)?.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+}
 
 function renderStaff(){
   const el=document.getElementById('staff-content'),em=document.getElementById('staff-empty');
@@ -3098,7 +3143,6 @@ function renderStaff(){
   const ROLE_COLOR={'Bartender':'var(--gold)','Serveur':'var(--blue,#7eaadc)','Bar Manager':'var(--green)','Manutentionnaire':'var(--text3)'};
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.staffItems.map(s=>{
     const isOpen=s._open===true;
-    const initials=(s.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
     const roleColor=ROLE_COLOR[s.type]||'var(--text3)';
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
@@ -3116,19 +3160,18 @@ function renderStaff(){
     if(s.langues)        phys.push(chip('lang.',s.langues));
     if(s.couleurCheveux) phys.push(chip('chx',s.couleurCheveux));
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
-    return`<div class="card staff-card" style="padding:0;overflow:hidden;border-radius:var(--radius)" data-search="${escHtml(searchData)}">
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px;cursor:pointer" onclick="toggleStaff(${s.id})">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(196,164,107,.15),rgba(196,164,107,.05));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0">${initials}</div>
+    return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
         <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;overflow:hidden">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
-            <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</div>
+            <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</span>
             <span style="font-size:10px;font-weight:600;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border:1px solid ${roleColor};border-radius:20px;opacity:.8;flex-shrink:0">${escHtml(s.type||'')}</span>
             ${infos.length?`${sep}${infos.join(sep)}`:''}
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-          <button class="btn-edit" onclick="toggleStaff(${s.id})">${isOpen?'Fermer':'Modifier'}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button class="btn-edit" onclick="${isOpen?`toggleStaff(${s.id})`:`showStaffInfo(${s.id})`}">${isOpen?'Fermer':'Info'}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -4300,7 +4343,7 @@ function renderDashboard(){
     el.innerHTML=`
       <div style="max-width:580px;margin:0 auto;padding:20px 0">
         <div style="text-align:center;margin-bottom:32px">
-          <div style="font-size:32px;font-family:var(--font-display);color:var(--gold);margin-bottom:8px">Excellence événementielle avec BAR OPS</div>
+          <div style="font-size:32px;font-family:var(--font-body);color:var(--gold);margin-bottom:8px">Excellence événementielle avec BAR OPS</div>
           <div style="color:var(--text2);font-size:13px">Suis ces 3 étapes pour démarrer en moins de 5 minutes</div>
         </div>
 
@@ -4423,7 +4466,7 @@ function renderDashboard(){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA <span style="font-size:9px;color:var(--text3)">(HT)</span></div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${_canRevDB?fmt(caPayees)+'€':'—'}</div>
+      <div style="font-size:56px;font-family:var(--font-body);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${_canRevDB?fmt(caPayees)+'€':'—'}</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       ${_canRevDB?`<div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
         <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
@@ -4433,7 +4476,7 @@ function renderDashboard(){
     </div>
     <div class="card" style="padding:16px;text-align:center">
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
-      <div style="font-size:56px;font-family:var(--font-display);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
+      <div style="font-size:56px;font-family:var(--font-body);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:20px">
         <div>OK | ALERTE</div>
@@ -5270,13 +5313,13 @@ function showEvForm(ev){
       <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:6px">
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_cost')}</div>
-          <div style="font-size:32px;font-family:var(--font-display);color:var(--red);font-weight:600" id="es-total">—</div>
+          <div style="font-size:32px;font-family:var(--font-body);color:var(--red);font-weight:600" id="es-total">—</div>
           <div style="font-size:10px;color:var(--text3);margin-top:6px"><span id="es-ing">—</span> cocktails · <span id="es-staff">—</span> staff</div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_revenue')}</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:8px">
-            <div style="font-size:32px;font-family:var(--font-display);color:var(--green);font-weight:600" id="es-rev">—</div>
+            <div style="font-size:32px;font-family:var(--font-body);color:var(--green);font-weight:600" id="es-rev">—</div>
             <button style="background:none;border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-size:11px;cursor:pointer;color:var(--text2)" onclick="toggleRevEdit()" title="Modifer si formule/devis convenu">✎</button>
           </div>
           <input type="number" id="ef-rev-custom" style="display:none;width:120px;padding:8px;font-size:14px;margin-top:8px" placeholder="Montant facturé" oninput="updEvCalc()"/>
@@ -5284,7 +5327,7 @@ function showEvForm(ev){
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--gold-border)">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_margin')}</div>
-          <div style="font-size:32px;font-family:var(--font-display);font-weight:600" id="es-mg">—</div>
+          <div style="font-size:32px;font-family:var(--font-body);font-weight:600" id="es-mg">—</div>
           <div style="font-size:12px;color:var(--text2);margin-top:6px" id="es-mgp">—</div>
         </div>
       </div>
@@ -8263,30 +8306,24 @@ function renderClients(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun client. Crée un profil réutilisable pour tes clients récurrents.</p></div>`;
     return;
   }
-  const now=new Date();
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.clients.map(c=>{
     const isOpen=c._open===true;
-    const initials=(c.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const pastEvs=state.events.filter(ev=>ev.clientId===c.id&&ev.date&&new Date(ev.date)<now);
-    const totalCA=pastEvs.reduce((s,ev)=>s+(ev.totalRevHT||0),0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     const infos=[];
     if(c.company) infos.push(`<span style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase">${escHtml(c.company)}</span>`);
-    if(c.address) infos.push(`<span style="font-size:11px;color:var(--text3)">📍 ${escHtml(c.address)}</span>`);
-    if(c.email) infos.push(`<a href="mailto:${escHtml(c.email)}" onclick="event.stopPropagation()" title="${escHtml(c.email)}" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">✉ ${escHtml(c.email.length>26?c.email.slice(0,24)+'…':c.email)}</a>`);
-    if(c.phone) infos.push(`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">📞 ${escHtml(c.phone)}</a>`);
+    if(c.address) infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(c.address)}</span>`);
+    if(c.email) infos.push(`<a href="mailto:${escHtml(c.email)}" onclick="event.stopPropagation()" title="${escHtml(c.email)}" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">${escHtml(c.email.length>26?c.email.slice(0,24)+'…':c.email)}</a>`);
+    if(c.phone) infos.push(`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">${escHtml(c.phone)}</a>`);
     if(c.notes) infos.push(`<span style="font-size:10px;color:var(--text3);font-style:italic" title="${escHtml(c.notes)}">— ${escHtml(c.notes.length>30?c.notes.slice(0,28)+'…':c.notes)}</span>`);
     const createdLabel=new Date(c.createdAt||c.id).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-    return`<div class="card client-card" style="padding:0;overflow:hidden;border-radius:var(--radius)">
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold-bg),rgba(196,164,107,0.06));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0;letter-spacing:.04em">${initials}</div>
-        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(c.name||'Sans nom')}</div>
+    return`<div class="card client-card" id="client-row-${c.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(c.name||'Sans nom')}</span>
         ${infos.length?`<div style="display:flex;align-items:center;flex-wrap:nowrap;overflow:hidden;gap:0;flex:1;min-width:0">${sep}${infos.join(sep)}</div>`:'<div style="flex:1"></div>'}
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${createdLabel?`<span style="font-size:10px;color:var(--text3);white-space:nowrap">depuis ${createdLabel}</span>`:''}
-          ${totalCA>0?`<span style="font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;padding:3px 8px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:4px">${fmt(totalCA)} HT</span>`:''}
-          <button class="btn-edit" onclick="event.stopPropagation();toggleClient(${c.id})">${isOpen?'Fermer':'Modifier'}</button>
-          <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})">+ Prestation</button>
+          <button class="btn-edit" onclick="${isOpen?`toggleClient(${c.id})`:`showClientInfo(${c.id})`}">${isOpen?'Fermer':'Info'}</button>
+          <button class="btn btn-sm btn-gold" onclick="newEvForClient(${c.id})">+ Prestation</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -8665,20 +8702,22 @@ function renderSuppliers(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
     return;
   }
-  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 224px';
+  const q=document.getElementById('suppliers-search')?.value?.toLowerCase()||'';
+  const list=q?state.suppliers.filter(s=>[s.name,s.contact,s.email,s.phone,...(s.categories||[])].filter(Boolean).join(' ').toLowerCase().includes(q)):state.suppliers;
+  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 140px';
   const HDR_STYLE=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px`;
-  const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;transition:.15s`;
-  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">
+  const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s`;
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
     <div style="${HDR_STYLE}">
       <div>Fournisseur</div><div>Catégories livrées</div><div>Contact</div><div>Téléphone</div><div>Email</div><div></div>
     </div>
-    ${state.suppliers.map(s=>{
+    ${list.length?list.map(s=>{
       const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
       const tutoieBadge=s.tutoie?` <span style="font-size:9px;color:var(--text3);opacity:.7">(tutoiement)</span>`:'';
       const cats=s.categories?.length?s.categories:s.speciality?[s.speciality]:[];
-      return`<div style="${ROW}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
+      return`<div style="${ROW}" id="supplier-row-${s.id}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border2)'">
         <div style="min-width:0">
-          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}${tutoieBadge}</div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}${tutoieBadge}</div>
         </div>
         <div style="font-size:11px;color:var(--text3);letter-spacing:.03em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cats.length?cats.map(escHtml).join(' · '):'—'}</div>
         <div style="font-size:12px;color:${s.contact?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.contact||'—')}</div>
@@ -8686,12 +8725,24 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.email)}</a>`:'—'}</div>
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
           <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
-          <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
-          <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})">×</button>
+          <button class="btn-edit" onclick="showSupplierInfo(${s.id})">Info</button>
         </div>
       </div>`;
-    }).join('')}
+    }).join('') : `<p style="font-size:12px;color:var(--text3);padding:10px 16px">Aucun fournisseur ne correspond à "${escHtml(q)}".</p>`}
   </div>`;
+}
+function showSupplierInfo(id){
+  const s=state.suppliers.find(x=>x.id===id);if(!s)return;
+  const cats=s.categories?.length?s.categories:s.speciality?[s.speciality]:[];
+  showInfoModal(s.name||'Sans nom', [
+    ['Catégories livrées', cats.length?cats.map(escHtml).join(' · '):''],
+    ['Contact', s.contact?escHtml(s.contact):''],
+    ['Téléphone', s.phone?escHtml(s.phone):''],
+    ['Email', s.email?escHtml(s.email):''],
+    ['Adresse', s.address?escHtml(s.address):''],
+    ['Notes', s.notes?escHtml(s.notes):''],
+    ['Tutoiement', s.tutoie?'Oui':''],
+  ], ()=>editSupplier(id));
 }
 
 async function addSupplier(){
@@ -8762,9 +8813,12 @@ function editSupplier(id){
       </div>
     </div>
     <div class="field"><label>Notes</label><textarea id="sp-notes" rows="2">${s.notes||''}</textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-ghost" onclick="document.getElementById('supplier-modal').remove()">Annuler</button>
-      <button class="btn btn-gold" onclick="saveSupplier(${id})">Enregistrer</button>
+    <div style="display:flex;gap:8px;justify-content:space-between">
+      <button class="btn btn-sm btn-danger" onclick="document.getElementById('supplier-modal').remove();delSupplier(${id})">Supprimer</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="document.getElementById('supplier-modal').remove()">Annuler</button>
+        <button class="btn btn-gold" onclick="saveSupplier(${id})">Enregistrer</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -8801,6 +8855,22 @@ async function delSupplier(id){
 function toggleClient(id){
   const c=state.clients.find(x=>x.id===id);
   if(c){c._open=!c._open;renderClients();}
+}
+function showClientInfo(id){
+  const c=state.clients.find(x=>x.id===id);if(!c)return;
+  const createdLabel=c.createdAt?new Date(c.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
+  showInfoModal(c.name||'Sans nom', [
+    ['Société', c.company?escHtml(c.company):''],
+    ['Email', c.email?escHtml(c.email):''],
+    ['Téléphone', c.phone?escHtml(c.phone):''],
+    ['Adresse', c.address?escHtml(c.address):''],
+    ['Notes', c.notes?escHtml(c.notes):''],
+    ['Client depuis', createdLabel],
+  ], ()=>{
+    c._open=true;
+    renderClients();
+    document.getElementById('client-row-'+id)?.scrollIntoView({behavior:'smooth',block:'center'});
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -9660,7 +9730,7 @@ function mkImportModal(title, subtitle){
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px';
   modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:720px;max-height:90vh;display:flex;flex-direction:column">
     <div style="padding:20px 24px 0">
-      <div style="font-size:17px;font-family:var(--font-display);color:var(--text)">${title}</div>
+      <div style="font-size:17px;font-family:var(--font-body);color:var(--text)">${title}</div>
       <div id="import-subtitle" class="txs tm" style="margin-top:3px">${subtitle}</div>
     </div>
     <div id="import-body" style="padding:10px 24px;overflow-y:auto;flex:1"></div>
@@ -9929,6 +9999,7 @@ function renderProfile(){
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('lbl_version_app')}</div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${appVersion?'v'+appVersion:'—'}</div>
             <button class="btn btn-ghost btn-sm" id="checkUpdatesBtn" onclick="manualCheckForUpdates()" style="width:100%">${t('btn_check_updates')}</button>
+            <div id="updateCheckStatus" style="font-size:11px;margin-top:6px;color:var(--gold)"></div>
           </div>
           `:''}
         `:`
@@ -11477,6 +11548,7 @@ const I18N={
     // Mise à jour
     nav_update_available:'Mise à jour disponible',nav_update_downloading:'Téléchargement…',
     nav_update_installing:'Installation…',nav_update_ready:'Redémarrage…',nav_update_checking:'Vérification…',
+    nav_update_uptodate:'Bar Ops est à jour · v',
     upd_state_available:'Préparation du téléchargement…',upd_state_downloading:'Téléchargement…',
     upd_state_installing:'Installation en cours…',upd_state_ready:'Prêt — redémarrage dans',
     wn_title:'Nouveautés installées',wn_text:"Bar Ops vient d'être mis à jour avec des améliorations et des correctifs importants.",
@@ -11539,6 +11611,7 @@ const I18N={
     confirm_delete:'Delete',no_phone:'No number',at:'at',from:'from',to:'to',and:'and',
     nav_update_available:'Update available',nav_update_downloading:'Downloading…',
     nav_update_installing:'Installing…',nav_update_ready:'Restarting…',nav_update_checking:'Checking…',
+    nav_update_uptodate:'Bar Ops is up to date · v',
     upd_state_available:'Preparing download…',upd_state_downloading:'Downloading…',
     upd_state_installing:'Installing…',upd_state_ready:'Ready — restarting in',
     wn_title:'Update installed',wn_text:'Bar Ops was just updated with important improvements and fixes.',
@@ -11601,6 +11674,7 @@ const I18N={
     confirm_delete:'Eliminar',no_phone:'Sin número',at:'a las',from:'de',to:'a',and:'y',
     nav_update_available:'Actualización disponible',nav_update_downloading:'Descargando…',
     nav_update_installing:'Instalando…',nav_update_ready:'Reiniciando…',nav_update_checking:'Comprobando…',
+    nav_update_uptodate:'Bar Ops está actualizado · v',
     upd_state_available:'Preparando la descarga…',upd_state_downloading:'Descargando…',
     upd_state_installing:'Instalando…',upd_state_ready:'Listo — reinicio en',
     wn_title:'Actualización instalada',wn_text:'Bar Ops se acaba de actualizar con mejoras y correcciones importantes.',
@@ -11634,8 +11708,10 @@ function resetCheckUpdatesBtn(){
 function handleUpdateStatus(payload){
   const {state,version,pct,seconds}=payload||{};
   const updateModal=document.getElementById('updateModal');
+  const statusEl=document.getElementById('updateCheckStatus');
   if(state==='available'){
     setNavUpdateState('available',t('nav_update_available'));
+    if(statusEl) statusEl.textContent='';
     document.getElementById('updVersion').textContent='v'+version;
     document.getElementById('updRing').className='upd-ring';
     document.getElementById('updBarFill').style.width='0%';
@@ -11658,8 +11734,10 @@ function handleUpdateStatus(payload){
     updateModal.classList.remove('show');
     setNavUpdateState('','');
     resetCheckUpdatesBtn();
+    if(statusEl) statusEl.textContent=t('nav_update_uptodate')+version;
   } else if(state==='error'){
     updateModal.classList.remove('show');
+    if(statusEl) statusEl.textContent='';
     setNavUpdateState('','');
     resetCheckUpdatesBtn();
   }
@@ -11675,6 +11753,7 @@ async function initUpdateSystem(){
   appVersion=await window.electronBridge.getVersion();
   setNavUpdateState('','');
   window.electronBridge.onUpdateStatus?.(handleUpdateStatus);
+  window.electronBridge.checkForUpdates?.();
   checkWhatsNew(appVersion);
 }
 // "Nouveauté importante" : comparée au X de 1.X.YYY (pas le YYY, trop fréquent pour mériter un
@@ -12363,7 +12442,7 @@ window.addSupplierFromOnboarding = function(supplier) {
   to   { transform: scale(1);   opacity:1 }
 }
 .ob-title {
-  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-family: var(--font-body, 'Jost', sans-serif);
   font-size: 26px;
   font-weight: 300;
   color: var(--text, #ede8e0);
