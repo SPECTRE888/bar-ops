@@ -320,8 +320,11 @@ async function checkAndUpdate() {
   }
 }
 
+// Pas de check au timer fixe ici : le renderer déclenche lui-même le premier check
+// (initUpdateSystem() dans app.html) une fois son écouteur 'update-status' branché —
+// sinon, si le boot dépasse le délai fixe, le statut 'available' part avant que quiconque
+// écoute côté renderer et le badge sidebar ne s'affiche jamais.
 function setupUpdater() {
-  setTimeout(checkAndUpdate, 10000)
   setInterval(checkAndUpdate, 30 * 60 * 1000)
 }
 

@@ -10024,6 +10024,7 @@ function renderProfile(){
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('lbl_version_app')}</div>
             <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${appVersion?'v'+appVersion:'—'}</div>
             <button class="btn btn-ghost btn-sm" id="checkUpdatesBtn" onclick="manualCheckForUpdates()" style="width:100%">${t('btn_check_updates')}</button>
+            <div id="updateCheckStatus" style="font-size:11px;margin-top:6px;color:var(--gold)"></div>
           </div>
           `:''}
         `:`
@@ -11649,6 +11650,7 @@ const I18N={
     // Mise à jour
     nav_update_available:'Mise à jour disponible',nav_update_downloading:'Téléchargement…',
     nav_update_installing:'Installation…',nav_update_ready:'Redémarrage…',nav_update_checking:'Vérification…',
+    nav_update_uptodate:'Bar Ops est à jour · v',
     upd_state_available:'Préparation du téléchargement…',upd_state_downloading:'Téléchargement…',
     upd_state_installing:'Installation en cours…',upd_state_ready:'Prêt — redémarrage dans',
     wn_title:'Nouveautés installées',wn_text:"Bar Ops vient d'être mis à jour avec des améliorations et des correctifs importants.",
@@ -11711,6 +11713,7 @@ const I18N={
     confirm_delete:'Delete',no_phone:'No number',at:'at',from:'from',to:'to',and:'and',
     nav_update_available:'Update available',nav_update_downloading:'Downloading…',
     nav_update_installing:'Installing…',nav_update_ready:'Restarting…',nav_update_checking:'Checking…',
+    nav_update_uptodate:'Bar Ops is up to date · v',
     upd_state_available:'Preparing download…',upd_state_downloading:'Downloading…',
     upd_state_installing:'Installing…',upd_state_ready:'Ready — restarting in',
     wn_title:'Update installed',wn_text:'Bar Ops was just updated with important improvements and fixes.',
@@ -11773,6 +11776,7 @@ const I18N={
     confirm_delete:'Eliminar',no_phone:'Sin número',at:'a las',from:'de',to:'a',and:'y',
     nav_update_available:'Actualización disponible',nav_update_downloading:'Descargando…',
     nav_update_installing:'Instalando…',nav_update_ready:'Reiniciando…',nav_update_checking:'Comprobando…',
+    nav_update_uptodate:'Bar Ops está actualizado · v',
     upd_state_available:'Preparando la descarga…',upd_state_downloading:'Descargando…',
     upd_state_installing:'Instalando…',upd_state_ready:'Listo — reinicio en',
     wn_title:'Actualización instalada',wn_text:'Bar Ops se acaba de actualizar con mejoras y correcciones importantes.',
@@ -11806,8 +11810,10 @@ function resetCheckUpdatesBtn(){
 function handleUpdateStatus(payload){
   const {state,version,pct,seconds}=payload||{};
   const updateModal=document.getElementById('updateModal');
+  const statusEl=document.getElementById('updateCheckStatus');
   if(state==='available'){
     setNavUpdateState('available',t('nav_update_available'));
+    if(statusEl) statusEl.textContent='';
     document.getElementById('updVersion').textContent='v'+version;
     document.getElementById('updRing').className='upd-ring';
     document.getElementById('updBarFill').style.width='0%';
@@ -11830,8 +11836,10 @@ function handleUpdateStatus(payload){
     updateModal.classList.remove('show');
     setNavUpdateState('','');
     resetCheckUpdatesBtn();
+    if(statusEl) statusEl.textContent=t('nav_update_uptodate')+version;
   } else if(state==='error'){
     updateModal.classList.remove('show');
+    if(statusEl) statusEl.textContent='';
     setNavUpdateState('','');
     resetCheckUpdatesBtn();
   }
@@ -11847,6 +11855,7 @@ async function initUpdateSystem(){
   appVersion=await window.electronBridge.getVersion();
   setNavUpdateState('','');
   window.electronBridge.onUpdateStatus?.(handleUpdateStatus);
+  window.electronBridge.checkForUpdates?.();
   checkWhatsNew(appVersion);
 }
 // "Nouveauté importante" : comparée au X de 1.X.YYY (pas le YYY, trop fréquent pour mériter un
