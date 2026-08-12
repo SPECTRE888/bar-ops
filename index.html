@@ -85,7 +85,7 @@ footer{width:100%;padding:0}
 
 <script>
 let sb=null;
-fetch('/.netlify/functions/config').then(r=>r.json()).then(cfg=>{
+fetch('/api/config').then(r=>r.json()).then(cfg=>{
   sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
   checkSession();
 }).catch(()=>{});
@@ -102,7 +102,7 @@ async function checkSession(){
 
 const LEGAL={
   cgv:`Conditions Générales de Vente — BAR OPS\n\nÉditeur : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil\nEmail : contact@intelligencespotlighted.com\n\n1. OBJET\nLes présentes CGV régissent l'accès et l'utilisation de la plateforme SaaS BAR OPS, outil de gestion d'événements et de bar à destination des professionnels.\n\n2. ABONNEMENTS ET TARIFS\n• Accès Anticipé : 149€/mois (limité aux 20 premiers clients, tarif garanti à vie)\n• Pro : 199€/mois\n• Annuel : remise de 10% sur le tarif mensuel\nTous les prix sont TTC. Un essai gratuit de 7 jours est inclus à l'inscription. Le prélèvement débute automatiquement à l'issue de la période d'essai.\n\n3. RÉSILIATION\nL'abonné peut résilier à tout moment via le portail de gestion accessible depuis son profil. La résiliation prend effet à la fin de la période en cours, sans remboursement au prorata.\n\n4. DROIT DE RÉTRACTATION\nConformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne s'applique pas aux services numériques pleinement exécutés avant la fin du délai de rétractation.\n\n5. RESPONSABILITÉ\nBAR OPS est fourni "en l'état". Intelligence Spotlighted ne saurait être tenu responsable des pertes de données ou interruptions de service indépendantes de sa volonté.\n\n6. DROIT APPLICABLE\nLes présentes CGV sont soumises au droit français. Tout litige relève de la compétence des tribunaux de Paris.`,
-  rgpd:`Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n'est cédée à des tiers. Données hébergées par Netlify Inc. (USA) dans le cadre du Privacy Shield. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com`,
+  rgpd:`Politique de confidentialité — Conformément au RGPD (Règlement UE 2016/679), vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Aucune donnée personnelle n'est cédée à des tiers. Données hébergées par Vercel Inc. et Supabase Inc. (USA), dans le cadre de clauses contractuelles types. Responsable de traitement : Intelligence Spotlighted, 63 avenue Pasteur, 93100 Montreuil. Contact : contact@intelligencespotlighted.com`,
   mentions:`Mentions légales — Éditeur : Intelligence Spotlighted\n63 avenue Pasteur, 93100 Montreuil, France\nEmail : contact@intelligencespotlighted.com\nDirecteur de publication : Jérôme\nHébergement : Netlify Inc., 44 Montgomery Street, San Francisco, CA 94104, USA`
 };
 function copyCmd(){

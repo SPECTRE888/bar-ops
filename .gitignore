@@ -4,6 +4,7 @@
 
 index.html.save
 node_modules/
+.DS_Store
 .github/
 !.github/workflows/
 dist/

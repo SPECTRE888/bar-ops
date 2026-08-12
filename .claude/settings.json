@@ -1,9 +1,7 @@
 {
   "promptCaching": true,
   "readablePaths": [
-    "CLAUDE.md",
-    ".claude/QUICK_REF.md",
-    "netlify/functions/**/*.js"
+    "CLAUDE.md"
   ],
   "ignorePaths": [
     "*.html",

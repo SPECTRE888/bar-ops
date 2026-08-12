@@ -28,12 +28,14 @@ electron/app/app.html→ Version Electron (même base, adaptations file://)
 api/
   config.js          → Retourne la clé anon Supabase (jamais les secrets)
   agents.js          → Invite/accept/manage agents (route par body.type)
-  billing.js         → Stripe portal + add-seat (route par body.action)
+  billing.js         → Stripe portal + add-seat + subscribe (route par body.action)
+  check-access.js    → Vérifie l'abonnement actif (service key, appelé par app.html)
   workspace.js       → GET=workspace-pull, POST=portal-token
   portal-public.js   → GET=portal-data, POST=portal-sign (public, no auth)
   send-quote.js      → Email devis via SendGrid
   webhook.js         → Webhook Stripe
   delete-account.js  → Suppression compte
+  _rate-limit.js      → Helper rate-limiting (utilisé par agents.js, send-quote.js)
 ```
 
 ---
