@@ -1086,6 +1086,28 @@ function alertModal(message){
     modal.onclick=(e)=>{if(e.target===modal){cleanup();resolve(true);}};
   });
 }
+// Popup "Info" en lecture seule (Fermer + Modifier), même système que Clients côté HelmOps :
+// une ligne compacte par entité (Clients/Fournisseurs/Équipe), le détail complet et l'édition
+// passent par ce popup plutôt que d'être affichés en permanence sur chaque ligne.
+function showInfoModal(title, rows, onEdit){
+  const modal=document.createElement('div');
+  modal.id='br-info-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+  const rowsHtml=rows.filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px"><span style="color:var(--text3)">${k}</span><span style="color:var(--text);text-align:right">${v}</span></div>`).join('');
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="font-size:15px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">${escHtml(title)}</div>
+    <div>${rowsHtml||'<div style="font-size:12px;color:var(--text3)">Aucune information.</div>'}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" id="br-info-close-btn">Fermer</button>
+      <button class="btn btn-gold" id="br-info-edit-btn">Modifier</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const cleanup=()=>modal.remove();
+  modal.querySelector('#br-info-close-btn').onclick=cleanup;
+  modal.querySelector('#br-info-edit-btn').onclick=()=>{cleanup();onEdit();};
+  modal.onclick=(e)=>{if(e.target===modal)cleanup();};
+}
 
 function deleteAccountModal(){
   showConfirmModal(
@@ -3077,6 +3099,29 @@ function toggleStaff(id){
   s._open=!s._open;
   renderStaff();
 }
+function showStaffInfo(id){
+  const s=state.staffItems.find(x=>x.id===id);if(!s)return;
+  showInfoModal(s.name||'Sans nom', [
+    ['Rôle', s.type?escHtml(s.type):''],
+    ['Âge', s.age?escHtml(s.age)+' ans':''],
+    ['Téléphone', s.phone?escHtml(s.phone):''],
+    ['Email', s.email?escHtml(s.email):''],
+    ['Adresse', s.address?escHtml(s.address):''],
+    ['Zone géographique', s.zone?escHtml(s.zone):''],
+    ['Taille', s.tailleCm?escHtml(s.tailleCm)+' cm':''],
+    ['Haut', s.tailleHaut?escHtml(s.tailleHaut):''],
+    ['Pantalon', s.taillePantalon?escHtml(s.taillePantalon):''],
+    ['Pointure', s.pointure?escHtml(s.pointure):''],
+    ['Physique', s.physique?escHtml(s.physique):''],
+    ['Cheveux', s.couleurCheveux?escHtml(s.couleurCheveux):''],
+    ['Langues', s.langues?escHtml(s.langues):''],
+    ['Infos supp.', (s.infosSupp||s.notes)?escHtml(s.infosSupp||s.notes):''],
+  ], ()=>{
+    s._open=true;
+    renderStaff();
+    document.getElementById('staff-row-'+id)?.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+}
 
 function renderStaff(){
   const el=document.getElementById('staff-content'),em=document.getElementById('staff-empty');
@@ -3087,7 +3132,6 @@ function renderStaff(){
   const ROLE_COLOR={'Bartender':'var(--gold)','Serveur':'var(--blue,#7eaadc)','Bar Manager':'var(--green)','Manutentionnaire':'var(--text3)'};
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.staffItems.map(s=>{
     const isOpen=s._open===true;
-    const initials=(s.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
     const roleColor=ROLE_COLOR[s.type]||'var(--text3)';
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
@@ -3108,19 +3152,18 @@ function renderStaff(){
     if(s.couleurCheveux) phys.push(chip('chx',s.couleurCheveux));
     // data-search
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
-    return`<div class="card staff-card" style="padding:0;overflow:hidden;border-radius:var(--radius)" data-search="${escHtml(searchData)}">
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px;cursor:pointer" onclick="toggleStaff(${s.id})">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(196,164,107,.15),rgba(196,164,107,.05));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0">${initials}</div>
+    return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
         <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;overflow:hidden">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
-            <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</div>
+            <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</span>
             <span style="font-size:10px;font-weight:600;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border:1px solid ${roleColor};border-radius:20px;opacity:.8;flex-shrink:0">${escHtml(s.type||'')}</span>
             ${infos.length?`${sep}${infos.join(sep)}`:''}
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-          <button class="btn-edit" onclick="toggleStaff(${s.id})">${isOpen?'Fermer':'Modifier'}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button class="btn-edit" onclick="${isOpen?`toggleStaff(${s.id})`:`showStaffInfo(${s.id})`}">${isOpen?'Fermer':'Info'}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -8346,30 +8389,24 @@ function renderClients(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun client. Crée un profil réutilisable pour tes clients récurrents.</p></div>`;
     return;
   }
-  const now=new Date();
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.clients.map(c=>{
     const isOpen=c._open===true;
-    const initials=(c.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const pastEvs=state.events.filter(ev=>ev.clientId===c.id&&ev.date&&new Date(ev.date)<now);
-    const totalCA=pastEvs.reduce((s,ev)=>s+(ev.totalRevHT||0),0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     const infos=[];
     if(c.company) infos.push(`<span style="font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase">${escHtml(c.company)}</span>`);
-    if(c.address) infos.push(`<span style="font-size:11px;color:var(--text3)">📍 ${escHtml(c.address)}</span>`);
-    if(c.email) infos.push(`<a href="mailto:${escHtml(c.email)}" onclick="event.stopPropagation()" title="${escHtml(c.email)}" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">✉ ${escHtml(c.email.length>26?c.email.slice(0,24)+'…':c.email)}</a>`);
-    if(c.phone) infos.push(`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">📞 ${escHtml(c.phone)}</a>`);
+    if(c.address) infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(c.address)}</span>`);
+    if(c.email) infos.push(`<a href="mailto:${escHtml(c.email)}" onclick="event.stopPropagation()" title="${escHtml(c.email)}" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">${escHtml(c.email.length>26?c.email.slice(0,24)+'…':c.email)}</a>`);
+    if(c.phone) infos.push(`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="font-size:11px;color:var(--text3);text-decoration:none;transition:.15s" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">${escHtml(c.phone)}</a>`);
     if(c.notes) infos.push(`<span style="font-size:10px;color:var(--text3);font-style:italic" title="${escHtml(c.notes)}">— ${escHtml(c.notes.length>30?c.notes.slice(0,28)+'…':c.notes)}</span>`);
     const createdLabel=c.createdAt?new Date(c.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
-    return`<div class="card client-card" style="padding:0;overflow:hidden;border-radius:var(--radius)">
-      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold-bg),rgba(196,164,107,0.06));border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--gold);flex-shrink:0;letter-spacing:.04em">${initials}</div>
-        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(c.name||'Sans nom')}</div>
+    return`<div class="card client-card" id="client-row-${c.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(c.name||'Sans nom')}</span>
         ${infos.length?`<div style="display:flex;align-items:center;flex-wrap:nowrap;overflow:hidden;gap:0;flex:1;min-width:0">${sep}${infos.join(sep)}</div>`:'<div style="flex:1"></div>'}
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${createdLabel?`<span style="font-size:10px;color:var(--text3);white-space:nowrap">depuis ${createdLabel}</span>`:''}
-          ${totalCA>0?`<span style="font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;padding:3px 8px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:4px">${fmt(totalCA)} HT</span>`:''}
-          <button class="btn-edit" onclick="event.stopPropagation();toggleClient(${c.id})">${isOpen?'Fermer':'Modifier'}</button>
-          <button class="btn btn-sm btn-gold" onclick="event.stopPropagation();newEvForClient(${c.id})">+ Prestation</button>
+          <button class="btn-edit" onclick="${isOpen?`toggleClient(${c.id})`:`showClientInfo(${c.id})`}">${isOpen?'Fermer':'Info'}</button>
+          <button class="btn btn-sm btn-gold" onclick="newEvForClient(${c.id})">+ Prestation</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -8748,20 +8785,22 @@ function renderSuppliers(){
     el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
     return;
   }
-  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 224px';
+  const q=document.getElementById('suppliers-search')?.value?.toLowerCase()||'';
+  const list=q?state.suppliers.filter(s=>[s.name,s.contact,s.email,s.phone,...(s.categories||[])].filter(Boolean).join(' ').toLowerCase().includes(q)):state.suppliers;
+  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 140px';
   const HDR_STYLE=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px`;
-  const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;transition:.15s`;
-  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:4px">
+  const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s`;
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
     <div style="${HDR_STYLE}">
       <div>Fournisseur</div><div>Catégories livrées</div><div>Contact</div><div>Téléphone</div><div>Email</div><div></div>
     </div>
-    ${state.suppliers.map(s=>{
+    ${list.length?list.map(s=>{
       const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
       const tutoieBadge=s.tutoie?` <span style="font-size:9px;color:var(--text3);opacity:.7">(tutoiement)</span>`:'';
       const cats=s.categories?.length?s.categories:s.speciality?[s.speciality]:[];
-      return`<div style="${ROW}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
+      return`<div style="${ROW}" id="supplier-row-${s.id}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border2)'">
         <div style="min-width:0">
-          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}${tutoieBadge}</div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name)}${tutoieBadge}</div>
         </div>
         <div style="font-size:11px;color:var(--text3);letter-spacing:.03em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cats.length?cats.map(escHtml).join(' · '):'—'}</div>
         <div style="font-size:12px;color:${s.contact?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.contact||'—')}</div>
@@ -8769,12 +8808,24 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.email||'—')}</div>
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
           <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
-          <button class="btn-edit" onclick="editSupplier(${s.id})">Modifier</button>
-          <button class="btn btn-sm btn-danger" onclick="delSupplier(${s.id})">×</button>
+          <button class="btn-edit" onclick="showSupplierInfo(${s.id})">Info</button>
         </div>
       </div>`;
-    }).join('')}
+    }).join('') : `<p style="font-size:12px;color:var(--text3);padding:10px 16px">Aucun fournisseur ne correspond à "${escHtml(q)}".</p>`}
   </div>`;
+}
+function showSupplierInfo(id){
+  const s=state.suppliers.find(x=>x.id===id);if(!s)return;
+  const cats=s.categories?.length?s.categories:s.speciality?[s.speciality]:[];
+  showInfoModal(s.name||'Sans nom', [
+    ['Catégories livrées', cats.length?cats.map(escHtml).join(' · '):''],
+    ['Contact', s.contact?escHtml(s.contact):''],
+    ['Téléphone', s.phone?escHtml(s.phone):''],
+    ['Email', s.email?escHtml(s.email):''],
+    ['Adresse', s.address?escHtml(s.address):''],
+    ['Notes', s.notes?escHtml(s.notes):''],
+    ['Tutoiement', s.tutoie?'Oui':''],
+  ], ()=>editSupplier(id));
 }
 
 async function addSupplier(){
@@ -8839,9 +8890,12 @@ function editSupplier(id){
       </div>
     </div>
     <div class="field"><label>Notes</label><textarea id="sp-notes" rows="2">${s.notes||''}</textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn btn-ghost" onclick="document.getElementById('supplier-modal').remove()">Annuler</button>
-      <button class="btn btn-gold" onclick="saveSupplier(${id})">Enregistrer</button>
+    <div style="display:flex;gap:8px;justify-content:space-between">
+      <button class="btn btn-sm btn-danger" onclick="document.getElementById('supplier-modal').remove();delSupplier(${id})">Supprimer</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="document.getElementById('supplier-modal').remove()">Annuler</button>
+        <button class="btn btn-gold" onclick="saveSupplier(${id})">Enregistrer</button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -8878,6 +8932,22 @@ async function delSupplier(id){
 function toggleClient(id){
   const c=state.clients.find(x=>x.id===id);
   if(c){c._open=!c._open;renderClients();}
+}
+function showClientInfo(id){
+  const c=state.clients.find(x=>x.id===id);if(!c)return;
+  const createdLabel=c.createdAt?new Date(c.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
+  showInfoModal(c.name||'Sans nom', [
+    ['Société', c.company?escHtml(c.company):''],
+    ['Email', c.email?escHtml(c.email):''],
+    ['Téléphone', c.phone?escHtml(c.phone):''],
+    ['Adresse', c.address?escHtml(c.address):''],
+    ['Notes', c.notes?escHtml(c.notes):''],
+    ['Client depuis', createdLabel],
+  ], ()=>{
+    c._open=true;
+    renderClients();
+    document.getElementById('client-row-'+id)?.scrollIntoView({behavior:'smooth',block:'center'});
+  });
 }
 
 // ════════════════════════════════════════════════════════
