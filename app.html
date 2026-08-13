@@ -545,7 +545,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
         <option value="Ice"> Glace</option>
         <option value="Bar"> Bar & Matériel</option>
       </select>
-      <button id="cat-delete-btn" class="btn btn-sm" style="background:#c96e6e;color:#fff;padding:6px 10px;border:none;border-radius:4px;cursor:pointer;display:none;font-weight:600" onclick="deleteSelectedCategory()">✕</button>
+      <button id="cat-delete-btn" class="btn btn-sm btn-danger" style="display:none" onclick="deleteSelectedCategory()">✕</button>
     </div>
     <button id="toggle-low-stock" class="btn btn-ghost" onclick="toggleLowStock()" style="color:var(--text2)">Stock faible <span class="nb" id="nb-low-stock" style="color:var(--red)">0</span></button>
     <div class="topbar-actions no-print" style="flex:0;gap:6px">
@@ -8791,7 +8791,7 @@ function renderSuppliers(){
   }
   const q=document.getElementById('suppliers-search')?.value?.toLowerCase()||'';
   const list=q?state.suppliers.filter(s=>[s.name,s.contact,s.email,s.phone,...(s.categories||[])].filter(Boolean).join(' ').toLowerCase().includes(q)):state.suppliers;
-  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 140px';
+  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 230px';
   const HDR_STYLE=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px`;
   const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s`;
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
@@ -8813,6 +8813,7 @@ function renderSuppliers(){
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
           <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
           <button class="btn-edit" onclick="showSupplierInfo(${s.id})">Info</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delSupplier(${s.id})">Supprimer</button>
         </div>
       </div>`;
     }).join('') : `<p style="font-size:12px;color:var(--text3);padding:10px 16px">Aucun fournisseur ne correspond à "${escHtml(q)}".</p>`}
