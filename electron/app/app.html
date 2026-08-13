@@ -8333,6 +8333,7 @@ function renderClients(){
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
           <button class="btn-edit" onclick="${isOpen?`toggleClient(${c.id})`:`showClientInfo(${c.id})`}">${isOpen?'Fermer':'Info'}</button>
           <button class="btn btn-sm btn-gold" onclick="newEvForClient(${c.id})">+ Presta</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">Supprimer</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -8346,9 +8347,6 @@ function renderClients(){
         </div>
         <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label><input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/></div>
         <div class="field" style="margin-bottom:10px"><label>Notes</label><input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/></div>
-        <div style="display:flex;justify-content:flex-end">
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">Supprimer</button>
-        </div>
       </div>`:''}
     </div>`;
   }).join('')+`</div>`;
