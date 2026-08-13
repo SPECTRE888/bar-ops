@@ -1,8 +1,8 @@
-const sgMail = require('@sendgrid/mail');
 const { createClient } = require('@supabase/supabase-js');
 const { checkEmailRate, logEmailSent } = require('./_rate-limit');
 
 const RATE = { perHour: 30, perDay: 100 };
+const BREVO_SENDER_EMAIL = 'mail@ops-suite.fr';
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: 'Token invalide ou expiré' });
 
-    // Rate limit anti-abus / anti-spam (protège la réputation SendGrid)
+    // Rate limit anti-abus / anti-spam (protège la réputation Brevo, mutualisée avec HelmOps)
     const rate = await checkEmailRate(supabase, user.id, RATE);
     if (!rate.allowed) {
       res.setHeader('Retry-After', String(rate.retryAfterSec || 3600));
@@ -24,17 +24,36 @@ module.exports = async function handler(req, res) {
         : `Limite quotidienne atteinte (${RATE.perDay}/jour). Réessayez demain.` });
     }
 
-    const { to, subject, html, devisHTML, fromEmail, fromName, sendgridApiKey } = req.body || {};
+    const { to, subject, html, devisHTML, fromName, replyTo } = req.body || {};
     if (!to || !subject) return res.status(400).json({ error: 'Champs manquants (to, subject)' });
-    if (!sendgridApiKey) return res.status(400).json({ error: 'Clé SendGrid manquante' });
-    if (!fromEmail) return res.status(400).json({ error: "Email d'envoi non configuré" });
+    const htmlContent = devisHTML || html;
+    if (!htmlContent) return res.status(400).json({ error: 'Contenu manquant' });
 
-    sgMail.setApiKey(sendgridApiKey);
-    await sgMail.send({ to, from: { email: fromEmail, name: fromName || 'BAR OPS' }, subject, html: devisHTML || html });
+    // Envoi centralisé via Brevo (mail.ops-suite.fr, même compte que HelmOps) : le nom affiché
+    // au destinataire est celui du bar/utilisateur, l'adresse technique reste mutualisée. Les
+    // réponses arrivent sur l'adresse de connexion de l'utilisateur, sauf override explicite.
+    const isValidEmail = (e) => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { email: BREVO_SENDER_EMAIL, name: fromName || 'BAR OPS' },
+        to: [{ email: to }],
+        replyTo: { email: isValidEmail(replyTo) ? replyTo : user.email },
+        subject,
+        htmlContent,
+      }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return res.status(r.status).json({ error: data?.message || 'Erreur Brevo' });
+
     await logEmailSent(supabase, user.id, 'send-quote');
     return res.status(200).json({ success: true });
   } catch (error) {
-    const detail = error?.response?.body?.errors?.[0]?.message || error.message || 'Erreur inconnue';
-    return res.status(500).json({ error: detail });
+    return res.status(500).json({ error: error.message || 'Erreur inconnue' });
   }
 };

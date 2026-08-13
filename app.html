@@ -7754,8 +7754,6 @@ async function sendQuoteToClient(evId,devisNum){
   const email=ev?.contactEmail||ev?.email||'';
   const contactName=ev?.contact||ev?.clientName||(ev?.clientId&&state.clients.find(x=>x.id===ev.clientId)?.name)||'';
   if(!ev||!email){await alertModal('Aucun email trouvé sur cet événement. Renseigne le dans la fiche événement.');return;}
-  if(!state.profile?.sendgridApiKey){await alertModal('Configure ta clé SendGrid dans Profil → Email & SendGrid.');return;}
-  if(!state.profile?.senderEmail){await alertModal('Configure l\'email d\'envoi dans Profil → Email & SendGrid.');return;}
   const sigName=state.profile?.barName||state.profile?.companyName||'BAR OPS';
   const fmtDate=ev.date?new Date(ev.date).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   const devisHTML=buildDevisHTML(ev,devisNum);
@@ -7777,9 +7775,8 @@ async function sendQuoteToClient(evId,devisNum){
         to:email,
         subject:'Devis '+devisNum+' — '+ev.name,
         devisHTML:emailBody,
-        fromEmail:state.profile?.senderEmail,
         fromName:sigName,
-        sendgridApiKey:state.profile?.sendgridApiKey
+        replyTo:state.profile?.replyToEmail
       })
     });
     const res=await r.json();
@@ -10165,44 +10162,13 @@ function renderProfile(){
     <!-- ROW 2: 50/50 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 
-      <!-- Email & SendGrid -->
+      <!-- Envoi de devis -->
       <div class="card" style="display:flex;flex-direction:column;gap:8px">
-        <div class="ctitle">Email & SendGrid <span style="font-weight:400;font-size:9px;color:var(--text3)">(envoi automatique)</span></div>
-        <div id="prof-sendgrid-view" style="flex:1;display:flex;flex-direction:column;gap:6px">
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px">Email d'envoi</div>
-            <div style="font-size:12px;color:var(--text2)">${state.profile?.senderEmail||'Non configuré'}</div>
-          </div>
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px">Clé SendGrid</div>
-            <div style="font-size:12px;color:${state.profile?.sendgridApiKey?'var(--gold)':'var(--text3)'};">${state.profile?.sendgridApiKey?'Configurée':'Non configurée'}</div>
-          </div>
-          <div style="flex:1;font-size:10px;color:var(--text3);line-height:1.5;border-top:1px solid var(--border);padding-top:6px">
-            <div style="font-weight:600;color:var(--text2);margin-bottom:4px;font-size:11px">Comment configurer :</div>
-            <ol style="margin:0;padding-left:14px;line-height:1.8">
-              <li>Allez sur <strong style="color:var(--gold)">sendgrid.com</strong> → créer un compte gratuit</li>
-              <li>Menu <strong>Settings → Sender Authentication</strong> → <strong>Verify a Single Sender</strong></li>
-              <li>Entrez votre email pro → vérifiez dans votre boîte mail</li>
-              <li>Menu <strong>Settings → API Keys → Create API Key</strong> → <strong>Full Access</strong></li>
-              <li>Collez la clé <code>SG.xxx</code> + votre email ci-dessous → Confirmer</li>
-            </ol>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(true)" style="width:100%">Configurer</button>
-        </div>
-        <div id="prof-sendgrid-edit" style="display:none;flex-direction:column;gap:8px">
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Email d'envoi</div>
-            <input id="prof-sender-email" value="${state.profile?.senderEmail||''}" placeholder="noreply@example.com" style="width:100%;font-size:11px"/>
-          </div>
-          <div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Clé API SendGrid</div>
-            <input id="prof-sendgrid-key" value="${state.profile?.sendgridApiKey||''}" type="password" placeholder="SG.xxx" style="width:100%;font-size:11px;font-family:monospace"/>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:auto">
-            <button class="btn btn-ghost btn-sm" onclick="toggleSendgridEdit(false)" style="flex:1">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="confirmSendgridEdit()" style="flex:1">Confirmer</button>
-          </div>
-        </div>
+        <div class="ctitle">Envoi de devis <span style="font-weight:400;font-size:9px;color:var(--text3)">(automatique, rien à configurer)</span></div>
+        <p style="font-size:11px;color:var(--text2);margin:0">Tes devis partent automatiquement sous ton nom. Les réponses de tes clients arrivent par défaut sur ton adresse de connexion, modifiable ici si tu préfères une autre adresse :</p>
+        <input id="prof-replyto-input" type="email" value="${state.profile?.replyToEmail||cloudUser?.user?.email||''}" placeholder="ton@email.com" disabled style="width:100%;font-size:11px"/>
+        <button class="btn btn-ghost btn-sm" id="prof-replyto-btn" onclick="toggleReplyToEdit(true)" style="width:100%">Modifier</button>
+        <div id="prof-replyto-status" style="font-size:11px;color:var(--gold)"></div>
       </div>
 
       <!-- Logo & Signature -->
@@ -10542,26 +10508,25 @@ function toggleLogoEdit(show){
   if(edit) edit.style.display=show?'flex':'none';
 }
 
-function toggleSendgridEdit(show){
-  const view=document.getElementById('prof-sendgrid-view');
-  const edit=document.getElementById('prof-sendgrid-edit');
-  if(view) view.style.display=show?'none':'block';
-  if(edit) edit.style.display=show?'block':'none';
+function toggleReplyToEdit(edit){
+  const el=document.getElementById('prof-replyto-input');
+  const btn=document.getElementById('prof-replyto-btn');
+  if(!el||!btn) return;
+  el.disabled=!edit;
+  btn.textContent=edit?'Enregistrer':'Modifier';
+  btn.onclick=edit?saveReplyTo:()=>toggleReplyToEdit(true);
+  if(edit) el.focus();
 }
 
-function confirmSendgridEdit(){
-  showConfirmModal(
-    'Configurer SendGrid',
-    'Votre clé API sera utilisée pour envoyer les devis automatiquement.',
-    function(){
-      if(!state.profile) state.profile={};
-      state.profile.senderEmail=document.getElementById('prof-sender-email')?.value||'';
-      state.profile.sendgridApiKey=document.getElementById('prof-sendgrid-key')?.value||'';
-      save();
-      showToastModal('SendGrid configuré');
-      renderProfile();
-    }
-  );
+function saveReplyTo(){
+  const val=(document.getElementById('prof-replyto-input')?.value||'').trim();
+  const statusEl=document.getElementById('prof-replyto-status');
+  if(val&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ if(statusEl) statusEl.textContent='⚠ Email invalide'; return; }
+  if(!state.profile) state.profile={};
+  state.profile.replyToEmail=val;
+  save();
+  toggleReplyToEdit(false);
+  if(statusEl){ statusEl.textContent='✓ Enregistré'; setTimeout(()=>statusEl.textContent='',2000); }
 }
 
 function confirmLogoUpload(){
