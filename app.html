@@ -597,16 +597,11 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     </div>
 
     <div id="dresscode-section" style="display:none">
-      <div class="topbar" style="border:none;padding:0;margin-bottom:6px">
-        <span style="color:var(--text3);font-size:12px">Présets rapides</span>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        <button class="btn btn-sm btn-ghost" onclick="addDressCode('Full Black','Chemise noire, pantalon noir, chaussures noires')">Full Black</button>
-        <button class="btn btn-sm btn-ghost" onclick="addDressCode('Smart Casual','Chino beige, chemise blanche, ceinture marron')">Smart Casual</button>
-        <button class="btn btn-sm btn-ghost" onclick="addDressCode('White Service','Chemise blanche, pantalon noir, tablier noir')">White Service</button>
-        <button class="btn btn-sm btn-ghost" onclick="addDressCode('Cocktail Attire','Costume noir, chemise blanche, cravate noire')">Cocktail Attire</button>
-        <button class="btn btn-sm btn-ghost" onclick="addDressCode('Casual Chic','Chino gris, polo blanc ou bleu marine, sneakers blanches')">Casual Chic</button>
-        <button class="btn btn-sm btn-ghost" onclick="addDressCode('Black & Gold','Chemise noire, nœud papillon doré, pantalon noir')">Black & Gold</button>
+      <div id="dc-presets-wrap">
+        <div class="topbar" style="border:none;padding:0;margin-bottom:6px">
+          <span style="color:var(--text3);font-size:12px">Présets rapides</span>
+        </div>
+        <div id="dc-presets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"></div>
       </div>
       <div id="dc-list"></div>
     </div>
@@ -3149,15 +3144,15 @@ function renderStaff(){
     if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">Tél. ${escHtml(s.phone)}</a>`);
     if(s.address) infos.push(`<span style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${escHtml(s.address)}</span>`);
     // Chips physiques (ligne visible sans ouvrir) — sans emoji
-    const chip=(label,val)=>`<span style="font-size:10px;padding:1px 7px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text3);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text4);font-size:9px;letter-spacing:.04em;text-transform:uppercase;margin-right:3px">${label}</span>${escHtml(val)}</span>`;
+    const chip=(label,val)=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;padding:2px 8px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase">${label}</span>${escHtml(val)}</span>`;
     const phys=[];
-    if(s.tailleCm)       phys.push(chip('cm',s.tailleCm));
-    if(s.tailleHaut)     phys.push(chip('haut',s.tailleHaut));
-    if(s.taillePantalon) phys.push(chip('pant.',s.taillePantalon));
-    if(s.pointure)       phys.push(chip('pnt.',s.pointure));
-    if(s.physique)       phys.push(chip('phys.',s.physique));
-    if(s.langues)        phys.push(chip('lang.',s.langues));
-    if(s.couleurCheveux) phys.push(chip('chx',s.couleurCheveux));
+    if(s.tailleCm)       phys.push(chip('Taille',s.tailleCm+' cm'));
+    if(s.tailleHaut)     phys.push(chip('Haut',s.tailleHaut));
+    if(s.taillePantalon) phys.push(chip('Pantalon',s.taillePantalon));
+    if(s.pointure)       phys.push(chip('Pointure',s.pointure));
+    if(s.physique)       phys.push(chip('Physique',s.physique));
+    if(s.langues)        phys.push(chip('Langues',s.langues));
+    if(s.couleurCheveux) phys.push(chip('Cheveux',s.couleurCheveux));
     // data-search
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
     return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
@@ -3172,6 +3167,7 @@ function renderStaff(){
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           <button class="btn-edit" onclick="${isOpen?`toggleStaff(${s.id})`:`showStaffInfo(${s.id})`}">${isOpen?'Fermer':'Info'}</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">Supprimer</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
@@ -3235,9 +3231,6 @@ function renderStaff(){
                   <button onclick="delStaffDoc(${s.id},${i})" style="background:none;border:none;cursor:pointer;color:var(--red,#dc6464);font-size:14px;padding:0 2px;line-height:1" title="Supprimer">×</button>
                 </div>`).join('')}
           </div>
-        </div>
-        <div style="display:flex;justify-content:flex-end">
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">Supprimer</button>
         </div>
       </div>`:''}
     </div>`;
@@ -8114,15 +8107,34 @@ function renderDresscode(){
   renderDressCodes();
 }
 
+// Présets rapides : une fois ajoutée aux tenues, une suggestion disparaît de la liste
+// (plus la peine de la reproposer, elle est déjà dans dc-list).
+const DRESSCODE_PRESETS=[
+  {name:'Full Black',desc:'Chemise noire, pantalon noir, chaussures noires'},
+  {name:'Smart Casual',desc:'Chino beige, chemise blanche, ceinture marron'},
+  {name:'White Service',desc:'Chemise blanche, pantalon noir, tablier noir'},
+  {name:'Cocktail Attire',desc:'Costume noir, chemise blanche, cravate noire'},
+  {name:'Casual Chic',desc:'Chino gris, polo blanc ou bleu marine, sneakers blanches'},
+  {name:'Black & Gold',desc:'Chemise noire, nœud papillon doré, pantalon noir'},
+];
+function renderDressCodePresets(){
+  const wrap=document.getElementById('dc-presets-wrap'),el=document.getElementById('dc-presets');
+  if(!el||!wrap)return;
+  const remaining=DRESSCODE_PRESETS.filter(p=>!state.dressCodes.find(d=>d.name===p.name));
+  wrap.style.display=remaining.length?'block':'none';
+  el.innerHTML=remaining.map(p=>`<button class="btn btn-sm btn-ghost" onclick="addDressCode('${p.name}','${p.desc}')">${escHtml(p.name)}</button>`).join('');
+}
+
 function renderDressCodes(){
+  renderDressCodePresets();
   const el=document.getElementById('dc-list');if(!el)return;
-  if(!state.dressCodes.length){el.innerHTML='<p class="ts tm">Aucune tenue. Utilise les raccourcis ci-dessus ou crée la tienne.</p>';return;}
+  if(!state.dressCodes.length){el.innerHTML='<p class="ts tm">Aucune tenue. Utilise les présets ci-dessus ou crée la tienne.</p>';return;}
   el.innerHTML=state.dressCodes.map(d=>`
-    <div style="display:grid;grid-template-columns:auto 1fr 1fr 28px;gap:8px;align-items:center;margin-bottom:7px;padding:8px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">
-      <input type="checkbox" ${d.active?'checked':''} onchange="updDC(${d.id},'active',this.checked)" style="width:auto;accent-color:var(--gold)"/>
-      <input value="${escHtml(d.name||'')}" onchange="updDC(${d.id},'name',this.value)" style="font-weight:500;font-size:12px"/>
-      <input value="${escHtml(d.desc||'')}" onchange="updDC(${d.id},'desc',this.value)" placeholder="Description..." style="font-size:12px"/>
-      <button class="btn btn-sm btn-danger" onclick="delDressCode(${d.id})">×</button>
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border2)'">
+      <input type="checkbox" ${d.active?'checked':''} onchange="updDC(${d.id},'active',this.checked)" title="Active pour les prestations" style="width:auto;flex-shrink:0;accent-color:var(--gold);cursor:pointer"/>
+      <input value="${escHtml(d.name||'')}" onchange="updDC(${d.id},'name',this.value)" placeholder="Nom de la tenue" style="font-weight:600;font-size:12.5px;flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:4px;padding:4px 6px" onfocus="this.style.borderColor='var(--border2)'" onblur="this.style.borderColor='transparent'"/>
+      <input value="${escHtml(d.desc||'')}" onchange="updDC(${d.id},'desc',this.value)" placeholder="Description..." style="font-size:11.5px;color:var(--text2);flex:2;min-width:0;background:transparent;border:1px solid transparent;border-radius:4px;padding:4px 6px" onfocus="this.style.borderColor='var(--border2)'" onblur="this.style.borderColor='transparent'"/>
+      <button class="btn btn-sm btn-danger" onclick="delDressCode(${d.id})" style="flex-shrink:0">Supprimer</button>
     </div>`).join('');
 }
 
