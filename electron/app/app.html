@@ -3144,17 +3144,19 @@ function renderStaff(){
   em.style.display='none';
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
   const ROLE_COLOR={'Bartender':'var(--gold)','Serveur':'var(--blue,#7eaadc)','Bar Manager':'var(--green)','Manutentionnaire':'var(--text3)'};
+  const ROLE_BG={'Bartender':'var(--gold-bg)','Serveur':'var(--blue-bg,rgba(126,170,220,.14))','Bar Manager':'var(--green-bg)','Manutentionnaire':'var(--surface3)'};
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.staffItems.map(s=>{
     const isOpen=s._open===true;
     const roleColor=ROLE_COLOR[s.type]||'var(--text3)';
+    const roleBg=ROLE_BG[s.type]||'var(--surface3)';
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     const infos=[];
-    if(s.age)    infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.age)} ans</span>`);
-    if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text3);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text3)'">Tél. ${escHtml(s.phone)}</a>`);
-    if(s.address) infos.push(`<span style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px">${escHtml(s.address)}</span>`);
+    if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="Envoyer un message WhatsApp" style="font-size:11px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">Tél. ${escHtml(s.phone)}</a>`);
+    if(s.zone)   infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.zone)}</span>`);
     const chip=(label,val)=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;padding:2px 8px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase">${label}</span>${escHtml(val)}</span>`;
     const phys=[];
+    if(s.age)             phys.push(chip('Âge',s.age+' ans'));
     if(s.tailleCm)       phys.push(chip('Taille',s.tailleCm+' cm'));
     if(s.tailleHaut)     phys.push(chip('Haut',s.tailleHaut));
     if(s.taillePantalon) phys.push(chip('Pantalon',s.taillePantalon));
@@ -3162,13 +3164,13 @@ function renderStaff(){
     if(s.physique)       phys.push(chip('Physique',s.physique));
     if(s.langues)        phys.push(chip('Langues',s.langues));
     if(s.couleurCheveux) phys.push(chip('Cheveux',s.couleurCheveux));
-    const searchData=[s.name,s.type,s.phone,s.email,s.address,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
+    const searchData=[s.name,s.type,s.phone,s.email,s.address,s.zone,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
     return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
         <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;overflow:hidden">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
             <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</span>
-            <span style="font-size:10px;font-weight:600;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border:1px solid ${roleColor};border-radius:20px;opacity:.8;flex-shrink:0">${escHtml(s.type||'')}</span>
+            <span style="font-size:10px;font-weight:700;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;background:${roleBg};border:1px solid ${roleColor};border-radius:20px;flex-shrink:0">${escHtml(s.type||'')}</span>
             ${infos.length?`${sep}${infos.join(sep)}`:''}
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
@@ -8018,7 +8020,6 @@ async function addDressCodeCustom(){
   document.getElementById('dc-custom-desc').value='';
 }
 function delDressCode(id){state.dressCodes=state.dressCodes.filter(x=>x.id!==id);save();renderDressCodes();}
-function updDC(id,k,v){const d=state.dressCodes.find(x=>x.id===id);if(d){d[k]=v;save();renderDressCodes();}}
 
 function renderDresscode(){
   renderDressCodes();
@@ -8048,11 +8049,56 @@ function renderDressCodes(){
   if(!state.dressCodes.length){el.innerHTML='<p class="ts tm">Aucune tenue. Utilise les présets ci-dessus ou crée la tienne.</p>';return;}
   el.innerHTML=state.dressCodes.map(d=>`
     <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border2)'">
-      <input type="checkbox" ${d.active?'checked':''} onchange="updDC(${d.id},'active',this.checked)" title="Active pour les prestations" style="width:auto;flex-shrink:0;accent-color:var(--gold);cursor:pointer"/>
-      <input value="${escHtml(d.name||'')}" onchange="updDC(${d.id},'name',this.value)" placeholder="Nom de la tenue" style="font-weight:600;font-size:12.5px;flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:4px;padding:4px 6px" onfocus="this.style.borderColor='var(--border2)'" onblur="this.style.borderColor='transparent'"/>
-      <input value="${escHtml(d.desc||'')}" onchange="updDC(${d.id},'desc',this.value)" placeholder="Description..." style="font-size:11.5px;color:var(--text2);flex:2;min-width:0;background:transparent;border:1px solid transparent;border-radius:4px;padding:4px 6px" onfocus="this.style.borderColor='var(--border2)'" onblur="this.style.borderColor='transparent'"/>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(d.name||'Sans nom')}${d.active?'':' <span style="font-size:9px;color:var(--text3);font-weight:400;text-transform:uppercase;letter-spacing:.05em">(inactive)</span>'}</div>
+        ${d.desc?`<div style="font-size:11.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${escHtml(d.desc)}</div>`:''}
+      </div>
+      <button class="btn-edit" onclick="showDressCodeInfo(${d.id})" style="flex-shrink:0">Info</button>
       <button class="btn btn-sm btn-danger" onclick="delDressCode(${d.id})" style="flex-shrink:0">Supprimer</button>
     </div>`).join('');
+}
+function showDressCodeInfo(id){
+  const d=state.dressCodes.find(x=>x.id===id);if(!d)return;
+  const modal=document.createElement('div');
+  modal.id='dc-info-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
+  modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="font-size:15px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">${escHtml(d.name||'Sans nom')}</div>
+    <div id="dc-info-view">
+      <div style="display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px"><span style="color:var(--text3)">Nom</span><span style="color:var(--text);text-align:right">${escHtml(d.name||'—')}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px"><span style="color:var(--text3)">Description</span><span style="color:var(--text);text-align:right">${escHtml(d.desc||'—')}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:16px;padding:7px 0;font-size:12.5px"><span style="color:var(--text3)">Statut</span><span style="color:${d.active?'var(--green)':'var(--text3)'};text-align:right">${d.active?'Active pour les prestations':'Inactive'}</span></div>
+    </div>
+    <div id="dc-info-edit" style="display:none">
+      <div class="field" style="margin-bottom:10px"><label>Nom</label><input id="dc-edit-name" value="${escHtml(d.name||'')}"/></div>
+      <div class="field" style="margin-bottom:10px"><label>Description</label><input id="dc-edit-desc" value="${escHtml(d.desc||'')}"/></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;margin-bottom:4px">
+        <input type="checkbox" id="dc-edit-active" ${d.active?'checked':''} style="width:auto;accent-color:var(--gold)"/> Active pour les prestations
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" id="dc-info-close-btn">Fermer</button>
+      <button class="btn btn-gold" id="dc-info-action-btn">Modifier</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  const cleanup=()=>modal.remove();
+  modal.querySelector('#dc-info-close-btn').onclick=cleanup;
+  modal.onclick=(e)=>{if(e.target===modal)cleanup();};
+  const actionBtn=modal.querySelector('#dc-info-action-btn');
+  actionBtn.onclick=()=>{
+    if(actionBtn.textContent==='Modifier'){
+      modal.querySelector('#dc-info-view').style.display='none';
+      modal.querySelector('#dc-info-edit').style.display='block';
+      actionBtn.textContent='Enregistrer';
+    }else{
+      d.name=document.getElementById('dc-edit-name').value.trim()||'Sans nom';
+      d.desc=document.getElementById('dc-edit-desc').value.trim();
+      d.active=document.getElementById('dc-edit-active').checked;
+      save();renderDressCodes();cleanup();
+      showToastModal('Tenue mise à jour');
+    }
+  };
 }
 
 // ════════════════════════════════════════════════════════
