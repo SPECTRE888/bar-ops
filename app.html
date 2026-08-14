@@ -3365,6 +3365,7 @@ function renderCGrid(){
       <div class="c-footer">
         <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${(c.ingredients||[]).length} ingr. · ${c.glass||'—'}</div>
         <div class="flex-g no-print" style="flex-wrap:nowrap;gap:4px;white-space:nowrap">
+          <button class="btn-edit" onclick="showCInfo(${c.id})">Info</button>
           <button class="btn-edit" onclick="editC(${c.id})">Modifier</button>
           <button class="btn btn-sm btn-ghost" onclick="dupC(${c.id})">⧉ Dup</button>
           <button class="btn btn-sm btn-danger" onclick="delC(${c.id})">✕</button>
@@ -3372,6 +3373,24 @@ function renderCGrid(){
       </div>
     </div>`;
   }).join('');
+}
+
+function showCInfo(id){
+  const c=state.cocktails.find(x=>x.id===id);if(!c)return;
+  const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||20)/100)).toFixed(2)+'€':'';
+  const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'';
+  const ings=(c.ingredients||[]).map(i=>(i.qty?i.qty+(i.unit||'ml')+' ':'')+(i.name||'')).filter(Boolean).join(', ');
+  showInfoModal(c.name||'Sans nom', [
+    ['Catégorie', escHtml(c.category||'')],
+    ['Code', escHtml(c.code||'')],
+    ['Description', escHtml(c.description||'')],
+    ['Verre', escHtml(c.glass||'')],
+    ['Ingrédients', escHtml(ings)],
+    ['Coût', c.totalCost?c.totalCost.toFixed(2)+'€':''],
+    ['Prix HT', c.priceHT?c.priceHT.toFixed(2)+'€':''],
+    ['Prix TTC', escHtml(ttc)],
+    ['Facteur coût', escHtml(fc)],
+  ], ()=>editC(id));
 }
 
 function dupC(id){
