@@ -53,8 +53,11 @@ fetch(API_BASE+'/api/config')
     }
     const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
     window._sb=sb;
-    const{data:{session}}=await sb.auth.getSession();
+    let {data:{session}}=await sb.auth.getSession();
     if(!session){window.location.href='paying.html';return;}
+    // Rafraîchir le token pour s'assurer qu'il est valide
+    try{const{data:{session:fresh}}=await sb.auth.refreshSession();if(fresh)session=fresh;}catch(e){}
+    if(!session?.access_token){window.location.href='paying.html';return;}
 
     // Vérification d'accès centralisée (admin → son abo, agent → abo de l'owner)
     let access=null;
@@ -75,14 +78,20 @@ fetch(API_BASE+'/api/config')
       }
       await new Promise(r=>setTimeout(r,1500));
     }
-    if(access===null){
-      document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">Impossible de joindre le serveur.</p><button onclick="location.reload()" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
-      return;
-    }
     if(!access?.allowed){
-      const msgs={suspended:'Votre accès a été suspendu. Contactez votre administrateur.',no_active_subscription:'Votre abonnement est inactif.',no_company:'Aucune entreprise associée à ce compte.',invalid_token:'Session invalide. Reconnectez-vous.',auth_required:'Authentification requise.'};
-      const txt=msgs[access.reason]||'Accès refusé.';
-      document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">${txt}</p><button onclick="window.location.href='auth.html'" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button>${access.reason==='no_active_subscription'?`<br><br><button onclick="window.location.href='paying.html'" style="background:transparent;color:#d9a637;border:1px solid #d9a637;padding:10px 24px;border-radius:3px;font-size:12px;cursor:pointer;margin-top:8px">Voir les offres</button>`:''}</div></div>`;
+      // null = erreur réseau/serveur ; objet = refus métier
+      if(access===null){
+        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Impossible de joindre le serveur.</p><p style="font-size:12px;color:#585450;margin-bottom:24px">Vérifiez votre connexion internet puis réessayez.</p><button onclick="location.reload()" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
+      }else if(access?.reason==='invalid_token'||access?.reason==='auth_required'){
+        // Token expiré ou invalide → vider la session et forcer la reconnexion
+        try{await sb.auth.signOut();}catch(e){}
+        window.location.href='auth.html';
+        return;
+      }else{
+        const msgs={suspended:'Votre accès a été suspendu. Contactez votre administrateur.',no_active_subscription:'Votre abonnement est inactif.',no_company:'Aucune entreprise associée à ce compte.'};
+        const txt=msgs[access.reason]||'Accès refusé.';
+        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">${txt}</p><button onclick="window.location.href='auth.html'" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button>${access.reason==='no_active_subscription'?`<br><br><button onclick="window.location.href='paying.html'" style="background:transparent;color:#d9a637;border:1px solid #d9a637;padding:10px 24px;border-radius:3px;font-size:12px;cursor:pointer;margin-top:8px">Voir les offres</button>`:''}</div></div>`;
+      }
       return;
     }
     const subs={plan:access.plan||'pro',status:'active',expires_at:new Date(Date.now()+365*24*3600*1000).toISOString()};
@@ -884,7 +893,7 @@ async function openBillingPortal(){
 }
 
 async function sidebarLogout(){
-  const sb=window.supabase?.createClient?.(SUPA_URL,SUPA_KEY);
+  const sb=window._sb||window.supabase?.createClient?.(SUPA_URL,SUPA_KEY,{auth:{storageKey:'sb-session'}});
   if(sb)await sb.auth.signOut();
   window.location.href='auth.html';
 }
@@ -2336,7 +2345,7 @@ function goPage(p,_evId){
   else if(PAGE_CAT[p]){renderCatPage(PAGE_CAT[p]);document.getElementById('nav-catalogue')?.classList.add('active');}
   else if(p==='glassware') renderGlassware();
   else if(p==='staff'){state.staffItems.forEach(s=>{s._open=false;});renderStaff();renderDressCodes();}
-  else if(p==='clients') renderClients();
+  else if(p==='clients'){state.clients.forEach(c=>c._open=false);renderClients();}
   else if(p==='suppliers') {renderSuppliers(); renderPrestEvSel(); setTimeout(()=>renderPrestation(),10);}
   else if(p==='prestation') {
     renderPrestEvSel();
@@ -4595,7 +4604,7 @@ function renderDashboard(){
       const bgColor=a.severity==='critical'?'var(--red-bg)':'var(--gold-bg)';
       const textColor=a.severity==='critical'?'var(--red)':'var(--gold)';
       const icon=a.severity==='critical'?'🚨':'⚠️';
-      const onclick=a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
+      const onclick=a.type==='stock_retour'&&a.event?`goToEventSuivi(${a.event.id})`:a.type==='stock_retour'?`goPage('suivi')`:a.product?`goPage('catalogue')`:a.event?`editEv(${a.event.id});goPage('events')`:';';
       html+=`<div style="padding:10px;background:${bgColor};border-left:3px solid ${textColor};border-radius:var(--radius);cursor:pointer;font-size:11px" onclick="${onclick}">
         <span style="color:${textColor};font-weight:500">${icon} ${a.text}</span>
       </div>`;
@@ -8881,8 +8890,8 @@ function renderSuppliers(){
         </div>
         <div style="font-size:11px;color:var(--text3);letter-spacing:.03em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cats.length?cats.map(escHtml).join(' · '):'—'}</div>
         <div style="font-size:12px;color:${s.contact?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.contact||'—')}</div>
-        <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${escHtml(s.phone||'—')}</div>
-        <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.email||'—')}</div>
+        <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.phone)}</a>`:'—'}</div>
+        <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.email)}</a>`:'—'}</div>
         <div style="display:flex;gap:5px;align-items:center;justify-content:flex-end;flex-wrap:nowrap">
           <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
           <button class="btn-edit" onclick="showSupplierInfo(${s.id})">Info</button>
@@ -9558,18 +9567,41 @@ function buildEventSummaryHTML(ev){
       <div><strong>Longueur:</strong> ${escHtml(String(ev.barLength||'—'))}m</div>
     </div>`:''}
 
-    ${(ev.assignedStaff||[]).length?`<h3 style="margin-top:25px">Équipe assignée</h3>
-    <div style="display:grid;gap:12px;margin-bottom:20px">
-      ${(ev.assignedStaff||[]).map(sid=>{
-        const s=state.staffItems.find(x=>x.id===sid);
-        if(!s)return'';
-        return`<div style="padding:12px;background:#f9f9f9;border-radius:6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px">
-          <div><strong>${escHtml(s.name)}</strong><br><small style="color:#999">${escHtml(s.type||'—')}</small></div>
-          <div><small style="color:#999">Téléphone</small><br>${escHtml(s.phone||'—')}</div>
-          <div><small style="color:#999">Dispo</small><br><span style="color:${(ev.staffStatus||{})[sid]?.confirmed?'#5a9b6f':'#999'}">${(ev.staffStatus||{})[sid]?.confirmed?'✓ Oui':'Confirmé'}</span></div>
-        </div>`;
-      }).join('')}
-    </div>`:''}
+    ${(()=>{
+      // Préférer staffAssignments (avec horaires) sinon fallback sur assignedStaff
+      const assignments=ev.staffAssignments&&ev.staffAssignments.length?ev.staffAssignments
+        :(ev.assignedStaff||[]).map(sid=>{const s=state.staffItems.find(x=>x.id===sid);return s?{name:s.name,role:s.type,phone:s.phone,billHT:s.billHT,costHT:s.costHT}:null;}).filter(Boolean);
+      if(!assignments.length)return'';
+      const rows=assignments.map(a=>{
+        const h=a.arrivalTime&&a.departureTime?calcStaffHours(a.arrivalTime,a.departureTime):null;
+        const bill=h!=null?(a.billHT||0)*h:null;
+        return`<tr>
+          <td style="padding:8px 10px;font-size:12px"><strong>${escHtml(a.name||'—')}</strong></td>
+          <td style="padding:8px 10px;font-size:12px;color:#666">${escHtml(a.role||'—')}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:center">${a.arrivalTime?escHtml(a.arrivalTime):'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:center">${a.departureTime?escHtml(a.departureTime):'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:center">${h!=null?h.toFixed(1)+'h':'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:right">${a.billHT?a.billHT.toFixed(2)+'€/h':'—'}</td>
+          <td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:600;color:#d4a574">${bill!=null?bill.toFixed(2)+'€':'—'}</td>
+        </tr>`;
+      }).join('');
+      const totalBill=assignments.reduce((s,a)=>{const h=calcStaffHours(a.arrivalTime,a.departureTime);return s+(a.billHT||0)*h;},0);
+      return`<h3 style="margin-top:25px;margin-bottom:12px">Équipe</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">
+        <thead><tr style="background:#f0f0f0">
+          <th style="padding:8px 10px;text-align:left">Nom</th>
+          <th style="padding:8px 10px;text-align:left">Rôle</th>
+          <th style="padding:8px 10px;text-align:center">Arrivée</th>
+          <th style="padding:8px 10px;text-align:center">Départ</th>
+          <th style="padding:8px 10px;text-align:center">Heures</th>
+          <th style="padding:8px 10px;text-align:right">Tarif</th>
+          <th style="padding:8px 10px;text-align:right">Facturation HT</th>
+        </tr></thead>
+        <tbody>${rows}
+          ${totalBill>0?`<tr style="border-top:2px solid #ddd;font-weight:600"><td colspan="6" style="padding:8px 10px;text-align:right">Total équipe HT</td><td style="padding:8px 10px;text-align:right;color:#d4a574">${totalBill.toFixed(2)}€</td></tr>`:''}
+        </tbody>
+      </table>`;
+    })()}
 
     <h3 style="margin-top:30px;margin-bottom:15px;padding-top:20px;border-top:2px solid #e0e0e0">Récapitulatif matériel</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
@@ -9685,7 +9717,12 @@ function renderHistorique(){
         if(prod?.costHT) retourVal+=qty*(prod.costHT||0);
       });
     }
-    return (Math.max(0, ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0))*evDatesCount(ev);
+    // Coût staff (si staffAssignments)
+    const staffCost=(ev.staffAssignments||[]).reduce((s,a)=>{
+      const h=calcStaffHours(a.arrivalTime,a.departureTime);
+      return s+(a.costHT||0)*h;
+    },0);
+    return (Math.max(0, ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0)+staffCost)*evDatesCount(ev);
   };
 
   const totalRev=past.reduce((s,ev)=>s+evRevenue(ev),0);
@@ -9705,23 +9742,23 @@ function renderHistorique(){
   });
 
   let html=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
-      <div class="card" style="text-align:center;padding:18px">
-        <div style="font-size:24px;font-family:'DM Serif Display',serif;color:var(--gold)">${Math.round(totalRev)}€</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">CA total HT</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px">
+      <div class="card" style="text-align:center;padding:28px 20px">
+        <div style="font-size:32px;font-weight:300;color:var(--gold);letter-spacing:-.01em">${fmt(totalRev)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">CA total HT</div>
       </div>
-      <div class="card" style="text-align:center;padding:18px">
-        <div style="font-size:24px;font-family:'DM Serif Display',serif;color:var(--green)">${Math.round(totalMg)}€</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Marge brute HT</div>
-        <div class="txs tm">${totalRev>0?(totalMg/totalRev*100).toFixed(1)+'%':''}</div>
+      <div class="card" style="text-align:center;padding:28px 20px">
+        <div style="font-size:32px;font-weight:300;color:var(--green);letter-spacing:-.01em">${fmt(totalMg)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">Marge brute HT</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">${totalRev>0?(totalMg/totalRev*100).toFixed(1)+'%':''}</div>
       </div>
-      <div class="card" style="text-align:center;padding:18px">
-        <div style="font-size:24px;font-family:'DM Serif Display',serif;color:var(--text)">${past.length}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Prestations</div>
+      <div class="card" style="text-align:center;padding:28px 20px">
+        <div style="font-size:32px;font-weight:300;color:var(--text);letter-spacing:-.01em">${past.length}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">Prestations</div>
       </div>
-      <div class="card" style="text-align:center;padding:18px">
-        <div style="font-size:24px;font-family:'DM Serif Display',serif;color:var(--text)">${totalCkts}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Cocktails servis</div>
+      <div class="card" style="text-align:center;padding:28px 20px">
+        <div style="font-size:32px;font-weight:300;color:var(--text);letter-spacing:-.01em">${totalCkts}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">Cocktails servis</div>
       </div>
     </div>`;
 
@@ -9732,24 +9769,32 @@ function renderHistorique(){
     const [y,m]=key.split('-');
     const monthLabel=new Date(y,m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
     const mg=data.rev-data.cost;
-    html+=`<div class="ctitle" style="margin:16px 0 8px">${monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)} — <span style="color:var(--gold)">${data.rev.toFixed(0)}€</span> <span class="txs tm">marge ${mg.toFixed(0)}€</span></div>`;
+    html+=`<div style="display:flex;align-items:baseline;gap:10px;margin:28px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:500;color:var(--text);text-transform:capitalize">${monthLabel}</div>
+      <div style="font-size:13px;color:var(--gold);font-weight:600">${fmt(data.rev)}</div>
+      <div style="font-size:11px;color:var(--text3)">marge ${fmt(mg)}</div>
+    </div>`;
     filteredEvents.forEach(ev=>{
       const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
-      const fmtDate=new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+      const fmtDate=new Date(ev.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
       const cktCount=evTot(ev);
-      html+=`<div class="card" style="padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:500">${escHtml(ev.name)}</div>
-          <div class="txs tm">${fmtDate}${ev.pax?' · '+ev.pax+' pax':''}${cktCount?' · '+cktCount+' cocktails':''}</div>
+      const client=state.clients.find(c=>c.id===ev.clientId);
+      const clientName=client?.name||ev.clientName||'';
+      html+=`<div class="card" style="padding:18px 22px;margin-bottom:8px;display:flex;align-items:center;gap:20px">
+        <div style="min-width:88px;font-size:11px;color:var(--text3);flex-shrink:0">${fmtDate}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px">${escHtml(ev.name)}</div>
+          <div style="font-size:11px;color:var(--text3);">${clientName?escHtml(clientName)+' · ':''}${ev.pax?ev.pax+' pax · ':''}${cktCount?cktCount+' cocktails':''}</div>
         </div>
-        <div style="text-align:right;margin-right:12px">
-          <div style="font-size:14px;font-weight:500;color:var(--gold)">${rev.toFixed(0)}€ HT</div>
-          <div class="txs" style="color:${mg>=0?'var(--green)':'var(--red)'}">${mg>=0?'+':''}${mg.toFixed(0)}€ marge</div>
+        <div style="text-align:right;flex-shrink:0;min-width:110px">
+          <div style="font-size:15px;font-weight:600;color:var(--gold)">${fmt(rev)}</div>
+          <div style="font-size:11px;color:${mg>=0?'var(--green)':'var(--red)'};margin-top:2px">${mg>=0?'+':''}${fmt(mg)} marge</div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
-          <button style="padding:8px 16px;background:transparent;border:2px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">HTML</button>
-          <button style="padding:8px 12px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:4px;cursor:pointer;font-size:14px;transition:.2s" onmouseover="this.style.background='var(--red-bg)'" onmouseout="this.style.background='transparent'" onclick="delEvHistorique(${ev.id})">×</button>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'" onclick="generateDevis(${ev.id})">Devis</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">Récap</button>
+          <button style="padding:6px 9px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:12px;transition:.2s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" onclick="delEvHistorique(${ev.id})">×</button>
         </div>
       </div>`;
     });
@@ -12041,8 +12086,8 @@ function applyLang(){
     else if(p==='historique') renderHistorique();
     else if(p==='suivi') renderSuivi();
     else if(p==='planning') renderPlanning();
-    else if(p==='staff') {renderStaff();renderDressCodes();}
-    else if(p==='clients') renderClients();
+    else if(p==='staff') {state.staffItems.forEach(s=>{s._open=false;});renderStaff();renderDressCodes();}
+    else if(p==='clients'){state.clients.forEach(c=>c._open=false);renderClients();}
     else if(p==='profile') renderProfile();
   }
 
@@ -12799,17 +12844,26 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
     // Vérif localStorage
     if (localStorage.getItem(OB_KEY) === '1') return;
 
-    // Attend que le paywall soit résolu (max 3s)
+    // Attend que le paywall soit résolu (max 15s)
     let tries = 0;
     const interval = setInterval(() => {
       tries++;
-      // Si demo ou user connecté → show
       if (window._isDemo === true || window._paywallDone === true) {
         clearInterval(interval);
-        obShow();
+        // Laisser 2s pour que cloudPull charge les données, puis vérifier
+        setTimeout(function() {
+          if (!window._isDemo && typeof state !== 'undefined') {
+            const hasData = (state.ingredients && state.ingredients.length > 0)
+              || (state.events && state.events.length > 0)
+              || (state.cocktails && state.cocktails.length > 0)
+              || (state.companyName && state.companyName.trim().length > 0);
+            if (hasData) { localStorage.setItem(OB_KEY, '1'); return; }
+          }
+          obShow();
+        }, 2000);
       }
-      // Timeout fallback
-      if (tries > 30) { clearInterval(interval); obShow(); }
+      // Timeout fallback (15s) — ne rien faire si paywall non résolu
+      if (tries > 150) { clearInterval(interval); }
     }, 100);
   }
 
