@@ -286,10 +286,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn{padding:8px 16px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font-body);font-weight:500;letter-spacing:.09em;text-transform:uppercase;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;line-height:1}
 .btn:hover{border-color:var(--text3);color:var(--text);background:var(--surface2)}
 .btn-gold{background:var(--gold);color:#080808;border:1px solid var(--gold);font-weight:600;letter-spacing:.09em;padding:8px 18px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-transform:uppercase;cursor:pointer;font-family:var(--font-body);line-height:1}
-.btn-gold:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(196,164,107,.2)}
+.btn-gold:hover{background:var(--gold2);border-color:var(--gold2);box-shadow:0 4px 12px rgba(217,166,55,.2)}
 .btn-gold:active{transform:scale(.98)}
 .btn-ghost{border:1px solid var(--border);color:var(--text2);padding:8px 16px;border-radius:4px;font-size:10px;white-space:nowrap;transition:.2s;letter-spacing:.09em;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;cursor:pointer;font-family:var(--font-body);line-height:1}
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(196,164,107,.07)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(217,166,55,.07)}
 .btn-edit{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text2);cursor:pointer;letter-spacing:.08em;transition:.2s;line-height:1;font-family:var(--font-body);text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .btn-edit:hover{border-color:var(--gold-border);color:var(--gold)}
 .br-dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -297,7 +297,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .btn-ghost.btn-sm{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;border-radius:4px}
 .btn-danger.btn-sm{padding:0 11px;height:28px;box-sizing:border-box;font-size:9px;border-radius:4px}
 .btn-danger{color:var(--red);border-color:var(--border2);background:var(--red-bg)}
-.btn-danger:hover{border-color:var(--red);background:rgba(196,112,112,0.14)}
+.btn-danger:hover{border-color:var(--red);background:rgba(217,86,79,0.14)}
 .btn-logout{border-color:var(--border2);color:var(--text3);font-size:10px}
 .btn-logout:hover{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
 .btn-profile{padding:8px 16px;font-size:10px;border-radius:4px;border:1px solid var(--gold-border);color:var(--text2);background:transparent;font-weight:500;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font-body);line-height:1}
@@ -1039,7 +1039,7 @@ function confirmModal(message, isDangerous=true){
 
     const btnColor=isDangerous?'var(--red)':'var(--gold)';
     const btnBg=isDangerous?'var(--red-bg)':'var(--gold-bg)';
-    const btnBorder=isDangerous?'rgba(196,112,112,.2)':'rgba(196,164,107,.2)';
+    const btnBorder=isDangerous?'rgba(217,86,79,.2)':'rgba(217,166,55,.2)';
 
     modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
       <div style="font-size:15px;color:var(--text);margin-bottom:16px;line-height:1.5;font-weight:400">${message}</div>
@@ -8920,10 +8920,13 @@ async function addSupplier(){
       <div class="field"><label>Email</label><input id="sp-email" placeholder="commande@..." type="email"/></div>
     </div>
     <div class="g2">
-      <div class="field"><label>Contact (prénom nom)</label><input id="sp-contact" placeholder="Jean Martin" /></div>
-      <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:22px">
-        <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0"/>
-        <label for="sp-tutoie" style="font-size:12px;cursor:pointer">Tutoiement</label>
+      <div class="field"><label>Contact (prénom)</label><input id="sp-contact" placeholder="Jérôme" /></div>
+      <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+          <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0"/>
+          <span style="font-size:12px">Tutoiement</span>
+          <span style="font-size:10px;color:var(--text3)">(sinon vouvoiement)</span>
+        </label>
       </div>
     </div>
     <div class="field"><label>Adresse</label><input id="sp-address" placeholder="12 rue du Marché, Paris"/></div>
@@ -8955,10 +8958,13 @@ function editSupplier(id){
       <div class="field"><label>Email</label><input id="sp-email" value="${escHtml(s.email||'')}" type="email"/></div>
     </div>
     <div class="g2">
-      <div class="field"><label>Contact (prénom nom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jean Martin" /></div>
-      <div class="field" style="display:flex;align-items:center;gap:8px;padding-top:22px">
-        <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0" ${s.tutoie?'checked':''}/>
-        <label for="sp-tutoie" style="font-size:12px;cursor:pointer">Tutoiement</label>
+      <div class="field"><label>Contact (prénom)</label><input id="sp-contact" value="${escHtml(s.contact||'')}" placeholder="Jérôme" /></div>
+      <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 0">
+          <input type="checkbox" id="sp-tutoie" style="width:auto;margin:0" ${s.tutoie?'checked':''}/>
+          <span style="font-size:12px">Tutoiement</span>
+          <span style="font-size:10px;color:var(--text3)">(sinon vouvoiement)</span>
+        </label>
       </div>
     </div>
     <div class="field"><label>Adresse</label><input id="sp-address" value="${escHtml(s.address||'')}"/></div>
@@ -12115,7 +12121,7 @@ updateCloudStatus();
     });
     // Demo banner
     const banner=document.createElement('div');
-    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99998;background:linear-gradient(90deg,rgba(196,164,107,0.1),rgba(196,164,107,0.08));border-bottom:1px solid rgba(196,164,107,0.3);backdrop-filter:blur(4px);padding:10px;text-align:center;font-size:12px;color:var(--gold);letter-spacing:.08em;font-family:Jost,sans-serif;font-weight:400';
+    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99998;background:linear-gradient(90deg,rgba(217,166,55,0.1),rgba(217,166,55,0.08));border-bottom:1px solid rgba(217,166,55,0.3);backdrop-filter:blur(4px);padding:10px;text-align:center;font-size:12px;color:var(--gold);letter-spacing:.08em;font-family:Jost,sans-serif;font-weight:400';
     banner.innerHTML='MODE VISUALISATION — <a href="paying.html" style="color:var(--gold);text-decoration:none;font-weight:500;cursor:pointer;opacity:0.9;transition:opacity.2s">Souscrire</a>';
     document.body.appendChild(banner);
     console.log('Demo data injected, events:', state.events);
@@ -12515,13 +12521,13 @@ window.addSupplierFromOnboarding = function(supplier) {
 /* Modal */
 #onboarding-modal {
   background: var(--surface, #0f0f0f);
-  border: 1px solid var(--gold-border, rgba(196,164,107,0.2));
+  border: 1px solid var(--gold-border, rgba(217,166,55,0.2));
   border-radius: 12px;
   width: 100%;
   max-width: 480px;
   padding: 36px 32px 28px;
   position: relative;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(196,164,107,0.05);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(217,166,55,0.05);
   animation: obSlideIn .35s cubic-bezier(0.16,1,0.3,1);
 }
 @keyframes obSlideIn {
@@ -12565,7 +12571,7 @@ window.addSupplierFromOnboarding = function(supplier) {
 .ob-step-dot.active {
   background: var(--gold, #d9a637);
   border-color: var(--gold, #d9a637);
-  box-shadow: 0 0 8px rgba(196,164,107,0.4);
+  box-shadow: 0 0 8px rgba(217,166,55,0.4);
 }
 .ob-step-dot.done {
   background: var(--green, #3fb37c);
@@ -12762,7 +12768,7 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
 #ob-btn-next:hover {
   background: var(--gold2, #eabc5c);
   border-color: var(--gold2);
-  box-shadow: 0 4px 16px rgba(196,164,107,.3);
+  box-shadow: 0 4px 16px rgba(217,166,55,.3);
 }
 #ob-btn-next.ob-finish {
   background: var(--green, #3fb37c);
