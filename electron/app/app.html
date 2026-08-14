@@ -10,23 +10,40 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://bar-ops-v2.vercel.app https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://bar-ops-v2.vercel.app https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;"/>
 <title>BAR OPS — Professional Event Management</title>
-<style>:root{--font-display:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;--font-body:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif}</style>
-<script src="https://js.stripe.com/v3/"></script>
-<script src="./supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="./permissions.js"></script>
+<script>window.__isElectron=(typeof window.electronBridge!=='undefined');</script>
 <script>
-// Config injectée par Electron via preload.js (window.electronConfig)
+if(window.__isElectron){
+  document.write('<style>:root{--font-display:-apple-system,BlinkMacSystemFont,\'SF Pro Display\',\'Helvetica Neue\',sans-serif;--font-body:-apple-system,BlinkMacSystemFont,\'SF Pro Text\',\'Helvetica Neue\',sans-serif}<\/style>');
+}else{
+  document.write('<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>');
+}
+</script>
+<script src="https://js.stripe.com/v3/"></script>
+<script>document.write(window.__isElectron?'<script src="./supabase.min.js"><\/script>':'<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>document.write(window.__isElectron?'<script src="./permissions.js"><\/script>':'<script src="/permissions.js"><\/script>');</script>
+<script>
+// Clés API : chargées depuis le serveur (web) ou injectées par preload.js (Electron, window.electronConfig)
 let SUPA_URL='', SUPA_KEY='';
 window.STRIPE_PUBLIC_KEY='';
-SUPA_URL=(window.electronConfig||{}).supabaseUrl||'';
-SUPA_KEY=(window.electronConfig||{}).supabaseAnonKey||'';
-window.STRIPE_PUBLIC_KEY=(window.electronConfig||{}).stripePublicKey||'';
-
-// ← URL des Netlify Functions — à changer ici uniquement si le site change
 const API_BASE='https://bar-ops-v2.vercel.app';
+
+if(window.__isElectron){
+  SUPA_URL=(window.electronConfig||{}).supabaseUrl||'';
+  SUPA_KEY=(window.electronConfig||{}).supabaseAnonKey||'';
+  window.STRIPE_PUBLIC_KEY=(window.electronConfig||{}).stripePublicKey||'';
+}else{
+  fetch(API_BASE+'/api/config')
+    .then(r=>r.json())
+    .then(cfg=>{
+      SUPA_URL=cfg.supabaseUrl;
+      SUPA_KEY=cfg.supabaseKey;
+      window.STRIPE_PUBLIC_KEY=cfg.stripePublicKey;
+    })
+    .catch(e=>console.error('Erreur chargement config:',e));
+}
 
 
 (async()=>{
@@ -46,13 +63,14 @@ const API_BASE='https://bar-ops-v2.vercel.app';
       document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">Impossible de joindre le serveur de configuration.</p><button onclick="location.reload()" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Réessayer</button></div></div>`;
       return;
     }
-    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'sb-session'}});
+    const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,...(window.__isElectron?{storageKey:'sb-session'}:{})}});
     window._sb=sb;
+    const noSessionUrl=window.__isElectron?'auth.html':'paying.html';
     let {data:{session}}=await sb.auth.getSession();
-    if(!session){window.location.href='auth.html';return;}
+    if(!session){window.location.href=noSessionUrl;return;}
     // Rafraîchir le token pour s'assurer qu'il est valide
     try{const{data:{session:fresh}}=await sb.auth.refreshSession();if(fresh)session=fresh;}catch(e){}
-    if(!session?.access_token){window.location.href='auth.html';return;}
+    if(!session?.access_token){window.location.href=noSessionUrl;return;}
 
     // Vérification d'accès centralisée (admin → son abo, agent → abo de l'owner)
     let access=null;
@@ -66,7 +84,7 @@ const API_BASE='https://bar-ops-v2.vercel.app';
       }catch(fe){console.warn('[check-access] fetch error',fe.message);access=null;}
       console.log('[check-access] attempt',i,access);
       if(access?.allowed)break;
-      if(access?.reason==='suspended'||access?.reason==='auth_required'||access?.reason==='invalid_token'||access?.reason==='no_company'||access?.reason==='no_active_subscription')break;
+      if(access?.reason==='suspended'||access?.reason==='auth_required'||access?.reason==='invalid_token'||access?.reason==='no_company')break;
       // reason=no_active_subscription → peut être webhook encore en transit
       if(i===0){
         document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Vérification de votre abonnement…</p><p style="font-size:12px;color:#585450">Cela peut prendre quelques secondes après le paiement.</p></div></div>`;
@@ -82,9 +100,13 @@ const API_BASE='https://bar-ops-v2.vercel.app';
         try{await sb.auth.signOut();}catch(e){}
         window.location.href='auth.html';
         return;
-      }else{
+      }else if(window.__isElectron){
         const msg=access.reason==='no_active_subscription'?'Aucun abonnement actif sur ce compte.':access.reason==='suspended'?'Ce compte a été suspendu.':access.reason==='no_company'?'Profil introuvable — contactez le support.':'Accès refusé.';
         document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:8px">Accès non autorisé.</p><p style="font-size:12px;color:#585450;margin-bottom:24px">${msg}</p><button onclick="window.location.href='auth.html'" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button></div></div>`;
+      }else{
+        const msgs={suspended:'Votre accès a été suspendu. Contactez votre administrateur.',no_active_subscription:'Votre abonnement est inactif.',no_company:'Aucune entreprise associée à ce compte.'};
+        const txt=msgs[access.reason]||'Accès refusé.';
+        document.body.innerHTML=`<div style="font-family:'Jost',sans-serif;background:#080808;color:#ede8e0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px"><div><div style="font-size:28px;font-weight:300;letter-spacing:.1em;color:#d9a637;margin-bottom:24px">BAR OPS</div><p style="color:#a09890;margin-bottom:16px">${txt}</p><button onclick="window.location.href='auth.html'" style="background:#d9a637;color:#080808;border:none;padding:12px 32px;border-radius:3px;font-size:13px;font-weight:600;letter-spacing:.08em;cursor:pointer">Se reconnecter</button>${access.reason==='no_active_subscription'?`<br><br><button onclick="window.location.href='paying.html'" style="background:transparent;color:#d9a637;border:1px solid #d9a637;padding:10px 24px;border-radius:3px;font-size:12px;cursor:pointer;margin-top:8px">Voir les offres</button>`:''}</div></div>`;
       }
       return;
     }
@@ -477,7 +499,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       Profil
     </div>
     <!-- Lien admin équipe — visible uniquement pour COMPANY_ADMIN / SUPER_ADMIN -->
-    <a href="./company-admin.html" class="nav-item" data-perm-role="COMPANY_ADMIN" style="text-decoration:none">
+    <a href="/company-admin.html" class="nav-item" data-perm-role="COMPANY_ADMIN" style="text-decoration:none" id="nav-company-admin-link">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
         <circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5"/>
         <circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/>
@@ -485,6 +507,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       </svg>
       Collaborateurs
     </a>
+    <script>if(window.__isElectron)document.getElementById('nav-company-admin-link').href='./company-admin.html';</script>
 
   </nav>
   <span id="save-dot" style="display:none"></span>
@@ -749,7 +772,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 <!-- ═══ HISTORIQUE ═══ -->
 <div id="page-historique" class="page">
   <div class="topbar">
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="hist-search" placeholder="Chercher..." class="input-md" oninput="renderHistorique()" style="width:200px !important"/>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -830,6 +853,7 @@ function _showSavePill(type='ok'){
   const lbl=document.getElementById('save-time');
   if(!el)return;
   if(saveStatusTimeout){clearTimeout(saveStatusTimeout);saveStatusTimeout=null;}
+  // Reset styles
   el.style.transition='opacity .22s ease';
   if(type==='error'){
     if(icon){icon.textContent='✕';icon.style.color='var(--red)';}
@@ -1618,12 +1642,15 @@ function load(){
 }
 
 function migrateEvRevHT(){
+  // Recalcule totalRevHT pour tous les events depuis les données stockées
+  // (corrige les valeurs sauvegardées avec l'ancien modèle staff nB×tarif)
   const _h=(a,d)=>{if(!a||!d)return 0;const[ah,am]=a.split(':').map(Number);const[dh,dm]=d.split(':').map(Number);let m=(dh*60+dm)-(ah*60+am);if(m<0)m+=24*60;return m/60;};
   let changed=false;
   (state.events||[]).forEach(ev=>{
     const dates=(ev.dates&&ev.dates.length>1)?ev.dates:[ev.date].filter(Boolean);
     const isMulti=dates.length>1;
     const configs=isMulti&&(ev.dateConfigs||[]).length>0?ev.dateConfigs:null;
+    // Cocktails
     let cktRev=0;
     if(configs){
       configs.forEach(dc=>(dc.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));}));
@@ -1631,6 +1658,7 @@ function migrateEvRevHT(){
       (ev.cocktails||[]).forEach(cfg=>{const c=state.cocktails.find(x=>x.id==cfg.id);if(!c)return;cktRev+=(cfg.qty||0)*((c.priceHT||0)-(c.glassCost||0)+(cfg.glassCostHT||0));});
       if(isMulti)cktRev*=dates.length;
     }
+    // Staff
     // Staff root (fallback)
     let rootStaffRev=0;
     (ev.staffAssignments||[]).forEach(s=>{rootStaffRev+=(s.billHT||0)*_h(s.arrivalTime,s.departureTime);});
@@ -2025,7 +2053,7 @@ function onCategoryFilterChange(){
   const select=document.getElementById('cat-filter');
   if(select.value==='__ADD_CATEGORY__'){
     select.value=select.options[0].value;
-    // prompt() est bloqué dans Electron → modal custom
+    // Modal custom (prompt() est bloqué dans Electron, et cette modale est plus cohérente visuellement partout)
     const modal=document.createElement('div');
     modal.id='add-cat-modal';
     modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
@@ -2389,7 +2417,6 @@ function updateBadges(){
 // KRAFTER — Recettes & préparations maison
 // ════════════════════════════════════════════════════════
 const PREP_CATEGORIES_DEFAULT=['Sirop','Infusion','Teinture','Purée','Shrub','Bitters','Autre'];
-// Liste effective = défauts + catégories ajoutées par le user (state.prepCategories), dédoublonnée
 function getPrepCategories(){
   const custom=Array.isArray(state.prepCategories)?state.prepCategories:[];
   return [...new Set([...PREP_CATEGORIES_DEFAULT,...custom])];
@@ -2410,7 +2437,6 @@ function onPrepCategoryChange(prepId,sel){
       updPrep(prepId,'category',newCat);
       renderKrafter();
     } else {
-      // restore previous selection
       const p=state.preparations.find(x=>x.id===prepId);
       sel.value=p?.category||PREP_CATEGORIES_DEFAULT[0];
     }
@@ -2418,9 +2444,8 @@ function onPrepCategoryChange(prepId,sel){
   }
   updPrep(prepId,'category',sel.value);
 }
-// Alias rétrocompatibilité
 const PREP_CATEGORIES=PREP_CATEGORIES_DEFAULT;
-const _openPreps=new Set();
+const _openPreps=new Set(); // track which prep forms are expanded
 
 function calcPrepCost(prep){
   return (prep.ingredients||[]).reduce((s,i)=>s+(parseFloat(i.qty)||0)*(parseFloat(i.pricePerUnit)||0),0);
@@ -2487,6 +2512,7 @@ function renderPrepIngList(prepId){
     <td><input id="kr-ing-price-${prepId}-${i.id}" type="number" value="${i.pricePerUnit||''}" min="0" step="any" placeholder="0.000" onchange="updPrepIng(${prepId},${i.id},'pricePerUnit',this.value)" style="${_ingStyle()};text-align:right"/></td>
     <td style="text-align:center"><button class="btn btn-sm btn-danger" onclick="delPrepIng(${prepId},${i.id})">×</button></td>
   </tr>`).join('');
+  // Init searchable selects from catalogue
   ings.forEach(i=>{
     const prodOpts=[...new Set(state.products.map(pr=>pr.productType+(pr.brand?' — '+pr.brand:'')).filter(Boolean))].sort();
     mkSS(`kr-ing-ss-${prepId}-${i.id}`, prodOpts, 'Produit catalogue…', (val)=>{
@@ -2512,8 +2538,6 @@ function sendPrepToCatalogue(prepId){
   const costHT=calcPrepPricePerUnit(p);
   const catName=(p.catalogueName||p.name).trim();
   if(!catName){alert('Donnez un nom catalogue avant d\'envoyer.');return;}
-  // Catégorie produit : on garde la catégorie choisie côté Krafter (Infusion, Sirop, custom, etc.)
-  // pour qu'elle s'intègre dans le filtre catégorie du catalogue, plutôt qu'un fourre-tout.
   const prepCat=(p.category||'').trim()||'Préparation maison';
   if(p.catalogueProductId){
     const prod=state.products.find(pr=>pr.id===p.catalogueProductId);
@@ -2580,7 +2604,6 @@ function togglePrepForm(id){
 }
 function renderKrafter(){
   const content=document.getElementById('krafter-content');if(!content)return;
-  // Synchronise le filtre catégorie avec les catégories réellement utilisées (défauts + custom)
   const catSel=document.getElementById('kr-cat');
   if(catSel){
     const currentVal=catSel.value;
@@ -2710,6 +2733,7 @@ function renderKrafter(){
     </div>`;
   }).join('');
 
+  // Restore open forms + init ingredient SS
   preps.forEach(p=>{if(_openPreps.has(p.id)) renderPrepIngList(p.id);});
 }
 
@@ -3151,9 +3175,11 @@ function renderStaff(){
     const roleBg=ROLE_BG[s.type]||'var(--surface3)';
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
+    // Ligne contact
     const infos=[];
     if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="Envoyer un message WhatsApp" style="font-size:11px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">Tél. ${escHtml(s.phone)}</a>`);
     if(s.zone)   infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.zone)}</span>`);
+    // Chips physiques (ligne visible sans ouvrir) — sans emoji
     const chip=(label,val)=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;padding:2px 8px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase">${label}</span>${escHtml(val)}</span>`;
     const phys=[];
     if(s.age)             phys.push(chip('Âge',s.age+' ans'));
@@ -3164,6 +3190,7 @@ function renderStaff(){
     if(s.physique)       phys.push(chip('Physique',s.physique));
     if(s.langues)        phys.push(chip('Langues',s.langues));
     if(s.couleurCheveux) phys.push(chip('Cheveux',s.couleurCheveux));
+    // data-search
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.zone,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
     return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
@@ -4402,7 +4429,7 @@ function showSingleEventSuivi(eventId){
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
-            <button class="btn btn-sm btn-ghost" style="flex:1;font-size:10px" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='block'">+ Hors presta</button>
+            <button class="btn btn-sm btn-ghost" style="flex:1" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='block'">+ Hors presta</button>
             <button class="btn btn-sm btn-ghost" style="flex:2;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="suiviReinject(${ev.id})">Réinjecter en stock</button>
           </div>
           ${!ev.paid?'<div style="font-size:10px;color:var(--text3);text-align:center">Marquez la prestation comme payée pour valider</div>':''}
@@ -4414,30 +4441,15 @@ function showSingleEventSuivi(eventId){
   el.innerHTML=html;
 }
 
-function addSuiviHorsCat(evId){
-  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
-  const nom=(document.getElementById('shc-nom-'+evId)?.value||'').trim();
-  if(!nom){toast('Saisir un nom de produit');return;}
-  const detail=(document.getElementById('shc-detail-'+evId)?.value||'').trim();
-  const unite=(document.getElementById('shc-unite-'+evId)?.value||'Unité').trim();
-  const qty=parseFloat(document.getElementById('shc-qty-'+evId)?.value)||1;
-  if(!ev.stockRetourCustomItems) ev.stockRetourCustomItems=[];
-  ev.stockRetourCustomItems.push({nom,detail,unite,qty});
-  save();
-  document.getElementById('suivi-hors-cat-form-'+evId).style.display='none';
-  showSingleEventSuivi(evId);
-}
-
 function suiviReinject(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   if(!ev.paid){toast("Marquez d'abord la prestation comme payée");return;}
   injectStockRetour(evId);
 }
 
-function markPaidSuivi(evId, paid){
+function markPaidSuivi(evId,paid){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   ev.paid=paid;
-  // Pas de cocktails → archive auto dès que payé
   if(paid&&!(ev.cocktails||[]).length) ev.stockRetourDone=true;
   save();cloudPush();
   showSingleEventSuivi(evId);
@@ -4660,7 +4672,8 @@ function renderDashboard(){
         if(!isOk&&product.stock<total/(product.qty||1)) stockIssues++;
       });
 
-      const staffColor=assigned===0?'var(--text3)':confirmed>=assigned?'var(--green)':'var(--gold)';
+      const staffOk=assigned===0?null:confirmed>=assigned;
+      const staffColor=assigned===0?'var(--text3)':staffOk?'var(--green)':'var(--gold)';
       const staffTxt=assigned===0?'—':`${confirmed}/${assigned}`;
 
       const stockOkAll=isAllStockOk(ev);
@@ -4778,16 +4791,16 @@ function updCRecap(){
   ingRows().forEach(r=>{const v=calcIC(r.id);ingCost+=v;total+=v;});
   consoRows().forEach(r=>{total+=calcIC(r.id);});
   total+=parseFloat(document.getElementById('cf-ice')?.value)||0;
-  // Coût verre séparé — s'ajoute APRÈS le multiplicateur
+  // Coût de production = ingrédients + conso + glace (PAS le verre)
   const glassCostVal=parseFloat(document.getElementById('cf-glass-cost')?.value)||0;
 
   const hasUnp=[...ingRows(),...consoRows()].some(r=>{const p=rowProduct(r.id);const ptype=r.dataset.ptype||r.querySelector('.ss-input')?.value||'';return ptype&&(!p||!p.priceHT);});
   const w=document.getElementById('ing-warn');if(w)w.className='warn'+(hasUnp?'':' hide');
 
-  // Coût de production affiché (SANS verre)
+  // Coût de production affiché (SANS verre — le verre s'ajoute au prix de vente)
   const costEl=document.getElementById('r-cost');if(costEl)costEl.textContent=total.toFixed(2)+'€';
 
-  // Prix conseillé = prod × multiplicateur + verre
+  // Prix conseillé = prod × multiplicateur + verre (verre ajouté APRÈS le mult)
   const cat=document.getElementById('cf-cat')?.value||'Cocktail Signature';
   let mult=4;
   if(cat.includes('Classique'))mult=3.5;
@@ -4807,6 +4820,7 @@ function updCRecap(){
   const loss=(parseFloat(document.getElementById('cf-vat')?.value)||0)/100;
   const ht=prixVente*(1+loss);
   const htFinalEl=document.getElementById('r-ht-final');if(htFinalEl)htFinalEl.textContent=prixVente>0?ht.toFixed(2)+'€':'—';
+  // Marge = prix de vente - coût prod - coût verre (total "out of pocket")
   if(prixVente>0&&total>0){
     const mg=prixVente-(total+glassCostVal),mgPct=mg/prixVente*100;
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
@@ -5001,77 +5015,6 @@ function _renderEvDateTabs(){
     ${tabs}
   </div>`;
 }
-let _evDateConfigs=[];
-
-function _ensureDateCfg(idx){
-  const dates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);
-  if(idx>=dates.length)return null;
-  if(!_evDateConfigs[idx]){
-    const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
-    const isFirst=idx===0;
-    const sel=document.getElementById('ev-content')?._sel||{};
-    _evDateConfigs[idx]={
-      date:dates[idx],
-      setup:isFirst?document.getElementById('ef-setup')?.value||'':'',
-      start:isFirst?document.getElementById('ef-start')?.value||'':'',
-      end:isFirst?document.getElementById('ef-end')?.value||'':'',
-      breakdown:isFirst?document.getElementById('ef-breakdown')?.value||'':'',
-      assignedStaff:isFirst?[...(curEv?.assignedStaff||[])]:[],
-      staffRoles:isFirst?{...(curEv?.staffRoles||{})}:{},
-      staffAssignments:JSON.parse(JSON.stringify(isFirst?curEv?.staffAssignments||[]:[])),
-      cocktails:isFirst
-        ?Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}))
-        :JSON.parse(JSON.stringify(curEv?.cocktails||[]))
-    };
-  } else {
-    _evDateConfigs[idx].date=dates[idx];
-  }
-  return _evDateConfigs[idx];
-}
-function _saveCurDateCfg(){
-  if(!_ensureDateCfg(_evActiveDateIdx))return;
-  const cfg=_evDateConfigs[_evActiveDateIdx];if(!cfg)return;
-  cfg.setup=document.getElementById('ef-setup')?.value||'';
-  cfg.start=document.getElementById('ef-start')?.value||'';
-  cfg.end=document.getElementById('ef-end')?.value||'';
-  cfg.breakdown=document.getElementById('ef-breakdown')?.value||'';
-  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
-  cfg.assignedStaff=[...(curEv?.assignedStaff||[])];
-  cfg.staffRoles={...(curEv?.staffRoles||{})};
-  cfg.staffAssignments=JSON.parse(JSON.stringify(curEv?.staffAssignments||[]));
-  const sel=document.getElementById('ev-content')?._sel||{};
-  cfg.cocktails=Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}));
-}
-function switchEvDateTab(idx){
-  _saveCurDateCfg();
-  _evActiveDateIdx=idx;
-  const cfg=_ensureDateCfg(idx);
-  if(!cfg)return;
-  const setSel=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
-  setSel('ef-setup',cfg.setup);setSel('ef-start',cfg.start);setSel('ef-end',cfg.end);setSel('ef-breakdown',cfg.breakdown);
-  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
-  if(curEv){
-    curEv.assignedStaff=[...(cfg.assignedStaff||[])];
-    curEv.staffRoles={...(cfg.staffRoles||{})};
-    const _destStaff=(cfg.staffAssignments&&cfg.staffAssignments.length>0)?cfg.staffAssignments:curEv.staffAssignments;
-    curEv.staffAssignments=JSON.parse(JSON.stringify(_destStaff));
-    if(!cfg.staffAssignments||!cfg.staffAssignments.length)cfg.staffAssignments=JSON.parse(JSON.stringify(_destStaff));
-  }
-  const evContent=document.getElementById('ev-content');
-  if(evContent){
-    evContent._sel={};
-    (cfg.cocktails||[]).forEach(c=>{evContent._sel[c.id]={qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};});
-  }
-  if(curEv)renderStaffList(curEv.id);
-  else{const l=document.getElementById('ev-staff-list');if(l)l.innerHTML='<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun staff — sauvegardez d\'abord l\'événement</div>';}
-  renderEvPicker();updEvCalc();
-  document.querySelectorAll('.ev-date-tab').forEach((t,i)=>{
-    const a=i===idx;
-    t.style.borderBottomColor=a?'var(--gold)':'transparent';
-    t.style.color=a?'var(--gold)':'var(--text3)';
-    t.style.fontWeight=a?'700':'400';
-  });
-}
 function _removeEvDate(btn){
   const list=document.getElementById('ef-dates-list');if(!list)return;
   const items=[...list.children];
@@ -5147,7 +5090,6 @@ function newEvForClient(clientId){
   if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canCreateEvents'))return;
   editEvId=null;showEvForm({});
   goPage('events');
-  // Pré-remplir le client après rendu du formulaire
   setTimeout(()=>selectClientFromSearch(clientId),50);
 }
 function editEv(id){editEvId=id;showEvForm(state.events.find(x=>x.id===id)||{});}
@@ -5496,8 +5438,10 @@ function showEvForm(ev){
     _sv('ef-setup',_c0.setup);_sv('ef-start',_c0.start);_sv('ef-end',_c0.end);_sv('ef-breakdown',_c0.breakdown);
     const _ce=editEvId?state.events.find(x=>x.id===editEvId):null;
     if(_ce){_ce.assignedStaff=[...(_c0.assignedStaff||[])];_ce.staffRoles={...(_c0.staffRoles||{})};
+      // Si dateConfigs[0] n'a pas de staff, hériter du staff root (fallback)
       const _c0staff=(_c0.staffAssignments&&_c0.staffAssignments.length>0)?_c0.staffAssignments:(_existingForTabs?.staffAssignments||[]);
       _ce.staffAssignments=JSON.parse(JSON.stringify(_c0staff));
+      // Rétro-alimenter _evDateConfigs[0] pour que _saveCurDateCfg() capture le bon staff
       if(_evDateConfigs[0]&&!(_c0.staffAssignments&&_c0.staffAssignments.length>0))_evDateConfigs[0].staffAssignments=JSON.parse(JSON.stringify(_c0staff));
       renderStaffList(_ce.id);}
     const _evc=document.getElementById('ev-content');
@@ -5505,6 +5449,82 @@ function showEvForm(ev){
     renderEvPicker();updEvCalc();
   }
 }
+
+// ── MULTI-DATE TABS ──────────────────────────────────────
+let _evDateConfigs=[];
+
+function _ensureDateCfg(idx){
+  const dates=[...document.querySelectorAll('.ef-date-item')].map(i=>i.value).filter(Boolean);
+  if(idx>=dates.length)return null;
+  if(!_evDateConfigs[idx]){
+    const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+    const isFirst=idx===0;
+    const sel=document.getElementById('ev-content')?._sel||{};
+    _evDateConfigs[idx]={
+      date:dates[idx],
+      setup:isFirst?document.getElementById('ef-setup')?.value||'':'',
+      start:isFirst?document.getElementById('ef-start')?.value||'':'',
+      end:isFirst?document.getElementById('ef-end')?.value||'':'',
+      breakdown:isFirst?document.getElementById('ef-breakdown')?.value||'':'',
+      assignedStaff:isFirst?[...(curEv?.assignedStaff||[])]:[],
+      staffRoles:isFirst?{...(curEv?.staffRoles||{})}:{},
+      staffAssignments:JSON.parse(JSON.stringify(isFirst?curEv?.staffAssignments||[]:[])),
+      cocktails:isFirst
+        ?Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}))
+        :JSON.parse(JSON.stringify(curEv?.cocktails||[]))
+    };
+  } else {
+    _evDateConfigs[idx].date=dates[idx];
+  }
+  return _evDateConfigs[idx];
+}
+function _saveCurDateCfg(){
+  // Always works — module-level array, no editEvId dependency
+  if(!_ensureDateCfg(_evActiveDateIdx))return;
+  const cfg=_evDateConfigs[_evActiveDateIdx];if(!cfg)return;
+  cfg.setup=document.getElementById('ef-setup')?.value||'';
+  cfg.start=document.getElementById('ef-start')?.value||'';
+  cfg.end=document.getElementById('ef-end')?.value||'';
+  cfg.breakdown=document.getElementById('ef-breakdown')?.value||'';
+  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+  cfg.assignedStaff=[...(curEv?.assignedStaff||[])];
+  cfg.staffRoles={...(curEv?.staffRoles||{})};
+  cfg.staffAssignments=JSON.parse(JSON.stringify(curEv?.staffAssignments||[]));
+  const sel=document.getElementById('ev-content')?._sel||{};
+  cfg.cocktails=Object.entries(sel).filter(([,c])=>c.qty>0).map(([id,c])=>({id:parseInt(id),qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null}));
+}
+function switchEvDateTab(idx){
+  _saveCurDateCfg();
+  _evActiveDateIdx=idx;
+  const cfg=_ensureDateCfg(idx);
+  if(!cfg)return;
+  const setSel=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  setSel('ef-setup',cfg.setup);setSel('ef-start',cfg.start);setSel('ef-end',cfg.end);setSel('ef-breakdown',cfg.breakdown);
+  const curEv=editEvId?state.events.find(x=>x.id===editEvId):null;
+  if(curEv){
+    curEv.assignedStaff=[...(cfg.assignedStaff||[])];
+    curEv.staffRoles={...(cfg.staffRoles||{})};
+    // Si le tab destination n'a pas de staff, hériter du staff courant (copie du tab précédent)
+    const _destStaff=(cfg.staffAssignments&&cfg.staffAssignments.length>0)?cfg.staffAssignments:curEv.staffAssignments;
+    curEv.staffAssignments=JSON.parse(JSON.stringify(_destStaff));
+    if(!cfg.staffAssignments||!cfg.staffAssignments.length)cfg.staffAssignments=JSON.parse(JSON.stringify(_destStaff));
+  }
+  const evContent=document.getElementById('ev-content');
+  if(evContent){
+    evContent._sel={};
+    (cfg.cocktails||[]).forEach(c=>{evContent._sel[c.id]={qty:c.qty,pct:c.pct||0,glass:c.glass||'',glassId:c.glassId||null,glassCostHT:c.glassCostHT||0,iceTypeId:c.iceTypeId??null,serviceIce:c.serviceIce??null};});
+  }
+  if(curEv)renderStaffList(curEv.id);
+  else{const l=document.getElementById('ev-staff-list');if(l)l.innerHTML='<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun staff — sauvegardez d\'abord l\'événement</div>';}
+  renderEvPicker();updEvCalc();
+  document.querySelectorAll('.ev-date-tab').forEach((t,i)=>{
+    const a=i===idx;
+    t.style.borderBottomColor=a?'var(--gold)':'transparent';
+    t.style.color=a?'var(--gold)':'var(--text3)';
+    t.style.fontWeight=a?'700':'400';
+  });
+}
+// ── END MULTI-DATE TABS ──────────────────────────────────
 
 function renderEvPicker(){
   const el=document.getElementById('ev-picker');if(!el)return;
@@ -5532,9 +5552,11 @@ function renderEvPicker(){
     // Sync into sel for calc
     sel[c.id].glassCostHT=glassCostHT;
 
+    // Cost WITHOUT glass (totalCost includes original glass cost)
     // Coût de prod pur (verre = prix de vente, pas un coût)
     const ingCostUnit=(c.totalCost||0);
     const totalCostUnit=ingCostUnit;
+    // c.priceHT = prod×mult + glassCost ; swap verre cocktail → verre event
     const adjustedPriceHT=(c.priceHT||0)-(c.glassCost||0)+glassCostHT;
     const totalCost=qty?(qty*totalCostUnit).toFixed(2):null;
     const totalPrice=qty?(qty*adjustedPriceHT).toFixed(2):null;
@@ -5950,6 +5972,7 @@ function updEvCalc(){
     const gc=cfg.glassCostHT||0;
     // Coût de prod pur (sans verre — le verre n'est pas un coût, c'est un prix de vente)
     ingCost+=qty*(c.totalCost||0);
+    // Prix de vente : swape le verre cocktail par défaut → verre choisi sur l'event
     const adjustedPrice=(c.priceHT||0)-(c.glassCost||0)+gc;
     revenue+=qty*adjustedPrice;
     glassCost+=qty*gc;
@@ -6122,7 +6145,7 @@ function _epShowPortal(anchorEl,rows){
     d.style.cssText='padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--border2)';
     d.innerHTML=label;
     d.addEventListener('mousedown',e=>{
-      e.preventDefault();
+      e.preventDefault(); // empêche le blur de l'input
       _epHidePortal();
       onSelect();
     });
@@ -6243,6 +6266,7 @@ async function saveEv(){
   if((_curEvSave?.staffAssignments||[]).length>0){
     (_curEvSave.staffAssignments).forEach(s=>{staffRevenue+=(s.billHT||0)*_calcHrsMin(s.arrivalTime,s.departureTime);});
   }else{
+    // Fallback ancien modèle (nB/nW/nM × tarif rôle)
     const staffBillPerRole={brt:state.staffItems?.find(s=>s.type==='Bartender')?.billHT||40,wtr:state.staffItems?.find(s=>s.type==='Serveur')?.billHT||32,mgr:state.staffItems?.find(s=>s.type==='Bar Manager')?.billHT||55};
     const calcHoursForm=(arrId,depId)=>{const a=document.getElementById(arrId)?.value||'';const d=document.getElementById(depId)?.value||'';return _calcHrsMin(a,d);};
     staffRevenue=nB*calcHoursForm('ef-arrbrt','ef-depbrt')*staffBillPerRole.brt+nW*calcHoursForm('ef-arrwtr','ef-depwtr')*staffBillPerRole.wtr+nM*calcHoursForm('ef-arrmgr','ef-depmgr')*staffBillPerRole.mgr;
@@ -8621,7 +8645,7 @@ function sendSupplierOrder(supplierName,method){
   items=Object.values(deduped);
   const sup=state.suppliers.find(s=>s.name===supplierName)||{};
   const lines=items.map(i=>{const u=i.unit==='cl'?'pièce':i.unit;return `${i.brand||i.name} — ${i.name}${i.code?' ['+i.code+']':''} : ${i.qty} ${u}`}).join('\n');
-  // Greeting personalisé : tutoiement ou vouvoiement, avec prénom du contact
+  // Greeting personnalisé : tutoiement ou vouvoiement, avec prénom du contact
   let greeting;
   if(sup.contact){
     const prenom=sup.contact.split(' ')[0];
@@ -9224,6 +9248,12 @@ async function downloadEventPDF(evId){
 function openEventHTML(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   const html=buildEventSummaryHTML(ev);
+  if(!window.__isElectron){
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    window.open(url);
+    return;
+  }
   // Affichage en modal intégré (évite l'erreur blob:file:// dans Electron)
   const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#1a1a1a;display:flex;flex-direction:column';
@@ -9347,7 +9377,7 @@ async function exportStockEuro(){
 
   if(!confirmed) return;
 
-  // Générer le PDF localement (form.submit → Netlify bloqué dans Electron)
+  // Générer le PDF localement
   const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
   const bycat={};
   allItems.forEach(i=>{if(!bycat[i.category])bycat[i.category]=[];bycat[i.category].push(i);});
@@ -9376,18 +9406,15 @@ async function exportStockEuro(){
       <tbody>${tableRows}</tbody>
     </table>
   </div>`;
-
   const el=document.createElement('div');
   el.style.cssText='position:absolute;left:-9999px;top:0;width:750px;background:#fff';
   el.innerHTML=reportHTML;
   document.body.appendChild(el);
-
   const filename=`Inventaire-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`;
   if(typeof html2pdf!=='undefined'){
     html2pdf().set({margin:[12,12,12,12],filename,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}})
       .from(el).save().then(()=>el.remove());
   }else{
-    // Fallback : télécharger en HTML
     const blob=new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Inventaire</title></head><body style="margin:24px">${reportHTML}</body></html>`],{type:'text/html'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.pdf','.html');
     document.body.appendChild(a);a.click();document.body.removeChild(a);el.remove();
@@ -9717,10 +9744,11 @@ function renderHistorique(){
   const searchFilter=document.getElementById('hist-search')?.value.toLowerCase()||'';
   const filtered=searchFilter?past.filter(ev=>ev.name.toLowerCase().includes(searchFilter)||ev.location?.toLowerCase().includes(searchFilter)):past;
 
-  // Revenue = totalRevHT stocké (inclut remise, multiplicateur dates) — identique au dashboard
+  // CA canonique : utiliser ev.totalRevHT stocké (remise + nb dates inclus à la sauvegarde),
+  // ne JAMAIS recalculer à la volée pour l'affichage (cf. CLAUDE.md règle cohérence CA).
   const evRevenue=ev=>ev.totalRevHT||0;
   const evCost=ev=>{
-    // Coût ingrédients réel (retour déduit)
+    // Si stock retour saisi, calcul coût réel = coût prévu - valeur des bouteilles retournées
     const ingredCost=(ev.cocktails||[]).reduce((s,cfg)=>{
       const ck=state.cocktails.find(x=>x.id===cfg.id);
       return s+(ck&&cfg.qty?cfg.qty*ck.totalCost:0);
@@ -9740,7 +9768,7 @@ function renderHistorique(){
       const h=calcStaffHours(a.arrivalTime,a.departureTime);
       return s+(a.costHT||0)*h;
     },0);
-    return (Math.max(0,ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0)+staffCost)*evDatesCount(ev);
+    return (Math.max(0, ingredCost-retourVal)+(ev.extraCostHT||0)+(ev.deliveryCostHT||0)+staffCost)*evDatesCount(ev);
   };
 
   const totalRev=past.reduce((s,ev)=>s+evRevenue(ev),0);
@@ -10353,6 +10381,7 @@ function renderProfile(){
   </div>`;
   loadSessionsList();
   if(isConnected&&(typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin())) loadAgentsList();
+  // preset select toggle
   setTimeout(()=>{
     const sel=document.getElementById('agent-invite-preset');
     if(sel) sel.addEventListener('change',()=>{
@@ -10375,6 +10404,33 @@ async function _agentsFetch(body){
   }catch(e){return null;}
 }
 
+async function confirmBuySeat(){
+  const email=(document.getElementById('seat-invite-email')?.value||'').trim();
+  if(!email){showToast('Saisissez un email','error');return;}
+  const role=document.getElementById('seat-invite-preset')?.value||'commercial';
+  const ROLE_PRESETS_APP={
+    commercial:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:true,canViewCosts:false,canManageClients:true,canCreateEvents:true,canEditProjects:true,canManageCatalogue:false,canManageStaff:false,canManageSuppliers:false,canExportData:false},
+    barman:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:false,canViewCosts:false,canManageClients:false,canCreateEvents:false,canEditProjects:false,canManageCatalogue:true,canManageStaff:false,canManageSuppliers:true,canExportData:false}
+  };
+  const perms=ROLE_PRESETS_APP[role]||ROLE_PRESETS_APP.commercial;
+  // Si sous la limite → invitation gratuite directe
+  const maxAgents=window._agentsMaxCache??2;
+  const currentCount=window._agentsCountCache??0;
+  if(currentCount<maxAgents){
+    try{
+      const r=await _agentsFetch({type:'invite',email,role,permissions:perms});
+      if(r?.error) throw new Error(r.error);
+      showToast('Invitation envoyée à '+email);
+      document.getElementById('seat-invite-email').value='';
+      document.getElementById('add-member-form').style.display='none';
+      loadAgentsList();
+    }catch(e){showToast(e?.message||'Erreur','error');}
+  } else {
+    // Limite atteinte → achat siège Stripe (invitation auto après paiement)
+    await buyAgentSeat({pendingEmail:email,pendingRole:role,pendingPermissions:perms});
+  }
+}
+
 async function loadAgentsList(){
   const wrap=document.getElementById('agents-list-wrap');
   if(!wrap) return;
@@ -10384,6 +10440,7 @@ async function loadAgentsList(){
     const invitations=res?.invitations||[];
     const maxAgents=res?.company?.max_agents??2;
     const limitReached=agents.length>=maxAgents;
+    // Cache pour confirmBuySeat
     window._agentsMaxCache=maxAgents;
     window._agentsCountCache=agents.length;
     let html='';
@@ -10422,6 +10479,7 @@ async function loadAgentsList(){
       }
       html+='</div>';
     }
+    // Formulaire "Ajouter un collaborateur" — toujours visible
     const btnLabel=limitReached?'Payer 29€/mois et inviter →':'Inviter →';
     const infoLabel=limitReached
       ?`<div style="font-size:10px;color:var(--gold);margin-bottom:6px">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''}) — un siège supplémentaire sera facturé 29€/mois.</div>`
@@ -10453,6 +10511,7 @@ async function loadAgentsList(){
       </div>
     </div>`;
     wrap.innerHTML=html;
+    // Masquer l'ancien bouton "+ Inviter" (remplacé par le nouveau formulaire intégré)
     const btnInvite=document.getElementById('btn-invite-agent');
     if(btnInvite) btnInvite.style.display='none';
   }catch(e){
@@ -10511,30 +10570,7 @@ async function cancelInvite(invitationId){
     showToast(e?.message||'Erreur','error');
   }
 }
-async function confirmBuySeat(){
-  const email=(document.getElementById('seat-invite-email')?.value||'').trim();
-  if(!email){showToast('Saisissez un email','error');return;}
-  const role=document.getElementById('seat-invite-preset')?.value||'commercial';
-  const ROLE_PRESETS_APP={
-    commercial:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:true,canViewCosts:false,canManageClients:true,canCreateEvents:true,canEditProjects:true,canManageCatalogue:false,canManageStaff:false,canManageSuppliers:false,canExportData:false},
-    barman:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:false,canViewCosts:false,canManageClients:false,canCreateEvents:false,canEditProjects:false,canManageCatalogue:true,canManageStaff:false,canManageSuppliers:true,canExportData:false}
-  };
-  const perms=ROLE_PRESETS_APP[role]||ROLE_PRESETS_APP.commercial;
-  const maxAgents=window._agentsMaxCache??2;
-  const currentCount=window._agentsCountCache??0;
-  if(currentCount<maxAgents){
-    try{
-      const r=await _agentsFetch({type:'invite',email,role,permissions:perms});
-      if(r?.error) throw new Error(r.error);
-      showToast('Invitation envoyée à '+email);
-      document.getElementById('seat-invite-email').value='';
-      document.getElementById('add-member-form').style.display='none';
-      loadAgentsList();
-    }catch(e){showToast(e?.message||'Erreur','error');}
-  } else {
-    await buyAgentSeat({pendingEmail:email,pendingRole:role,pendingPermissions:perms});
-  }
-}
+
 async function buyAgentSeat(opts={}){
   try{
     const token=extractToken(cloudUser);
@@ -10551,6 +10587,27 @@ async function buyAgentSeat(opts={}){
     showToast(e?.message||'Erreur','error');
   }
 }
+
+// Gestion du retour depuis Stripe après achat de siège
+(function _handleSeatReturn(){
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('seat')==='success'){
+    setTimeout(()=>{
+      showToast(p.get('seat_invite')==='1'
+        ? '✅ Siège ajouté — invitation envoyée automatiquement !'
+        : '✅ Siège collaborateur ajouté à votre abonnement !','success');
+      // Naviguer vers la section Compte / Collaborateurs
+      if(typeof navigate==='function') navigate('profile');
+    },800);
+    // Nettoyer l'URL
+    const url=new URL(window.location.href);url.searchParams.delete('seat');url.searchParams.delete('seat_invite');
+    window.history.replaceState({},'',url.toString());
+  } else if(p.get('seat')==='cancelled'){
+    setTimeout(()=>showToast('Achat de siège annulé.'),400);
+    const url=new URL(window.location.href);url.searchParams.delete('seat');
+    window.history.replaceState({},'',url.toString());
+  }
+})();
 
 function updProfile(k,v){
   if(!state.profile) state.profile={};
@@ -10744,7 +10801,7 @@ async function deleteAccountConfirmed(){
     const r=await fetch(API_BASE+'/api/delete-account',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({action:'portal'})
+      body:JSON.stringify({})
     });
     
     if(!r.ok){
@@ -11004,7 +11061,7 @@ function _renderSuiviOld_unused(){
 
       <!-- Colonnes checks -->
       <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px">
-        ${col(hasCocktails,'Cocktails',!hasCocktails?`<button class="btn btn-sm btn-ghost" onclick="goToEventSuivi(${ev.id})">Config</button>`:'')}
+        ${col(hasCocktails,'Cocktails',!hasCocktails?`<button class="btn btn-sm btn-ghost" style="font-size:9px;padding:2px 6px" onclick="goToEventSuivi(${ev.id})">Config</button>`:'')}
         ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
         ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
         ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
@@ -11095,6 +11152,7 @@ function _renderSuiviOld_unused(){
             }).join('')}
           </div>
           ${(()=>{
+            // Casse verres : agréger les verres utilisés (multi-date = somme par dateConfigs)
             const glassQty={};
             const allCkts=ev.dateConfigs?.length>1
               ?ev.dateConfigs.flatMap(dc=>dc.cocktails||[])
@@ -11256,6 +11314,7 @@ function updBreakageActual(evId, glassName, qty){
 function injectStockRetour(evId){
   const ev=state.events.find(x=>x.id===evId);if(!ev)return;
   let count=0;
+  // Produits du devis
   if(ev.stockRetour){
     Object.entries(ev.stockRetour).forEach(([key,qty])=>{
       if(!qty) return;
@@ -11267,12 +11326,14 @@ function injectStockRetour(evId){
       count++;
     });
   }
+  // Ajouts catalogue
   (ev.stockRetourCatalogueItems||[]).forEach(item=>{
     if(!item.qty) return;
     const prod=state.products.find(p=>p.productType===item.productType&&(p.brand||'')===(item.brand||''))
               ||state.products.find(p=>p.productType===item.productType);
     if(prod){prod.stock=(prod.stock||0)+item.qty;count++;}
   });
+  // Produits hors catalogue — juste comptabilisés
   (ev.stockRetourCustomItems||[]).forEach(item=>{if(item.qty)count++;});
   // Casse verres : facturer l'excédent au-delà de la tolérance
   if(ev.breakageActual&&Object.keys(ev.breakageActual).length){
@@ -11300,6 +11361,20 @@ function injectStockRetour(evId){
   save();cloudPush();
   toast(`${count} produit(s) réinjecté(s) en stock`);
   renderSuivi();renderDashboard();
+}
+
+function addSuiviHorsCat(evId){
+  const ev=state.events.find(x=>x.id===evId);if(!ev)return;
+  const nom=(document.getElementById('shc-nom-'+evId)?.value||'').trim();
+  if(!nom){toast('Saisir un nom de produit');return;}
+  const detail=(document.getElementById('shc-detail-'+evId)?.value||'').trim();
+  const unite=(document.getElementById('shc-unite-'+evId)?.value||'Unité').trim();
+  const qty=parseFloat(document.getElementById('shc-qty-'+evId)?.value)||1;
+  if(!ev.stockRetourCustomItems) ev.stockRetourCustomItems=[];
+  ev.stockRetourCustomItems.push({nom,detail,unite,qty});
+  save();
+  document.getElementById('suivi-hors-cat-form-'+evId).style.display='none';
+  showSingleEventSuivi(evId);
 }
 
 function toggleAddStockRetour(evId){
@@ -11347,6 +11422,7 @@ function addStockRetourFromCatalogue(evId){
   const retourUnit=isBtl?'Btl':['g','kg'].includes(volUnit)?'kg':'Unité';
   if(!ev.stockRetourCatalogueItems) ev.stockRetourCatalogueItems=[];
   ev.stockRetourCatalogueItems.push({productType,brand,qty,retourUnit});
+  // reset
   if(wrap){wrap.dataset.selected='';const inp=wrap.querySelector('input');if(inp)inp.value='';}
   document.getElementById('src-cat-brand-'+evId).value='';
   document.getElementById('src-cat-qty-'+evId).value='1';
@@ -11376,9 +11452,12 @@ function addStockRetourCustom(evId){
   if(!nom||qty<=0){toast('Remplissez au minimum le produit et la quantité','var(--red)');return;}
   if(!ev.stockRetourCustomItems) ev.stockRetourCustomItems=[];
   ev.stockRetourCustomItems.push({nom,detail,unite,cout,qty});
+  // Réinitialiser le formulaire
   ['src-nom-','src-detail-','src-unite-','src-cout-','src-qty-'].forEach(p=>{const el=document.getElementById(p+evId);if(el){el.value=p==='src-qty-'?'1':'';} });
   document.getElementById('stock-retour-add-form-'+evId).style.display='none';
-  save();toast(`${nom}${detail?' — '+detail:''} ajouté`);renderSuivi();
+  save();
+  toast(`${nom}${detail?' — '+detail:''} ajouté`);
+  renderSuivi();
 }
 
 function updStockRetourCustomItem(evId,idx,qty){
@@ -12128,7 +12207,7 @@ updateCloudStatus();
     // Demo banner
     const banner=document.createElement('div');
     banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99998;background:linear-gradient(90deg,rgba(217,166,55,0.1),rgba(217,166,55,0.08));border-bottom:1px solid rgba(217,166,55,0.3);backdrop-filter:blur(4px);padding:10px;text-align:center;font-size:12px;color:var(--gold);letter-spacing:.08em;font-family:Jost,sans-serif;font-weight:400';
-    banner.innerHTML='MODE VISUALISATION — <a href="auth.html" style="color:var(--gold);text-decoration:none;font-weight:500;cursor:pointer;opacity:0.9;transition:opacity.2s">Souscrire</a>';
+    banner.innerHTML='MODE VISUALISATION — <a href="'+(window.__isElectron?'auth.html':'paying.html')+'" style="color:var(--gold);text-decoration:none;font-weight:500;cursor:pointer;opacity:0.9;transition:opacity.2s">Souscrire</a>';
     document.body.appendChild(banner);
     console.log('Demo data injected, events:', state.events);
     updateBadges();
@@ -12662,7 +12741,7 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: var(--green-bg, rgba(63,179,124,0.08));
+  background: var(--green-bg, rgba(63,179,124,0.14));
   border: 1px solid rgba(90,144,112,0.2);
   border-radius: 5px;
   margin-top: 6px;
