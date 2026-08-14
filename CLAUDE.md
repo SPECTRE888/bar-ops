@@ -4,6 +4,18 @@ Guidance for Claude Code when working in this repository.
 
 ---
 
+## ⚠️ Contexte — à lire avant de toucher au code
+
+**Bar Ops est le plus gros projet personnel de Jérôme, celui qui compte le plus.** Ce n'est pas un repo jetable ou un side-project parmi d'autres — il doit fonctionner correctement, pour de vrai, pour de vrais utilisateurs payants.
+
+Conséquences concrètes pour Claude Code :
+- **Honnêteté avant tout.** Ne jamais annoncer "c'est fait" / "tout est traduit" / "ça marche" sans avoir vérifié soi-même (pas juste fait confiance au rapport d'un agent). Si un audit direct sur le fichier n'a pas été fait, dire "je ne sais pas encore" plutôt que d'affirmer.
+- **Vérifier deux fois plutôt qu'une**, surtout sur les gros chantiers transverses (i18n, fusion web/Electron, etc.) où il est facile de rater des zones entières. Un seul passage de vérification a déjà donné une fausse impression de complétude sur ce repo (session i18n du 2026-08-14) — préférer un audit exhaustif (recherche systématique, pas un échantillon) avant de conclure qu'un chantier est terminé.
+- Si un agent a fait le travail, relire le diff réel et faire tourner ses propres scripts de vérification — ne pas se contenter du rapport texte de l'agent.
+- Signaler clairement ce qui reste hors périmètre (ex : documents légaux/devis volontairement non traduits) plutôt que de laisser croire que tout est couvert.
+
+---
+
 ## Stack
 
 | Couche | Techno |
