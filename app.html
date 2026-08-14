@@ -447,7 +447,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     </div>
     <div class="nav-item" onclick="goPage('clients')" id="nav-clients" data-perm="canManageClients">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-2.8 2.2-5 5-5"/><circle cx="11" cy="5" r="2.5"/><path d="M11 10c2.8 0 5 2.2 5 5"/></svg>
-      Clients
+      Mes clients
     </div>
     <div class="nav-item" onclick="goPage('suppliers')" id="nav-suppliers" data-perm="canManageSuppliers">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="6" width="14" height="9" rx="1"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
@@ -8849,7 +8849,7 @@ function renderSuppliers(){
   }
   const q=document.getElementById('suppliers-search')?.value?.toLowerCase()||'';
   const list=q?state.suppliers.filter(s=>[s.name,s.contact,s.email,s.phone,...(s.categories||[])].filter(Boolean).join(' ').toLowerCase().includes(q)):state.suppliers;
-  const COLS='1.6fr 1fr 0.9fr 0.9fr 0.9fr 230px';
+  const COLS='1.4fr 0.9fr 0.8fr 0.8fr 1fr 280px';
   const HDR_STYLE=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:6px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px`;
   const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s`;
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
@@ -8868,7 +8868,7 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.contact?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.contact||'—')}</div>
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${escHtml(s.phone||'—')}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.email||'—')}</div>
-        <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
+        <div style="display:flex;gap:5px;align-items:center;justify-content:flex-end;flex-wrap:nowrap">
           <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
           <button class="btn-edit" onclick="showSupplierInfo(${s.id})">Info</button>
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delSupplier(${s.id})">Supprimer</button>
