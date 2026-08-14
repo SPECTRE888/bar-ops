@@ -6062,7 +6062,9 @@ function epSelectBrand(i,brand,unit,costPerUnit,qty){
   if(!window._evExtraProducts[i])return;
   _epHidePortal();
   const volume=qty?qty+unit:unit;
-  Object.assign(window._evExtraProducts[i],{brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1});
+  const type=window._evExtraProducts[i].productType||'';
+  const fullName=(brand?brand+' — ':'')+type||brand;
+  Object.assign(window._evExtraProducts[i],{brand,unit,volume,costHT:parseFloat(costPerUnit.toFixed(2)),mult:1,name:fullName||brand||type});
   _renderExtraProds();
   epAutoPrice(i);
   setTimeout(()=>{const m=document.getElementById('ep-mult-'+i);if(m){m.focus();m.select();}},50);
@@ -6217,7 +6219,7 @@ async function saveEv(){
     remisePct:parseFloat(document.getElementById('ef-remise-pct')?.value)||0,
     remiseHT:parseFloat(document.getElementById('ef-remise-ht')?.value)||0,
     cocktails:Object.entries(sel).map(([id,cfg])=>({id:parseInt(id),qty:cfg.qty,pct:cfg.pct||0,glass:cfg.glass||'',glassId:cfg.glassId||null,glassCostHT:cfg.glassCostHT||0,iceTypeId:cfg.iceTypeId??null,serviceIce:cfg.serviceIce??null})),
-    extraProducts:(window._evExtraProducts||[]).filter(p=>p.name&&p.qty),
+    extraProducts:(window._evExtraProducts||[]).filter(p=>(p.name||p.productType)&&p.qty).map(p=>({...p,name:p.name||p.productType})),
     exchanges:document.getElementById('ef-exchanges')?.value||'',
     exchangesSummary:document.getElementById('ef-exchanges-summary')?.value||'',
     dryIce:document.getElementById('ef-dryice')?.checked||false,
@@ -10225,8 +10227,7 @@ async function _agentsFetch(body){
   if(!token) return null;
   try{
     const r=await fetch(API_BASE+'/api/agents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
-    if(!r.ok) return null;
-    return await r.json();
+    return await r.json(); // retourne toujours le body (erreur ou succès)
   }catch(e){return null;}
 }
 
@@ -10331,6 +10332,16 @@ async function submitInviteAgent(){
   try{
     const r=await _agentsFetch({type:'invite',email,role:preset,permissions:perms});
     if(!r) throw new Error('Erreur serveur');
+    // Vérifier si l'erreur est liée à la limite de sièges
+    if(r.error&&(r.error.includes('limit')||r.error.includes('siège')||r.error.includes('max'))){
+      // Proposer d'acheter un siège ET d'envoyer l'invitation en même temps
+      const ok=await confirmModal(
+        `Limite de collaborateurs atteinte.\n\nPour inviter <strong>${email}</strong>, un siège supplémentaire est nécessaire (29€/mois).\nL'invitation sera envoyée automatiquement après paiement.`,
+        false
+      );
+      if(ok) await buyAgentSeat({pendingEmail:email,pendingRole:preset,pendingPermissions:perms});
+      return;
+    }
     showToast('Invitation envoyée à '+email);
     document.getElementById('invite-agent-form').style.display='none';
     document.getElementById('agent-invite-email').value='';

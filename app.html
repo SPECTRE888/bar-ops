@@ -440,7 +440,7 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       Krafter <span class="nb" id="nb-kr" style="display:none">0</span>
     </div>
 
-    <div class="nav-sec">COLLABORATEURS</div>
+    <div class="nav-sec">ÉQUIPE</div>
     <div class="nav-item" onclick="goPage('staff')" id="nav-staff" data-perm="canManageStaff">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
       Équipe
@@ -4461,9 +4461,9 @@ function renderDashboard(){
 
   const now=new Date();
   const upcoming=state.events.filter(ev=>ev.date&&new Date(ev.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const past=state.events.filter(ev=>ev.date&&new Date(ev.date)<now).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const past=state.events.filter(ev=>ev.date&&new Date(ev.date)<now&&ev.stockRetourDone).sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  // CA total (past events) — utilise totalRevHT comme l'historique
+  // CA total (past events) — même filtre et même calcul que l'historique
   const totalRevenue=past.reduce((s,ev)=>s+(ev.totalRevHT||0),0);
 
   // Next event
