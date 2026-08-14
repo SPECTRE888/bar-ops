@@ -882,13 +882,15 @@ async function loadSessionsList(){
   const sb=window._sb;if(!sb)return;
   const cutoff=new Date(Date.now()-30*60*1000).toISOString();
   const{data:sessions}=await sb.from('user_sessions').select('device_id,last_seen').eq('user_id',window._userId).gte('last_seen',cutoff).order('last_seen',{ascending:false});
-  if(!sessions||sessions.length===0){el.textContent='Aucun appareil actif';return;}
+  if(!sessions||sessions.length===0){el.textContent=t('prof_sessions_empty');return;}
   el.innerHTML=sessions.map(s=>{
     const isCurrent=s.device_id===window._deviceId;
     const mins=Math.round((Date.now()-new Date(s.last_seen))/60000);
+    const agoWord=t('prof_ago');
+    const agoTxt=lang==='en'?`${mins}min ${agoWord}`:`${agoWord} ${mins}min`;
     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)">
-      <span style="color:${isCurrent?'var(--gold)':'var(--text2)'}">${isCurrent?'Cet appareil':'Autre appareil'} <span style="color:var(--text3);font-size:10px">il y a ${mins}min</span></span>
-      ${!isCurrent?`<button onclick="revokeSession('${s.device_id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:10px;font-family:var(--font-body)">Révoquer</button>`:''}
+      <span style="color:${isCurrent?'var(--gold)':'var(--text2)'}">${isCurrent?t('prof_session_this_device'):t('prof_session_other_device')} <span style="color:var(--text3);font-size:10px">${agoTxt}</span></span>
+      ${!isCurrent?`<button onclick="revokeSession('${s.device_id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:10px;font-family:var(--font-body)">${t('prof_revoke_btn')}</button>`:''}
     </div>`;
   }).join('');
 }
@@ -10173,149 +10175,149 @@ function renderProfile(){
 
       <!-- Compte -->
       <div class="card" style="display:flex;flex-direction:column;gap:8px;padding:10px">
-        <div class="ctitle">Compte</div>
+        <div class="ctitle">${t('prof_account_title')}</div>
         ${isConnected?`
           <div style="display:flex;align-items:center;gap:10px">
             <div style="width:34px;height:34px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--gold);flex-shrink:0">${email.charAt(0).toUpperCase()}</div>
-            <div style="min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${email}</div><div style="font-size:10px;color:var(--text3)">Connecte au cloud</div></div>
+            <div style="min-width:0"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${email}</div><div style="font-size:10px;color:var(--text3)">${t('prof_connected_label')}</div></div>
           </div>
           <div style="border-top:1px solid var(--border);padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Plan</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_plan_label')}</div>
               <div style="font-size:12px;color:var(--gold);font-weight:500">${(window._userPlan||'—').toUpperCase()}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Renouvellement</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_renewal_label')}</div>
               <div style="font-size:12px;color:var(--text2)">${window._subExpiresAt?new Date(window._subExpiresAt).toLocaleDateString('fr-FR'):'—'}</div>
             </div>
           </div>
-          ${window._userPlan!=='lifetime'?`<button class="btn btn-ghost btn-sm" onclick="openBillingPortal()" style="width:100%;margin-top:4px">Gérer mon abonnement</button>`:''}
+          ${window._userPlan!=='lifetime'?`<button class="btn btn-ghost btn-sm" onclick="openBillingPortal()" style="width:100%;margin-top:4px">${t('prof_manage_sub_btn')}</button>`:''}
           <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Appareils connectés</div>
-            <div id="sessions-list" style="font-size:11px;color:var(--text2)">Chargement...</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">${t('prof_devices_label')}</div>
+            <div id="sessions-list" style="font-size:11px;color:var(--text2)">${t('loading')}</div>
           </div>
         `:`
           <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Compte connecte au cloud</div>
-            <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Non</div>
-            <button class="btn btn-gold btn-sm" onclick="showCloudModal()" style="width:100%">Se connecter</button>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_cloud_connected_q')}</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:8px">${t('no')}</div>
+            <button class="btn btn-gold btn-sm" onclick="showCloudModal()" style="width:100%">${t('prof_connect_btn')}</button>
           </div>
         `}
       </div>
 
       <!-- Informations & Donnees -->
       <div class="card" style="display:flex;flex-direction:column;gap:8px;padding:10px">
-        <div class="ctitle">Informations & Donnees</div>
+        <div class="ctitle">${t('prof_info_title')}</div>
         <div id="prof-bar-view" style="flex:1;display:flex;flex-direction:column;gap:6px">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;flex:1">
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Nom</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_name')}</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.barName||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Ville</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_city')}</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.city||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Telephone</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_phone')}</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.phone||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">SIRET</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_siret')}</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.siret||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Forme juridique</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_legalform')}</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.legalForm||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Code APE</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_ape')}</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.apeCode||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">IBAN</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_iban')}</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.iban||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">BIC</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_bic')}</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.bic||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Banque</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_bank')}</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.banque||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">N° TVA</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_tva')}</div>
               <div style="font-size:12px;color:var(--text2);font-family:monospace">${state.profile?.tvaNumber||'—'}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Statut</div>
-              <div style="font-size:12px;color:var(--text2)">${state.profile?.tvaNumber?'Assujetti TVA':'Auto-entrepreneur'}</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_status')}</div>
+              <div style="font-size:12px;color:var(--text2)">${state.profile?.tvaNumber?t('prof_status_vat'):t('prof_status_auto')}</div>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">Acompte par défaut</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:3px">${t('prof_field_deposit')}</div>
               <div style="font-size:12px;color:var(--text2)">${state.profile?.acomptePercent||0}%</div>
             </div>
           </div>
           <div style="display:flex;gap:8px;border-top:1px solid var(--border);padding-top:12px">
             ${typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin()?`
-            <button class="btn-profile" onclick="showProfileEditModal()" style="flex:1">Modifier</button>
-            <button class="btn-profile" onclick="confirmResetData()" style="flex:1">Réinitialiser</button>
-            <button class="btn-profile btn-danger" onclick="confirmDeleteAccount()" style="flex:1">Supprimer</button>
+            <button class="btn-profile" onclick="showProfileEditModal()" style="flex:1">${t('btn_edit')}</button>
+            <button class="btn-profile" onclick="confirmResetData()" style="flex:1">${t('prof_btn_reset')}</button>
+            <button class="btn-profile btn-danger" onclick="confirmDeleteAccount()" style="flex:1">${t('btn_delete')}</button>
             `:''}
-            <button class="btn-profile" onclick="if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canExportData'))return;exportData()" style="flex:1" data-perm="canExportData">Exporter</button>
+            <button class="btn-profile" onclick="if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.guard('canExportData'))return;exportData()" style="flex:1" data-perm="canExportData">${t('prof_btn_export')}</button>
           </div>
         </div>
         <div id="prof-bar-edit" style="display:none;flex-direction:column;gap:8px">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Nom</div>
-              <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="Votre entreprise" style="width:100%;font-size:11px"/>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_name')}</div>
+              <input id="prof-barname" value="${state.profile?.barName||''}" placeholder="${t('prof_ph_company')}" style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Ville</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_city')}</div>
               <input id="prof-city" value="${state.profile?.city||''}" placeholder="Paris" style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Telephone</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_phone')}</div>
               <input id="prof-phone" value="${state.profile?.phone||''}" placeholder="+33 6..." style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">SIRET</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_siret')}</div>
               <input id="prof-siret" value="${state.profile?.siret||''}" placeholder="12345678901234" style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Forme juridique</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_legalform')}</div>
               <input id="prof-legalform" value="${state.profile?.legalForm||''}" placeholder="S.A.S., SARL, EIRL..." style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Code APE</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_ape')}</div>
               <input id="prof-apecode" value="${state.profile?.apeCode||''}" placeholder="5590Z" style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">IBAN</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_iban')}</div>
               <input id="prof-iban" value="${state.profile?.iban||''}" placeholder="FR76 XXXX XXXX..." style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">BIC</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_bic')}</div>
               <input id="prof-bic" value="${state.profile?.bic||''}" placeholder="XXXXXXXX" style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Banque</div>
-              <input id="prof-banque" value="${state.profile?.banque||''}" placeholder="Votre banque" style="width:100%;font-size:11px"/>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_bank')}</div>
+              <input id="prof-banque" value="${state.profile?.banque||''}" placeholder="${t('prof_ph_bank')}" style="width:100%;font-size:11px"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">N° TVA</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_tva')}</div>
               <input id="prof-tvanumber" value="${state.profile?.tvaNumber||''}" placeholder="FR12345678901" style="width:100%;font-size:11px;font-family:monospace"/>
             </div>
             <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">Acompte par défaut (%)</div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px">${t('prof_field_deposit_pct')}</div>
               <input id="prof-acompte-percent" type="number" value="${state.profile?.acomptePercent||0}" min="0" max="100" placeholder="30" style="width:100%;font-size:11px"/>
             </div>
           </div>
           <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:10px">
-            <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(false)" style="flex:1">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()" style="flex:1">Confirmer</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleBarEdit(false)" style="flex:1">${t('btn_cancel')}</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmBarEdit()" style="flex:1">${t('prof_btn_confirm')}</button>
           </div>
         </div>
       </div>
@@ -10327,10 +10329,10 @@ function renderProfile(){
 
       <!-- Envoi de devis -->
       <div class="card" style="display:flex;flex-direction:column;gap:8px">
-        <div class="ctitle">Envoi de devis <span style="font-weight:400;font-size:9px;color:var(--text3)">(automatique, rien à configurer)</span></div>
-        <p style="font-size:11px;color:var(--text2);margin:0">Tes devis partent automatiquement sous ton nom. Les réponses de tes clients arrivent par défaut sur ton adresse de connexion, modifiable ici si tu préfères une autre adresse :</p>
+        <div class="ctitle">${t('prof_quote_sending_title')} <span style="font-weight:400;font-size:9px;color:var(--text3)">(${t('prof_quote_sending_auto')})</span></div>
+        <p style="font-size:11px;color:var(--text2);margin:0">${t('prof_quote_sending_desc')}</p>
         <input id="prof-replyto-input" type="email" value="${state.profile?.replyToEmail||cloudUser?.user?.email||''}" placeholder="ton@email.com" disabled style="width:100%;font-size:11px"/>
-        <button class="btn btn-ghost btn-sm" id="prof-replyto-btn" onclick="toggleReplyToEdit(true)" style="width:100%">Modifier</button>
+        <button class="btn btn-ghost btn-sm" id="prof-replyto-btn" onclick="toggleReplyToEdit(true)" style="width:100%">${t('btn_edit')}</button>
         <div id="prof-replyto-status" style="font-size:11px;color:var(--gold)"></div>
       </div>
 
@@ -10347,21 +10349,21 @@ function renderProfile(){
 
       <!-- Logo & Signature -->
       <div class="card" style="display:flex;flex-direction:column;gap:8px">
-        <div class="ctitle">Logo & Signature</div>
+        <div class="ctitle">${t('prof_logo_title')}</div>
         <div id="prof-logo-view" style="flex:1;display:flex;flex-direction:column;gap:8px">
           <div style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:var(--radius);padding:12px;min-height:140px">
-            ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:130px;object-fit:contain"/>`:`<div style="font-size:11px;color:var(--text3)">Aucun logo</div>`}
+            ${state.profile?.logo?`<img src="${state.profile.logo}" style="max-width:100%;max-height:130px;object-fit:contain"/>`:`<div style="font-size:11px;color:var(--text3)">${t('prof_logo_empty')}</div>`}
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">Modifier logo</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(true)" style="width:100%">${t('prof_logo_edit_btn')}</button>
         </div>
         <div id="prof-logo-edit" style="display:none;flex-direction:column;gap:8px">
           <div style="flex:1">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">Fichier image</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">${t('prof_logo_file_label')}</div>
             <input id="prof-logo-input" type="file" accept="image/*" style="width:100%;font-size:11px;padding:4px"/>
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)" style="flex:1">Annuler</button>
-            <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()" style="flex:1">Confirmer</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleLogoEdit(false)" style="flex:1">${t('btn_cancel')}</button>
+            <button class="btn btn-gold btn-sm" onclick="confirmLogoUpload()" style="flex:1">${t('prof_btn_confirm')}</button>
           </div>
         </div>
       </div>
@@ -10372,9 +10374,9 @@ function renderProfile(){
     ${isConnected&&(typeof BarOpsAuth==='undefined'||BarOpsAuth.isAdmin())?`
     <div style="margin-top:14px">
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <div class="ctitle" style="margin:0 0 4px 0">Collaborateurs</div>
+        <div class="ctitle" style="margin:0 0 4px 0">${t('prof_collab_title')}</div>
         <!-- Tout le contenu est géré par loadAgentsList() -->
-        <div id="agents-list-wrap" style="font-size:12px;color:var(--text2)">Chargement…</div>
+        <div id="agents-list-wrap" style="font-size:12px;color:var(--text2)">${t('loading')}</div>
       </div>
     </div>`:''}
 
@@ -10406,7 +10408,7 @@ async function _agentsFetch(body){
 
 async function confirmBuySeat(){
   const email=(document.getElementById('seat-invite-email')?.value||'').trim();
-  if(!email){showToast('Saisissez un email','error');return;}
+  if(!email){showToast(t('agent_toast_enter_email'),'error');return;}
   const role=document.getElementById('seat-invite-preset')?.value||'commercial';
   const ROLE_PRESETS_APP={
     commercial:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:true,canViewCosts:false,canManageClients:true,canCreateEvents:true,canEditProjects:true,canManageCatalogue:false,canManageStaff:false,canManageSuppliers:false,canExportData:false},
@@ -10420,11 +10422,11 @@ async function confirmBuySeat(){
     try{
       const r=await _agentsFetch({type:'invite',email,role,permissions:perms});
       if(r?.error) throw new Error(r.error);
-      showToast('Invitation envoyée à '+email);
+      showToast(t('agent_toast_invite_sent')+' '+email);
       document.getElementById('seat-invite-email').value='';
       document.getElementById('add-member-form').style.display='none';
       loadAgentsList();
-    }catch(e){showToast(e?.message||'Erreur','error');}
+    }catch(e){showToast(e?.message||t('agent_err_generic'),'error');}
   } else {
     // Limite atteinte → achat siège Stripe (invitation auto après paiement)
     await buyAgentSeat({pendingEmail:email,pendingRole:role,pendingPermissions:perms});
@@ -10446,14 +10448,14 @@ async function loadAgentsList(){
     let html='';
     const totalMembers=agents.length+invitations.length;
     if(!totalMembers){
-      html='<div style="color:var(--text3);font-size:11px;padding:4px 0">Aucun collaborateur pour l\'instant.</div>';
+      html='<div style="color:var(--text3);font-size:11px;padding:4px 0">'+t('agent_empty')+'</div>';
     } else {
       const statusColor={active:'var(--gold)',suspended:'var(--text3)',pending:'var(--text2)'};
-      const statusLabel={active:'Actif',suspended:'Suspendu',pending:'En attente'};
+      const statusLabel={active:t('agent_status_active'),suspended:t('agent_status_suspended'),pending:t('agent_status_pending')};
       html='<div style="display:flex;flex-direction:column;gap:6px">';
       for(const a of agents){
         const st=a.status||'active';
-        const roleLabel=a.role==='COMPANY_ADMIN'?'Administrateur':'Collaborateur';
+        const roleLabel=a.role==='COMPANY_ADMIN'?t('agent_role_admin'):t('agent_role_member');
         html+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:5px;border:1px solid var(--border)">
           <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gold);flex-shrink:0">${(a.email||'?').charAt(0).toUpperCase()}</div>
           <div style="flex:1;min-width:0">
@@ -10461,9 +10463,9 @@ async function loadAgentsList(){
             <div style="font-size:10px;color:var(--text3)">${roleLabel}</div>
           </div>
           <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid ${statusColor[st]};color:${statusColor[st]}">${statusLabel[st]||st}</span>
-          ${st==='active'?`<button onclick="agentAction('${a.id}','suspend')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;padding:2px 6px;border-radius:3px" title="Suspendre">⏸</button>`:''}
-          ${st==='suspended'?`<button onclick="agentAction('${a.id}','reactivate')" style="background:none;border:none;cursor:pointer;color:var(--gold);font-size:10px;padding:2px 6px;border-radius:3px" title="Réactiver">▶</button>`:''}
-          <button onclick="agentAction('${a.id}','remove')" style="background:none;border:none;cursor:pointer;color:#dc6464;font-size:11px;padding:2px 6px;border-radius:3px" title="Retirer">✕</button>
+          ${st==='active'?`<button onclick="agentAction('${a.id}','suspend')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;padding:2px 6px;border-radius:3px" title="${t('agent_action_suspend_title')}">⏸</button>`:''}
+          ${st==='suspended'?`<button onclick="agentAction('${a.id}','reactivate')" style="background:none;border:none;cursor:pointer;color:var(--gold);font-size:10px;padding:2px 6px;border-radius:3px" title="${t('agent_action_reactivate_title')}">▶</button>`:''}
+          <button onclick="agentAction('${a.id}','remove')" style="background:none;border:none;cursor:pointer;color:#dc6464;font-size:11px;padding:2px 6px;border-radius:3px" title="${t('agent_action_remove_title')}">✕</button>
         </div>`;
       }
       for(const inv of invitations){
@@ -10471,41 +10473,44 @@ async function loadAgentsList(){
           <div style="width:28px;height:28px;border-radius:50%;background:var(--surface);border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);flex-shrink:0">?</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(inv.email||'—')}</div>
-            <div style="font-size:10px;color:var(--text3)">Invitation en attente</div>
+            <div style="font-size:10px;color:var(--text3)">${t('agent_invite_pending')}</div>
           </div>
-          <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--text3)">En attente</span>
-          <button onclick="cancelInvite('${inv.id}')" style="background:none;border:none;cursor:pointer;color:#dc6464;font-size:11px;padding:2px 6px;border-radius:3px" title="Annuler">✕</button>
+          <span style="font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--text3)">${t('agent_status_pending')}</span>
+          <button onclick="cancelInvite('${inv.id}')" style="background:none;border:none;cursor:pointer;color:#dc6464;font-size:11px;padding:2px 6px;border-radius:3px" title="${t('btn_cancel')}">✕</button>
         </div>`;
       }
       html+='</div>';
     }
     // Formulaire "Ajouter un collaborateur" — toujours visible
-    const btnLabel=limitReached?'Payer 29€/mois et inviter →':'Inviter →';
+    const btnLabel=limitReached?t('agent_btn_pay_invite'):t('agent_btn_invite_arrow');
+    const seatWord=maxAgents>1?t('agent_seats_plural'):t('agent_seat_singular');
+    const collabWord=maxAgents>1?t('agent_collab_plural'):t('agent_collab_singular');
+    const usedWord=maxAgents>1?t('agent_used_plural'):t('agent_used_singular');
     const infoLabel=limitReached
-      ?`<div style="font-size:10px;color:var(--gold);margin-bottom:6px">Limite atteinte (${maxAgents} siège${maxAgents>1?'s':''}) — un siège supplémentaire sera facturé 29€/mois.</div>`
-      :`<div style="font-size:10px;color:var(--text3);margin-bottom:6px">${agents.length}/${maxAgents} collaborateur${maxAgents>1?'s':''} utilisé${maxAgents>1?'s':''}</div>`;
+      ?`<div style="font-size:10px;color:var(--gold);margin-bottom:6px">${t('agent_limit_reached')} (${maxAgents} ${seatWord}) — ${t('agent_extra_seat_price')}</div>`
+      :`<div style="font-size:10px;color:var(--text3);margin-bottom:6px">${agents.length}/${maxAgents} ${collabWord} ${usedWord}</div>`;
     html+=`<div id="add-member-section" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:500;color:var(--text)">Ajouter un collaborateur</div>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-member-form').style.display=document.getElementById('add-member-form').style.display==='none'?'block':'none'" style="font-size:10px;padding:3px 10px">+ Nouveau</button>
+        <div style="font-size:11px;font-weight:500;color:var(--text)">${t('agent_add_title')}</div>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-member-form').style.display=document.getElementById('add-member-form').style.display==='none'?'block':'none'" style="font-size:10px;padding:3px 10px">${t('agent_btn_new')}</button>
       </div>
       <div id="add-member-form" style="display:none">
         ${infoLabel}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Email</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">${t('client_email')}</div>
             <input id="seat-invite-email" type="email" placeholder="prenom@email.com" style="width:100%;font-size:11px;box-sizing:border-box"/>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">Profil</div>
+            <div style="font-size:10px;color:var(--text3);margin-bottom:3px">${t('agent_profile_label')}</div>
             <select id="seat-invite-preset" style="width:100%;font-size:11px;padding:5px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--text)">
-              <option value="commercial">Commercial — clients &amp; événements</option>
-              <option value="barman">Barman — catalogue &amp; fournisseurs</option>
+              <option value="commercial">${t('agent_opt_commercial')}</option>
+              <option value="barman">${t('agent_opt_barman')}</option>
             </select>
           </div>
         </div>
         <div style="display:flex;gap:6px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-member-form').style.display='none'">Annuler</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-member-form').style.display='none'">${t('btn_cancel')}</button>
           <button class="btn btn-gold btn-sm" onclick="confirmBuySeat()">${btnLabel}</button>
         </div>
       </div>
@@ -10521,7 +10526,7 @@ async function loadAgentsList(){
 
 async function submitInviteAgent(){
   const email=(document.getElementById('agent-invite-email')?.value||'').trim();
-  if(!email){showToast('Saisissez un email');return;}
+  if(!email){showToast(t('agent_toast_enter_email'));return;}
   const preset=document.getElementById('agent-invite-preset')?.value||'commercial';
   const ROLE_PRESETS_APP={
     commercial:{canViewRevenue:false,canViewAnalytics:false,canViewEventMargin:true,canViewCosts:false,canManageClients:true,canCreateEvents:true,canEditProjects:true,canManageCatalogue:false,canManageStaff:false,canManageSuppliers:false,canExportData:false},
@@ -10539,18 +10544,18 @@ async function submitInviteAgent(){
     if(r.error&&(r.error.includes('limit')||r.error.includes('siège')||r.error.includes('max'))){
       // Proposer d'acheter un siège ET d'envoyer l'invitation en même temps
       const ok=await confirmModal(
-        `Limite de collaborateurs atteinte.\n\nPour inviter <strong>${email}</strong>, un siège supplémentaire est nécessaire (29€/mois).\nL'invitation sera envoyée automatiquement après paiement.`,
+        `${t('agent_limit_modal_title')}\n\n${t('agent_limit_modal_line1_prefix')} <strong>${email}</strong>${t('agent_limit_modal_line1_suffix')}\n${t('agent_limit_modal_line2')}`,
         false
       );
       if(ok) await buyAgentSeat({pendingEmail:email,pendingRole:preset,pendingPermissions:perms});
       return;
     }
-    showToast('Invitation envoyée à '+email);
+    showToast(t('agent_toast_invite_sent')+' '+email);
     document.getElementById('invite-agent-form').style.display='none';
     document.getElementById('agent-invite-email').value='';
     loadAgentsList();
   }catch(e){
-    showToast(e?.message||'Erreur lors de l\'invitation','error');
+    showToast(e?.message||t('agent_toast_invite_error'),'error');
   }
 }
 
@@ -10559,7 +10564,7 @@ async function agentAction(agentId,action){
     await _agentsFetch({type:'manage',action,targetUserId:agentId});
     loadAgentsList();
   }catch(e){
-    showToast(e?.message||'Erreur','error');
+    showToast(e?.message||t('agent_err_generic'),'error');
   }
 }
 async function cancelInvite(invitationId){
@@ -10574,7 +10579,7 @@ async function cancelInvite(invitationId){
 async function buyAgentSeat(opts={}){
   try{
     const token=extractToken(cloudUser);
-    if(!token){showToast('Non connecté','error');return;}
+    if(!token){showToast(t('agent_toast_not_connected'),'error');return;}
     const body={action:'add-seat',quantity:1};
     if(opts.pendingEmail) body.pendingEmail=opts.pendingEmail;
     if(opts.pendingRole) body.pendingRole=opts.pendingRole;
@@ -10582,9 +10587,9 @@ async function buyAgentSeat(opts={}){
     const r=await fetch(API_BASE+'/api/billing',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
     const res=await r.json();
     if(res?.url) window.location.href=res.url;
-    else showToast('Erreur lors de la création du lien de paiement','error');
+    else showToast(t('agent_toast_payment_link_error'),'error');
   }catch(e){
-    showToast(e?.message||'Erreur','error');
+    showToast(e?.message||t('agent_err_generic'),'error');
   }
 }
 
@@ -10617,17 +10622,17 @@ function updProfile(k,v){
 
 function showProfileEditModal(){
   if(typeof BarOpsAuth!=='undefined'&&!BarOpsAuth.isAdmin()){
-    if(typeof showToast==='function')showToast('Modification du profil réservée à l\'administrateur','error');
+    if(typeof showToast==='function')showToast(t('prof_toast_admin_only'),'error');
     return;
   }
   const result=new Promise((resolve)=>{
     const modal=document.createElement('div');
     modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
     modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
-      <div style="font-size:15px;color:var(--text);margin-bottom:16px;line-height:1.5;font-weight:400">Modifier les informations de votre profil ?</div>
+      <div style="font-size:15px;color:var(--text);margin-bottom:16px;line-height:1.5;font-weight:400">${t('prof_edit_confirm_q')}</div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">Annuler</button>
-        <button style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">Modifier</button>
+        <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">${t('btn_cancel')}</button>
+        <button style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">${t('btn_edit')}</button>
       </div>
     </div>`;
     document.body.appendChild(modal);
@@ -10681,7 +10686,7 @@ function toggleReplyToEdit(edit){
   const btn=document.getElementById('prof-replyto-btn');
   if(!el||!btn) return;
   el.disabled=!edit;
-  btn.textContent=edit?'Enregistrer':'Modifier';
+  btn.textContent=edit?t('btn_save'):t('btn_edit');
   btn.onclick=edit?saveReplyTo:()=>toggleReplyToEdit(true);
   if(edit) el.focus();
 }
@@ -11858,6 +11863,68 @@ const I18N={
     suivi_btn_reinject:'Réinjecter en stock',suivi_mark_paid_hint:'Marquez la prestation comme payée pour valider',
     // Historique (i18n pass)
     hist_empty_full:"Aucune prestation passée pour l'instant.",hist_margin_prefix:'marge',hist_btn_recap:'Récap',
+    // Profil / Agents (i18n pass)
+    prof_account_title:'Compte',prof_connected_label:'Connecte au cloud',prof_plan_label:'Plan',
+    prof_renewal_label:'Renouvellement',prof_manage_sub_btn:'Gérer mon abonnement',prof_devices_label:'Appareils connectés',
+    prof_cloud_connected_q:'Compte connecte au cloud',prof_connect_btn:'Se connecter',prof_info_title:'Informations & Donnees',
+    prof_field_name:'Nom',prof_field_city:'Ville',prof_field_phone:'Telephone',prof_field_siret:'SIRET',
+    prof_field_legalform:'Forme juridique',prof_field_ape:'Code APE',prof_field_iban:'IBAN',prof_field_bic:'BIC',
+    prof_field_bank:'Banque',prof_field_tva:'N° TVA',prof_field_status:'Statut',prof_status_vat:'Assujetti TVA',
+    prof_status_auto:'Auto-entrepreneur',prof_field_deposit:'Acompte par défaut',prof_btn_reset:'Réinitialiser',
+    prof_btn_export:'Exporter',prof_ph_company:'Votre entreprise',prof_ph_bank:'Votre banque',
+    prof_field_deposit_pct:'Acompte par défaut (%)',prof_btn_confirm:'Confirmer',
+    prof_quote_sending_title:'Envoi de devis',prof_quote_sending_auto:'automatique, rien à configurer',
+    prof_quote_sending_desc:'Tes devis partent automatiquement sous ton nom. Les réponses de tes clients arrivent par défaut sur ton adresse de connexion, modifiable ici si tu préfères une autre adresse :',
+    prof_logo_title:'Logo & Signature',prof_logo_empty:'Aucun logo',prof_logo_edit_btn:'Modifier logo',
+    prof_logo_file_label:'Fichier image',prof_collab_title:'Collaborateurs',
+    prof_sessions_empty:'Aucun appareil actif',prof_ago:'il y a',prof_session_this_device:'Cet appareil',
+    prof_session_other_device:'Autre appareil',prof_revoke_btn:'Révoquer',
+    prof_toast_admin_only:"Modification du profil réservée à l'administrateur",
+    prof_edit_confirm_q:'Modifier les informations de votre profil ?',
+    agent_toast_enter_email:'Saisissez un email',agent_toast_invite_sent:'Invitation envoyée à',agent_err_generic:'Erreur',
+    agent_empty:"Aucun collaborateur pour l'instant.",agent_status_active:'Actif',agent_status_suspended:'Suspendu',
+    agent_status_pending:'En attente',agent_role_admin:'Administrateur',agent_role_member:'Collaborateur',
+    agent_action_suspend_title:'Suspendre',agent_action_reactivate_title:'Réactiver',agent_action_remove_title:'Retirer',
+    agent_invite_pending:'Invitation en attente',agent_btn_pay_invite:'Payer 29€/mois et inviter →',agent_btn_invite_arrow:'Inviter →',
+    agent_seats_plural:'sièges',agent_seat_singular:'siège',agent_collab_plural:'collaborateurs',agent_collab_singular:'collaborateur',
+    agent_used_plural:'utilisés',agent_used_singular:'utilisé',agent_limit_reached:'Limite atteinte',
+    agent_extra_seat_price:'un siège supplémentaire sera facturé 29€/mois.',agent_add_title:'Ajouter un collaborateur',
+    agent_btn_new:'+ Nouveau',agent_profile_label:'Profil',agent_opt_commercial:'Commercial — clients & événements',
+    agent_opt_barman:'Barman — catalogue & fournisseurs',agent_limit_modal_title:'Limite de collaborateurs atteinte.',
+    agent_limit_modal_line1_prefix:'Pour inviter',agent_limit_modal_line1_suffix:', un siège supplémentaire est nécessaire (29€/mois).',
+    agent_limit_modal_line2:"L'invitation sera envoyée automatiquement après paiement.",
+    agent_toast_invite_error:"Erreur lors de l'invitation",agent_toast_not_connected:'Non connecté',
+    agent_toast_payment_link_error:'Erreur lors de la création du lien de paiement',
+    // Onboarding (i18n pass)
+    ob_step1_title:'Bienvenue dans BAR OPS',
+    ob_step1_subtitle:'Votre outil de gestion evenementielle professionnelle.<br>En 6 etapes, on va tout configurer.',
+    ob_firstname_label:'Votre prenom',ob_company_label:'Nom de votre structure / entreprise',ob_activity_label:'Votre activite principale',
+    ob_activity_barman:'Barman independant evenementiel',ob_activity_agency:'Agence evenementielle',ob_activity_bar:'Bar / Restaurant',
+    ob_activity_caterer:'Traiteur',ob_option_other:'Autre',
+    ob_step2_title:'Ajoutez votre 1er produit',
+    ob_step2_subtitle:"Un alcool, un sirop, n'importe quoi.<br>Ca prend 30 secondes - et vous verrez immediatement la valeur.",
+    ob_prod_name_label:'Nom du produit',ob_prod_price_label:"Prix d'achat HT (EUR)",ob_prod_volume_label:'Contenance (cl)',
+    ob_prod_calc_label:'Coût au cl',ob_step2_hint:'Vous pourrez en ajouter autant que vous voulez dans le Catalogue',
+    ob_step3_title:'Votre prochain evenement',ob_step3_subtitle:'Creez votre premiere prestation en quelques secondes.',
+    ob_event_name_label:"Nom de l'evenement",ob_event_guests_label:'Nombre de convives',
+    ob_event_budget_label:'Budget client HT (EUR) - optionnel',
+    ob_step3_hint:'Vous pouvez passer cette etape et creer vos events depuis le menu',
+    ob_step4_title:'Mon équipe',ob_step4_subtitle:'Ajoute tes 1ers barmen / serveuses avec leurs tarifs horaires.',
+    ob_staff_name_label:'Prenom & Nom',ob_role_barman:'Barman / Barmaid',ob_role_waiter:'Serveur / Serveuse',
+    ob_role_barchief:'Chef de bar',ob_role_prep:'Preparateur',ob_staff_rate_label:'Tarif HT / heure (EUR)',
+    ob_staff_phone_label:'Telephone (optionnel)',ob_step4_hint:"Vous pouvez ajouter d'autres membres depuis l'app",
+    ob_step5_title:'Tes fournisseurs',ob_step5_subtitle:'Enregistre tes contact fournisseurs pour les retrouver facilement.',
+    ob_supplier_name_label:'Nom du fournisseur',ob_supplier_category_label:'Specialite / Categorie',
+    ob_cat_alcohol:'Alcools & Spirits',ob_cat_wine:'Vins & Champagnes',ob_cat_beer:'Biere',ob_cat_syrup:'Sirops & Amers',
+    ob_cat_ice:'Glacons & Glacage',ob_cat_glassware:'Verres & Barware',ob_cat_fruit:'Fruits & Jus',
+    ob_supplier_email_label:'Email (optionnel)',ob_step5_hint:"Vous en ajouterez d'autres au fur et a mesure",
+    ob_step6_title:'Pret a decoller!',ob_step6_subtitle:'Vous avez configure les 5 piliers de BAR OPS.',
+    ob_check1_title:'Profile & Structure',ob_check1_desc:'Nom, activite et infos de base',
+    ob_check2_desc:'Vos produits et leurs couts',ob_check3_desc:'Vos prestations & budgets',
+    ob_check4_desc:'Vos barmen/serveuses & tarifs',ob_check5_title:'Fournisseurs',ob_check5_desc:'Vos contacts & partenaires',
+    ob_step6_final_text:'Vous pouvez maintenant creer vos cocktails, <br/>gerer vos events en temps reel et exporter vos devis PDF !',
+    ob_btn_skip:'Passer',ob_btn_next:'Continuer →',ob_btn_finish:'Acceder a BAR OPS v',
+    ob_greeting_prefix:'Bonjour',ob_greeting_suffix:'· Pro',
   },
   en:{
     nav_dashboard:'Dashboard',nav_catalogue:'Catalogue',nav_cocktails:'Cocktails',
@@ -11996,6 +12063,69 @@ const I18N={
     suivi_btn_reinject:'Reinject into stock',suivi_mark_paid_hint:'Mark the event as paid to confirm',
     // Historique (i18n pass)
     hist_empty_full:'No past events yet.',hist_margin_prefix:'margin',hist_btn_recap:'Summary',
+    loading:'Loading...',
+    // Profil / Agents (i18n pass)
+    prof_account_title:'Account',prof_connected_label:'Connected to cloud',prof_plan_label:'Plan',
+    prof_renewal_label:'Renewal',prof_manage_sub_btn:'Manage my subscription',prof_devices_label:'Connected devices',
+    prof_cloud_connected_q:'Cloud-connected account',prof_connect_btn:'Connect',prof_info_title:'Information & Data',
+    prof_field_name:'Name',prof_field_city:'City',prof_field_phone:'Phone',prof_field_siret:'Business ID',
+    prof_field_legalform:'Legal form',prof_field_ape:'Activity code',prof_field_iban:'IBAN',prof_field_bic:'BIC',
+    prof_field_bank:'Bank',prof_field_tva:'VAT number',prof_field_status:'Status',prof_status_vat:'VAT registered',
+    prof_status_auto:'Sole trader',prof_field_deposit:'Default deposit',prof_btn_reset:'Reset',
+    prof_btn_export:'Export',prof_ph_company:'Your company',prof_ph_bank:'Your bank',
+    prof_field_deposit_pct:'Default deposit (%)',prof_btn_confirm:'Confirm',
+    prof_quote_sending_title:'Quote sending',prof_quote_sending_auto:'automatic, nothing to configure',
+    prof_quote_sending_desc:"Your quotes are sent automatically under your name. Your clients' replies go by default to your login email, editable here if you prefer another address:",
+    prof_logo_title:'Logo & Signature',prof_logo_empty:'No logo',prof_logo_edit_btn:'Edit logo',
+    prof_logo_file_label:'Image file',prof_collab_title:'Collaborators',
+    prof_sessions_empty:'No active device',prof_ago:'ago',prof_session_this_device:'This device',
+    prof_session_other_device:'Other device',prof_revoke_btn:'Revoke',
+    prof_toast_admin_only:'Editing the profile is reserved for the administrator',
+    prof_edit_confirm_q:'Edit your profile information?',
+    agent_toast_enter_email:'Enter an email',agent_toast_invite_sent:'Invitation sent to',agent_err_generic:'Error',
+    agent_empty:'No collaborators yet.',agent_status_active:'Active',agent_status_suspended:'Suspended',
+    agent_status_pending:'Pending',agent_role_admin:'Administrator',agent_role_member:'Collaborator',
+    agent_action_suspend_title:'Suspend',agent_action_reactivate_title:'Reactivate',agent_action_remove_title:'Remove',
+    agent_invite_pending:'Invitation pending',agent_btn_pay_invite:'Pay €29/month and invite →',agent_btn_invite_arrow:'Invite →',
+    agent_seats_plural:'seats',agent_seat_singular:'seat',agent_collab_plural:'collaborators',agent_collab_singular:'collaborator',
+    agent_used_plural:'used',agent_used_singular:'used',agent_limit_reached:'Limit reached',
+    agent_extra_seat_price:'an extra seat will be billed €29/month.',agent_add_title:'Add a collaborator',
+    agent_btn_new:'+ New',agent_profile_label:'Profile',agent_opt_commercial:'Sales — clients & events',
+    agent_opt_barman:'Barman — catalogue & suppliers',agent_limit_modal_title:'Collaborator limit reached.',
+    agent_limit_modal_line1_prefix:'To invite',agent_limit_modal_line1_suffix:', an extra seat is required (€29/month).',
+    agent_limit_modal_line2:'The invitation will be sent automatically after payment.',
+    agent_toast_invite_error:'Error sending the invitation',agent_toast_not_connected:'Not connected',
+    agent_toast_payment_link_error:'Error creating the payment link',
+    // Onboarding (i18n pass)
+    ob_step1_title:'Welcome to BAR OPS',
+    ob_step1_subtitle:"Your professional event management tool.<br>In 6 steps, we'll set everything up.",
+    ob_firstname_label:'Your first name',ob_company_label:'Name of your business',ob_activity_label:'Your main activity',
+    ob_activity_barman:'Independent event bartender',ob_activity_agency:'Event agency',ob_activity_bar:'Bar / Restaurant',
+    ob_activity_caterer:'Caterer',ob_option_other:'Other',
+    ob_step2_title:'Add your 1st product',
+    ob_step2_subtitle:"A spirit, a syrup, anything.<br>It takes 30 seconds - and you'll see the value right away.",
+    ob_prod_name_label:'Product name',ob_prod_price_label:'Purchase price excl. VAT (EUR)',ob_prod_volume_label:'Volume (cl)',
+    ob_prod_calc_label:'Cost per cl',ob_step2_hint:"You'll be able to add as many as you want in the Catalogue",
+    ob_step3_title:'Your next event',ob_step3_subtitle:'Create your first event in a few seconds.',
+    ob_event_name_label:'Event name',ob_event_guests_label:'Number of guests',
+    ob_event_budget_label:'Client budget excl. VAT (EUR) - optional',
+    ob_step3_hint:'You can skip this step and create your events from the menu',
+    ob_step4_title:'My team',ob_step4_subtitle:'Add your first bartenders / servers with their hourly rates.',
+    ob_staff_name_label:'First & Last name',ob_role_barman:'Bartender',ob_role_waiter:'Server',
+    ob_role_barchief:'Head bartender',ob_role_prep:'Prep staff',ob_staff_rate_label:'Rate excl. VAT / hour (EUR)',
+    ob_staff_phone_label:'Phone (optional)',ob_step4_hint:'You can add other members from the app',
+    ob_step5_title:'Your suppliers',ob_step5_subtitle:'Save your supplier contacts to find them easily.',
+    ob_supplier_name_label:'Supplier name',ob_supplier_category_label:'Specialty / Category',
+    ob_cat_alcohol:'Spirits',ob_cat_wine:'Wines & Champagnes',ob_cat_beer:'Beer',ob_cat_syrup:'Syrups & Bitters',
+    ob_cat_ice:'Ice',ob_cat_glassware:'Glassware & Barware',ob_cat_fruit:'Fruits & Juices',
+    ob_supplier_email_label:'Email (optional)',ob_step5_hint:"You'll add more as you go",
+    ob_step6_title:'Ready to take off!',ob_step6_subtitle:"You've set up the 5 pillars of BAR OPS.",
+    ob_check1_title:'Profile & Structure',ob_check1_desc:'Name, activity and basic info',
+    ob_check2_desc:'Your products and their costs',ob_check3_desc:'Your events & budgets',
+    ob_check4_desc:'Your bartenders/servers & rates',ob_check5_title:'Suppliers',ob_check5_desc:'Your contacts & partners',
+    ob_step6_final_text:'You can now create your cocktails, <br/>manage your events in real time and export your PDF quotes!',
+    ob_btn_skip:'Skip',ob_btn_next:'Continue →',ob_btn_finish:'Access BAR OPS v',
+    ob_greeting_prefix:'Hello',ob_greeting_suffix:'· Pro',
   },
   es:{
     nav_dashboard:'Dashboard',nav_catalogue:'Catálogo',nav_cocktails:'Cócteles',
@@ -12134,6 +12264,69 @@ const I18N={
     suivi_btn_reinject:'Reinyectar en stock',suivi_mark_paid_hint:'Marca el evento como pagado para confirmar',
     // Historial (i18n pass)
     hist_empty_full:'Todavía no hay eventos pasados.',hist_margin_prefix:'margen',hist_btn_recap:'Resumen',
+    loading:'Cargando...',
+    // Profil / Agents (i18n pass)
+    prof_account_title:'Cuenta',prof_connected_label:'Conectado a la nube',prof_plan_label:'Plan',
+    prof_renewal_label:'Renovación',prof_manage_sub_btn:'Gestionar mi suscripción',prof_devices_label:'Dispositivos conectados',
+    prof_cloud_connected_q:'Cuenta conectada a la nube',prof_connect_btn:'Conectar',prof_info_title:'Información y Datos',
+    prof_field_name:'Nombre',prof_field_city:'Ciudad',prof_field_phone:'Teléfono',prof_field_siret:'SIRET',
+    prof_field_legalform:'Forma jurídica',prof_field_ape:'Código APE',prof_field_iban:'IBAN',prof_field_bic:'BIC',
+    prof_field_bank:'Banco',prof_field_tva:'N.º IVA',prof_field_status:'Estado',prof_status_vat:'Sujeto a IVA',
+    prof_status_auto:'Autónomo',prof_field_deposit:'Depósito por defecto',prof_btn_reset:'Restablecer',
+    prof_btn_export:'Exportar',prof_ph_company:'Tu empresa',prof_ph_bank:'Tu banco',
+    prof_field_deposit_pct:'Depósito por defecto (%)',prof_btn_confirm:'Confirmar',
+    prof_quote_sending_title:'Envío de presupuestos',prof_quote_sending_auto:'automático, nada que configurar',
+    prof_quote_sending_desc:'Tus presupuestos se envían automáticamente con tu nombre. Las respuestas de tus clientes llegan por defecto a tu dirección de conexión, editable aquí si prefieres otra dirección:',
+    prof_logo_title:'Logo y Firma',prof_logo_empty:'Sin logo',prof_logo_edit_btn:'Editar logo',
+    prof_logo_file_label:'Archivo de imagen',prof_collab_title:'Colaboradores',
+    prof_sessions_empty:'Ningún dispositivo activo',prof_ago:'hace',prof_session_this_device:'Este dispositivo',
+    prof_session_other_device:'Otro dispositivo',prof_revoke_btn:'Revocar',
+    prof_toast_admin_only:'La edición del perfil está reservada al administrador',
+    prof_edit_confirm_q:'¿Modificar la información de tu perfil?',
+    agent_toast_enter_email:'Introduce un email',agent_toast_invite_sent:'Invitación enviada a',agent_err_generic:'Error',
+    agent_empty:'Todavía no hay colaboradores.',agent_status_active:'Activo',agent_status_suspended:'Suspendido',
+    agent_status_pending:'Pendiente',agent_role_admin:'Administrador',agent_role_member:'Colaborador',
+    agent_action_suspend_title:'Suspender',agent_action_reactivate_title:'Reactivar',agent_action_remove_title:'Eliminar',
+    agent_invite_pending:'Invitación pendiente',agent_btn_pay_invite:'Pagar 29€/mes e invitar →',agent_btn_invite_arrow:'Invitar →',
+    agent_seats_plural:'plazas',agent_seat_singular:'plaza',agent_collab_plural:'colaboradores',agent_collab_singular:'colaborador',
+    agent_used_plural:'utilizados',agent_used_singular:'utilizado',agent_limit_reached:'Límite alcanzado',
+    agent_extra_seat_price:'se facturará una plaza adicional a 29€/mes.',agent_add_title:'Añadir un colaborador',
+    agent_btn_new:'+ Nuevo',agent_profile_label:'Perfil',agent_opt_commercial:'Comercial — clientes y eventos',
+    agent_opt_barman:'Barman — catálogo y proveedores',agent_limit_modal_title:'Límite de colaboradores alcanzado.',
+    agent_limit_modal_line1_prefix:'Para invitar a',agent_limit_modal_line1_suffix:', se necesita una plaza adicional (29€/mes).',
+    agent_limit_modal_line2:'La invitación se enviará automáticamente tras el pago.',
+    agent_toast_invite_error:'Error al enviar la invitación',agent_toast_not_connected:'No conectado',
+    agent_toast_payment_link_error:'Error al crear el enlace de pago',
+    // Onboarding (i18n pass)
+    ob_step1_title:'Bienvenido a BAR OPS',
+    ob_step1_subtitle:'Tu herramienta profesional de gestión de eventos.<br>En 6 pasos, lo configuraremos todo.',
+    ob_firstname_label:'Tu nombre',ob_company_label:'Nombre de tu estructura / empresa',ob_activity_label:'Tu actividad principal',
+    ob_activity_barman:'Barman independiente de eventos',ob_activity_agency:'Agencia de eventos',ob_activity_bar:'Bar / Restaurante',
+    ob_activity_caterer:'Catering',ob_option_other:'Otro',
+    ob_step2_title:'Añade tu 1er producto',
+    ob_step2_subtitle:'Un licor, un sirope, lo que sea.<br>Solo lleva 30 segundos - y verás el valor de inmediato.',
+    ob_prod_name_label:'Nombre del producto',ob_prod_price_label:'Precio de compra sin IVA (EUR)',ob_prod_volume_label:'Contenido (cl)',
+    ob_prod_calc_label:'Coste por cl',ob_step2_hint:'Podrás añadir tantos como quieras en el Catálogo',
+    ob_step3_title:'Tu próximo evento',ob_step3_subtitle:'Crea tu primer evento en unos segundos.',
+    ob_event_name_label:'Nombre del evento',ob_event_guests_label:'Número de invitados',
+    ob_event_budget_label:'Presupuesto del cliente sin IVA (EUR) - opcional',
+    ob_step3_hint:'Puedes saltar este paso y crear tus eventos desde el menú',
+    ob_step4_title:'Mi equipo',ob_step4_subtitle:'Añade tus primeros bármanes / camareras con sus tarifas horarias.',
+    ob_staff_name_label:'Nombre y apellidos',ob_role_barman:'Barman / Barwoman',ob_role_waiter:'Camarero / Camarera',
+    ob_role_barchief:'Jefe de barra',ob_role_prep:'Preparador',ob_staff_rate_label:'Tarifa sin IVA / hora (EUR)',
+    ob_staff_phone_label:'Teléfono (opcional)',ob_step4_hint:'Puedes añadir más miembros desde la app',
+    ob_step5_title:'Tus proveedores',ob_step5_subtitle:'Guarda tus contactos de proveedores para encontrarlos fácilmente.',
+    ob_supplier_name_label:'Nombre del proveedor',ob_supplier_category_label:'Especialidad / Categoría',
+    ob_cat_alcohol:'Licores y Spirits',ob_cat_wine:'Vinos y Champagnes',ob_cat_beer:'Cerveza',ob_cat_syrup:'Siropes y Amargos',
+    ob_cat_ice:'Hielo',ob_cat_glassware:'Copas y Barware',ob_cat_fruit:'Frutas y Zumos',
+    ob_supplier_email_label:'Email (opcional)',ob_step5_hint:'Añadirás más sobre la marcha',
+    ob_step6_title:'¡Listo para despegar!',ob_step6_subtitle:'Has configurado los 5 pilares de BAR OPS.',
+    ob_check1_title:'Perfil y Estructura',ob_check1_desc:'Nombre, actividad e información básica',
+    ob_check2_desc:'Tus productos y sus costes',ob_check3_desc:'Tus eventos y presupuestos',
+    ob_check4_desc:'Tus bármanes/camareras y tarifas',ob_check5_title:'Proveedores',ob_check5_desc:'Tus contactos y socios',
+    ob_step6_final_text:'Ahora puedes crear tus cócteles, <br/>gestionar tus eventos en tiempo real y exportar tus presupuestos en PDF!',
+    ob_btn_skip:'Saltar',ob_btn_next:'Continuar →',ob_btn_finish:'Acceder a BAR OPS v',
+    ob_greeting_prefix:'Hola',ob_greeting_suffix:'· Pro',
   }
 };
 
@@ -12365,6 +12558,9 @@ function applyLang(){
       el.placeholder=t(textMap[el.placeholder]);
     }
   });
+
+  // Onboarding overlay (si déjà initialisé)
+  if(typeof window.applyOnboardingI18n==='function') window.applyOnboardingI18n();
 }
 
 load();
@@ -12587,26 +12783,26 @@ window.addSupplierFromOnboarding = function(supplier) {
     <!-- STEP 1 : Bienvenue -->
     <div class="ob-step" id="ob-step-1">
       <div class="ob-icon">*</div>
-      <h2 class="ob-title">Bienvenue dans BAR OPS</h2>
-      <p class="ob-subtitle">Votre outil de gestion evenementielle professionnelle.<br>En 6 etapes, on va tout configurer.</p>
+      <h2 class="ob-title" data-i18n="ob_step1_title">Bienvenue dans BAR OPS</h2>
+      <p class="ob-subtitle" data-i18n="ob_step1_subtitle">Votre outil de gestion evenementielle professionnelle.<br>En 6 etapes, on va tout configurer.</p>
 
       <div class="ob-field">
-        <label class="ob-label">Votre prenom</label>
+        <label class="ob-label" data-i18n="ob_firstname_label">Votre prenom</label>
         <input type="text" id="ob-firstname" class="ob-input" placeholder="Ex : Alexandre" autocomplete="off"/>
       </div>
       <div class="ob-field">
-        <label class="ob-label">Nom de votre structure / entreprise</label>
+        <label class="ob-label" data-i18n="ob_company_label">Nom de votre structure / entreprise</label>
         <input type="text" id="ob-company" class="ob-input" placeholder="Ex : Alexandre Bartending" autocomplete="off"/>
       </div>
       <div class="ob-field">
-        <label class="ob-label">Votre activite principale</label>
+        <label class="ob-label" data-i18n="ob_activity_label">Votre activite principale</label>
         <select id="ob-activity" class="ob-input">
-          <option value="">- Selectionnez -</option>
-          <option>Barman independant evenementiel</option>
-          <option>Agence evenementielle</option>
-          <option>Bar / Restaurant</option>
-          <option>Traiteur</option>
-          <option>Autre</option>
+          <option value="" data-i18n="select_placeholder">- Selectionnez -</option>
+          <option data-i18n="ob_activity_barman">Barman independant evenementiel</option>
+          <option data-i18n="ob_activity_agency">Agence evenementielle</option>
+          <option data-i18n="ob_activity_bar">Bar / Restaurant</option>
+          <option data-i18n="ob_activity_caterer">Traiteur</option>
+          <option data-i18n="ob_option_other">Autre</option>
         </select>
       </div>
     </div>
@@ -12614,172 +12810,172 @@ window.addSupplierFromOnboarding = function(supplier) {
     <!-- STEP 2 : Premier produit -->
     <div class="ob-step" id="ob-step-2" style="display:none">
       <div class="ob-icon">#</div>
-      <h2 class="ob-title">Ajoutez votre 1er produit</h2>
-      <p class="ob-subtitle">Un alcool, un sirop, n'importe quoi.<br>Ca prend 30 secondes - et vous verrez immediatement la valeur.</p>
+      <h2 class="ob-title" data-i18n="ob_step2_title">Ajoutez votre 1er produit</h2>
+      <p class="ob-subtitle" data-i18n="ob_step2_subtitle">Un alcool, un sirop, n'importe quoi.<br>Ca prend 30 secondes - et vous verrez immediatement la valeur.</p>
 
       <div class="ob-field">
-        <label class="ob-label">Nom du produit</label>
+        <label class="ob-label" data-i18n="ob_prod_name_label">Nom du produit</label>
         <input type="text" id="ob-prod-name" class="ob-input" placeholder="Ex : Rhum Diplomatico" autocomplete="off"/>
       </div>
       <div class="ob-row2">
         <div class="ob-field">
-          <label class="ob-label">Prix d'achat HT (EUR)</label>
+          <label class="ob-label" data-i18n="ob_prod_price_label">Prix d'achat HT (EUR)</label>
           <input type="number" id="ob-prod-price" class="ob-input" placeholder="Ex : 22.50" step="0.01" min="0"/>
         </div>
         <div class="ob-field">
-          <label class="ob-label">Contenance (cl)</label>
+          <label class="ob-label" data-i18n="ob_prod_volume_label">Contenance (cl)</label>
           <input type="number" id="ob-prod-volume" class="ob-input" placeholder="Ex : 70" step="1" min="0"/>
         </div>
       </div>
       <div id="ob-prod-calc" class="ob-calc" style="display:none">
-        <span class="ob-calc-label">Coût au cl</span>
+        <span class="ob-calc-label" data-i18n="ob_prod_calc_label">Coût au cl</span>
         <span id="ob-prod-calc-val" class="ob-calc-val">—</span>
       </div>
-      <p class="ob-hint">Vous pourrez en ajouter autant que vous voulez dans le Catalogue</p>
+      <p class="ob-hint" data-i18n="ob_step2_hint">Vous pourrez en ajouter autant que vous voulez dans le Catalogue</p>
     </div>
 
     <!-- STEP 3 : Premier événement -->
     <div class="ob-step" id="ob-step-3" style="display:none">
       <div class="ob-icon">+</div>
-      <h2 class="ob-title">Votre prochain evenement</h2>
-      <p class="ob-subtitle">Creez votre premiere prestation en quelques secondes.</p>
+      <h2 class="ob-title" data-i18n="ob_step3_title">Votre prochain evenement</h2>
+      <p class="ob-subtitle" data-i18n="ob_step3_subtitle">Creez votre premiere prestation en quelques secondes.</p>
 
       <div class="ob-field">
-        <label class="ob-label">Nom de l'evenement</label>
+        <label class="ob-label" data-i18n="ob_event_name_label">Nom de l'evenement</label>
         <input type="text" id="ob-event-name" class="ob-input" placeholder="Ex : Mariage Dupont - 14 juin" autocomplete="off"/>
       </div>
       <div class="ob-row2">
         <div class="ob-field">
-          <label class="ob-label">Date</label>
+          <label class="ob-label" data-i18n="ev_date">Date</label>
           <input type="date" id="ob-event-date" class="ob-input"/>
         </div>
         <div class="ob-field">
-          <label class="ob-label">Nombre de convives</label>
+          <label class="ob-label" data-i18n="ob_event_guests_label">Nombre de convives</label>
           <input type="number" id="ob-event-guests" class="ob-input" placeholder="Ex : 120" min="1"/>
         </div>
       </div>
       <div class="ob-field">
-        <label class="ob-label">Budget client HT (EUR) - optionnel</label>
+        <label class="ob-label" data-i18n="ob_event_budget_label">Budget client HT (EUR) - optionnel</label>
         <input type="number" id="ob-event-budget" class="ob-input" placeholder="Ex : 2400" step="100" min="0"/>
       </div>
-      <p class="ob-hint">Vous pouvez passer cette etape et creer vos events depuis le menu</p>
+      <p class="ob-hint" data-i18n="ob_step3_hint">Vous pouvez passer cette etape et creer vos events depuis le menu</p>
     </div>
 
     <!-- STEP 4 : Staff -->
     <div class="ob-step" id="ob-step-4" style="display:none">
       <div class="ob-icon">=</div>
-      <h2 class="ob-title">Mon équipe</h2>
-      <p class="ob-subtitle">Ajoute tes 1ers barmen / serveuses avec leurs tarifs horaires.</p>
+      <h2 class="ob-title" data-i18n="ob_step4_title">Mon équipe</h2>
+      <p class="ob-subtitle" data-i18n="ob_step4_subtitle">Ajoute tes 1ers barmen / serveuses avec leurs tarifs horaires.</p>
 
       <div class="ob-field">
-        <label class="ob-label">Prenom & Nom</label>
+        <label class="ob-label" data-i18n="ob_staff_name_label">Prenom & Nom</label>
         <input type="text" id="ob-staff-name" class="ob-input" placeholder="Ex : Marie Dupont" autocomplete="off"/>
       </div>
       <div class="ob-row2">
         <div class="ob-field">
-          <label class="ob-label">Role</label>
+          <label class="ob-label" data-i18n="staff_role">Role</label>
           <select id="ob-staff-role" class="ob-input">
-            <option value="">- Selectionnez -</option>
-            <option>Barman / Barmaid</option>
-            <option>Serveur / Serveuse</option>
-            <option>Chef de bar</option>
-            <option>Preparateur</option>
+            <option value="" data-i18n="select_placeholder">- Selectionnez -</option>
+            <option data-i18n="ob_role_barman">Barman / Barmaid</option>
+            <option data-i18n="ob_role_waiter">Serveur / Serveuse</option>
+            <option data-i18n="ob_role_barchief">Chef de bar</option>
+            <option data-i18n="ob_role_prep">Preparateur</option>
           </select>
         </div>
         <div class="ob-field">
-          <label class="ob-label">Tarif HT / heure (EUR)</label>
+          <label class="ob-label" data-i18n="ob_staff_rate_label">Tarif HT / heure (EUR)</label>
           <input type="number" id="ob-staff-rate" class="ob-input" placeholder="Ex : 15.00" step="0.50" min="0"/>
         </div>
       </div>
       <div class="ob-field">
-        <label class="ob-label">Telephone (optionnel)</label>
+        <label class="ob-label" data-i18n="ob_staff_phone_label">Telephone (optionnel)</label>
         <input type="text" id="ob-staff-phone" class="ob-input" placeholder="06 XX XX XX XX" autocomplete="off"/>
       </div>
-      <p class="ob-hint">Vous pouvez ajouter d'autres membres depuis l'app</p>
+      <p class="ob-hint" data-i18n="ob_step4_hint">Vous pouvez ajouter d'autres membres depuis l'app</p>
     </div>
 
     <!-- STEP 5 : Fournisseurs -->
     <div class="ob-step" id="ob-step-5" style="display:none">
       <div class="ob-icon">></div>
-      <h2 class="ob-title">Tes fournisseurs</h2>
-      <p class="ob-subtitle">Enregistre tes contact fournisseurs pour les retrouver facilement.</p>
+      <h2 class="ob-title" data-i18n="ob_step5_title">Tes fournisseurs</h2>
+      <p class="ob-subtitle" data-i18n="ob_step5_subtitle">Enregistre tes contact fournisseurs pour les retrouver facilement.</p>
 
       <div class="ob-field">
-        <label class="ob-label">Nom du fournisseur</label>
+        <label class="ob-label" data-i18n="ob_supplier_name_label">Nom du fournisseur</label>
         <input type="text" id="ob-supplier-name" class="ob-input" placeholder="Ex : Les Spiritueux de Marseille" autocomplete="off"/>
       </div>
       <div class="ob-field">
-        <label class="ob-label">Specialite / Categorie</label>
+        <label class="ob-label" data-i18n="ob_supplier_category_label">Specialite / Categorie</label>
         <select id="ob-supplier-category" class="ob-input">
-          <option value="">- Selectionnez -</option>
-          <option>Alcools & Spirits</option>
-          <option>Vins & Champagnes</option>
-          <option>Biere</option>
-          <option>Sirops & Amers</option>
-          <option>Glacons & Glacage</option>
-          <option>Verres & Barware</option>
-          <option>Fruits & Jus</option>
-          <option>Autre</option>
+          <option value="" data-i18n="select_placeholder">- Selectionnez -</option>
+          <option data-i18n="ob_cat_alcohol">Alcools & Spirits</option>
+          <option data-i18n="ob_cat_wine">Vins & Champagnes</option>
+          <option data-i18n="ob_cat_beer">Biere</option>
+          <option data-i18n="ob_cat_syrup">Sirops & Amers</option>
+          <option data-i18n="ob_cat_ice">Glacons & Glacage</option>
+          <option data-i18n="ob_cat_glassware">Verres & Barware</option>
+          <option data-i18n="ob_cat_fruit">Fruits & Jus</option>
+          <option data-i18n="ob_option_other">Autre</option>
         </select>
       </div>
       <div class="ob-row2">
         <div class="ob-field">
-          <label class="ob-label">Telephone</label>
+          <label class="ob-label" data-i18n="client_phone">Telephone</label>
           <input type="text" id="ob-supplier-phone" class="ob-input" placeholder="06 XX XX XX XX" autocomplete="off"/>
         </div>
         <div class="ob-field">
-          <label class="ob-label">Email (optionnel)</label>
+          <label class="ob-label" data-i18n="ob_supplier_email_label">Email (optionnel)</label>
           <input type="email" id="ob-supplier-email" class="ob-input" placeholder="contact@..." autocomplete="off"/>
         </div>
       </div>
-      <p class="ob-hint">Vous en ajouterez d'autres au fur et a mesure</p>
+      <p class="ob-hint" data-i18n="ob_step5_hint">Vous en ajouterez d'autres au fur et a mesure</p>
     </div>
 
     <!-- STEP 6 : Final -->
     <div class="ob-step" id="ob-step-6" style="display:none">
       <div class="ob-icon">v</div>
-      <h2 class="ob-title">Pret a decoller!</h2>
-      <p class="ob-subtitle">Vous avez configure les 5 piliers de BAR OPS.</p>
+      <h2 class="ob-title" data-i18n="ob_step6_title">Pret a decoller!</h2>
+      <p class="ob-subtitle" data-i18n="ob_step6_subtitle">Vous avez configure les 5 piliers de BAR OPS.</p>
 
       <div class="ob-checklist">
         <div class="ob-check-item">
           <span class="ob-check-icon">*</span>
           <div>
-            <div class="ob-check-title">Profile & Structure</div>
-            <div class="ob-check-desc">Nom, activite et infos de base</div>
+            <div class="ob-check-title" data-i18n="ob_check1_title">Profile & Structure</div>
+            <div class="ob-check-desc" data-i18n="ob_check1_desc">Nom, activite et infos de base</div>
           </div>
         </div>
         <div class="ob-check-item">
           <span class="ob-check-icon">#</span>
           <div>
-            <div class="ob-check-title">Catalogue</div>
-            <div class="ob-check-desc">Vos produits et leurs couts</div>
+            <div class="ob-check-title" data-i18n="nav_catalogue">Catalogue</div>
+            <div class="ob-check-desc" data-i18n="ob_check2_desc">Vos produits et leurs couts</div>
           </div>
         </div>
         <div class="ob-check-item">
           <span class="ob-check-icon">+</span>
           <div>
-            <div class="ob-check-title">Evenements</div>
-            <div class="ob-check-desc">Vos prestations & budgets</div>
+            <div class="ob-check-title" data-i18n="nav_events">Evenements</div>
+            <div class="ob-check-desc" data-i18n="ob_check3_desc">Vos prestations & budgets</div>
           </div>
         </div>
         <div class="ob-check-item">
           <span class="ob-check-icon">=</span>
           <div>
-            <div class="ob-check-title">Equipe</div>
-            <div class="ob-check-desc">Vos barmen/serveuses & tarifs</div>
+            <div class="ob-check-title" data-i18n="nav_team">Equipe</div>
+            <div class="ob-check-desc" data-i18n="ob_check4_desc">Vos barmen/serveuses & tarifs</div>
           </div>
         </div>
         <div class="ob-check-item">
           <span class="ob-check-icon">></span>
           <div>
-            <div class="ob-check-title">Fournisseurs</div>
-            <div class="ob-check-desc">Vos contacts & partenaires</div>
+            <div class="ob-check-title" data-i18n="ob_check5_title">Fournisseurs</div>
+            <div class="ob-check-desc" data-i18n="ob_check5_desc">Vos contacts & partenaires</div>
           </div>
         </div>
       </div>
 
-      <p style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);text-align:center">
+      <p style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);text-align:center" data-i18n="ob_step6_final_text">
         Vous pouvez maintenant creer vos cocktails, <br/>
         gerer vos events en temps reel et exporter vos devis PDF !
       </p>
@@ -12787,10 +12983,10 @@ window.addSupplierFromOnboarding = function(supplier) {
 
     <!-- ── FOOTER NAVIGATION ── -->
     <div id="ob-footer">
-      <button id="ob-btn-skip" onclick="obSkip()">Passer</button>
+      <button id="ob-btn-skip" onclick="obSkip()" data-i18n="ob_btn_skip">Passer</button>
       <div style="display:flex;gap:10px;align-items:center">
-        <button id="ob-btn-back" onclick="obBack()" style="display:none">← Retour</button>
-        <button id="ob-btn-next" onclick="obNext()">Continuer →</button>
+        <button id="ob-btn-back" onclick="obBack()" style="display:none" data-i18n="btn_back">← Retour</button>
+        <button id="ob-btn-next" onclick="obNext()" data-i18n="ob_btn_next">Continuer →</button>
       </div>
     </div>
 
@@ -13091,6 +13287,15 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
   let obCurrentStep = 1;
   const OB_TOTAL = 6;
 
+  // ── Traduction du contenu statique (data-i18n) ──
+  function applyOnboardingI18n() {
+    if (typeof t !== 'function') return;
+    document.querySelectorAll('#onboarding-overlay [data-i18n]').forEach(function(el) {
+      el.innerHTML = t(el.getAttribute('data-i18n'));
+    });
+  }
+  window.applyOnboardingI18n = applyOnboardingI18n;
+
   // ── Lance l'onboarding si pas encore fait ──
   function obInit() {
     // Vérif localStorage
@@ -13136,6 +13341,7 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
 
   function obRender(step) {
     obCurrentStep = step;
+    applyOnboardingI18n();
 
     // Progress bar
     document.getElementById('ob-progress-bar').style.width = (step / OB_TOTAL * 100) + '%';
@@ -13165,10 +13371,10 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
     btnSkip.style.display = step < OB_TOTAL ? 'block' : 'none';
 
     if (step === OB_TOTAL) {
-      btnNext.textContent = 'Acceder a BAR OPS v';
+      btnNext.textContent = t('ob_btn_finish');
       btnNext.classList.add('ob-finish');
     } else {
-      btnNext.textContent = 'Continuer →';
+      btnNext.textContent = t('ob_btn_next');
       btnNext.classList.remove('ob-finish');
     }
   }
@@ -13290,7 +13496,7 @@ select.ob-input { color-scheme: dark; cursor: pointer; }
     const firstname = localStorage.getItem('barops_user_firstname');
     if (firstname) {
       const logoP = document.querySelector('.logo p');
-      if (logoP) logoP.textContent = 'Bonjour ' + firstname + ' · Pro';
+      if (logoP) logoP.textContent = t('ob_greeting_prefix') + ' ' + firstname + ' ' + t('ob_greeting_suffix');
     }
   }
 
