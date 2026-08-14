@@ -2882,7 +2882,7 @@ function renderCatPage(cat){
     return;
   }
   if(!filtered.length){
-    body.innerHTML=`<div class="empty"><p style="color:var(--text3)">Aucun résultat pour "<strong style="color:var(--text)">${escHtml(search)}</strong>"</p></div>`;
+    body.innerHTML=`<div class="empty"><p style="color:var(--text3)">${t('cat_no_results')} "<strong style="color:var(--text)">${escHtml(search)}</strong>"</p></div>`;
     return;
   }
   const items=sortProducts(filtered);
@@ -2913,14 +2913,14 @@ function renderCatPage(cat){
         <th>${arr('type',t('cat_type'))}</th>
         <th>${arr('brand',t('cat_brand'))}</th>
         <th>${arr('price',t('cat_price'))}</th>
-        <th>Cont.</th>
+        <th>${t('cat_cont')}</th>
         <th>${t('cat_unit')}</th>
-        <th>HT / Unité</th>
+        <th>${t('cat_ht_unit')}</th>
         <th>${t('cat_supplier')}</th>
         <th style="white-space:nowrap">${t('cat_code')}</th>
         <th style="color:var(--gold)">${t('cat_stock')}</th>
-        <th style="color:var(--text3);font-size:8px;white-space:nowrap">Alerte</th>
-        <th style="color:var(--text3);font-size:8px;padding-left:16px;border-left:1px solid var(--border2)">Qté</th>
+        <th style="color:var(--text3);font-size:8px;white-space:nowrap">${t('cat_alert_short')}</th>
+        <th style="color:var(--text3);font-size:8px;padding-left:16px;border-left:1px solid var(--border2)">${t('c_ing_qty')}</th>
         <th></th>
         <th></th>
       </tr></thead>
@@ -2933,7 +2933,7 @@ function renderCatPage(cat){
     const stockLow=hasStock&&p.stockAlert>0&&p.stock<=p.stockAlert;
     html+=`<tr style="${missingPrice?'opacity:.6':''}">
       <td style="overflow:visible"><div id="pt-${p.id}-ss"></div></td>
-      <td><input value="${escHtml(p.brand||'')}" onchange="updProd(${p.id},'brand',this.value)" placeholder="Marque *" style="${INP};border-color:${!p.brand?'var(--red)':''}"/></td>
+      <td><input value="${escHtml(p.brand||'')}" onchange="updProd(${p.id},'brand',this.value)" placeholder="${t('cat_brand')}" style="${INP};border-color:${!p.brand?'var(--red)':''}"/></td>
       <td><input type="number" value="${p.priceHT||''}" step="0.01" min="0" placeholder="0.00" onchange="updProd(${p.id},'priceHT',parseFloat(this.value)||0)" style="${INP};border-color:${missingPrice?'var(--red)':''}"/></td>
       <td><input type="number" value="${p.qty||''}" step="0.1" min="0" placeholder="70" onchange="updProd(${p.id},'qty',parseFloat(this.value)||0)" style="${INP}"/></td>
       <td><select onchange="updProd(${p.id},'unit',this.value)" style="${INP};padding:3px 2px">
@@ -2941,10 +2941,10 @@ function renderCatPage(cat){
       </select></td>
       <td><span class="cpu ${cpu>0?'cpu-ok':'cpu-warn'}" id="cpu-${p.id}">${cpu>0?cpu.toFixed(2)+' €/'+uLabel:'—'}</span></td>
       <td><select onchange="updProd(${p.id},'supplier',this.value)" style="${INP};padding:3px 2px">
-        <option value="">— Fourn. —</option>
+        <option value="">${t('cat_supplier_placeholder')}</option>
         ${(state.suppliers||[]).map(s=>`<option value="${escHtml(s.name)}"${p.supplier===s.name?' selected':''}>${escHtml(s.name)}</option>`).join('')}
       </select></td>
-      <td><input value="${escHtml(p.supplierCode||'')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="ex: 123456" style="${INP};font-family:monospace"/></td>
+      <td><input value="${escHtml(p.supplierCode||'')}" onchange="updProd(${p.id},'supplierCode',this.value)" placeholder="${t('cat_code_example')}" style="${INP};font-family:monospace"/></td>
       <td style="white-space:nowrap">${stockLow?`<span style="color:var(--red);margin-right:2px">⚠</span>`:''}<input type="number" value="${hasStock?p.stock:''}" step="0.1" min="0" placeholder="—"
         onchange="updProd(${p.id},'stock',this.value===''?null:parseFloat(this.value))"
         style="${INP};border-color:${stockLow?'var(--red)':'var(--border2)'};color:${stockLow?'var(--red)':''};font-weight:${stockLow?'500':'300'}"/>
@@ -2952,8 +2952,8 @@ function renderCatPage(cat){
       <td><input type="number" value="${p.stockAlert>0?p.stockAlert:''}" step="0.5" min="0" placeholder="0"
         onchange="updProd(${p.id},'stockAlert',parseFloat(this.value)||0)"
         style="${INP};color:var(--text3)"/></td>
-      <td style="padding-left:16px;border-left:1px solid var(--border2)"><input type="number" id="order_qty_${p.id}" min="1" placeholder="Qté" style="${INP};text-align:center"/></td>
-      <td><button class="btn btn-sm" style="width:100%" onclick="addToOrderList(${p.id})">+ Commande</button></td>
+      <td style="padding-left:16px;border-left:1px solid var(--border2)"><input type="number" id="order_qty_${p.id}" min="1" placeholder="${t('c_ing_qty')}" style="${INP};text-align:center"/></td>
+      <td><button class="btn btn-sm" style="width:100%" onclick="addToOrderList(${p.id})">${t('cat_btn_order')}</button></td>
       <td style="text-align:center"><button class="btn btn-sm btn-danger" style="width:100%" onclick="delProduct(${p.id})">×</button></td>
     </tr>`;
   });
@@ -2963,7 +2963,7 @@ function renderCatPage(cat){
     // In catalogue view: suggestions = only existing types for this category
     const existingTypes=[...new Set(state.products.filter(x=>x.category===cat).map(x=>x.productType).filter(Boolean))].sort();
     const opts=existingTypes.length ? existingTypes : (TYPE_PRESETS[cat]||[]);
-    mkSS('pt-'+p.id+'-ss', opts, 'Type...', (v)=>updProd(p.id,'productType',v), p.productType||'');
+    mkSS('pt-'+p.id+'-ss', opts, t('cat_type_placeholder'), (v)=>updProd(p.id,'productType',v), p.productType||'');
   });
 }
 
@@ -3177,95 +3177,95 @@ function renderStaff(){
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     // Ligne contact
     const infos=[];
-    if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="Envoyer un message WhatsApp" style="font-size:11px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">Tél. ${escHtml(s.phone)}</a>`);
+    if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="${t('staff_wa_title')}" style="font-size:11px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">${t('staff_tel_prefix')} ${escHtml(s.phone)}</a>`);
     if(s.zone)   infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.zone)}</span>`);
     // Chips physiques (ligne visible sans ouvrir) — sans emoji
     const chip=(label,val)=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;padding:2px 8px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase">${label}</span>${escHtml(val)}</span>`;
     const phys=[];
-    if(s.age)             phys.push(chip('Âge',s.age+' ans'));
-    if(s.tailleCm)       phys.push(chip('Taille',s.tailleCm+' cm'));
-    if(s.tailleHaut)     phys.push(chip('Haut',s.tailleHaut));
-    if(s.taillePantalon) phys.push(chip('Pantalon',s.taillePantalon));
-    if(s.pointure)       phys.push(chip('Pointure',s.pointure));
-    if(s.physique)       phys.push(chip('Physique',s.physique));
-    if(s.langues)        phys.push(chip('Langues',s.langues));
-    if(s.couleurCheveux) phys.push(chip('Cheveux',s.couleurCheveux));
+    if(s.age)             phys.push(chip(t('staff_age'),s.age+' '+t('staff_years')));
+    if(s.tailleCm)       phys.push(chip(t('staff_height_short'),s.tailleCm+' cm'));
+    if(s.tailleHaut)     phys.push(chip(t('staff_top'),s.tailleHaut));
+    if(s.taillePantalon) phys.push(chip(t('staff_pants'),s.taillePantalon));
+    if(s.pointure)       phys.push(chip(t('staff_shoe_size'),s.pointure));
+    if(s.physique)       phys.push(chip(t('staff_physique'),s.physique));
+    if(s.langues)        phys.push(chip(t('staff_lang_short'),s.langues));
+    if(s.couleurCheveux) phys.push(chip(t('staff_hair'),s.couleurCheveux));
     // data-search
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.zone,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
     return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
         <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;overflow:hidden">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
-            <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||'Sans nom')}</span>
+            <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||t('staff_no_name'))}</span>
             <span style="font-size:10px;font-weight:700;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;background:${roleBg};border:1px solid ${roleColor};border-radius:20px;flex-shrink:0">${escHtml(s.type||'')}</span>
             ${infos.length?`${sep}${infos.join(sep)}`:''}
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <button class="btn-edit" onclick="${isOpen?`toggleStaff(${s.id})`:`showStaffInfo(${s.id})`}">${isOpen?'Fermer':'Info'}</button>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">Supprimer</button>
+          <button class="btn-edit" onclick="${isOpen?`toggleStaff(${s.id})`:`showStaffInfo(${s.id})`}">${isOpen?t('btn_close'):t('btn_info')}</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delStaff(${s.id})">${t('btn_delete')}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 80px;gap:8px;margin-bottom:8px">
-          <div class="field"><label>Nom / Prénom</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
+          <div class="field"><label>${t('client_name')}</label><input value="${escHtml(s.name||'')}" onchange="updStaff(${s.id},'name',this.value)" placeholder="Jean Dupont"/></div>
           <div class="field" style="position:relative">
-            <label>Rôle</label>
-            <select id="role-sel-${s.id}" onchange="onStaffRoleChange(${s.id},this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}<option value="__new__">+ Nouveau rôle...</option></select>
-            <input id="new-role-inp-${s.id}" placeholder="Nom du rôle → Entrée" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;padding:0 8px;border:1px solid var(--gold-border);border-radius:4px;background:var(--surface);color:var(--text);font-size:12px;z-index:2" onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRoleInline(${s.id})}else if(event.key==='Escape'){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}" onblur="if(!this.value.trim()){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}"/>
-            ${(state.staffCustomRoles||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(state.staffCustomRoles||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 8px;border:1px solid var(--border2);border-radius:20px;font-size:10px;color:var(--text3)">${escHtml(r)}<button onclick="event.stopPropagation();delStaffCustomRoleByIdx(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0;margin-left:2px;line-height:1;opacity:.7" title="Supprimer ce rôle">✕</button></span>`).join('')}</div>`:''}
+            <label>${t('staff_role')}</label>
+            <select id="role-sel-${s.id}" onchange="onStaffRoleChange(${s.id},this.value)">${[...STAFF_ROLES,...(state.staffCustomRoles||[])].map(r=>`<option${r===s.type?' selected':''}>${r}</option>`).join('')}<option value="__new__">${t('staff_new_role_opt')}</option></select>
+            <input id="new-role-inp-${s.id}" placeholder="${t('staff_new_role_placeholder')}" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;padding:0 8px;border:1px solid var(--gold-border);border-radius:4px;background:var(--surface);color:var(--text);font-size:12px;z-index:2" onkeydown="if(event.key==='Enter'){event.stopPropagation();addStaffCustomRoleInline(${s.id})}else if(event.key==='Escape'){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}" onblur="if(!this.value.trim()){this.style.display='none';document.getElementById('role-sel-${s.id}').style.display='';}"/>
+            ${(state.staffCustomRoles||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${(state.staffCustomRoles||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px 1px 8px;border:1px solid var(--border2);border-radius:20px;font-size:10px;color:var(--text3)">${escHtml(r)}<button onclick="event.stopPropagation();delStaffCustomRoleByIdx(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:0;margin-left:2px;line-height:1;opacity:.7" title="${t('staff_del_role_title')}">✕</button></span>`).join('')}</div>`:''}
           </div>
-          <div class="field"><label>Âge</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
+          <div class="field"><label>${t('staff_age')}</label><input type="number" min="16" max="99" value="${escHtml(s.age||'')}" onchange="updStaff(${s.id},'age',this.value)" placeholder="—"/></div>
           <div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-          <div class="field"><label>Téléphone</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
-          <div class="field"><label>Email</label><input type="email" value="${escHtml(s.email||'')}" onchange="updStaff(${s.id},'email',this.value)" placeholder="jean@mail.com"/></div>
-          <div class="field"><label>Adresse</label><input value="${escHtml(s.address||'')}" onchange="updStaff(${s.id},'address',this.value)" placeholder="Adresse complète"/></div>
-          <div class="field"><label>Zone géographique</label><select onchange="updStaff(${s.id},'zone',this.value)">
-            <option value="">— Sélectionner —</option>
+          <div class="field"><label>${t('staff_phone_lbl')}</label><input value="${escHtml(s.phone||'')}" onchange="updStaff(${s.id},'phone',this.value)" placeholder="+33 6..."/></div>
+          <div class="field"><label>${t('client_email')}</label><input type="email" value="${escHtml(s.email||'')}" onchange="updStaff(${s.id},'email',this.value)" placeholder="jean@mail.com"/></div>
+          <div class="field"><label>${t('client_address')}</label><input value="${escHtml(s.address||'')}" onchange="updStaff(${s.id},'address',this.value)" placeholder="${t('staff_address_placeholder')}"/></div>
+          <div class="field"><label>${t('staff_zone')}</label><select onchange="updStaff(${s.id},'zone',this.value)">
+            <option value="">${t('select_placeholder')}</option>
             ${['Paris & Île-de-France','Côte d\'Azur','Lyon & Rhône-Alpes','Bordeaux & Aquitaine','Marseille & PACA','Toulouse & Occitanie','Nantes & Pays de la Loire','Strasbourg & Alsace','Lille & Nord','Normandie','Bretagne','Montpellier','Grenoble & Alpes','Réunion','Martinique','Guadeloupe','Autre'].map(z=>`<option value="${z}"${s.zone===z?' selected':''}>${z}</option>`).join('')}
           </select></div>
         </div>
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Mensurations & Physique</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">${t('staff_measurements')}</div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px">
-          <div class="field"><label>Taille (cm)</label><input type="number" value="${escHtml(s.tailleCm||'')}" onchange="updStaff(${s.id},'tailleCm',this.value)" placeholder="175"/></div>
-          <div class="field"><label>Haut</label><select onchange="updStaff(${s.id},'tailleHaut',this.value)"><option value="">—</option>${['XS','S','M','L','XL','XXL','3XL'].map(v=>`<option${v===s.tailleHaut?' selected':''}>${v}</option>`).join('')}</select></div>
-          <div class="field"><label>Pantalon</label><input value="${escHtml(s.taillePantalon||'')}" onchange="updStaff(${s.id},'taillePantalon',this.value)" placeholder="32, 40..."/></div>
-          <div class="field"><label>Pointure</label><input type="number" value="${escHtml(s.pointure||'')}" onchange="updStaff(${s.id},'pointure',this.value)" placeholder="42"/></div>
-          <div class="field"><label>Cheveux</label><input value="${escHtml(s.couleurCheveux||'')}" onchange="updStaff(${s.id},'couleurCheveux',this.value)" placeholder="Brun, blond..."/></div>
+          <div class="field"><label>${t('staff_height_cm')}</label><input type="number" value="${escHtml(s.tailleCm||'')}" onchange="updStaff(${s.id},'tailleCm',this.value)" placeholder="175"/></div>
+          <div class="field"><label>${t('staff_top')}</label><select onchange="updStaff(${s.id},'tailleHaut',this.value)"><option value="">—</option>${['XS','S','M','L','XL','XXL','3XL'].map(v=>`<option${v===s.tailleHaut?' selected':''}>${v}</option>`).join('')}</select></div>
+          <div class="field"><label>${t('staff_pants')}</label><input value="${escHtml(s.taillePantalon||'')}" onchange="updStaff(${s.id},'taillePantalon',this.value)" placeholder="32, 40..."/></div>
+          <div class="field"><label>${t('staff_shoe_size')}</label><input type="number" value="${escHtml(s.pointure||'')}" onchange="updStaff(${s.id},'pointure',this.value)" placeholder="42"/></div>
+          <div class="field"><label>${t('staff_hair')}</label><input value="${escHtml(s.couleurCheveux||'')}" onchange="updStaff(${s.id},'couleurCheveux',this.value)" placeholder="${t('staff_hair_placeholder')}"/></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div class="field"><label>Physique</label><select onchange="updStaff(${s.id},'physique',this.value)"><option value="">—</option>${['Mince','Athlétique','Musclé','Costaud','Enrobé'].map(v=>`<option${v===s.physique?' selected':''}>${v}</option>`).join('')}</select></div>
-          <div class="field"><label>Langues parlées</label><input value="${escHtml(s.langues||'')}" onchange="updStaff(${s.id},'langues',this.value)" placeholder="FR, EN, IT, ES..."/></div>
+          <div class="field"><label>${t('staff_physique')}</label><select onchange="updStaff(${s.id},'physique',this.value)"><option value="">—</option>${['Mince','Athlétique','Musclé','Costaud','Enrobé'].map(v=>`<option${v===s.physique?' selected':''}>${v}</option>`).join('')}</select></div>
+          <div class="field"><label>${t('staff_lang_full')}</label><input value="${escHtml(s.langues||'')}" onchange="updStaff(${s.id},'langues',this.value)" placeholder="FR, EN, IT, ES..."/></div>
         </div>
-        ${canCost?`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">Tarifs</div>
+        ${canCost?`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:8px">${t('staff_tariffs')}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
-          <div class="field"><label>Coût HT (€/h)</label><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
-          <div class="field"><label>Facturé HT (€/h)</label><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
+          <div class="field"><label>${t('staff_cost_hr')}</label><input type="number" value="${s.rateHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'rateHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
+          <div class="field"><label>${t('staff_billed_hr')}</label><input type="number" value="${s.billHT||0}" step="0.01" min="0" onchange="updStaff(${s.id},'billHT',parseFloat(this.value)||0)" placeholder="0.00"/></div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Marge : <span style="color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:600">${margin>0?'+':''}${margin.toFixed(2)} €/h</span></div>`:''}
-        <div class="field" style="margin-bottom:10px"><label>Infos supplémentaires</label><input value="${escHtml(s.infosSupp||s.notes||'')}" onchange="updStaff(${s.id},'infosSupp',this.value)" placeholder="Disponibilité, véhiculé, spécialités, allergies..."/></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px">${t('staff_margin')} : <span style="color:${margin>0?'var(--green)':margin<0?'var(--red)':'var(--text3)'};font-weight:600">${margin>0?'+':''}${margin.toFixed(2)} €/h</span></div>`:''}
+        <div class="field" style="margin-bottom:10px"><label>${t('staff_infos_supp')}</label><input value="${escHtml(s.infosSupp||s.notes||'')}" onchange="updStaff(${s.id},'infosSupp',this.value)" placeholder="Disponibilité, véhiculé, spécialités, allergies..."/></div>
         <!-- Documents / Attestations -->
         <div style="margin-bottom:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600">Documents & attestations</label>
+            <label style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600">${t('staff_docs_title')}</label>
             <label style="cursor:pointer;font-size:9px;padding:3px 10px;border:1px solid var(--border2);border-radius:3px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
-              + Ajouter
+              ${t('btn_add')}
               <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple style="display:none" onchange="uploadStaffDocs(${s.id},this)"/>
             </label>
           </div>
           <div id="staff-docs-${s.id}">
             ${(s.documents||[]).length===0
-              ? `<div style="font-size:11px;color:var(--text3);font-style:italic">Aucun document</div>`
+              ? `<div style="font-size:11px;color:var(--text3);font-style:italic">${t('staff_docs_empty')}</div>`
               : (s.documents||[]).map((d,i)=>`
                 <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:4px;margin-bottom:4px;border:1px solid var(--border)">
                   <span style="font-size:16px">${d.name.match(/\.pdf$/i)?'📄':d.name.match(/\.(jpg|jpeg|png)$/i)?'🖼️':'📎'}</span>
                   <span style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)">${escHtml(d.name)}</span>
                   <span style="font-size:10px;color:var(--text3)">${d.size?Math.round(d.size/1024)+'ko':''}</span>
-                  <a href="${d.url}" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none;padding:2px 7px;border:1px solid var(--gold-border);border-radius:3px;white-space:nowrap">Voir</a>
-                  <button onclick="delStaffDoc(${s.id},${i})" style="background:none;border:none;cursor:pointer;color:var(--red,#dc6464);font-size:14px;padding:0 2px;line-height:1" title="Supprimer">×</button>
+                  <a href="${d.url}" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none;padding:2px 7px;border:1px solid var(--gold-border);border-radius:3px;white-space:nowrap">${t('staff_doc_view')}</a>
+                  <button onclick="delStaffDoc(${s.id},${i})" style="background:none;border:none;cursor:pointer;color:var(--red,#dc6464);font-size:14px;padding:0 2px;line-height:1" title="${t('btn_delete')}">×</button>
                 </div>`).join('')}
           </div>
         </div>
@@ -3327,7 +3327,7 @@ function showCList(){
   document.getElementById('btn-cnew').style.display='flex';
   document.getElementById('btn-cnew').textContent=t('btn_new_cocktail');
   document.getElementById('btn-recalc-ice').style.display='flex';
-  document.getElementById('btn-recalc-ice').textContent='↺ Recalculer les coûts';
+  document.getElementById('btn-recalc-ice').textContent=t('c_btn_recalc_costs');
   
   // Clear old filters
   const oldFilters=document.querySelectorAll('#page-cocktails .topbar-actions input[id^="c-"], #page-cocktails .topbar-actions select[id^="c-"]');
@@ -3353,13 +3353,13 @@ function showCList(){
   document.getElementById('c-filters-left')?.remove();
 
   const filterHTML=`
-    <input id="c-srch" placeholder="Rechercher un cocktail..." oninput="renderCGrid()" class="input-md"/>
+    <input id="c-srch" placeholder="${t('c_search_placeholder')}" oninput="renderCGrid()" class="input-md"/>
     <select id="c-filter-spirit" onchange="renderCGrid()" class="input-md">
-      <option value="">Tous les spiritueux</option>
+      <option value="">${t('c_filter_all_spirits')}</option>
       ${spiritTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
     </select>
     <select id="c-filter-cat" onchange="renderCGrid()" class="input-md">
-      <option value="">Toutes catégories</option>
+      <option value="">${t('c_filter_all_cats')}</option>
       ${cats.map(c=>`<option value="${c}">${c}</option>`).join('')}
     </select>`;
 
@@ -3381,7 +3381,7 @@ function renderCGrid(){
     (!catFilter||(c.category||'')=== catFilter)&&
     (!spiritFilter||(c.ingredients||[]).some(i=>(i.productType||'').toLowerCase().includes(spiritFilter.toLowerCase())))
   );
-  if(!items.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><p>Aucun résultat.</p></div>';return;}
+  if(!items.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>${t('c_no_results')}</p></div>`;return;}
   el.innerHTML=items.map(c=>{
     const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||20)/100)).toFixed(2)+'€ TTC':'—';
     const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'—';
@@ -3394,15 +3394,15 @@ function renderCGrid(){
         </div>
         <h3>${escHtml(c.name)}</h3>
         <div class="c-desc">${escHtml(c.description||'')}</div>
-        <div class="stat">Coût: <strong>${c.totalCost.toFixed(2)}€</strong> &nbsp;·&nbsp; FC: <span style="color:${fcColor}">${fc}</span></div>
+        <div class="stat">${t('c_cost_label')}: <strong>${c.totalCost.toFixed(2)}€</strong> &nbsp;·&nbsp; ${t('c_fc_label')}: <span style="color:${fcColor}">${fc}</span></div>
         <div class="stat tg">${c.priceHT?'<strong>'+c.priceHT.toFixed(2)+'€ HT</strong>':''} <span class="tm">${ttc}</span></div>
       </div>
       <div class="c-footer">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${(c.ingredients||[]).length} ingr. · ${c.glass||'—'}</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${(c.ingredients||[]).length} ${t('c_ingr_abbr')} · ${c.glass||'—'}</div>
         <div class="flex-g no-print" style="flex-wrap:nowrap;gap:4px;white-space:nowrap">
-          <button class="btn-edit" onclick="showCInfo(${c.id})">Info</button>
-          <button class="btn-edit" onclick="editC(${c.id})">Modifier</button>
-          <button class="btn btn-sm btn-ghost" onclick="dupC(${c.id})">⧉ Dup</button>
+          <button class="btn-edit" onclick="showCInfo(${c.id})">${t('btn_info')}</button>
+          <button class="btn-edit" onclick="editC(${c.id})">${t('btn_edit')}</button>
+          <button class="btn btn-sm btn-ghost" onclick="dupC(${c.id})">${t('c_btn_dup')}</button>
           <button class="btn btn-sm btn-danger" onclick="delC(${c.id})">✕</button>
         </div>
       </div>
@@ -4228,7 +4228,7 @@ function goToEventSuivi(eventId){
 function showSingleEventSuivi(eventId){
   const el=document.getElementById('suivi-detail');if(!el)return;
   const ev=state.events.find(x=>x.id===eventId);
-  if(!ev){el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Événement non trouvé.</p></div>`;return;}
+  if(!ev){el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>${t('suivi_ev_not_found')}</p></div>`;return;}
 
   const now=new Date();
   const total=evTot(ev);
@@ -4273,11 +4273,11 @@ function showSingleEventSuivi(eventId){
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div style="min-width:0;flex:1">
         <div style="font-size:10px;color:var(--text3);letter-spacing:.04em;margin-bottom:1px">
-          ${fmtDate}${isToday?' · <span style="color:var(--gold);font-weight:500">Aujourd\'hui</span>':''}
-          ${isMultiDate?`<span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:1px 6px;margin-left:4px;color:var(--text3)">${evDates.length} dates</span>`:''}
+          ${fmtDate}${isToday?` · <span style="color:var(--gold);font-weight:500">${t('suivi_today')}</span>`:''}
+          ${isMultiDate?`<span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:1px 6px;margin-left:4px;color:var(--text3)">${evDates.length} ${t('suivi_dates_count_suffix')}</span>`:''}
         </div>
         <div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
-        <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} pax · ${total} cocktails</div>
+        <div style="font-size:10px;color:var(--text3)">${ev.pax||'?'} ${t('suivi_pax')} · ${total} ${t('ev_summary_cocktails')}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;margin-left:12px">
         <div style="font-size:20px;font-family:'DM Serif Display',serif;color:${statusColor};font-weight:500;line-height:1">${pct}%</div>
@@ -4290,7 +4290,7 @@ function showSingleEventSuivi(eventId){
 
     ${isMultiDate&&ev.dateConfigs?(()=>{
       return`<div style="border:1px solid var(--border2);border-radius:6px;overflow:hidden;margin-bottom:10px">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;padding:5px 10px;background:var(--surface2);border-bottom:1px solid var(--border2)">Calendrier prestation</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;padding:5px 10px;background:var(--surface2);border-bottom:1px solid var(--border2)">${t('suivi_calendar_title')}</div>
         ${ev.dateConfigs.map(dc=>{
           const dObj=new Date(dc.date);
           const dFmt=dObj.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'});
@@ -4315,11 +4315,11 @@ function showSingleEventSuivi(eventId){
     })():''}
 
     <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px">
-      ${col(hasCocktails,'Cocktails',!hasCocktails?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Config</button>`:'')}
-      ${col(hasStaff,`Staff (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Assigner</button>`:'')}
-      ${col(allConfirmed,`Confirmé (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Dispo?</button>`:'')}
-      ${col(briefSent,'Brief',!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">Envoyer</button>`:'')}
-      ${col(coursesDone,'Stock',`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">État des stocks</button>`)}
+      ${col(hasCocktails,t('nav_cocktails'),!hasCocktails?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">${t('suivi_btn_config')}</button>`:'')}
+      ${col(hasStaff,`${t('suivi_col_staff')} (${assigned}${needed>0?'/'+needed:''})`,!hasStaff?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">${t('suivi_btn_assign')}</button>`:'')}
+      ${col(allConfirmed,`${t('suivi_col_confirmed')} (${confirmed}/${assigned||'?'})`,!allConfirmed?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">${t('suivi_btn_dispo')}</button>`:'')}
+      ${col(briefSent,t('suivi_col_brief'),!briefSent?`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'prestation')">${t('btn_send')}</button>`:'')}
+      ${col(coursesDone,t('cat_stock'),`<button class="btn btn-sm btn-ghost" onclick="goEvTab(${ev.id},'shopping')">${t('suivi_btn_stock_state')}</button>`)}
     </div>
 
     ${(()=>{
@@ -4329,32 +4329,32 @@ function showSingleEventSuivi(eventId){
       const acompteRecu=ev.acompte>0;
       const reste=acompteRecu?Math.max(0,total-acompte):total;
       return`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500">Paiement</div>
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-weight:500">${t('suivi_payment_title')}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px">
           <div style="background:var(--surface);padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
             <div style="font-size:16px;font-weight:600;color:var(--text);line-height:1.2">${total.toFixed(0)}€</div>
-            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">Total HT</div>
+            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${t('suivi_total_ht')}</div>
           </div>
           <div style="background:var(--surface);padding:12px 8px;text-align:center;border-right:1px solid var(--border)">
             <input type="number" value="${acompte.toFixed(0)}" min="0" step="1"
               style="width:100%;padding:2px 0;font-size:16px;font-weight:600;height:22px;border:none;background:transparent;text-align:center;color:var(--text)"
               onchange="updEvField(${ev.id},'acompte',parseFloat(this.value)||0);showSingleEventSuivi(${ev.id})" onkeydown="if(event.key==='Enter')event.target.blur()"/>
-            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">€ Acompte</div>
+            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${t('suivi_deposit_label')}</div>
           </div>
           <div style="background:var(--surface);padding:12px 8px;text-align:center">
             <div style="font-size:16px;font-weight:600;color:${ev.paid?'var(--green)':reste>0?'var(--gold)':'var(--green)'};line-height:1.2">${ev.paid?'✓':reste.toFixed(0)}€</div>
-            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${ev.paid?'Payée':'À encaisser'}</div>
+            <div style="font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-top:4px">${ev.paid?t('suivi_paid_label'):t('suivi_to_collect')}</div>
           </div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-sm ${acompteRecu?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="updEvField(${ev.id},'acompte',${acompteRecu?'0':acompte.toFixed(0)});showSingleEventSuivi(${ev.id})">
-            ${acompteRecu?'✓ Acompte reçu':'Acompte reçu'}
+            ${acompteRecu?'✓ ':''}${t('suivi_deposit_received')}
           </button>
           <button class="btn btn-sm ${ev.paid?'btn-primary':'btn-ghost'}" style="flex:1;min-width:140px" onclick="markPaidSuivi(${ev.id},!${ev.paid})">
-            ${ev.paid?'✓ Prestation payée':'Prestation payée'}
+            ${ev.paid?'✓ ':''}${t('suivi_event_paid')}
           </button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">Fiche</button>
-          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">Signature électronique</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="goEvTab(${ev.id},'prestation')">${t('dash_fiche')}</button>
+          <button class="btn btn-sm btn-ghost" style="flex:0;min-width:fit-content" onclick="copyPortalLink(${ev.id})">${t('suivi_btn_esign')}</button>
         </div>
       </div>
       ${(isPast&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0)?(()=>{
@@ -4369,7 +4369,7 @@ function showSingleEventSuivi(eventId){
         });
         const rows=Object.entries(ingredients);
         return`<div style="margin-top:8px;padding:10px 14px;border-top:1px solid var(--border)">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:600;margin-bottom:8px">Stock retour</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:600;margin-bottom:8px">${t('suivi_stock_return_title')}</div>
           ${rows.length?`<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
             ${rows.map(([key,{label,unit,needed}])=>{
               const [kb,kp]=key.split('||');
@@ -4377,12 +4377,12 @@ function showSingleEventSuivi(eventId){
               const volUnit=unit||prod?.unit||'cl';
               const isBtl=['cl','ml','L'].includes(volUnit);
               const isWeight=['g','kg'].includes(volUnit);
-              const retourUnit=isBtl?'Btl':isWeight?'kg':'Unité';
+              const retourUnit=isBtl?t('suivi_unit_btl'):isWeight?'kg':t('cat_unit');
               const bottleSize=isBtl?(prod?.qty||75):1;
               const usedQty=isBtl?(needed/bottleSize):needed;
               return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
                 <span style="flex:1;color:var(--text2)">${label}</span>
-                <span style="font-size:10px;color:var(--text3)">prévu ~${usedQty.toFixed(1)}</span>
+                <span style="font-size:10px;color:var(--text3)">${t('suivi_expected_prefix')} ~${usedQty.toFixed(1)}</span>
                 <input type="number" min="0" step="0.1" placeholder="0" value="${(ev.stockRetour||{})[key]||''}"
                   style="width:65px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right"
                   onchange="updStockRetour(${ev.id},'${key}',parseFloat(this.value)||0)"/>
@@ -4391,11 +4391,11 @@ function showSingleEventSuivi(eventId){
             }).join('')}
           </div>`:''}
           ${(ev.stockRetourCustomItems||[]).length?`<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;padding-top:6px;border-top:1px solid var(--border)">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px">Hors presta / catalogue</div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:2px">${t('suivi_outside_catalog')}</div>
             ${(ev.stockRetourCustomItems||[]).map((item,idx)=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px">
               <span style="flex:1;color:var(--text2)">${escHtml(item.nom)}${item.detail?` <span style="color:var(--text3);font-size:10px">${escHtml(item.detail)}</span>`:''}</span>
               <input type="number" min="0" step="0.1" value="${item.qty||1}" style="width:55px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right" onchange="updStockRetourCustomItem(${ev.id},${idx},parseFloat(this.value)||0)"/>
-              <span style="font-size:10px;color:var(--text3);width:26px">${escHtml(item.unite||'Unité')}</span>
+              <span style="font-size:10px;color:var(--text3);width:26px">${escHtml(item.unite||t('cat_unit'))}</span>
               <button onclick="removeStockRetourCustomItem(${ev.id},${idx})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0">✕</button>
             </div>`).join('')}
           </div>`:''}
@@ -4406,33 +4406,33 @@ function showSingleEventSuivi(eventId){
             const glassEntries=Object.entries(glassQty);
             if(!glassEntries.length)return'';
             return`<div style="padding:6px 0 8px;border-top:1px solid var(--border);margin-top:6px">
-              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:5px">Casse verres</div>
-              <div style="font-size:10px;color:var(--text4);margin-bottom:6px">Tolérance : ${glassEntries.map(([n,{g,qty}])=>`<strong>${Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100)}</strong> ${escHtml(n)}`).join(', ')} — excédent facturé à ${glassEntries.map(([n,{g}])=>`${(g.priceHT||0).toFixed(2)}€/u`).join(', ')}</div>
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;margin-bottom:5px">${t('suivi_glass_breakage_title')}</div>
+              <div style="font-size:10px;color:var(--text4);margin-bottom:6px">${t('suivi_tolerance_label')} : ${glassEntries.map(([n,{g,qty}])=>`<strong>${Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100)}</strong> ${escHtml(n)}`).join(', ')} — ${t('suivi_excess_billed')} ${glassEntries.map(([n,{g}])=>`${(g.priceHT||0).toFixed(2)}€/u`).join(', ')}</div>
               <div style="display:flex;flex-direction:column;gap:5px">
                 ${glassEntries.map(([name,{g,qty}])=>{const tol=Math.floor(qty*(parseFloat(g.breakagePercent)||5)/100);const saved=(ev.breakageActual||{})[name]||'';return`<div style="display:flex;align-items:center;gap:8px;font-size:11px">
                   <span style="flex:1;color:var(--text2)">${escHtml(name)}</span>
-                  <span style="font-size:10px;color:var(--text3)">tolérance ${tol}</span>
+                  <span style="font-size:10px;color:var(--text3)">${t('suivi_tolerance_lower')} ${tol}</span>
                   <input type="number" min="0" step="1" placeholder="0" value="${saved}" style="width:65px;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:right" onchange="updBreakageActual(${ev.id},'${escHtml(name)}',parseInt(this.value)||0)"/>
-                  <span style="font-size:10px;color:var(--text3);width:40px">cassés</span>
+                  <span style="font-size:10px;color:var(--text3);width:40px">${t('suivi_broken_suffix')}</span>
                 </div>`}).join('')}
               </div>
             </div>`;
           })()}
           <div id="suivi-hors-cat-form-${ev.id}" style="display:none;margin-bottom:8px;padding:6px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px">
             <div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap">
-              <input id="shc-nom-${ev.id}" placeholder="Produit" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
-              <input id="shc-detail-${ev.id}" placeholder="Marque / Détail" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
-              <input id="shc-unite-${ev.id}" placeholder="Unité" style="flex:1;min-width:55px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-nom-${ev.id}" placeholder="${t('suivi_ph_product')}" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-detail-${ev.id}" placeholder="${t('suivi_ph_brand_detail')}" style="flex:2;min-width:80px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
+              <input id="shc-unite-${ev.id}" placeholder="${t('cat_unit')}" style="flex:1;min-width:55px;padding:4px 7px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text)"/>
               <input id="shc-qty-${ev.id}" type="number" value="1" min="0.1" step="0.1" style="width:52px;flex-shrink:0;padding:4px 6px;font-size:11px;border:1px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:center"/>
-              <button class="btn btn-sm btn-gold" style="flex-shrink:0" onclick="addSuiviHorsCat(${ev.id})">Ajouter</button>
+              <button class="btn btn-sm btn-gold" style="flex-shrink:0" onclick="addSuiviHorsCat(${ev.id})">${t('suivi_btn_add_short')}</button>
               <button class="btn btn-sm btn-ghost" style="flex-shrink:0" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='none'">✕</button>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:6px">
-            <button class="btn btn-sm btn-ghost" style="flex:1" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='block'">+ Hors presta</button>
-            <button class="btn btn-sm btn-ghost" style="flex:2;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="suiviReinject(${ev.id})">Réinjecter en stock</button>
+            <button class="btn btn-sm btn-ghost" style="flex:1" onclick="document.getElementById('suivi-hors-cat-form-${ev.id}').style.display='block'">${t('suivi_btn_outside_event')}</button>
+            <button class="btn btn-sm btn-ghost" style="flex:2;${ev.paid?'border-color:#4ade80;color:#4ade80':'opacity:.4'}" onclick="suiviReinject(${ev.id})">${t('suivi_btn_reinject')}</button>
           </div>
-          ${!ev.paid?'<div style="font-size:10px;color:var(--text3);text-align:center">Marquez la prestation comme payée pour valider</div>':''}
+          ${!ev.paid?`<div style="font-size:10px;color:var(--text3);text-align:center">${t('suivi_mark_paid_hint')}</div>`:''}
         </div>`;
       })():''}`;
     })()}
@@ -4481,21 +4481,21 @@ function renderDashboard(){
     el.innerHTML=`
       <div style="max-width:580px;margin:0 auto;padding:20px 0">
         <div style="text-align:center;margin-bottom:32px">
-          <div style="font-size:32px;font-family:var(--font-body);color:var(--gold);margin-bottom:8px">Excellence événementielle avec BAR OPS</div>
-          <div style="color:var(--text2);font-size:13px">Suis ces 3 étapes pour démarrer en moins de 5 minutes</div>
+          <div style="font-size:32px;font-family:var(--font-body);color:var(--gold);margin-bottom:8px">${t('dash_onboard_title')}</div>
+          <div style="color:var(--text2);font-size:13px">${t('dash_onboard_subtitle')}</div>
         </div>
 
         ${[
-          {n:1,done:false,title:'Construis ton catalogue',desc:'Ajoute tes spiritueux, jus, sirops et garnitures avec leurs prix. C\'est la base de tous tes calculs de coût.',action:"goPage('catalogue')",btn:'Ouvrir le catalogue',icon:'<rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>'},
-          {n:2,done:false,title:'Crée tes recettes',desc:'Assemble tes cocktails avec les ingrédients du catalogue. Le food cost et le prix de vente se calculent automatiquement.',action:"goPage('cocktails')",btn:'Créer un cocktail',icon:'<path d="M3 2h10L8 9v5M5 14h6"/>'},
-          {n:3,done:false,title:'Configure ta première prestation',desc:'Crée un événement, assigne tes cocktails et ton staff. La fiche prestation et la liste de courses se génèrent en un clic.',action:"newEv();goPage('events')",btn:'Créer un événement',icon:'<rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/>'},
+          {n:1,done:false,title:t('dash_step1_title'),desc:t('dash_step1_desc'),action:"goPage('catalogue')",btn:t('dash_step1_btn'),icon:'<rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>'},
+          {n:2,done:false,title:t('dash_step2_title'),desc:t('dash_step2_desc'),action:"goPage('cocktails')",btn:t('dash_step2_btn'),icon:'<path d="M3 2h10L8 9v5M5 14h6"/>'},
+          {n:3,done:false,title:t('dash_step3_title'),desc:t('dash_step3_desc'),action:"newEv();goPage('events')",btn:t('dash_step3_btn'),icon:'<rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/>'},
         ].map(step=>`
           <div style="display:flex;gap:16px;padding:20px;border-radius:var(--radius-lg);margin-bottom:10px;background:var(--surface);transition:.2s" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center">
               <svg viewBox="0 0 16 16" fill="none" stroke="var(--gold)" stroke-width="1.2" style="width:14px;height:14px">${step.icon}</svg>
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:3px">Étape ${step.n}</div>
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:3px">${t('dash_step_label')} ${step.n}</div>
               <div style="font-size:14px;font-weight:500;margin-bottom:4px">${step.title}</div>
               <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:10px">${step.desc}</div>
               <button class="btn btn-gold" onclick="${step.action}">${step.btn}</button>
@@ -4503,10 +4503,10 @@ function renderDashboard(){
           </div>`).join('')}
 
         <div style="margin-top:24px;padding:10px;background:var(--surface2);border-radius:var(--radius-lg)">
-          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:8px">Raccourcis utiles</div>
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:8px">${t('dash_shortcuts_title')}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()">Import CSV catalogue</button>
-            <button class="btn btn-ghost" onclick="goPage('staff')">Configurer mon équipe</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('csv-import-input').click()">${t('dash_import_csv')}</button>
+            <button class="btn btn-ghost" onclick="goPage('staff')">${t('dash_config_team')}</button>
           </div>
         </div>
       </div>`;
@@ -4534,7 +4534,7 @@ function renderDashboard(){
   // Tâche: stock retour à faire pour events passés
   const pastNoRetour=state.events.filter(ev=>{const _ld=evLastDate(ev);return _ld&&_ld<now&&!ev.stockRetourDone&&(ev.cocktails||[]).length>0;});
   pastNoRetour.forEach(ev=>{
-    alerts.push({type:'stock_retour',severity:'high',event:ev,text:`Stock retour à saisir — ${ev.name}`});
+    alerts.push({type:'stock_retour',severity:'high',event:ev,text:`${t('dash_alert_stock_return')} — ${ev.name}`});
   });
   const upcomingNoPay=upcoming.filter(ev=>!ev.paid&&!ev.acompte);
   // Payment alerts removed - use dashboard cards instead
@@ -4544,7 +4544,7 @@ function renderDashboard(){
     const confirmed=(ev.staffConfirmed||[]).length;
     const assigned=(ev.assignedStaff||[]).length;
     if(assigned>0&&confirmed<assigned&&days<=3){
-      alerts.push({type:'staff',severity:'critical',event:ev,text:`${ev.name}: ${confirmed}/${assigned} confirmés (${days}j)`});
+      alerts.push({type:'staff',severity:'critical',event:ev,text:`${ev.name}: ${confirmed}/${assigned} ${t('dash_alert_confirmed')} (${days}${t('dash_day_abbr')})`});
     }
     // Stock insuffisant pour cet event
     const neededMap={};
@@ -4569,7 +4569,7 @@ function renderDashboard(){
       const bottlesNeeded=total/(product.qty||1);
       if(product.stock<bottlesNeeded){
         const label=`${ing.brand?ing.brand+' ':''}${ing.productType}`;
-        alerts.push({type:'stock_event',severity:'critical',event:ev,text:`${ev.name} — Stock insuffisant: ${label} (${product.stock} dispo, ${bottlesNeeded.toFixed(1)} requis)`});
+        alerts.push({type:'stock_event',severity:'critical',event:ev,text:`${ev.name} — ${t('dash_alert_stock_insufficient')}: ${label} (${product.stock} ${t('dash_alert_dispo')}, ${bottlesNeeded.toFixed(1)} ${t('dash_alert_requis')})`});
       }
     });
   });
@@ -4603,21 +4603,21 @@ function renderDashboard(){
   let html=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card" style="padding:16px;text-align:center">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">CA <span style="font-size:9px;color:var(--text3)">(HT)</span></div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px;font-weight:500">${t('dash_ca_label')} <span style="font-size:9px;color:var(--text3)">${t('dash_ca_excl_vat')}</span></div>
       <div style="font-size:56px;font-family:var(--font-body);font-weight:600;color:var(--gold);margin-bottom:16px;line-height:1" id="ca-value">${_canRevDB?fmt(caPayees)+'€':'—'}</div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       ${_canRevDB?`<div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px">
         <input type="date" id="ca-from" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
         <span style="color:var(--text3)">→</span>
         <input type="date" id="ca-to" style="font-size:11px;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);width:120px;cursor:pointer" onchange="updCARange()"/>
-      </div>`:'<div style="font-size:11px;color:var(--text3);margin-top:20px">Accès restreint</div>'}
+      </div>`:`<div style="font-size:11px;color:var(--text3);margin-top:20px">${t('dash_restricted_access')}</div>`}
     </div>
     <div class="card" style="padding:16px;text-align:center">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">STOCK</div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);margin-bottom:16px">${t('dash_stock_label')}</div>
       <div style="font-size:56px;font-family:var(--font-body);font-weight:600;color:var(--text);margin-bottom:16px;line-height:1"><span style="color:var(--green)">${stockOk}</span> <span style="color:var(--text3)">|</span> <span style="color:var(--red)">${lowStock.length}</span></div>
       <div style="height:1px;background:var(--gold-border);margin:20px 0"></div>
       <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-top:20px">
-        <div>OK | ALERTE</div>
+        <div>${t('dash_stock_legend')}</div>
       </div>
     </div>
   </div>`;
@@ -4641,9 +4641,9 @@ function renderDashboard(){
   // ═══ UPCOMING EVENTS LIST ═══
   if(upcoming.length>0){
     html+=`<div style="margin-bottom:16px">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">Événements à venir</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('dash_upcoming_title')}</div>
       <div style="display:grid;grid-template-columns:90px 2fr 1.2fr 52px 52px 52px 52px 90px 80px;column-gap:12px;padding:6px 14px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:4px">
-        <div>Date</div><div>Événement</div><div>Client</div><div style="text-align:center">Équipe</div><div style="text-align:center">Stock</div><div style="text-align:center">Cokt.</div><div style="text-align:center">Payé</div><div style="text-align:right">CA HT</div><div></div>
+        <div>${t('ev_date')}</div><div>${t('dash_col_event')}</div><div>${t('client_col_name')}</div><div style="text-align:center">${t('nav_team')}</div><div style="text-align:center">${t('cat_stock')}</div><div style="text-align:center">${t('dash_col_cocktails_abbr')}</div><div style="text-align:center">${t('dash_col_paid')}</div><div style="text-align:right">${t('dash_col_ca')}</div><div></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:2px">`;
 
@@ -4691,7 +4691,7 @@ function renderDashboard(){
       html+=`<div style="display:grid;grid-template-columns:90px 2fr 1.2fr 52px 52px 52px 52px 90px 80px;column-gap:12px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;align-items:center;cursor:pointer;transition:.15s;${leftBorder}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border)'" onclick="goToEventSuivi(${ev.id})">
         <div>
           <div style="font-size:11px;color:var(--text2)">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</div>
-          <div style="font-size:9px;color:var(--text3)">${days}j</div>
+          <div style="font-size:9px;color:var(--text3)">${days}${t('dash_day_abbr')}</div>
         </div>
         <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>
         <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cl?escHtml(cl.name):'—'}</div>
@@ -4701,7 +4701,7 @@ function renderDashboard(){
         <div style="text-align:center;font-size:13px;color:${payColor};font-weight:500">${payTxt}</div>
         <div style="text-align:right;font-size:12px;font-weight:${ev.totalRevHT?'600':'400'};color:${ev.totalRevHT?'var(--gold)':'var(--text3)'}">${ev.totalRevHT?fmt(ev.totalRevHT):'—'}</div>
         <div style="display:flex;justify-content:flex-end">
-          <button class="btn btn-sm" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">Suivi →</button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">${t('dash_btn_suivi')}</button>
         </div>
       </div>`;
     });
@@ -4713,8 +4713,8 @@ function renderDashboard(){
   // No events CTA
   if(!state.events.length){
     html+=`<div class="empty"><div class="empty-icon">📋</div>
-      <p style="margin-bottom:6px">Aucune prestation. Commence par créer un événement.</p>
-      <button class="btn btn-gold" onclick="newEv();goPage('events')">+ Créer un événement</button>
+      <p style="margin-bottom:6px">${t('dash_empty')}</p>
+      <button class="btn btn-gold" onclick="newEv();goPage('events')">${t('dash_create')}</button>
     </div>`;
   }
 
@@ -4933,15 +4933,15 @@ function evRowHTML(ev){
     <div style="display:flex;justify-content:center">${evStatusBadge(ev)}</div>
     <div style="font-size:13px;font-weight:600;text-align:right;color:${rev?'var(--gold)':'var(--text3)'}">${rev?fmt(rev):'—'}</div>
     <div style="display:flex;gap:5px;justify-content:flex-end;align-items:center">
-      <button class="btn-edit" onclick="editEv(${ev.id})">Modifier</button>
-      <button class="btn-edit" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">Suivi</button>
-      <button onclick="event.stopPropagation();delEv(${ev.id})" title="Supprimer" style="width:28px;height:28px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
+      <button class="btn-edit" onclick="editEv(${ev.id})">${t('btn_edit')}</button>
+      <button class="btn-edit" onclick="event.stopPropagation();goToEventSuivi(${ev.id})">${t('ev_btn_suivi')}</button>
+      <button onclick="event.stopPropagation();delEv(${ev.id})" title="${t('btn_delete')}" style="width:28px;height:28px;padding:0;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--text3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)';this.style.background='var(--red-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)';this.style.background='transparent'">×</button>
     </div>
   </div>`;
 }
 function evRowHdrHTML(){
   return`<div style="display:grid;grid-template-columns:${EV_ROW_COLS};column-gap:12px;padding:8px 16px;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);margin-bottom:6px">
-    <div>Date</div><div>Événement</div><div>Client</div><div style="text-align:center">Statut</div><div style="text-align:right">CA HT</div><div></div>
+    <div>${t('ev_date')}</div><div>${t('dash_col_event')}</div><div>${t('client_col_name')}</div><div style="text-align:center">${t('ev_col_status')}</div><div style="text-align:right">${t('dash_col_ca')}</div><div></div>
   </div>`;
 }
 function showEvList(){
@@ -4975,9 +4975,9 @@ function showEvList(){
     ${pageEvs.map(evRowHTML).join('')}
   </div>
   ${totalPg>1?`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px">
-    <button class="btn btn-sm btn-ghost" onclick="window._evPg=Math.max(0,(window._evPg||0)-1);showEvList()" ${pg===0?'disabled':''}>← Précédent</button>
-    <span style="font-size:12px;color:var(--text3)">${pg+1} / ${totalPg} — ${sorted.length} événements</span>
-    <button class="btn btn-sm btn-ghost" onclick="window._evPg=Math.min(${totalPg-1},(window._evPg||0)+1);showEvList()" ${pg>=totalPg-1?'disabled':''}>Suivant →</button>
+    <button class="btn btn-sm btn-ghost" onclick="window._evPg=Math.max(0,(window._evPg||0)-1);showEvList()" ${pg===0?'disabled':''}>${t('pag_prev')}</button>
+    <span style="font-size:12px;color:var(--text3)">${pg+1} / ${totalPg} — ${sorted.length} ${t('ev_count_suffix')}</span>
+    <button class="btn btn-sm btn-ghost" onclick="window._evPg=Math.min(${totalPg-1},(window._evPg||0)+1);showEvList()" ${pg>=totalPg-1?'disabled':''}>${t('pag_next')}</button>
   </div>`:''}
   `;
 }
@@ -4992,7 +4992,7 @@ function filterEvList(){
   const sorted=[...filtered].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
   const el=document.getElementById('ev-content');
   if(!sorted.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon"></div><p>Aucun résultat.</p></div>';
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>${t('c_no_results')}</p></div>`;
     return;
   }
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:2px">
@@ -5110,66 +5110,66 @@ function showEvForm(ev){
 
     <!-- SECTION 1: CLIENT & CONTACT -->
     <div class="card">
-      <div class="ctitle">Client & Contact</div>
+      <div class="ctitle">${t('ev_section_client')}</div>
       <div class="field" style="margin-bottom:8px">
         <label>${t('ev_client')}</label>
         <div style="position:relative">
-          <input id="ef-client-search" placeholder="Nom du client..." style="width:100%" oninput="clientSearchFilter()" value="${ev.clientId?(state.clients.find(x=>x.id===ev.clientId)||{}).name||ev.clientName||'':ev.clientName||''}"/>
+          <input id="ef-client-search" placeholder="${t('ev_client_search_placeholder')}" style="width:100%" oninput="clientSearchFilter()" value="${ev.clientId?(state.clients.find(x=>x.id===ev.clientId)||{}).name||ev.clientName||'':ev.clientName||''}"/>
           <div id="ef-client-list" style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:150px;overflow-y:auto;display:none;z-index:10"></div>
         </div>
         ${ev.clientId?`<div class="txs tm mt1" style="color:var(--gold);margin-top:3px">✓ ${(state.clients.find(x=>x.id===ev.clientId)||{}).name}</div>`:''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div class="field"><label>Email</label>
+        <div class="field"><label>${t('client_email')}</label>
           <input id="ef-email" type="email" value="${escHtml(ev.email||'')}" placeholder="contact@example.com"/>
         </div>
-        <div class="field"><label>Téléphone</label>
+        <div class="field"><label>${t('client_phone')}</label>
           <input id="ef-phone" value="${escHtml(ev.phone||'')}" placeholder="+33 6..."/>
         </div>
       </div>
 
       <!-- Client inline form (shown when new client needed) -->
       <div id="ef-client-form" style="display:none;padding:12px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px">
-        <div class="ctitle">Créer nouveau client</div>
+        <div class="ctitle">${t('ev_new_client_title')}</div>
         <div class="g2" style="margin-bottom:10px">
-          <div class="field"><label>Prénom</label>
+          <div class="field"><label>${t('ev_client_fname')}</label>
             <input id="ef-client-fname" placeholder="Jean"/>
           </div>
-          <div class="field"><label>Nom</label>
+          <div class="field"><label>${t('staff_name')}</label>
             <input id="ef-client-lname" placeholder="Dupont"/>
           </div>
         </div>
-        <div class="field" style="margin-bottom:10px"><label>Société</label>
+        <div class="field" style="margin-bottom:10px"><label>${t('client_company')}</label>
           <input id="ef-client-company" placeholder="Événements XYZ"/>
         </div>
         <div class="g2" style="margin-bottom:10px">
-          <div class="field"><label>Email</label>
+          <div class="field"><label>${t('client_email')}</label>
             <input id="ef-client-email" type="email" placeholder="contact@example.com"/>
           </div>
-          <div class="field"><label>Téléphone</label>
+          <div class="field"><label>${t('client_phone')}</label>
             <input id="ef-client-phone" placeholder="+33 6..."/>
           </div>
         </div>
-        <div class="field" style="margin-bottom:10px"><label>Adresse</label>
+        <div class="field" style="margin-bottom:10px"><label>${t('client_address')}</label>
           <input id="ef-client-address" placeholder="12 rue de la Paix, Paris"/>
         </div>
-        <div class="field" style="margin-bottom:6px"><label>Notes</label>
-          <input id="ef-client-notes" placeholder="Remarques, préférences..."/>
+        <div class="field" style="margin-bottom:6px"><label>${t('client_notes')}</label>
+          <input id="ef-client-notes" placeholder="${t('ev_client_notes_placeholder')}"/>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-ghost btn-sm" onclick="cancelClientForm()">Annuler</button>
-          <button class="btn btn-gold btn-sm" onclick="createClientFromForm()">Créer & Lier</button>
+          <button class="btn btn-ghost btn-sm" onclick="cancelClientForm()">${t('btn_cancel')}</button>
+          <button class="btn btn-gold btn-sm" onclick="createClientFromForm()">${t('ev_btn_create_link')}</button>
         </div>
       </div>
 
-      <div class="field" style="margin-bottom:8px"><label>Contact / Responsable</label>
-        <input id="ef-contact" value="${escHtml(ev.contact||'')}" placeholder="Personne responsable..."/>
+      <div class="field" style="margin-bottom:8px"><label>${t('ev_contact_resp')}</label>
+        <input id="ef-contact" value="${escHtml(ev.contact||'')}" placeholder="${t('ev_contact_resp_placeholder')}"/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="field"><label>Email Contact</label>
+        <div class="field"><label>${t('ev_contact_email_lbl')}</label>
           <input id="ef-contactemail" type="email" value="${escHtml(ev.contactEmail||'')}" placeholder="contact@example.com" onchange="if(${editEvId}){const ev=state.events.find(x=>x.id===${editEvId});if(ev){ev.contactEmail=this.value;save();}}"/>
         </div>
-        <div class="field"><label>Tél. Contact</label>
+        <div class="field"><label>${t('ev_contact_phone_lbl')}</label>
           <input id="ef-contactphone" value="${escHtml(ev.contactPhone||'')}" placeholder="+33 6..." onchange="if(${editEvId}){const ev=state.events.find(x=>x.id===${editEvId});if(ev){ev.contactPhone=this.value;save();}}"/>
         </div>
       </div>
@@ -5177,14 +5177,14 @@ function showEvForm(ev){
 
     <!-- SECTION 2: BASE EVENT -->
     <div class="card">
-      <div class="ctitle">Événement</div>
+      <div class="ctitle">${t('ev_section_event')}</div>
 
       <div class="field" style="margin-bottom:8px"><label>${t('ev_name')}</label>
         <input id="ef-name" value="${escHtml(ev.name||'')}" placeholder="Mariage Dupont, Gala XYZ..."/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div class="field">
-          <label>Date(s) de prestation</label>
+          <label>${t('ev_dates_label')}</label>
           <div id="ef-dates-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px">
             ${(ev.dates&&ev.dates.length?ev.dates:[ev.date||'']).map((d,i)=>`
               <div style="display:flex;gap:4px;align-items:center">
@@ -5192,7 +5192,7 @@ function showEvForm(ev){
                 ${i>0?`<button type="button" onclick="this.parentElement.remove();_syncEvDates()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0 4px">×</button>`:'<span style="width:20px"></span>'}
               </div>`).join('')}
           </div>
-          <button type="button" onclick="_addEvDate()" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;text-align:left">+ Ajouter une date</button>
+          <button type="button" onclick="_addEvDate()" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;text-align:left">${t('ev_add_date_btn')}</button>
         </div>
         <div class="field"><label>${t('ev_pax')}</label>
           <input type="number" id="ef-pax" value="${ev.pax||''}" placeholder="100" oninput="updEvCalc();renderEvPicker()"/>
@@ -5202,7 +5202,7 @@ function showEvForm(ev){
         <input id="ef-addr" value="${escHtml(ev.address||'')}" placeholder="12 rue de la Paix, Paris"/>
       </div>
       <div class="field"><label>${t('ev_access')}</label>
-        <input id="ef-access" value="${escHtml(ev.access||'')}" placeholder="Code porte..."/>
+        <input id="ef-access" value="${escHtml(ev.access||'')}" placeholder="${t('ev_access_placeholder')}"/>
       </div>
     </div>
 
@@ -5212,35 +5212,35 @@ function showEvForm(ev){
 
     <!-- SECTION 2: HORAIRES & SETUP -->
     <div class="card" style="padding:10px 14px">
-      <div class="ctitle" style="margin-bottom:8px">Horaires</div>
+      <div class="ctitle" style="margin-bottom:8px">${t('ev_section_hours')}</div>
       <div class="g3" style="grid-template-columns:1fr 1fr 1fr 1fr">
         <div class="field"><label>${t('ev_setup')}</label>${mkTimeSel('ef-setup',ev.setup||'')}</div>
         <div class="field"><label>${t('ev_bar_open')}</label>${mkTimeSel('ef-start',ev.start||'')}</div>
         <div class="field"><label>${t('ev_bar_close')}</label>${mkTimeSel('ef-end',ev.end||'')}</div>
-        <div class="field"><label>Fin de prestation</label>${mkTimeSel('ef-breakdown',ev.breakdown||'')}</div>
+        <div class="field"><label>${t('ev_breakdown_lbl')}</label>${mkTimeSel('ef-breakdown',ev.breakdown||'')}</div>
       </div>
     </div>
 
     <!-- SECTION 5: BAR -->
     <div class="card" style="padding:10px 14px">
-      <div class="ctitle" style="margin-bottom:8px">Bar</div>
+      <div class="ctitle" style="margin-bottom:8px">${t('nav_bar')}</div>
       <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:100px">
-          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Modèle</label>
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">${t('ev_bar_model_lbl')}</label>
           <select id="ef-bar-model-inp" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.name).filter(Boolean))].sort().map(model=>`<option value="${model}">${model}</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:80px">
-          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Longueur</label>
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">${t('ev_bar_length_lbl')}</label>
           <select id="ef-bar-length-sel" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).map(b=>b.lengthM))].sort((a,b)=>a-b).map(len=>`<option value="${len}">${len}m</option>`).join('')}
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:80px">
-          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Couleur</label>
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">${t('cat_bar_color')}</label>
           <select id="ef-bar-color" style="width:100%;font-size:10px;padding:4px 6px;height:28px" onchange="updBarOptions()">
             <option value="">—</option>
             ${[...new Set((state.barItems||[]).filter(b=>b.color).map(b=>b.color))].map(color=>`<option value="${color}">${color}</option>`).join('')}
@@ -5248,7 +5248,7 @@ function showEvForm(ev){
         </div>
         <div style="width:1px;height:28px;background:var(--border2);flex-shrink:0"></div>
         <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
-          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">Prix HT</label>
+          <label style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600">${t('cat_price')}</label>
           <span style="font-size:13px;font-weight:600;color:var(--gold);height:28px;display:flex;align-items:center;padding:0 4px" id="ef-bar-prix">—</span>
         </div>
       </div>
@@ -5269,26 +5269,26 @@ function showEvForm(ev){
     </div>
 
     <div class="card">
-      <div class="ctitle">Produits supplémentaires</div>
+      <div class="ctitle">${t('ev_extra_products_title')}</div>
       <div id="ev-extra-products"></div>
-      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addExtraProd()">+ Ajouter</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="addExtraProd()">${t('btn_add')}</button>
     </div>
 
     <!-- SECTION 3: STAFF -->
     <div class="card" style="padding:10px 14px">
       <div class="ctitle" style="margin-bottom:8px">${t('ev_staff_section')}</div>
       <div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px ${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'80px 100px 70px ':' '}28px;gap:6px;align-items:center;padding:6px 0;margin-bottom:10px;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">
-        <span>Rôle</span><span>Nom Staff</span><span>Arrivée</span><span>Départ</span><span style="color:var(--gold);text-align:center">Heures</span>${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?'<span style="color:var(--red);text-align:right">Coût HT</span><span style="color:var(--green);text-align:right">Facturation HT</span><span style="text-align:right">Marge</span>':''}<span></span>
+        <span>${t('staff_role')}</span><span>${t('ev_staff_col_name')}</span><span>${t('ev_col_arrival')}</span><span>${t('ev_col_departure')}</span><span style="color:var(--gold);text-align:center">${t('ev_col_hours')}</span>${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?`<span style="color:var(--red);text-align:right">${t('staff_rate')}</span><span style="color:var(--green);text-align:right">${t('ev_col_billing')}</span><span style="text-align:right">${t('staff_margin')}</span>`:''}<span></span>
       </div>
       <div id="ev-staff-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
-      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="addStaffAssignment(${ev.id})">+ Ajouter staff</button>
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="addStaffAssignment(${ev.id})">${t('ev_add_staff_btn')}</button>
 
       <!-- Tenue -->
       ${state.dressCodes.length?`
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <label style="font-size:11px">Tenue</label>
+        <label style="font-size:11px">${t('ev_dresscode')}</label>
         <select id="ef-tenue-select" style="width:100%;font-size:10px;padding:3px 4px;height:24px">
-          <option value="">— Aucune —</option>
+          <option value="">${t('opt_none')}</option>
           ${(state.dressCodes||[]).map(dc=>{const sel=(ev.dressCodes||[]).includes(dc.id);return`<option value="${dc.id}" ${sel?'selected':''}>${dc.name}</option>`;}).join('')}
         </select>
       </div>
@@ -5298,15 +5298,15 @@ function showEvForm(ev){
       ${(typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts'))?`
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:flex-end;gap:32px">
         <div style="text-align:right">
-          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Coût HT</div>
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">${t('staff_rate')}</div>
           <div id="ef-staff-total-cost" style="font-size:16px;font-weight:600;color:var(--red)">—</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Facturation HT</div>
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">${t('ev_col_billing')}</div>
           <div id="ef-staff-total-bill" style="font-size:16px;font-weight:600;color:var(--green)">—</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">Marge</div>
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;margin-bottom:4px">${t('staff_margin')}</div>
           <div id="ef-staff-total-mg" style="font-size:16px;font-weight:600;color:var(--gold)">—</div>
         </div>
       </div>`:''}
@@ -5316,14 +5316,14 @@ function showEvForm(ev){
 
     <!-- SECTION 3.5: LIVRAISON -->
     <div class="card" style="padding:10px 14px">
-      <div class="ctitle" style="margin-bottom:8px">Livraison</div>
+      <div class="ctitle" style="margin-bottom:8px">${t('ev_section_delivery')}</div>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="flex:1">
-          <div style="font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Coût HT</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">${t('staff_rate')}</div>
           <input type="number" id="ef-delivery" value="${ev.deliveryCostHT||''}" min="0" step="1" style="width:100%;padding:4px 6px;font-size:11px;height:26px" oninput="updEvCalc()" placeholder="0"/>
         </div>
         <div style="flex:1">
-          <div style="font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Facturé client</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">${t('ev_delivery_billed')}</div>
           <input type="number" id="ef-delivery-bill" value="${ev.deliveryBillHT||''}" min="0" step="1" style="width:100%;padding:4px 6px;font-size:11px;height:26px" oninput="updEvCalc()" placeholder="0"/>
         </div>
       </div>
@@ -5331,8 +5331,8 @@ function showEvForm(ev){
 
     <!-- NOTES -->
     <div class="card" style="padding:10px 14px">
-      <div class="ctitle" style="margin-bottom:8px">Notes</div>
-      <textarea id="ef-notes" style="width:100%;min-height:52px;padding:6px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:vertical;box-sizing:border-box" placeholder="Détails livraison, instructions, remarques..."></textarea>
+      <div class="ctitle" style="margin-bottom:8px">${t('client_notes')}</div>
+      <textarea id="ef-notes" style="width:100%;min-height:52px;padding:6px;font-size:11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);resize:vertical;box-sizing:border-box" placeholder="${t('ev_notes_placeholder')}"></textarea>
     </div>
 
     </div>
@@ -5345,15 +5345,15 @@ function showEvForm(ev){
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_cost')}</div>
           <div style="font-size:32px;font-family:var(--font-body);color:var(--red);font-weight:600" id="es-total">—</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:6px"><span id="es-ing">—</span> cocktails · <span id="es-staff">—</span> staff</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px"><span id="es-ing">—</span> ${t('ev_summary_cocktails')} · <span id="es-staff">—</span> ${t('ev_summary_staff')}</div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center">
           <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px">${t('ev_revenue')}</div>
           <div style="display:flex;align-items:center;justify-content:center;gap:8px">
             <div style="font-size:32px;font-family:var(--font-body);color:var(--green);font-weight:600" id="es-rev">—</div>
-            <button style="background:none;border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-size:11px;cursor:pointer;color:var(--text2)" onclick="toggleRevEdit()" title="Modifer si formule/devis convenu">✎</button>
+            <button style="background:none;border:1px solid var(--border);padding:6px 10px;border-radius:4px;font-size:11px;cursor:pointer;color:var(--text2)" onclick="toggleRevEdit()" title="${t('ev_edit_rev_title')}">✎</button>
           </div>
-          <input type="number" id="ef-rev-custom" style="display:none;width:120px;padding:8px;font-size:14px;margin-top:8px" placeholder="Montant facturé" oninput="updEvCalc()"/>
+          <input type="number" id="ef-rev-custom" style="display:none;width:120px;padding:8px;font-size:14px;margin-top:8px" placeholder="${t('ev_amount_billed_placeholder')}" oninput="updEvCalc()"/>
           <div style="font-size:10px;color:var(--text2);margin-top:6px" id="es-ttc"></div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--gold-border)">
@@ -5367,12 +5367,12 @@ function showEvForm(ev){
       <!-- REMISE -->
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);flex-shrink:0">Remise</span>
+          <span style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);flex-shrink:0">${t('ev_discount_label')}</span>
           <input type="number" id="ef-remise-pct" value="${ev.remisePct||''}" min="0" max="100" step="1" placeholder="%" style="width:52px;padding:4px 6px;font-size:11px;height:26px" oninput="updEvCalc()"/>
           <span style="font-size:10px;color:var(--text3)">%</span>
-          <span style="font-size:10px;color:var(--text3)">ou</span>
+          <span style="font-size:10px;color:var(--text3)">${t('gen_or')}</span>
           <input type="number" id="ef-remise-ht" value="${ev.remiseHT||''}" min="0" step="1" placeholder="€" style="width:64px;padding:4px 6px;font-size:11px;height:26px" oninput="updEvCalc()"/>
-          <span style="font-size:10px;color:var(--text3)">€ HT</span>
+          <span style="font-size:10px;color:var(--text3)">${t('ev_eur_ht')}</span>
           <div id="ef-remise-display" style="font-size:11px;color:var(--red);font-weight:600;margin-left:4px"></div>
         </div>
       </div>
@@ -5842,7 +5842,7 @@ function renderStaffList(evId){
   const staffList=ev?.staffAssignments||[];
 
   if(!staffList.length){
-    list.innerHTML='<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">Aucun staff assigné</div>';
+    list.innerHTML=`<div style="text-align:center;color:var(--text3);font-size:11px;padding:10px">${t('ev_no_staff_assigned')}</div>`;
     const elCost=document.getElementById('ef-staff-total-cost');
     const elBill=document.getElementById('ef-staff-total-bill');
     const elMg=document.getElementById('ef-staff-total-mg');
@@ -5868,7 +5868,7 @@ function renderStaffList(evId){
 
     return`<div style="display:grid;grid-template-columns:100px 150px 85px 85px 60px 80px 100px 70px 28px;gap:6px;align-items:center;padding:8px;background:var(--surface2);border-radius:var(--radius);font-size:11px">
       <select onchange="updStaffAssignment(${evId},${s.id},'role',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">
-        <option value="">— Rôle —</option>
+        <option value="">${t('opt_role')}</option>
         ${roleOpts.map(r=>`<option ${r===s.role?'selected':''}>${r}</option>`).join('')}
       </select>
       <div id="staff-name-ss-${s.id}" style="min-width:0"></div>
@@ -5876,10 +5876,10 @@ function renderStaffList(evId){
       <select onchange="updStaffAssignment(${evId},${s.id},'departureTime',this.value);renderStaffList(${evId});updEvCalc()" style="font-size:11px;padding:4px 6px;height:32px">${mkTimeOpts(s.departureTime)}</select>
       <span style="color:var(--gold);font-weight:600;text-align:center">${hours.toFixed(1)}h</span>
       <div style="display:flex;flex-direction:column;gap:1px">
-        <input type="number" value="${hours>0?cost.toFixed(2):s.costHT||''}" placeholder="Total €" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
+        <input type="number" value="${hours>0?cost.toFixed(2):s.costHT||''}" placeholder="${t('ev_total_eur_placeholder')}" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'costHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--red)"/>
       </div>
       <div>
-        <input type="number" value="${hours>0?bill.toFixed(2):s.billHT||''}" placeholder="Total €" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
+        <input type="number" value="${hours>0?bill.toFixed(2):s.billHT||''}" placeholder="${t('ev_total_eur_placeholder')}" step="1" min="0" oninput="updStaffAssignment(${evId},${s.id},'billHT',${hours}>0?(parseFloat(this.value)||0)/${hours}:parseFloat(this.value)||0);updEvCalc()" style="width:100%;padding:4px 6px;font-size:10px;text-align:right;color:var(--green)"/>
       </div>
       <div style="text-align:right;font-weight:600;color:${margin>=0?'var(--green)':'var(--red)'}">${(margin>=0?'+':'')+(margin).toFixed(2)}€</div>
       <button class="btn btn-sm btn-danger" onclick="delStaffAssignment(${evId},${s.id})" style="padding:4px 6px;height:28px">×</button>
@@ -5890,7 +5890,7 @@ function renderStaffList(evId){
   staffList.forEach(s=>{
     const staffForRole=state.staffItems.filter(x=>x.type===s.role);
     const names=staffForRole.map(x=>x.name);
-    mkSS('staff-name-ss-'+s.id, names, 'Nom staff...', (v)=>{
+    mkSS('staff-name-ss-'+s.id, names, t('ev_staff_name_placeholder'), (v)=>{
       updStaffAssignment(evId,s.id,'name',v);
       const found=staffForRole.find(x=>x.name===v);
       if(found){
@@ -8499,7 +8499,7 @@ function filterClients(){
 function renderClients(){
   const el=document.getElementById('clients-content');if(!el)return;
   if(!state.clients.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun client. Crée un profil réutilisable pour tes clients récurrents.</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>${t('client_empty_full')}</p></div>`;
     return;
   }
   const COLS='14px 1.2fr 1fr 2fr 1fr 1fr 200px';
@@ -8507,34 +8507,34 @@ function renderClients(){
   const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:8px 10px`;
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
     <div style="${HDR_STYLE}">
-      <div></div><div>Client</div><div>Société</div><div>Adresse</div><div>Email</div><div>Téléphone</div><div></div>
+      <div></div><div>${t('client_col_name')}</div><div>${t('client_company')}</div><div>${t('client_address')}</div><div>${t('client_email')}</div><div>${t('client_phone')}</div><div></div>
     </div>`+state.clients.map(c=>{
     const isOpen=c._open===true;
     return`<div class="client-card" id="client-row-${c.id}" style="border-radius:6px;border:1px solid var(--border2);background:var(--surface2);overflow:hidden">
       <div style="${ROW}">
         <span class="br-dot" style="background:${dotColor(c.name)}"></span>
-        <div style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(c.name||'Sans nom')}</div>
+        <div style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(c.name||t('staff_no_name'))}</div>
         <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.company?escHtml(c.company):'—'}</div>
         <div style="font-size:11px;color:${c.address?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.address?escHtml(c.address):'—'}</div>
         <div style="font-size:11px;color:${c.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.email?`<a href="mailto:${escHtml(c.email)}" onclick="event.stopPropagation()" title="${escHtml(c.email)}" style="color:inherit;text-decoration:none;transition:.15s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color=''">${escHtml(c.email)}</a>`:'—'}</div>
         <div style="font-size:11px;color:${c.phone?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.phone?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp" style="color:inherit;text-decoration:none;transition:.15s" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color=''">${escHtml(c.phone)}</a>`:'—'}</div>
         <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
-          <button class="btn-edit" onclick="${isOpen?`toggleClient(${c.id})`:`showClientInfo(${c.id})`}">${isOpen?'Fermer':'Info'}</button>
-          <button class="btn btn-sm btn-gold" onclick="newEvForClient(${c.id})">+ Presta</button>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">Supprimer</button>
+          <button class="btn-edit" onclick="${isOpen?`toggleClient(${c.id})`:`showClientInfo(${c.id})`}">${isOpen?t('btn_close'):t('btn_info')}</button>
+          <button class="btn btn-sm btn-gold" onclick="newEvForClient(${c.id})">${t('client_btn_new_event')}</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delClient(${c.id})">${t('btn_delete')}</button>
         </div>
       </div>
       ${isOpen?`<div style="padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2)">
         <div class="g2" style="margin-bottom:10px">
-          <div class="field"><label>Nom / Prénom</label><input value="${escHtml(c.name||'')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/></div>
-          <div class="field"><label>Société</label><input value="${escHtml(c.company||'')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/></div>
+          <div class="field"><label>${t('client_name')}</label><input value="${escHtml(c.name||'')}" onchange="updClient(${c.id},'name',this.value)" placeholder="Jean Martin"/></div>
+          <div class="field"><label>${t('client_company')}</label><input value="${escHtml(c.company||'')}" onchange="updClient(${c.id},'company',this.value)" placeholder="Événements XYZ"/></div>
         </div>
         <div class="g2" style="margin-bottom:10px">
-          <div class="field"><label>Email</label><input type="email" value="${escHtml(c.email||'')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/></div>
-          <div class="field"><label>Téléphone</label><input value="${escHtml(c.phone||'')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/></div>
+          <div class="field"><label>${t('client_email')}</label><input type="email" value="${escHtml(c.email||'')}" onchange="updClient(${c.id},'email',this.value)" placeholder="contact@example.com"/></div>
+          <div class="field"><label>${t('client_phone')}</label><input value="${escHtml(c.phone||'')}" onchange="updClient(${c.id},'phone',this.value)" placeholder="+33 6..."/></div>
         </div>
-        <div class="field" style="margin-bottom:10px"><label>Adresse habituelle</label><input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="Adresse par défaut"/></div>
-        <div class="field" style="margin-bottom:10px"><label>Notes</label><input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="Préférences, contraintes..."/></div>
+        <div class="field" style="margin-bottom:10px"><label>${t('client_address_usual')}</label><input value="${escHtml(c.address||'')}" onchange="updClient(${c.id},'address',this.value)" placeholder="${t('client_address_default_placeholder')}"/></div>
+        <div class="field" style="margin-bottom:10px"><label>${t('client_notes')}</label><input value="${escHtml(c.notes||'')}" onchange="updClient(${c.id},'notes',this.value)" placeholder="${t('client_notes_placeholder')}"/></div>
       </div>`:''}
     </div>`;
   }).join('')+`</div>`;
@@ -8894,7 +8894,7 @@ function receiveOrder(supplier,orderId){
 function renderSuppliers(){
   const el=document.getElementById('suppliers-content');if(!el)return;
   if(!state.suppliers.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.</p><button class="btn btn-gold" onclick="addSupplier()">+ Nouveau fournisseur</button></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>${t('sup_empty_full')}</p><button class="btn btn-gold" onclick="addSupplier()">${t('sup_btn_new')}</button></div>`;
     return;
   }
   const q=document.getElementById('suppliers-search')?.value?.toLowerCase()||'';
@@ -8904,11 +8904,11 @@ function renderSuppliers(){
   const ROW=`display:grid;grid-template-columns:${COLS};column-gap:16px;align-items:center;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;transition:.15s`;
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">
     <div style="${HDR_STYLE}">
-      <div>Fournisseur</div><div>Catégories livrées</div><div>Contact</div><div>Téléphone</div><div>Email</div><div></div>
+      <div>${t('cat_supplier')}</div><div>${t('sup_col_categories')}</div><div>${t('sup_col_contact')}</div><div>${t('client_phone')}</div><div>${t('client_email')}</div><div></div>
     </div>
     ${list.length?list.map(s=>{
       const orderCount=(state.orders&&state.orders[s.name]?.length)||0;
-      const tutoieBadge=s.tutoie?` <span style="font-size:9px;color:var(--text3);opacity:.7">(tutoiement)</span>`:'';
+      const tutoieBadge=s.tutoie?` <span style="font-size:9px;color:var(--text3);opacity:.7">${t('sup_tutoie_badge')}</span>`:'';
       const cats=s.categories?.length?s.categories:s.speciality?[s.speciality]:[];
       return`<div style="${ROW}" id="supplier-row-${s.id}" onmouseover="this.style.borderColor='var(--gold-border)'" onmouseout="this.style.borderColor='var(--border2)'">
         <div style="min-width:0">
@@ -8919,12 +8919,12 @@ function renderSuppliers(){
         <div style="font-size:12px;color:${s.phone?'var(--text2)':'var(--text3)'}">${s.phone?`<a href="tel:${escHtml(s.phone)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.phone)}</a>`:'—'}</div>
         <div style="font-size:12px;color:${s.email?'var(--text2)':'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.email?`<a href="mailto:${escHtml(s.email)}" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.email)}</a>`:'—'}</div>
         <div style="display:flex;gap:5px;align-items:center;justify-content:flex-end;flex-wrap:nowrap">
-          <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">Commander${orderCount?` (${orderCount})`:''}</button>
-          <button class="btn-edit" onclick="showSupplierInfo(${s.id})">Info</button>
-          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delSupplier(${s.id})">Supprimer</button>
+          <button class="btn btn-sm btn-gold" data-supplier="${escHtml(s.name)}" onclick="openSupplierOrder(this.dataset.supplier)">${t('sup_btn_order')}${orderCount?` (${orderCount})`:''}</button>
+          <button class="btn-edit" onclick="showSupplierInfo(${s.id})">${t('btn_info')}</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();delSupplier(${s.id})">${t('btn_delete')}</button>
         </div>
       </div>`;
-    }).join('') : `<p style="font-size:12px;color:var(--text3);padding:10px 16px">Aucun fournisseur ne correspond à "${escHtml(q)}".</p>`}
+    }).join('') : `<p style="font-size:12px;color:var(--text3);padding:10px 16px">${t('sup_no_match')} "${escHtml(q)}".</p>`}
   </div>`;
 }
 function showSupplierInfo(id){
@@ -9737,7 +9737,7 @@ function renderHistorique(){
     .sort((a,b)=>(evLastDate(b)||0)-(evLastDate(a)||0));
 
   if(!past.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><p>Aucune prestation passée pour l'instant.</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><p>${t('hist_empty_full')}</p></div>`;
     return;
   }
   
@@ -9791,20 +9791,20 @@ function renderHistorique(){
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px">
       <div class="card" style="text-align:center;padding:28px 20px">
         <div style="font-size:32px;font-weight:300;color:var(--gold);letter-spacing:-.01em">${fmt(totalRev)}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">CA total HT</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">${t('hist_total_rev')}</div>
       </div>
       <div class="card" style="text-align:center;padding:28px 20px">
         <div style="font-size:32px;font-weight:300;color:var(--green);letter-spacing:-.01em">${fmt(totalMg)}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">Marge brute HT</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">${t('hist_margin')}</div>
         <div style="font-size:12px;color:var(--text3);margin-top:4px">${totalRev>0?(totalMg/totalRev*100).toFixed(1)+'%':''}</div>
       </div>
       <div class="card" style="text-align:center;padding:28px 20px">
         <div style="font-size:32px;font-weight:300;color:var(--text);letter-spacing:-.01em">${past.length}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">Prestations</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">${t('hist_events')}</div>
       </div>
       <div class="card" style="text-align:center;padding:28px 20px">
         <div style="font-size:32px;font-weight:300;color:var(--text);letter-spacing:-.01em">${totalCkts}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">Cocktails servis</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em">${t('hist_cocktails')}</div>
       </div>
     </div>`;
 
@@ -9818,7 +9818,7 @@ function renderHistorique(){
     html+=`<div style="display:flex;align-items:baseline;gap:10px;margin:28px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)">
       <div style="font-size:13px;font-weight:500;color:var(--text);text-transform:capitalize">${monthLabel}</div>
       <div style="font-size:13px;color:var(--gold);font-weight:600">${fmt(data.rev)}</div>
-      <div style="font-size:11px;color:var(--text3)">marge ${fmt(mg)}</div>
+      <div style="font-size:11px;color:var(--text3)">${t('hist_margin_prefix')} ${fmt(mg)}</div>
     </div>`;
     filteredEvents.forEach(ev=>{
       const rev=evRevenue(ev);const cost=evCost(ev);const mg=rev-cost;
@@ -9830,16 +9830,16 @@ function renderHistorique(){
         <div style="min-width:88px;font-size:11px;color:var(--text3);flex-shrink:0">${fmtDate}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:500;margin-bottom:3px">${escHtml(ev.name)}</div>
-          <div style="font-size:11px;color:var(--text3);">${clientName?escHtml(clientName)+' · ':''}${ev.pax?ev.pax+' pax · ':''}${cktCount?cktCount+' cocktails':''}</div>
+          <div style="font-size:11px;color:var(--text3);">${clientName?escHtml(clientName)+' · ':''}${ev.pax?ev.pax+' '+t('suivi_pax')+' · ':''}${cktCount?cktCount+' '+t('ev_summary_cocktails'):''}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;min-width:110px">
           <div style="font-size:15px;font-weight:600;color:var(--gold)">${fmt(rev)}</div>
-          <div style="font-size:11px;color:${mg>=0?'var(--green)':'var(--red)'};margin-top:2px">${mg>=0?'+':''}${fmt(mg)} marge</div>
+          <div style="font-size:11px;color:${mg>=0?'var(--green)':'var(--red)'};margin-top:2px">${mg>=0?'+':''}${fmt(mg)} ${t('hist_margin_prefix')}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
-          <button style="padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'" onclick="generateDevis(${ev.id})">Devis</button>
-          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">PDF</button>
-          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">Récap</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'" onclick="generateDevis(${ev.id})">${t('btn_devis')}</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="downloadEventPDF(${ev.id})">${t('btn_pdf')}</button>
+          <button style="padding:6px 12px;background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:11px;transition:.2s" onmouseover="this.style.background='var(--gold-bg)'" onmouseout="this.style.background='transparent'" onclick="openEventHTML(${ev.id})">${t('hist_btn_recap')}</button>
           <button style="padding:6px 9px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:4px;cursor:pointer;font-size:12px;transition:.2s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" onclick="delEvHistorique(${ev.id})">×</button>
         </div>
       </div>`;
@@ -10909,7 +10909,7 @@ function renderSuivi(){
   const el=document.getElementById('suivi-content');if(!el)return;
   
   if(!state.events.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>${t('suivi_empty')}</p></div>`;
     return;
   }
 
@@ -10917,9 +10917,9 @@ function renderSuivi(){
 
   // Filtrer: exclure les events payés + stock retour fait
   const filtered=state.events.filter(ev=>!(ev.paid&&ev.stockRetourDone));
-  
+
   if(!filtered.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>Aucune prestation à suivre.</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon"></div><p>${t('suivi_empty')}</p></div>`;
     return;
   }
 
@@ -10973,11 +10973,11 @@ function renderSuivi(){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${escHtml(ev.name)}</div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px">
-          ${isMulti?`<span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:1px 6px;color:var(--text3)">${evDates.length}j</span>`:''}
+          ${isMulti?`<span style="font-size:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:1px 6px;color:var(--text3)">${evDates.length}${t('dash_day_abbr')}</span>`:''}
           <span style="font-size:12px;font-weight:600;color:${statusColor}">${pct}%</span>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">${fmtDate}${isToday?' · <span style="color:var(--gold)">Aujourd\'hui</span>':''}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">${fmtDate}${isToday?` · <span style="color:var(--gold)">${t('suivi_today')}</span>`:''}</div>
       <div style="height:3px;background:var(--surface3);border-radius:2px">
         <div style="width:${pct}%;height:100%;background:${statusColor};border-radius:2px"></div>
       </div>
@@ -11796,6 +11796,68 @@ const I18N={
     wn_title:'Nouveautés installées',wn_text:"Bar Ops vient d'être mis à jour avec des améliorations et des correctifs importants.",
     wn_btn:'Parfait, on y va',wn_badge_version:'Version',
     lbl_version_app:'Version',btn_check_updates:'Vérifier les mises à jour',
+    // Catalogue (i18n pass)
+    cat_no_results:'Aucun résultat pour',cat_cont:'Cont.',cat_ht_unit:'HT / Unité',cat_alert_short:'Alerte',
+    cat_supplier_placeholder:'— Fourn. —',cat_code_example:'ex: 123456',cat_btn_order:'+ Commande',cat_type_placeholder:'Type...',
+    // Staff (i18n pass)
+    staff_wa_title:'Envoyer un message WhatsApp',staff_tel_prefix:'Tél.',staff_age:'Âge',staff_height_short:'Taille',
+    staff_top:'Haut',staff_pants:'Pantalon',staff_shoe_size:'Pointure',staff_physique:'Physique',
+    staff_lang_short:'Langues',staff_hair:'Cheveux',staff_years:'ans',staff_no_name:'Sans nom',btn_info:'Info',
+    staff_new_role_opt:'+ Nouveau rôle...',staff_new_role_placeholder:'Nom du rôle → Entrée',staff_del_role_title:'Supprimer ce rôle',
+    staff_address_placeholder:'Adresse complète',staff_zone:'Zone géographique',select_placeholder:'— Sélectionner —',
+    staff_measurements:'Mensurations & Physique',staff_height_cm:'Taille (cm)',staff_hair_placeholder:'Brun, blond...',
+    staff_lang_full:'Langues parlées',staff_tariffs:'Tarifs',staff_cost_hr:'Coût HT (€/h)',staff_billed_hr:'Facturé HT (€/h)',
+    staff_infos_supp:'Infos supplémentaires',staff_docs_title:'Documents & attestations',staff_docs_empty:'Aucun document',staff_doc_view:'Voir',
+    // Cocktails (i18n pass)
+    c_btn_recalc_costs:'↺ Recalculer les coûts',c_search_placeholder:'Rechercher un cocktail...',
+    c_filter_all_spirits:'Tous les spiritueux',c_filter_all_cats:'Toutes catégories',c_no_results:'Aucun résultat.',
+    c_cost_label:'Coût',c_fc_label:'FC',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
+    // Clients (i18n pass)
+    client_empty_full:"Aucun client. Crée un profil réutilisable pour tes clients récurrents.",client_col_name:'Client',
+    client_btn_new_event:'+ Presta',client_address_usual:'Adresse habituelle',client_address_default_placeholder:'Adresse par défaut',
+    client_notes_placeholder:'Préférences, contraintes...',
+    // Fournisseurs (i18n pass)
+    sup_empty_full:'Aucun fournisseur. Ajoute tes fournisseurs pour passer des commandes rapidement.',sup_btn_new:'+ Nouveau fournisseur',
+    sup_col_categories:'Catégories livrées',sup_col_contact:'Contact',sup_tutoie_badge:'(tutoiement)',
+    sup_btn_order:'Commander',sup_no_match:'Aucun fournisseur ne correspond à',
+    // Dashboard (i18n pass)
+    dash_onboard_title:'Excellence événementielle avec BAR OPS',dash_onboard_subtitle:'Suis ces 3 étapes pour démarrer en moins de 5 minutes',
+    dash_step1_title:'Construis ton catalogue',dash_step1_desc:"Ajoute tes spiritueux, jus, sirops et garnitures avec leurs prix. C'est la base de tous tes calculs de coût.",dash_step1_btn:'Ouvrir le catalogue',
+    dash_step2_title:'Crée tes recettes',dash_step2_desc:'Assemble tes cocktails avec les ingrédients du catalogue. Le food cost et le prix de vente se calculent automatiquement.',dash_step2_btn:'Créer un cocktail',
+    dash_step3_title:'Configure ta première prestation',dash_step3_desc:'Crée un événement, assigne tes cocktails et ton staff. La fiche prestation et la liste de courses se génèrent en un clic.',dash_step3_btn:'Créer un événement',
+    dash_step_label:'Étape',dash_shortcuts_title:'Raccourcis utiles',dash_import_csv:'Import CSV catalogue',dash_config_team:'Configurer mon équipe',
+    dash_alert_stock_return:'Stock retour à saisir',dash_alert_confirmed:'confirmés',dash_day_abbr:'j',
+    dash_alert_stock_insufficient:'Stock insuffisant',dash_alert_dispo:'dispo',dash_alert_requis:'requis',
+    dash_ca_label:'CA',dash_ca_excl_vat:'(HT)',dash_restricted_access:'Accès restreint',dash_stock_label:'STOCK',dash_stock_legend:'OK | ALERTE',
+    dash_upcoming_title:'Événements à venir',dash_col_event:'Événement',dash_col_cocktails_abbr:'Cokt.',dash_col_paid:'Payé',dash_col_ca:'CA HT',dash_btn_suivi:'Suivi →',
+    // Events list (i18n pass)
+    ev_btn_suivi:'Suivi',ev_col_status:'Statut',pag_prev:'← Précédent',pag_next:'Suivant →',ev_count_suffix:'événements',
+    // Event form (i18n pass)
+    ev_section_client:'Client & Contact',ev_client_search_placeholder:'Nom du client...',ev_new_client_title:'Créer nouveau client',
+    ev_client_fname:'Prénom',ev_client_notes_placeholder:'Remarques, préférences...',ev_btn_create_link:'Créer & Lier',
+    ev_contact_resp:'Contact / Responsable',ev_contact_resp_placeholder:'Personne responsable...',
+    ev_contact_email_lbl:'Email Contact',ev_contact_phone_lbl:'Tél. Contact',ev_section_event:'Événement',
+    ev_dates_label:'Date(s) de prestation',ev_add_date_btn:'+ Ajouter une date',ev_access_placeholder:'Code porte...',
+    ev_section_hours:'Horaires',ev_breakdown_lbl:'Fin de prestation',ev_bar_model_lbl:'Modèle',ev_bar_length_lbl:'Longueur',
+    ev_extra_products_title:'Produits supplémentaires',ev_staff_col_name:'Nom Staff',ev_col_arrival:'Arrivée',ev_col_departure:'Départ',
+    ev_col_hours:'Heures',ev_col_billing:'Facturation HT',ev_add_staff_btn:'+ Ajouter staff',opt_none:'— Aucune —',
+    ev_section_delivery:'Livraison',ev_delivery_billed:'Facturé client',
+    ev_notes_placeholder:'Détails livraison, instructions, remarques...',ev_summary_cocktails:'cocktails',ev_summary_staff:'staff',
+    ev_edit_rev_title:'Modifer si formule/devis convenu',ev_amount_billed_placeholder:'Montant facturé',
+    ev_discount_label:'Remise',gen_or:'ou',ev_eur_ht:'€ HT',
+    ev_no_staff_assigned:'Aucun staff assigné',opt_role:'— Rôle —',ev_total_eur_placeholder:'Total €',ev_staff_name_placeholder:'Nom staff...',
+    // Suivi (i18n pass)
+    suivi_ev_not_found:'Événement non trouvé.',suivi_dates_count_suffix:'dates',suivi_pax:'pax',suivi_calendar_title:'Calendrier prestation',
+    suivi_btn_config:'Config',suivi_col_staff:'Staff',suivi_btn_assign:'Assigner',suivi_col_confirmed:'Confirmé',suivi_btn_dispo:'Dispo?',
+    suivi_col_brief:'Brief',suivi_btn_stock_state:'État des stocks',suivi_payment_title:'Paiement',suivi_total_ht:'Total HT',
+    suivi_deposit_label:'€ Acompte',suivi_paid_label:'Payée',suivi_to_collect:'À encaisser',suivi_deposit_received:'Acompte reçu',
+    suivi_event_paid:'Prestation payée',suivi_btn_esign:'Signature électronique',suivi_stock_return_title:'Stock retour',
+    suivi_unit_btl:'Btl',suivi_expected_prefix:'prévu',suivi_outside_catalog:'Hors presta / catalogue',suivi_glass_breakage_title:'Casse verres',
+    suivi_tolerance_label:'Tolérance',suivi_excess_billed:'excédent facturé à',suivi_tolerance_lower:'tolérance',suivi_broken_suffix:'cassés',
+    suivi_ph_product:'Produit',suivi_ph_brand_detail:'Marque / Détail',suivi_btn_add_short:'Ajouter',suivi_btn_outside_event:'+ Hors presta',
+    suivi_btn_reinject:'Réinjecter en stock',suivi_mark_paid_hint:'Marquez la prestation comme payée pour valider',
+    // Historique (i18n pass)
+    hist_empty_full:"Aucune prestation passée pour l'instant.",hist_margin_prefix:'marge',hist_btn_recap:'Récap',
   },
   en:{
     nav_dashboard:'Dashboard',nav_catalogue:'Catalogue',nav_cocktails:'Cocktails',
@@ -11859,6 +11921,81 @@ const I18N={
     wn_title:'Update installed',wn_text:'Bar Ops was just updated with important improvements and fixes.',
     wn_btn:"Great, let's go",wn_badge_version:'Version',
     lbl_version_app:'Version',btn_check_updates:'Check for updates',
+    cat_spirits:'Spirits',cat_juices:'Juices & Purées',cat_mixers:'Mixers & Sodas',cat_syrups:'Syrups',
+    cat_garnish:'Garnishes',cat_consumables:'Consumables',cat_spices:'Spices & Condiments',
+    cat_glassware:'Glassware',cat_ice:'Ice',cat_bar:'Bar & Equipment',
+    cat_no_products:'No products. Click "+ Add" to get started.',
+    cat_glass_price:'Price incl. VAT (€)',cat_glass_vol:'Volume (cl)',cat_glass_ht:'→ excl. VAT',
+    cat_bar_name:'Name / Model',cat_bar_length:'Length (m)',cat_bar_price:'Price excl. VAT (€)',
+    cat_bar_color:'Color',cat_bar_transport:'Transport',cat_bar_setup:'Setup',
+    cat_bar_custom:'Custom',cat_bar_available:'Available',
+    cat_add_glass:'+ Add a glass',cat_add_ice:'+ Add an ice type',cat_add_bar:'+ Add a bar / setup',
+    ev_summary:'Summary excl. VAT',ev_cost:'What it costs',ev_revenue:'What is billed',
+    ev_margin:'Margin',ev_save:'Save the event',
+    no_name:'Untitled',
+    ev_staff_section:'Staff & Hours',c_ing_qty:'Qty',staff_phone_lbl:'Phone',staff_margin:'Margin',
+    // Catalogue (i18n pass)
+    cat_no_results:'No results for',cat_cont:'Vol.',cat_ht_unit:'Excl. VAT / Unit',cat_alert_short:'Alert',
+    cat_supplier_placeholder:'— Supplier —',cat_code_example:'e.g. 123456',cat_btn_order:'+ Order',cat_type_placeholder:'Type...',
+    // Staff (i18n pass)
+    staff_wa_title:'Send a WhatsApp message',staff_tel_prefix:'Tel.',staff_age:'Age',staff_height_short:'Height',
+    staff_top:'Top',staff_pants:'Pants',staff_shoe_size:'Shoe size',staff_physique:'Build',
+    staff_lang_short:'Languages',staff_hair:'Hair',staff_years:'yrs',staff_no_name:'No name',btn_info:'Info',
+    staff_new_role_opt:'+ New role...',staff_new_role_placeholder:'Role name → Enter',staff_del_role_title:'Delete this role',
+    staff_address_placeholder:'Full address',staff_zone:'Geographic area',select_placeholder:'— Select —',
+    staff_measurements:'Measurements & Build',staff_height_cm:'Height (cm)',staff_hair_placeholder:'Brown, blonde...',
+    staff_lang_full:'Languages spoken',staff_tariffs:'Rates',staff_cost_hr:'Cost excl. VAT (€/h)',staff_billed_hr:'Billed excl. VAT (€/h)',
+    staff_infos_supp:'Additional info',staff_docs_title:'Documents & certificates',staff_docs_empty:'No documents',staff_doc_view:'View',
+    // Cocktails (i18n pass)
+    c_btn_recalc_costs:'↺ Recalculate costs',c_search_placeholder:'Search a cocktail...',
+    c_filter_all_spirits:'All spirits',c_filter_all_cats:'All categories',c_no_results:'No results.',
+    c_cost_label:'Cost',c_fc_label:'FC',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
+    // Clients (i18n pass)
+    client_empty_full:'No clients yet. Create a reusable profile for your recurring clients.',client_col_name:'Client',
+    client_btn_new_event:'+ Event',client_address_usual:'Usual address',client_address_default_placeholder:'Default address',
+    client_notes_placeholder:'Preferences, constraints...',
+    // Suppliers (i18n pass)
+    sup_empty_full:'No suppliers yet. Add your suppliers to place orders quickly.',sup_btn_new:'+ New Supplier',
+    sup_col_categories:'Categories supplied',sup_col_contact:'Contact',sup_tutoie_badge:'(informal)',
+    sup_btn_order:'Order',sup_no_match:'No supplier matches',
+    // Dashboard (i18n pass)
+    dash_onboard_title:'Event excellence with BAR OPS',dash_onboard_subtitle:'Follow these 3 steps to get started in under 5 minutes',
+    dash_step1_title:'Build your catalogue',dash_step1_desc:'Add your spirits, juices, syrups and garnishes with their prices. This is the base for all your cost calculations.',dash_step1_btn:'Open the catalogue',
+    dash_step2_title:'Create your recipes',dash_step2_desc:'Assemble your cocktails with ingredients from the catalogue. Food cost and sale price are calculated automatically.',dash_step2_btn:'Create a cocktail',
+    dash_step3_title:'Set up your first event',dash_step3_desc:'Create an event, assign your cocktails and your staff. The event sheet and shopping list are generated in one click.',dash_step3_btn:'Create an event',
+    dash_step_label:'Step',dash_shortcuts_title:'Useful shortcuts',dash_import_csv:'Import CSV catalogue',dash_config_team:'Configure my team',
+    dash_alert_stock_return:'Return stock to enter',dash_alert_confirmed:'confirmed',dash_day_abbr:'d',
+    dash_alert_stock_insufficient:'Insufficient stock',dash_alert_dispo:'avail.',dash_alert_requis:'required',
+    dash_ca_label:'Revenue',dash_ca_excl_vat:'(excl. VAT)',dash_restricted_access:'Restricted access',dash_stock_label:'STOCK',dash_stock_legend:'OK | ALERT',
+    dash_upcoming_title:'Upcoming events',dash_col_event:'Event',dash_col_cocktails_abbr:'Ckt.',dash_col_paid:'Paid',dash_col_ca:'Revenue excl. VAT',dash_btn_suivi:'Track →',
+    // Events list (i18n pass)
+    ev_btn_suivi:'Track',ev_col_status:'Status',pag_prev:'← Previous',pag_next:'Next →',ev_count_suffix:'events',
+    // Event form (i18n pass)
+    ev_section_client:'Client & Contact',ev_client_search_placeholder:'Client name...',ev_new_client_title:'Create new client',
+    ev_client_fname:'First name',ev_client_notes_placeholder:'Remarks, preferences...',ev_btn_create_link:'Create & Link',
+    ev_contact_resp:'Contact / Manager',ev_contact_resp_placeholder:'Person in charge...',
+    ev_contact_email_lbl:'Contact Email',ev_contact_phone_lbl:'Contact Phone',ev_section_event:'Event',
+    ev_dates_label:'Event date(s)',ev_add_date_btn:'+ Add a date',ev_access_placeholder:'Door code...',
+    ev_section_hours:'Hours',ev_breakdown_lbl:'End of event',ev_bar_model_lbl:'Model',ev_bar_length_lbl:'Length',
+    ev_extra_products_title:'Additional products',ev_staff_col_name:'Staff Name',ev_col_arrival:'Arrival',ev_col_departure:'Departure',
+    ev_col_hours:'Hours',ev_col_billing:'Billing excl. VAT',ev_add_staff_btn:'+ Add staff',opt_none:'— None —',
+    ev_section_delivery:'Delivery',ev_delivery_billed:'Billed to client',
+    ev_notes_placeholder:'Delivery details, instructions, remarks...',ev_summary_cocktails:'cocktails',ev_summary_staff:'staff',
+    ev_edit_rev_title:'Edit if a package/quote was agreed',ev_amount_billed_placeholder:'Amount billed',
+    ev_discount_label:'Discount',gen_or:'or',ev_eur_ht:'€ excl. VAT',
+    ev_no_staff_assigned:'No staff assigned',opt_role:'— Role —',ev_total_eur_placeholder:'Total €',ev_staff_name_placeholder:'Staff name...',
+    // Suivi (i18n pass)
+    suivi_ev_not_found:'Event not found.',suivi_dates_count_suffix:'dates',suivi_pax:'guests',suivi_calendar_title:'Event calendar',
+    suivi_btn_config:'Config',suivi_col_staff:'Staff',suivi_btn_assign:'Assign',suivi_col_confirmed:'Confirmed',suivi_btn_dispo:'Avail.?',
+    suivi_col_brief:'Brief',suivi_btn_stock_state:'Stock status',suivi_payment_title:'Payment',suivi_total_ht:'Total excl. VAT',
+    suivi_deposit_label:'€ Deposit',suivi_paid_label:'Paid',suivi_to_collect:'To collect',suivi_deposit_received:'Deposit received',
+    suivi_event_paid:'Event paid',suivi_btn_esign:'Electronic signature',suivi_stock_return_title:'Return stock',
+    suivi_unit_btl:'Btl',suivi_expected_prefix:'expected',suivi_outside_catalog:'Outside event / catalogue',suivi_glass_breakage_title:'Glass breakage',
+    suivi_tolerance_label:'Tolerance',suivi_excess_billed:'excess billed at',suivi_tolerance_lower:'tolerance',suivi_broken_suffix:'broken',
+    suivi_ph_product:'Product',suivi_ph_brand_detail:'Brand / Detail',suivi_btn_add_short:'Add',suivi_btn_outside_event:'+ Outside event',
+    suivi_btn_reinject:'Reinject into stock',suivi_mark_paid_hint:'Mark the event as paid to confirm',
+    // Historique (i18n pass)
+    hist_empty_full:'No past events yet.',hist_margin_prefix:'margin',hist_btn_recap:'Summary',
   },
   es:{
     nav_dashboard:'Dashboard',nav_catalogue:'Catálogo',nav_cocktails:'Cócteles',
@@ -11922,6 +12059,81 @@ const I18N={
     wn_title:'Actualización instalada',wn_text:'Bar Ops se acaba de actualizar con mejoras y correcciones importantes.',
     wn_btn:'Perfecto, vamos',wn_badge_version:'Versión',
     lbl_version_app:'Versión',btn_check_updates:'Buscar actualizaciones',
+    cat_spirits:'Espirituosos',cat_juices:'Jugos y Purés',cat_mixers:'Mixers y Refrescos',cat_syrups:'Jarabes',
+    cat_garnish:'Guarniciones',cat_consumables:'Consumibles',cat_spices:'Especias y Condimentos',
+    cat_glassware:'Cristalería',cat_ice:'Hielo',cat_bar:'Barra y Equipo',
+    cat_no_products:'Ningún producto. Haz clic en "+ Añadir" para empezar.',
+    cat_glass_price:'Precio con IVA (€)',cat_glass_vol:'Volumen (cl)',cat_glass_ht:'→ sin IVA',
+    cat_bar_name:'Nombre / Modelo',cat_bar_length:'Longitud (m)',cat_bar_price:'Precio sin IVA (€)',
+    cat_bar_color:'Color',cat_bar_transport:'Transporte',cat_bar_setup:'Montaje',
+    cat_bar_custom:'Personalizado',cat_bar_available:'Disponible',
+    cat_add_glass:'+ Añadir una copa',cat_add_ice:'+ Añadir un tipo de hielo',cat_add_bar:'+ Añadir una barra / montaje',
+    ev_summary:'Resumen sin IVA',ev_cost:'Lo que cuesta',ev_revenue:'Lo que se factura',
+    ev_margin:'Margen',ev_save:'Guardar el evento',
+    no_name:'Sin título',
+    ev_staff_section:'Personal y horarios',c_ing_qty:'Cant.',staff_phone_lbl:'Teléfono',staff_margin:'Margen',
+    // Catálogo (i18n pass)
+    cat_no_results:'Sin resultados para',cat_cont:'Vol.',cat_ht_unit:'Sin IVA / Unidad',cat_alert_short:'Alerta',
+    cat_supplier_placeholder:'— Proveedor —',cat_code_example:'ej: 123456',cat_btn_order:'+ Pedido',cat_type_placeholder:'Tipo...',
+    // Equipo (i18n pass)
+    staff_wa_title:'Enviar un mensaje de WhatsApp',staff_tel_prefix:'Tel.',staff_age:'Edad',staff_height_short:'Altura',
+    staff_top:'Parte superior',staff_pants:'Pantalón',staff_shoe_size:'Talla de zapato',staff_physique:'Físico',
+    staff_lang_short:'Idiomas',staff_hair:'Cabello',staff_years:'años',staff_no_name:'Sin nombre',btn_info:'Info',
+    staff_new_role_opt:'+ Nuevo rol...',staff_new_role_placeholder:'Nombre del rol → Intro',staff_del_role_title:'Eliminar este rol',
+    staff_address_placeholder:'Dirección completa',staff_zone:'Zona geográfica',select_placeholder:'— Seleccionar —',
+    staff_measurements:'Medidas y Físico',staff_height_cm:'Altura (cm)',staff_hair_placeholder:'Moreno, rubio...',
+    staff_lang_full:'Idiomas hablados',staff_tariffs:'Tarifas',staff_cost_hr:'Coste sin IVA (€/h)',staff_billed_hr:'Facturado sin IVA (€/h)',
+    staff_infos_supp:'Información adicional',staff_docs_title:'Documentos y certificados',staff_docs_empty:'Sin documentos',staff_doc_view:'Ver',
+    // Cócteles (i18n pass)
+    c_btn_recalc_costs:'↺ Recalcular costes',c_search_placeholder:'Buscar un cóctel...',
+    c_filter_all_spirits:'Todos los espirituosos',c_filter_all_cats:'Todas las categorías',c_no_results:'Sin resultados.',
+    c_cost_label:'Coste',c_fc_label:'FC',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
+    // Clientes (i18n pass)
+    client_empty_full:'Sin clientes. Crea un perfil reutilizable para tus clientes recurrentes.',client_col_name:'Cliente',
+    client_btn_new_event:'+ Evento',client_address_usual:'Dirección habitual',client_address_default_placeholder:'Dirección predeterminada',
+    client_notes_placeholder:'Preferencias, restricciones...',
+    // Proveedores (i18n pass)
+    sup_empty_full:'Sin proveedores. Añade tus proveedores para hacer pedidos rápidamente.',sup_btn_new:'+ Nuevo proveedor',
+    sup_col_categories:'Categorías suministradas',sup_col_contact:'Contacto',sup_tutoie_badge:'(tuteo)',
+    sup_btn_order:'Pedir',sup_no_match:'Ningún proveedor coincide con',
+    // Dashboard (i18n pass)
+    dash_onboard_title:'Excelencia en eventos con BAR OPS',dash_onboard_subtitle:'Sigue estos 3 pasos para empezar en menos de 5 minutos',
+    dash_step1_title:'Construye tu catálogo',dash_step1_desc:'Añade tus espirituosos, zumos, jarabes y guarniciones con sus precios. Es la base de todos tus cálculos de coste.',dash_step1_btn:'Abrir el catálogo',
+    dash_step2_title:'Crea tus recetas',dash_step2_desc:'Combina tus cócteles con los ingredientes del catálogo. El food cost y el precio de venta se calculan automáticamente.',dash_step2_btn:'Crear un cóctel',
+    dash_step3_title:'Configura tu primer evento',dash_step3_desc:'Crea un evento, asigna tus cócteles y tu personal. La ficha del evento y la lista de compras se generan con un clic.',dash_step3_btn:'Crear un evento',
+    dash_step_label:'Paso',dash_shortcuts_title:'Atajos útiles',dash_import_csv:'Importar CSV del catálogo',dash_config_team:'Configurar mi equipo',
+    dash_alert_stock_return:'Stock de retorno por registrar',dash_alert_confirmed:'confirmados',dash_day_abbr:'d',
+    dash_alert_stock_insufficient:'Stock insuficiente',dash_alert_dispo:'disp.',dash_alert_requis:'requerido',
+    dash_ca_label:'Ingresos',dash_ca_excl_vat:'(sin IVA)',dash_restricted_access:'Acceso restringido',dash_stock_label:'STOCK',dash_stock_legend:'OK | ALERTA',
+    dash_upcoming_title:'Próximos eventos',dash_col_event:'Evento',dash_col_cocktails_abbr:'Ckt.',dash_col_paid:'Pagado',dash_col_ca:'Ingresos sin IVA',dash_btn_suivi:'Seguim. →',
+    // Lista de eventos (i18n pass)
+    ev_btn_suivi:'Seguim.',ev_col_status:'Estado',pag_prev:'← Anterior',pag_next:'Siguiente →',ev_count_suffix:'eventos',
+    // Formulario de evento (i18n pass)
+    ev_section_client:'Cliente y contacto',ev_client_search_placeholder:'Nombre del cliente...',ev_new_client_title:'Crear nuevo cliente',
+    ev_client_fname:'Nombre',ev_client_notes_placeholder:'Observaciones, preferencias...',ev_btn_create_link:'Crear y vincular',
+    ev_contact_resp:'Contacto / Responsable',ev_contact_resp_placeholder:'Persona responsable...',
+    ev_contact_email_lbl:'Email de contacto',ev_contact_phone_lbl:'Tel. de contacto',ev_section_event:'Evento',
+    ev_dates_label:'Fecha(s) del evento',ev_add_date_btn:'+ Añadir una fecha',ev_access_placeholder:'Código de la puerta...',
+    ev_section_hours:'Horarios',ev_breakdown_lbl:'Fin del evento',ev_bar_model_lbl:'Modelo',ev_bar_length_lbl:'Longitud',
+    ev_extra_products_title:'Productos adicionales',ev_staff_col_name:'Nombre del personal',ev_col_arrival:'Llegada',ev_col_departure:'Salida',
+    ev_col_hours:'Horas',ev_col_billing:'Facturación sin IVA',ev_add_staff_btn:'+ Añadir personal',opt_none:'— Ninguna —',
+    ev_section_delivery:'Entrega',ev_delivery_billed:'Facturado al cliente',
+    ev_notes_placeholder:'Detalles de entrega, instrucciones, observaciones...',ev_summary_cocktails:'cócteles',ev_summary_staff:'personal',
+    ev_edit_rev_title:'Modificar si se acordó un paquete/presupuesto',ev_amount_billed_placeholder:'Importe facturado',
+    ev_discount_label:'Descuento',gen_or:'o',ev_eur_ht:'€ sin IVA',
+    ev_no_staff_assigned:'Sin personal asignado',opt_role:'— Rol —',ev_total_eur_placeholder:'Total €',ev_staff_name_placeholder:'Nombre del personal...',
+    // Seguimiento (i18n pass)
+    suivi_ev_not_found:'Evento no encontrado.',suivi_dates_count_suffix:'fechas',suivi_pax:'invitados',suivi_calendar_title:'Calendario del evento',
+    suivi_btn_config:'Config',suivi_col_staff:'Personal',suivi_btn_assign:'Asignar',suivi_col_confirmed:'Confirmado',suivi_btn_dispo:'¿Disp.?',
+    suivi_col_brief:'Brief',suivi_btn_stock_state:'Estado del stock',suivi_payment_title:'Pago',suivi_total_ht:'Total sin IVA',
+    suivi_deposit_label:'€ Depósito',suivi_paid_label:'Pagado',suivi_to_collect:'Por cobrar',suivi_deposit_received:'Depósito recibido',
+    suivi_event_paid:'Evento pagado',suivi_btn_esign:'Firma electrónica',suivi_stock_return_title:'Stock de retorno',
+    suivi_unit_btl:'Bot.',suivi_expected_prefix:'previsto',suivi_outside_catalog:'Fuera del evento / catálogo',suivi_glass_breakage_title:'Rotura de vasos',
+    suivi_tolerance_label:'Tolerancia',suivi_excess_billed:'exceso facturado a',suivi_tolerance_lower:'tolerancia',suivi_broken_suffix:'rotos',
+    suivi_ph_product:'Producto',suivi_ph_brand_detail:'Marca / Detalle',suivi_btn_add_short:'Añadir',suivi_btn_outside_event:'+ Fuera del evento',
+    suivi_btn_reinject:'Reinyectar en stock',suivi_mark_paid_hint:'Marca el evento como pagado para confirmar',
+    // Historial (i18n pass)
+    hist_empty_full:'Todavía no hay eventos pasados.',hist_margin_prefix:'margen',hist_btn_recap:'Resumen',
   }
 };
 
