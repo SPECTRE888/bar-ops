@@ -4,33 +4,43 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>BAR OPS</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#080808;--text:#ede8e0;--text2:#7a7268;--gold:#d9a637;--gold2:#eabc5c}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow-x:hidden;overflow-y:auto}
-body{font-family:'Jost',sans-serif;background:#000;color:var(--text);display:flex;flex-direction:column;align-items:center;padding:0}
-h1,h2,h3{font-family:'Cormorant Garamond',serif}
+body{
+  font-family:'Jost',sans-serif;color:var(--text);display:flex;flex-direction:column;align-items:center;padding:0;
+  background:
+    radial-gradient(1100px 620px at 50% -12%,rgba(217,166,55,.14),transparent 60%),
+    #030303;
+  position:relative;isolation:isolate
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+}
+h2,h3{font-family:'Cormorant Garamond',serif}
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
 .install-section{width:100%;max-width:660px;padding:64px 24px 80px;text-align:center}
-.install-section h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--gold);margin-bottom:12px;letter-spacing:.06em}
-.install-section p{font-size:14px;color:var(--text2);line-height:1.75;margin-bottom:36px}
-.steps{display:flex;flex-direction:column;gap:20px;margin-bottom:36px;text-align:left}
+.install-section h2{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--gold);margin-bottom:14px;letter-spacing:.06em}
+.install-section p{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:38px}
+.steps{display:flex;flex-direction:column;gap:20px;margin-bottom:38px;text-align:left}
 .step{display:flex;align-items:flex-start;gap:16px}
 .step-num{min-width:28px;height:28px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:2px;flex-shrink:0}
 .step-text{font-size:14px;color:var(--text);line-height:1.65}
 .step-text strong{color:var(--gold);font-weight:500}
-.code-block{background:#0d0d0d;border:1px solid #2a2520;border-radius:4px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:36px;text-align:left}
+.code-block{background:#0d0d0d;border:1px solid #2a2520;border-radius:5px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:38px;text-align:left}
 .code-block code{font-family:'Courier New',monospace;font-size:12px;color:#d9a637;word-break:break-all;line-height:1.6}
-.copy-btn{background:none;border:1px solid #2a2520;border-radius:3px;padding:6px 14px;color:var(--text2);font-size:11px;cursor:pointer;white-space:nowrap;font-family:'Jost',sans-serif;letter-spacing:.08em;transition:.2s;flex-shrink:0}
+.copy-btn{background:none;border:1px solid #2a2520;border-radius:4px;padding:7px 15px;color:var(--text2);font-size:12px;cursor:pointer;white-space:nowrap;font-family:'Jost',sans-serif;letter-spacing:.08em;transition:.2s;flex-shrink:0;font-weight:500}
 .copy-btn:hover{border-color:var(--gold);color:var(--gold)}
-.dl-btn{display:inline-block;padding:13px 44px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s;text-decoration:none}
+.dl-btn{display:inline-block;padding:15px 46px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s;text-decoration:none}
 .dl-btn:hover{background:var(--gold);color:#080808}
 .divider{width:60px;height:1px;background:linear-gradient(to right,transparent,#2a2520,transparent);margin:0 auto 48px}
-.logo{font-size:54px;font-weight:300;letter-spacing:.1em;margin-bottom:18px;color:var(--gold)}
-.tagline{font-size:20px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:44px;max-width:600px}
-.btn-primary{padding:14px 52px;background:var(--gold);color:#080808;border:none;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.16em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s}
+.logo{font-size:58px;font-weight:700;letter-spacing:.09em;margin-bottom:20px;color:var(--gold)}
+.tagline{font-size:21px;font-weight:300;color:var(--text);letter-spacing:.02em;margin-bottom:48px;max-width:600px}
+.btn-primary{padding:16px 56px;background:var(--gold);color:#080808;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.14em;text-transform:uppercase;font-family:'Jost',sans-serif;transition:.25s}
 .btn-primary:hover{background:var(--gold2)}
 footer{width:100%;padding:0}
 .legal{text-align:center;font-size:12px;color:var(--text2);padding:12px 24px;line-height:1.6}

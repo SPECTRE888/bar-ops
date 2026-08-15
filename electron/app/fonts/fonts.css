@@ -61,3 +61,10 @@
   font-display: swap;
   src: url(./afe09aa1.woff2) format('woff2');
 }
+@font-face {
+  font-family: 'Jost';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(./jost-700.woff2) format('woff2');
+}

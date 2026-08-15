@@ -7,25 +7,45 @@
 <link href="./fonts/fonts.css" rel="stylesheet"/>
 <script src="./supabase.min.js"></script>
 <style>
-:root{--bg:#080808;--surface:#0f0f0f;--text:#ede8e0;--text2:#a09890;--gold:#d9a637;--gold2:#eabc5c}
+:root{--bg:#050505;--surface:#0f0e0c;--text:#ede8e0;--text2:#a89f92;--gold:#d9a637;--gold2:#eabc5c}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Jost',sans-serif;font-weight:300;-webkit-font-smoothing:antialiased;background:#000;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.box{background:var(--surface);border:1px solid #222;border-radius:8px;padding:56px 48px 48px;max-width:440px;width:100%;text-align:center}
-h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;margin-bottom:10px;letter-spacing:.14em;color:var(--gold);line-height:1}
-.sub{color:var(--text2);font-size:10px;margin-bottom:44px;letter-spacing:.18em;text-transform:uppercase;font-family:'Jost',sans-serif;font-weight:400}
-.msg{padding:10px 12px;border-radius:3px;margin-bottom:20px;font-size:11px;letter-spacing:.04em;display:none}
+html,body{height:100%}
+body{
+  font-family:'Jost',sans-serif;font-weight:300;-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 620px at 50% -12%,rgba(217,166,55,.16),transparent 60%),
+    radial-gradient(900px 700px at 105% 105%,rgba(217,166,55,.06),transparent 55%),
+    #030303;
+  color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;isolation:isolate
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+}
+.box{
+  background:linear-gradient(165deg,#141310,#0b0a09 65%);
+  border:1px solid rgba(217,166,55,.14);border-radius:20px;
+  padding:72px 56px 56px;max-width:500px;width:100%;text-align:center;
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.75),0 1px 0 rgba(255,255,255,.03) inset
+}
+h1{
+  font-family:'Jost',sans-serif;font-size:58px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;margin-bottom:16px;line-height:1;color:var(--gold)
+}
+.sub{color:var(--text2);font-size:12px;margin-bottom:52px;letter-spacing:.22em;text-transform:uppercase;font-family:'Jost',sans-serif;font-weight:500}
+.msg{padding:12px 14px;border-radius:4px;margin-bottom:22px;font-size:12px;letter-spacing:.04em;display:none}
 .msg.ok{background:rgba(63,179,124,.15);color:#3fb37c;border:1px solid rgba(63,179,124,.3);display:block}
 .msg.err{background:rgba(220,100,100,.12);color:#dc6464;border:1px solid rgba(220,100,100,.25);display:block}
-.btn{width:100%;padding:13px 16px;border:1px solid #2a2a2a;background:none;color:var(--text2);border-radius:3px;cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;transition:.2s;margin-bottom:10px}
+.btn{width:100%;padding:17px 18px;border:1px solid #2a2a2a;background:none;color:var(--text2);border-radius:5px;cursor:pointer;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;transition:.2s;margin-bottom:12px}
 .btn:hover{border-color:var(--gold);color:var(--gold)}
 .btn.gold{border-color:var(--gold);color:var(--gold)}
-.btn.fill{background:var(--gold);color:#080808;border-color:var(--gold);font-weight:600;letter-spacing:.14em;margin-top:4px}
+.btn.fill{background:var(--gold);color:#080808;border-color:var(--gold);font-weight:700;letter-spacing:.13em;margin-top:4px}
 .btn.fill:hover{background:var(--gold2);border-color:var(--gold2)}
 .btn.fill:disabled{opacity:.4}
-.toggle{font-size:11px;color:var(--text2);margin-top:18px;letter-spacing:.03em}
-.toggle button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-family:'Jost',sans-serif;font-size:11px}
-.back{margin-top:28px;display:flex;justify-content:center;gap:32px;align-items:center;border-top:1px solid #1e1e1e;padding-top:20px}
-.back a{color:var(--text2);text-decoration:none;font-size:10px;letter-spacing:.08em;transition:.2s}
+.toggle{font-size:13px;color:var(--text2);margin-top:22px;letter-spacing:.03em}
+.toggle button{background:none;border:none;color:var(--gold);cursor:pointer;text-decoration:underline;text-underline-offset:3px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500}
+.back{margin-top:34px;display:flex;justify-content:center;gap:36px;align-items:center;border-top:1px solid #1e1e1e;padding-top:24px}
+.back a{color:var(--text2);text-decoration:none;font-size:12px;letter-spacing:.08em;transition:.2s}
 .back a:hover{color:var(--gold)}
 .footer-links{display:contents}
 </style>
@@ -48,7 +68,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;margin-
 
   <div class="back">
     <a href="index.html">← Retour</a>
-    <a href="app.html?demo=1" style="font-size:11px;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px">Visualiser sans se connecter →</a>
+    <a href="app.html?demo=1" style="font-size:12px;letter-spacing:.06em;text-decoration:underline;text-underline-offset:3px">Visualiser sans se connecter →</a>
   </div>
 </div>
 
