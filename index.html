@@ -22,7 +22,15 @@ body::before{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
 }
 h2,h3{font-family:'Cormorant Garamond',serif}
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0;position:relative}
+.scroll-cue{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;opacity:.7;transition:opacity .2s,visibility .2s;background:none;border:none;font-family:'Jost',sans-serif;z-index:50}
+.scroll-cue:hover{opacity:1}
+.scroll-cue span{font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text2)}
+.scroll-cue svg{animation:scrollBounce 1.8s ease-in-out infinite}
+@keyframes scrollBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.scroll-cue.up svg{animation:scrollBounceUp 1.8s ease-in-out infinite}
+@keyframes scrollBounceUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.scroll-cue.hidden{opacity:0;visibility:hidden;pointer-events:none}
 .install-section{width:100%;max-width:660px;padding:64px 24px 80px;text-align:center}
 .install-section h2{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--gold);margin-bottom:14px;letter-spacing:.06em}
 .install-section p{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:38px}
@@ -56,7 +64,12 @@ footer{width:100%;padding:0}
   <button class="btn-primary" onclick="window.location.href='auth.html'">Accéder à la plateforme</button>
 </div>
 
-<section class="install-section">
+<button class="scroll-cue" id="scroll-cue" aria-label="Voir l'installation sur Mac">
+  <span id="scroll-cue-label">Installer sur Mac</span>
+  <svg id="scroll-cue-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold)"><path d="M6 9l6 6 6-6"/></svg>
+</button>
+
+<section class="install-section" id="install-section">
   <div class="divider"></div>
   <h2>Installer Bar Ops sur Mac</h2>
   <p>Télécharge l'application de bureau et installe-la en quelques secondes.<br>Toutes les mises à jour se feront ensuite automatiquement.</p>
@@ -94,6 +107,37 @@ footer{width:100%;padding:0}
 </div>
 
 <script>
+// Bouton flottant bas de page : bascule entre "Installer sur Mac ↓" et "Continuer sur internet ↑"
+// selon la position de scroll, et se masque tout en bas (chevauchement du footer sinon).
+(function(){
+  const cue=document.getElementById('scroll-cue');
+  const label=document.getElementById('scroll-cue-label');
+  const path=document.getElementById('scroll-cue-icon').querySelector('path');
+  const install=document.getElementById('install-section');
+  if(!cue||!install)return;
+  let mode='down';
+  function update(){
+    const installTop=install.getBoundingClientRect().top+window.scrollY;
+    const nearBottom=window.scrollY+window.innerHeight>=document.body.scrollHeight-140;
+    if(nearBottom){
+      cue.classList.add('hidden');
+      return;
+    }
+    cue.classList.remove('hidden');
+    const showUp=window.scrollY>=installTop-window.innerHeight*0.4;
+    mode=showUp?'up':'down';
+    cue.classList.toggle('up',showUp);
+    label.textContent=showUp?'Continuer sur internet':'Installer sur Mac';
+    path.setAttribute('d',showUp?'M18 15l-6-6-6 6':'M6 9l6 6 6-6');
+  }
+  cue.addEventListener('click',()=>{
+    if(mode==='up')window.location.href='auth.html';
+    else install.scrollIntoView({behavior:'smooth'});
+  });
+  window.addEventListener('scroll',update,{passive:true});
+  update();
+})();
+
 let sb=null;
 fetch('/api/config').then(r=>r.json()).then(cfg=>{
   sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
