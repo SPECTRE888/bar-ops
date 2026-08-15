@@ -23,14 +23,21 @@ body::before{
 }
 h2,h3{font-family:'Cormorant Garamond',serif}
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;gap:0;position:relative}
-.scroll-cue{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;opacity:.7;transition:opacity .2s,visibility .2s;background:none;border:none;font-family:'Jost',sans-serif;z-index:50}
+.scroll-cue{position:fixed;top:28px;left:50%;transform:translateX(-50%);width:230px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;opacity:.75;transition:opacity .3s ease;background:none;border:none;font-family:'Jost',sans-serif;z-index:50}
 .scroll-cue:hover{opacity:1}
-.scroll-cue span{font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text2)}
-.scroll-cue svg{animation:scrollBounce 1.8s ease-in-out infinite}
-@keyframes scrollBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
-.scroll-cue.up svg{animation:scrollBounceUp 1.8s ease-in-out infinite}
-@keyframes scrollBounceUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.scroll-cue.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.cue-label-stack{position:relative;width:100%;height:15px}
+.cue-label{position:absolute;inset:0;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);white-space:nowrap;transition:opacity .4s ease;opacity:0}
+.cue-label.down{opacity:1}
+.scroll-cue.up .cue-label.down{opacity:0}
+.scroll-cue.up .cue-label.up{opacity:1}
+.cue-icon-stack{position:relative;width:22px;height:22px}
+.cue-icon{position:absolute;inset:0;color:var(--gold);opacity:0;transition:opacity .4s ease}
+.cue-icon.down{opacity:1;animation:scrollBounce 1.8s ease-in-out infinite}
+.cue-icon.up{animation:scrollBounceUp 1.8s ease-in-out infinite}
+.scroll-cue.up .cue-icon.down{opacity:0}
+.scroll-cue.up .cue-icon.up{opacity:1}
+@keyframes scrollBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+@keyframes scrollBounceUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .install-section{width:100%;max-width:660px;padding:64px 24px 80px;text-align:center}
 .install-section h2{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--gold);margin-bottom:14px;letter-spacing:.06em}
 .install-section p{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:38px}
@@ -64,9 +71,15 @@ footer{width:100%;padding:0}
   <button class="btn-primary" onclick="window.location.href='auth.html'">Accéder à la plateforme</button>
 </div>
 
-<button class="scroll-cue" id="scroll-cue" aria-label="Voir l'installation sur Mac">
-  <span id="scroll-cue-label">Installer sur Mac</span>
-  <svg id="scroll-cue-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold)"><path d="M6 9l6 6 6-6"/></svg>
+<button class="scroll-cue" id="scroll-cue" aria-label="Naviguer">
+  <span class="cue-label-stack">
+    <span class="cue-label down">Installer sur Mac</span>
+    <span class="cue-label up">Continuer sur internet</span>
+  </span>
+  <span class="cue-icon-stack">
+    <svg class="cue-icon down" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    <svg class="cue-icon up" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+  </span>
 </button>
 
 <section class="install-section" id="install-section">
@@ -107,28 +120,18 @@ footer{width:100%;padding:0}
 </div>
 
 <script>
-// Bouton flottant bas de page : bascule entre "Installer sur Mac ↓" et "Continuer sur internet ↑"
-// selon la position de scroll, et se masque tout en bas (chevauchement du footer sinon).
+// Bouton flottant ancré en haut : bascule (crossfade CSS) entre "Installer sur Mac ↓"
+// et "Continuer sur internet ↑" selon la position de scroll.
 (function(){
   const cue=document.getElementById('scroll-cue');
-  const label=document.getElementById('scroll-cue-label');
-  const path=document.getElementById('scroll-cue-icon').querySelector('path');
   const install=document.getElementById('install-section');
   if(!cue||!install)return;
   let mode='down';
   function update(){
     const installTop=install.getBoundingClientRect().top+window.scrollY;
-    const nearBottom=window.scrollY+window.innerHeight>=document.body.scrollHeight-140;
-    if(nearBottom){
-      cue.classList.add('hidden');
-      return;
-    }
-    cue.classList.remove('hidden');
     const showUp=window.scrollY>=installTop-window.innerHeight*0.4;
     mode=showUp?'up':'down';
     cue.classList.toggle('up',showUp);
-    label.textContent=showUp?'Continuer sur internet':'Installer sur Mac';
-    path.setAttribute('d',showUp?'M18 15l-6-6-6 6':'M6 9l6 6 6-6');
   }
   cue.addEventListener('click',()=>{
     if(mode==='up')window.location.href='auth.html';
