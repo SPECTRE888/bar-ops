@@ -169,9 +169,8 @@ async function openOAuth(action){
   });
   if(error)return msg(error.message,'err');
   if(!data?.url)return msg('Impossible de générer l\'URL OAuth','err');
-  // Fenêtre Electron interne — plus de Safari/navigateur externe
-  if(window.electronBridge?.openOAuthWindow) window.electronBridge.openOAuthWindow(data.url);
-  else if(window.electronBridge?.openExternal) window.electronBridge.openExternal(data.url);
+  // Navigateur système — nécessaire pour que les clés d'accès (Touch ID) fonctionnent
+  if(window.electronBridge?.openExternal) window.electronBridge.openExternal(data.url);
   else window.open(data.url,'_blank');
 }
 async function googleAuthLogin()  { await openOAuth('login');  }
@@ -179,7 +178,7 @@ async function googleAuthSignup() { await openOAuth('signup'); }
 
 function openPasskeyWindow(){
   const url='https://bar-ops-v2.vercel.app/auth.html?electron=1';
-  if(window.electronBridge?.openOAuthWindow) window.electronBridge.openOAuthWindow(url);
+  if(window.electronBridge?.openExternal) window.electronBridge.openExternal(url);
   else window.open(url,'_blank');
 }
 </script>

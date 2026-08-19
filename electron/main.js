@@ -26,37 +26,6 @@ ipcMain.handle('restart-auth-server', () => {
   return 'restarted'
 })
 
-// Ouvre l'OAuth Google dans une fenêtre Electron interne (pas de navigateur externe)
-let oauthWin = null
-ipcMain.handle('open-oauth-window', (_e, oauthUrl) => {
-  if (oauthWin && !oauthWin.isDestroyed()) oauthWin.close()
-
-  oauthWin = new BrowserWindow({
-    width: 480,
-    height: 640,
-    title: 'Connexion — Bar Ops',
-    parent: mainWin,
-    modal: false,
-    resizable: false,
-    webPreferences: { nodeIntegration: false, contextIsolation: true },
-  })
-
-  oauthWin.setMenuBarVisibility(false)
-  oauthWin.loadURL(oauthUrl)
-
-  // Ferme la fenêtre dès que Google redirige vers notre callback local
-  const closeOnCallback = (_, navUrl) => {
-    if (navUrl && navUrl.startsWith(`http://127.0.0.1:${AUTH_PORT}`)) {
-      setTimeout(() => {
-        if (oauthWin && !oauthWin.isDestroyed()) oauthWin.close()
-      }, 800)
-    }
-  }
-  oauthWin.webContents.on('did-navigate', closeOnCallback)
-  oauthWin.webContents.on('will-redirect', closeOnCallback)
-  oauthWin.on('closed', () => { oauthWin = null })
-})
-
 // ─── Local OAuth callback server ─────────────────────────────────────────────
 function startAuthServer() {
   if (authServer?.listening) return           // already up, skip
