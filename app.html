@@ -3213,8 +3213,8 @@ function renderStaff(){
     const infos=[];
     if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="${t('staff_wa_title')}" style="font-size:11px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">${t('staff_tel_prefix')} ${escHtml(s.phone)}</a>`);
     if(s.zone)   infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.zone)}</span>`);
-    // Chips physiques (ligne visible sans ouvrir) — sans emoji
-    const chip=(label,val)=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;padding:2px 8px;border-radius:4px;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums"><span style="color:var(--text3);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase">${label}</span>${escHtml(val)}</span>`;
+    // Ligne physique (ligne visible sans ouvrir) — texte fluide, pas de pastilles
+    const chip=(label,val)=>`<span style="font-size:11px;white-space:nowrap"><span style="color:var(--text3)">${label}</span> <span style="color:var(--text2);font-weight:600">${escHtml(val)}</span></span>`;
     const phys=[];
     if(s.age)             phys.push(chip(t('staff_age'),s.age+' '+t('staff_years')));
     if(s.tailleCm)       phys.push(chip(t('staff_height_short'),s.tailleCm+' cm'));
@@ -3234,7 +3234,7 @@ function renderStaff(){
             <span style="font-size:10px;font-weight:700;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;background:${roleBg};border:1px solid ${roleColor};border-radius:20px;flex-shrink:0">${escHtml(s.type||'')}</span>
             ${infos.length?`${sep}${infos.join(sep)}`:''}
           </div>
-          ${phys.length?`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${phys.join('')}</div>`:''}
+          ${phys.length?`<div style="display:flex;align-items:center;flex-wrap:wrap;line-height:1.4">${phys.join(sep)}</div>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           <button class="btn-edit" onclick="${isOpen?`toggleStaff(${s.id})`:`showStaffInfo(${s.id})`}">${isOpen?t('btn_close'):t('btn_info')}</button>
