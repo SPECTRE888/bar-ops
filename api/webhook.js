@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
           const finalPerms = Object.keys(perms).length > 0 ? perms : (ROLE_PRESETS[pending_invite_role] || ROLE_PRESETS.commercial);
           const { data: adminProfile } = await supabase.from('profiles').select('company_id').eq('id', seat_user_id).maybeSingle();
           if (adminProfile?.company_id) {
-            await supabase.from('agent_invitations').insert([{
+            await supabase.from('invitations').insert([{
               company_id: adminProfile.company_id,
               invited_by: seat_user_id,
               email: pending_invite_email,
