@@ -44,7 +44,7 @@ api/
   check-access.js    → Vérifie l'abonnement actif (service key, appelé par app.html)
   workspace.js       → GET=workspace-pull, POST=portal-token
   portal-public.js   → GET=portal-data, POST=portal-sign (public, no auth)
-  send-quote.js      → Email devis via SendGrid
+  send-quote.js      → Email devis via Brevo (webhook.js utilise SendGrid pour la confirmation d'abonnement — deux sous-traitants email distincts)
   webhook.js         → Webhook Stripe
   delete-account.js  → Suppression compte
   _rate-limit.js      → Helper rate-limiting (utilisé par agents.js, send-quote.js)

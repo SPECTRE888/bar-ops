@@ -53,6 +53,12 @@ module.exports = async function handler(req, res) {
   if (stripeEvent.type === 'checkout.session.completed') {
     const session = stripeEvent.data.object;
 
+    // Endpoint mutualisé possible avec d'autres produits Stripe du même compte :
+    // on ignore tout event dont les metadata désignent explicitement une autre app.
+    if (session.metadata?.app && session.metadata.app !== 'barops') {
+      return res.status(200).send('ignored_other_app');
+    }
+
     if (session.metadata?.type === 'seat') {
       const { company_id, seats, user_id: seat_user_id, pending_invite_email, pending_invite_role, pending_invite_perms } = session.metadata;
       const toAdd = parseInt(seats) || 1;

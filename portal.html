@@ -262,6 +262,7 @@ function render() {
   const legal = `<div class="footer-legal">
     ${esc(profile.barName || '')} ${profile.siret ? '· SIRET ' + esc(profile.siret) : ''}<br>
     ${profile.senderEmail ? `Contact : <a href="mailto:${esc(profile.senderEmail)}" style="color:var(--accent)">${esc(profile.senderEmail)}</a>` : ''}
+    <div style="margin-top:10px;font-size:10px;opacity:.7">Ce devis est propulsé par BAR OPS — <a href="https://bar-ops-v2.vercel.app/index.html" target="_blank" style="color:inherit;text-decoration:underline">Confidentialité &amp; mentions légales</a></div>
   </div>`;
 
   document.getElementById('root').innerHTML = `

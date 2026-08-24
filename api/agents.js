@@ -59,7 +59,7 @@ module.exports = async function handler(req, res) {
     if (!['COMPANY_ADMIN', 'SUPER_ADMIN'].includes(profile.role)) return res.status(403).json({ error: 'Réservé aux administrateurs' });
 
     const { email, role = 'AGENT', permissions, fromEmail, fromName, sendgridApiKey } = body;
-    if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email invalide' });
+    if (!email || !/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(email)) return res.status(400).json({ error: 'Email invalide' });
     if (!['AGENT', 'COMPANY_ADMIN'].includes(role)) return res.status(400).json({ error: 'Rôle invalide' });
 
     const { data: company } = await supabase.from('companies').select('name, max_agents, plan').eq('id', profile.company_id).single();

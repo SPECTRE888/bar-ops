@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price_data: { currency: 'eur', recurring: { interval: 'month' }, product_data: { name: `Siège collaborateur supplémentaire × ${seats}` }, unit_amount: 2900 }, quantity: seats }],
-      metadata: { type: 'seat', user_id: user.id, company_id: profile.company_id, seats: String(seats), ...pendingMeta },
+      metadata: { app: 'barops', type: 'seat', user_id: user.id, company_id: profile.company_id, seats: String(seats), ...pendingMeta },
       success_url: `${APP_URL}/app.html?seat=success${pendingEmail ? '&seat_invite=1' : ''}`,
       cancel_url: `${APP_URL}/app.html?seat=cancelled`,
     };
@@ -85,7 +85,7 @@ module.exports = async function handler(req, res) {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price_data: { currency: 'eur', recurring: { interval }, product_data: { name: planLabels[plan] || 'Bar Ops' }, unit_amount: unitAmount }, quantity: 1 }],
-      metadata: { type: 'subscription', user_id: user.id, plan },
+      metadata: { app: 'barops', type: 'subscription', user_id: user.id, plan },
       success_url: `${APP_URL}/app.html`,
       cancel_url: `${APP_URL}/paying.html`,
     });

@@ -396,6 +396,8 @@ const PRESET_COLORS = {
   custom:     'background:rgba(255,255,255,.05);color:#7a7060;border:1px solid #2a2520',
 };
 
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
 function renderAgents(agents) {
   const el = document.getElementById('agentList');
   if (!agents?.length) { el.innerHTML = '<div class="empty">Aucun collaborateur pour l\'instant.</div>'; return; }
@@ -409,7 +411,7 @@ function renderAgents(agents) {
     <div class="agent-row">
       <div class="agent-avatar">${(a.email||'?')[0].toUpperCase()}</div>
       <div class="agent-info">
-        <div class="agent-email">${a.email || a.id}</div>
+        <div class="agent-email">${esc(a.email || a.id)}</div>
         <div class="agent-meta">
           <span class="badge badge-${a.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}">${a.role === 'COMPANY_ADMIN' ? 'Administrateur' : 'Collaborateur'}</span>
           ${presetBadge}
@@ -437,7 +439,7 @@ function renderInvitations(invitations) {
     <div class="agent-row">
       <div class="agent-avatar" style="background:#1a1408;color:#d9a637">@</div>
       <div class="agent-info">
-        <div class="agent-email">${inv.email}</div>
+        <div class="agent-email">${esc(inv.email)}</div>
         <div class="agent-meta">
           <span class="badge badge-pending">En attente</span>
           <span class="badge badge-${inv.role === 'COMPANY_ADMIN' ? 'admin' : 'agent'}" style="margin-left:4px">${inv.role === 'COMPANY_ADMIN' ? 'Administrateur' : 'Collaborateur'}</span>
@@ -478,7 +480,7 @@ async function loadAuditLog() {
     <div class="audit-row">
       <span class="audit-time">${new Date(l.created_at).toLocaleString('fr-FR')}</span>
       <span class="audit-action">${ACTION_LABELS[l.action] || l.action}
-        ${l.metadata?.email ? `— <em>${l.metadata.email}</em>` : ''}
+        ${l.metadata?.email ? `— <em>${esc(l.metadata.email)}</em>` : ''}
       </span>
     </div>
   `).join('');

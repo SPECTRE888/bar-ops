@@ -407,6 +407,23 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
 .c-card .c-footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--border)}
 .ppill{display:inline-block;padding:2px 10px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border);border-radius:2px;font-size:9px;margin-top:8px;letter-spacing:.08em;font-weight:400}
 
+/* ── CALENDRIER (Planning) ── */
+.plan-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.plan-daylbl{text-align:center;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:4px 0}
+.cal-day{min-height:74px;min-width:0;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;border-radius:4px;font-size:11px;background:var(--surface2);color:var(--text3);cursor:pointer;position:relative;line-height:1.25;padding:5px 6px;text-align:left;border:1px solid transparent;transition:.15s;box-sizing:border-box}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.has-event{background:var(--gold-bg);border-color:var(--gold-border);color:var(--text);font-weight:600}
+.cal-day.selected{outline:2px solid var(--gold);outline-offset:-1px}
+.cal-day.empty{background:transparent;cursor:default}
+.cal-day.past{opacity:.5}
+.cal-day.past.has-event{background:var(--surface3);border-color:var(--border2)}
+.cal-day .cal-daynum{font-size:13px}
+.cal-day .cal-names{font-size:10px;font-weight:400;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.cal-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;flex-shrink:0}
+.cal-day-panel{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;margin-top:14px}
+.cal-day-panel .cal-ev-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);gap:10px;font-size:12px}
+.cal-day-panel .cal-ev-row:last-child{border-bottom:none}
+
 /* ── MISC ── */
 .search-bar{position:relative;margin-bottom:14px}
 .search-bar input{padding-left:32px}
@@ -515,6 +532,10 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <div class="nav-item" onclick="goPage('events')" id="nav-events" data-perm="canEditProjects">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 1v4M11 1v4M2 7h12"/></svg>
       Événements <span class="nb" id="nb-e">0</span>
+    </div>
+    <div class="nav-item" onclick="goPage('planning')" id="nav-planning" data-perm="canEditProjects">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="2" width="14" height="12" rx="1"/><path d="M1 6h14"/><circle cx="5" cy="9.5" r="1"/><circle cx="8" cy="9.5" r="1"/><circle cx="11" cy="9.5" r="1"/><circle cx="5" cy="12.5" r="1"/></svg>
+      Calendrier
     </div>
     <div class="nav-item" onclick="goPage('suivi')" id="nav-suivi" data-perm="canEditProjects">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
@@ -783,12 +804,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
     <div style="display:flex;gap:8px;align-items:center;flex:0">
       <input type="text" id="suivi-search" placeholder="Chercher..." class="input-md" data-i18n-placeholder="ph_search" oninput="filterSuivi()"/>
     </div>
-    <div class="topbar-actions no-print" style="flex:0;gap:6px">
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" id="tab-suivi" onclick="showSuiviTab('suivi')" style="background:var(--gold);color:#000" data-i18n="nav_suivi">Suivi</button>
-        <button class="btn btn-ghost" id="tab-planning" onclick="showSuiviTab('planning')" data-i18n="nav_planning">Planning</button>
-      </div>
-    </div>
   </div>
   <div style="display:flex;gap:0;height:calc(100vh - 56px);overflow:hidden">
     <div style="width:320px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;padding:12px" id="suivi-list-panel">
@@ -798,7 +813,6 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
       <div style="text-align:center;color:var(--text3);padding:60px 20px;font-size:13px" data-i18n="suivi_select_event">Sélectionne une prestation</div>
     </div>
   </div>
-  <div class="content" id="planning-content-embed" style="display:none"></div>
 </div>
 
 <!-- ═══ HISTORIQUE ═══ -->
@@ -821,13 +835,13 @@ select.input-md{padding:8px 10px;height:36px;appearance:none;background-image:ur
   <div class="content" id="profile-content"></div>
 </div>
 
-<!-- ═══ PLANNING ═══ -->
+<!-- ═══ PLANNING (Calendrier) ═══ -->
 <div id="page-planning" class="page">
-  <div class="topbar"><h2 id="h-planning" data-i18n="nav_planning">Planning</h2>
+  <div class="topbar"><h2 id="h-planning" data-i18n="nav_planning">Calendrier</h2>
     <div class="topbar-actions no-print">
-      <button class="btn btn-ghost" onclick="planningNav(-1)" id="plan-prev-btn">${t('plan_prev')}</button>
-      <span id="plan-month-label" style="font-size:13px;color:var(--text2);min-width:130px;text-align:center"></span>
-      <button class="btn btn-ghost" onclick="planningNav(1)" id="plan-next-btn">${t('plan_next')}</button>
+      <button class="btn btn-ghost" onclick="planningNav(-1)" id="plan-prev-btn" data-i18n="plan_prev">← Mois préc.</button>
+      <span id="plan-month-label" style="font-size:13px;color:var(--text2);min-width:130px;text-align:center;font-weight:500"></span>
+      <button class="btn btn-ghost" onclick="planningNav(1)" id="plan-next-btn" data-i18n="plan_next">Mois suiv. →</button>
     </div>
   </div>
   <div class="content" id="planning-content" style="display:flex;flex-direction:column;flex:1;overflow-y:auto"></div>
@@ -1396,6 +1410,10 @@ async function cloudPull(){
 }
 
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Valeur sûre à interpoler comme argument JS dans un attribut onclick="fn(...)":
+// JSON.stringify échappe correctement guillemets/backslashs pour le contexte JS,
+// puis on échappe les " restants pour ne pas casser l'attribut HTML englobant.
+function jsAttr(s){return JSON.stringify(String(s==null?'':s)).replace(/"/g,'&quot;');}
 
 let _initDone=false;
 
@@ -6517,11 +6535,11 @@ async function openShopOrderModal(orderKey,ikey,label,email,supplier,code){
 
     <textarea id="shop-order-txt" rows="11" style="width:100%;font-size:12px;line-height:1.7;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical">${escHtml(savedBody)}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
-      <button onclick="sendShopOrder('${orderKey}','${email}')"
+      <button onclick="sendShopOrder(${jsAttr(orderKey)},${jsAttr(email)})"
         style="padding:9px 18px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500"> ${t('shop_order_btn_send_email')}</button>
       <button onclick="navigator.clipboard.writeText(document.getElementById('shop-order-txt').value);this.textContent=' ${t('shop_order_copied_feedback')}'"
         style="padding:9px 14px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500"> ${t('btn_copy')}</button>
-      <button onclick="saveShopOrderDraft('${orderKey}');this.textContent=' ${t('shop_order_saved_feedback')}'"
+      <button onclick="saveShopOrderDraft(${jsAttr(orderKey)});this.textContent=' ${t('shop_order_saved_feedback')}'"
         style="padding:9px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:8px;font-size:12px;cursor:pointer"> ${t('btn_save_draft')}</button>
       <button onclick="document.getElementById('shop-order-modal').remove()"
         style="margin-left:auto;padding:9px 14px;background:none;border:1px solid var(--border2);border-radius:8px;font-size:12px;cursor:pointer;color:var(--text2)">${t('btn_close')}</button>
@@ -6574,7 +6592,7 @@ async function openIceOrderModal(msgKey){
     <div class="field" style="margin-bottom:6px">
       <label style="font-size:11px;color:var(--text3);margin-bottom:4px;display:block">${t('ice_order_contact_label')}</label>
       ${assignedStaff.length
-        ? `<select id="ice-contact-sel" onchange="updateIceOrderMsg('${msgKey}')" style="font-size:13px;width:100%">
+        ? `<select id="ice-contact-sel" onchange="updateIceOrderMsg(${jsAttr(msgKey)})" style="font-size:13px;width:100%">
             ${contactOpts.map((c,i)=>`<option value="${i}" data-name="${escHtml(c.name)}" data-phone="${escHtml(c.phone)}">${escHtml(c.label)}</option>`).join('')}
            </select>`
         : `<div class="txs tm" style="color:var(--text3)">${t('ice_order_no_staff')} <span style="color:var(--gold);cursor:pointer" onclick="document.getElementById('ice-order-modal').remove();goPage('prestation')">${t('ice_order_confirm_link')}</span></div>`}
@@ -6582,11 +6600,11 @@ async function openIceOrderModal(msgKey){
 
     <textarea id="ice-order-txt" rows="13" style="width:100%;font-size:12px;line-height:1.7;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical">${escHtml(msg)}</textarea>
     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">
-      <button onclick="sendIceOrder('${msgKey}','${phone}')"
+      <button onclick="sendIceOrder(${jsAttr(msgKey)},${jsAttr(phone)})"
         style="padding:9px 18px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500"> ${t('ice_order_send_wa')}</button>
       <button onclick="navigator.clipboard.writeText(document.getElementById('ice-order-txt').value);this.textContent=' ${t('shop_order_copied_feedback')}'"
         style="padding:9px 14px;background:var(--gold);color:#0d0d0d;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:500"> ${t('btn_copy')}</button>
-      <button onclick="saveIceOrderDraft('${msgKey}');this.textContent=' ${t('shop_order_saved_feedback')}'"
+      <button onclick="saveIceOrderDraft(${jsAttr(msgKey)});this.textContent=' ${t('shop_order_saved_feedback')}'"
         style="padding:9px 14px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:8px;font-size:12px;cursor:pointer"> ${t('btn_save_draft')}</button>
       <button onclick="document.getElementById('ice-order-modal').remove()"
         style="margin-left:auto;padding:9px 14px;background:none;border:1px solid var(--border2);border-radius:8px;font-size:12px;cursor:pointer;color:var(--text2)">${t('btn_close')}</button>
@@ -8431,14 +8449,22 @@ async function sendToSelected(btn){
 // ════════════════════════════════════════════════════════
 // PLANNING
 // ════════════════════════════════════════════════════════
-let planYear=new Date().getFullYear(), planMonth=new Date().getMonth();
+let planYear=new Date().getFullYear(), planMonth=new Date().getMonth(), planSelDay=null;
 
 function planningNav(dir){
   planMonth+=dir;
   if(planMonth>11){planMonth=0;planYear++;}
   if(planMonth<0){planMonth=11;planYear--;}
+  planSelDay=null;
   renderPlanning();
 }
+
+function selectPlanDay(d){
+  planSelDay=(planSelDay===d)?null:d;
+  renderPlanning();
+}
+
+function _planEvDates(ev){return(ev.dates&&ev.dates.length)?ev.dates:[ev.date].filter(Boolean);}
 
 function renderPlanning(){
   const el=document.getElementById('planning-content');if(!el)return;
@@ -8446,52 +8472,73 @@ function renderPlanning(){
   const monthName=new Date(planYear,planMonth,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
   if(label)label.textContent=monthName.charAt(0).toUpperCase()+monthName.slice(1);
 
-  // Get events this month
-  const monthEvents=state.events.filter(ev=>{
-    if(!ev.date)return false;
-    const d=new Date(ev.date);
-    return d.getFullYear()===planYear&&d.getMonth()===planMonth;
-  }).sort((a,b)=>new Date(a.date)-new Date(b.date));
-
-  // Calendar grid
   const firstDay=new Date(planYear,planMonth,1).getDay();
   const daysInMonth=new Date(planYear,planMonth+1,0).getDate();
   const startOffset=(firstDay+6)%7; // Mon=0
   const today=new Date();
+  const todayKey=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
   const DAY_LABELS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
-  let html=`<div style="margin-bottom:20px">
-    <!-- Calendar -->
-    <div class="card" style="padding:10px">
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px">
-        ${DAY_LABELS.map(d=>`<div style="text-align:center;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:4px">${d}</div>`).join('')}
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+  // Prévisionnel du mois — CA dédupliqué par événement (un event multi-dates ne compte qu'une fois)
+  const seenIds=new Set();
+  let forecast=0;
+  state.events.forEach(ev=>{
+    if(seenIds.has(ev.id))return;
+    const inMonth=_planEvDates(ev).some(d=>{const dt=new Date(d);return dt.getFullYear()===planYear&&dt.getMonth()===planMonth;});
+    if(inMonth){forecast+=ev.totalRevHT||0;seenIds.add(ev.id);}
+  });
 
-  // Empty cells before first day
-  for(let i=0;i<startOffset;i++) html+=`<div></div>`;
+  let html=`
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3)">${t('plan_forecast_label')}</div>
+    <div style="font-size:26px;color:var(--gold);margin-bottom:16px">${fmt(forecast)} €</div>
+    <div class="plan-grid">
+      ${DAY_LABELS.map(d=>`<div class="plan-daylbl">${d}</div>`).join('')}`;
+
+  for(let i=0;i<startOffset;i++) html+=`<div class="cal-day empty"></div>`;
 
   for(let d=1;d<=daysInMonth;d++){
-    const isToday=d===today.getDate()&&planMonth===today.getMonth()&&planYear===today.getFullYear();
     const dateStr=`${planYear}-${String(planMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayEvents=state.events.filter(ev=>ev.date===dateStr);
-    const hasEvents=dayEvents.length>0;
+    const dayEvents=state.events.filter(ev=>_planEvDates(ev).includes(dateStr));
+    const isPast=dateStr<todayKey;
+    const isSel=planSelDay===d;
+    const cls='cal-day'+(dayEvents.length?' has-event':'')+(isPast?' past':'')+(isSel?' selected':'');
+    if(dayEvents.length){
+      const shown=dayEvents.slice(0,2);
+      const extra=dayEvents.length-shown.length;
+      const moreLabel=lang==='en'?'more':lang==='es'?'más':('autre'+(extra>1?'s':''));
+      const namesHtml=shown.map(ev=>{
+        const st=EV_STATUSES.find(s=>s.key===(ev.status||'planning'))||EV_STATUSES[0];
+        return `<div class="cal-names"><span class="cal-dot" style="background:${st.color}"></span>${escHtml(ev.name||t('no_name'))}</div>`;
+      }).join('')+(extra>0?`<div class="cal-names">+${extra} ${moreLabel}</div>`:'');
+      html+=`<div class="${cls}" onclick="selectPlanDay(${d})"><span class="cal-daynum">${d}</span>${namesHtml}</div>`;
+    } else {
+      html+=`<div class="${cls}" onclick="selectPlanDay(${d})"><span class="cal-daynum">${d}</span></div>`;
+    }
+  }
+  html+=`</div>`;
 
-    html+=`<div style="min-height:64px;padding:5px;border-radius:var(--radius);border:1px solid ${hasEvents?'var(--gold)':isToday?'var(--border2)':'var(--border)'};background:${hasEvents?'var(--gold-bg)':isToday?'var(--surface2)':'transparent'};cursor:${hasEvents?'pointer':'default'}" ${hasEvents?`onclick="${dayEvents.length===1?`editEv(${dayEvents[0].id});goPage('events')`:`scrollToPlanEvent('${dateStr}')` }"`:''}>
-      <div style="font-size:11px;font-weight:${isToday?'500':'400'};color:${isToday?'var(--gold)':hasEvents?'var(--gold)':'var(--text2)'};margin-bottom:3px">${d}</div>
-      ${dayEvents.map(ev=>`<div style="font-size:9px;background:var(--gold);color:#0d0d0d;border-radius:3px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.name)}</div>`).join('')}
+  if(planSelDay){
+    const dateStr=`${planYear}-${String(planMonth+1).padStart(2,'0')}-${String(planSelDay).padStart(2,'0')}`;
+    const dayEvents=state.events.filter(ev=>_planEvDates(ev).includes(dateStr));
+    const rows=dayEvents.map(ev=>{
+      const st=EV_STATUSES.find(s=>s.key===(ev.status||'planning'))||EV_STATUSES[0];
+      const client=state.clients.find(c=>c.id===ev.clientId);
+      return`<div class="cal-ev-row" style="border-left:3px solid ${st.color};padding-left:8px">
+        <span><b>${escHtml(ev.name||t('no_name'))}</b>${client?' — '+escHtml(client.name):''}${ev.nGuests?' · '+ev.nGuests+' pers.':''}${ev.totalRevHT?` — <span style="color:var(--gold);font-weight:600">${fmt(ev.totalRevHT)} €</span>`:''}</span>
+        <span style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn-edit" onclick="editEv(${ev.id});goPage('events')">${t('btn_info')}</button>
+          <button class="btn btn-sm btn-danger" onclick="delEv(${ev.id}).then(renderPlanning)">${t('btn_delete')}</button>
+        </span>
+      </div>`;
+    }).join('');
+    html+=`<div class="cal-day-panel">
+      ${rows||`<p style="color:var(--text3);font-size:11px;margin:2px 0">${t('plan_empty_day')}</p>`}
+      <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="newEv();goPage('events')">${t('plan_add_event_day')}</button>
     </div>`;
   }
 
-  html+=`</div></div></div>`;
-
   el.innerHTML=html;
-}
-
-function scrollToPlanEvent(dateStr){
-  const el=document.getElementById('plan-ev-'+dateStr);
-  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ════════════════════════════════════════════════════════
@@ -8715,7 +8762,7 @@ function sendSupplierOrder(supplierName,method){
       <div style="font-size:13px;color:var(--text2)">Avez-vous envoyé la commande ?</div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" style="flex:1" onclick="this.closest('[style*=fixed]').remove()">NON</button>
-        <button class="btn btn-gold" style="flex:1" onclick="confirmOrderSent('${supplierName}');this.closest('[style*=fixed]').remove()">OUI</button>
+        <button class="btn btn-gold" style="flex:1" onclick="confirmOrderSent(${jsAttr(supplierName)});this.closest('[style*=fixed]').remove()">OUI</button>
       </div>
     </div>`;
     document.body.appendChild(modal);
@@ -9207,9 +9254,11 @@ function showLegal(){
       <p style="margin-bottom:6px"><strong style="color:var(--text)">Hébergement et traitement des données (RGPD)</strong><br/>
       Les données saisies dans l'application (clients, événements, recettes, équipe, contacts) sont :<br/>
       • stockées localement sur votre appareil (localStorage)<br/>
-      • synchronisées et hébergées sur Supabase (UE — Francfort), prestataire conforme RGPD<br/>
-      • les paiements transitent par Stripe (UE), aucune donnée de carte n'est stockée par BAR OPS<br/>
-      Le responsable de traitement est Jérôme Jarrige. Vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression de vos données ; pour l'exercer, contactez l'éditeur ou utilisez la fonction "Supprimer le compte" dans la section Compte.</p>
+      • synchronisées et hébergées sur Supabase (base de données, UE — Irlande)<br/>
+      • le site et les fonctions serveur sont hébergés par Vercel Inc. (société américaine), dans le cadre de clauses contractuelles types<br/>
+      • les paiements transitent par Stripe, aucune donnée de carte n'est stockée par BAR OPS<br/>
+      • les emails transactionnels sont envoyés via SendGrid et Brevo (Sendinblue)<br/>
+      Ces prestataires agissent en tant que sous-traitants au sens de l'art. 28 du RGPD. Le responsable de traitement est Jérôme Jarrige. Vous disposez d'un droit d'accès, de rectification, d'opposition, de limitation, de portabilité et d'effacement de vos données ; pour l'exercer, contactez l'éditeur ou utilisez la fonction "Supprimer le compte" dans la section Compte. Vous disposez également du droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).</p>
 
       <p style="margin-bottom:6px"><strong style="color:var(--text)">Archivage légal</strong><br/>
       Conformément à l'art. L.110-4 du Code de commerce et à l'art. 286 I-3° du CGI, les devis émis sont conservés 5 ans avec numérotation continue et immuable, consultables dans Historique → Devis.</p>
@@ -10858,91 +10907,6 @@ async function deleteAccountConfirmed(){
 }
 
 // ════════════════════════════════════════════════════════
-function showSuiviTab(tab){
-  const listPanel=document.getElementById('suivi-list-panel');
-  const detailPanel=document.getElementById('suivi-detail');
-  if(tab==='suivi'){
-    if(listPanel) listPanel.parentElement.style.display='flex';
-    document.getElementById('planning-content-embed').style.display='none';
-    document.getElementById('tab-suivi').style.background='var(--gold)';
-    document.getElementById('tab-suivi').style.color='#000';
-    document.getElementById('tab-planning').style.background='';
-    document.getElementById('tab-planning').style.color='';
-  }else{
-    if(listPanel) listPanel.parentElement.style.display='none';
-    document.getElementById('planning-content-embed').style.display='block';
-    document.getElementById('tab-planning').style.background='var(--gold)';
-    document.getElementById('tab-planning').style.color='#000';
-    document.getElementById('tab-suivi').style.background='';
-    document.getElementById('tab-suivi').style.color='';
-    renderPlanningEmbed();
-  }
-}
-
-function renderPlanningEmbed(){
-  const el=document.getElementById('planning-content-embed');
-  if(!el) return;
-  
-  let displayMonth=parseInt(sessionStorage.getItem('planningMonth')||new Date().getMonth());
-  let displayYear=parseInt(sessionStorage.getItem('planningYear')||new Date().getFullYear());
-  
-  const monthNames=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  
-  const lastDay=new Date(displayYear,displayMonth+1,0).getDate();
-  
-  const prevMonth=()=>{
-    displayMonth--;
-    if(displayMonth<0){displayMonth=11;displayYear--;}
-    sessionStorage.setItem('planningMonth',displayMonth);
-    sessionStorage.setItem('planningYear',displayYear);
-    renderPlanningEmbed();
-  };
-  
-  const nextMonth=()=>{
-    displayMonth++;
-    if(displayMonth>11){displayMonth=0;displayYear++;}
-    sessionStorage.setItem('planningMonth',displayMonth);
-    sessionStorage.setItem('planningYear',displayYear);
-    renderPlanningEmbed();
-  };
-  
-  let html=`
-    <div style="padding:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <button onclick="window.prevMonth()" style="background:var(--surface2);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer;color:var(--text)">← Précédent</button>
-        <h3 style="font-size:16px;font-weight:600;color:var(--text)">${monthNames[displayMonth]} ${displayYear}</h3>
-        <button onclick="window.nextMonth()" style="background:var(--surface2);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer;color:var(--text)">Suivant →</button>
-      </div>
-      
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
-        ${Array.from({length:lastDay},(_,i)=>i+1).map(day=>{
-          const date=new Date(displayYear,displayMonth,day);
-          const eventsOnDay=state.events.filter(e=>{
-            const ed=new Date(e.date||0);
-            return ed.getDate()===day&&ed.getMonth()===displayMonth&&ed.getFullYear()===displayYear;
-          });
-          const event=eventsOnDay[0];
-          return `
-            <div style="border:1px solid var(--border);background:var(--surface);border-radius:4px;padding:8px;min-height:80px;display:flex;flex-direction:column">
-              <div style="font-weight:600;font-size:14px;color:var(--gold);margin-bottom:6px">${day}</div>
-              ${event?`
-                <div style="flex:1;background:var(--gold-bg);border-left:2px solid var(--gold);padding:4px 6px;border-radius:2px;cursor:pointer;overflow:hidden" onclick="goPage('events');setTimeout(()=>{document.getElementById('prest-ev-sel').value='${event.id}';renderPrestation()},100)">
-                  <div style="font-size:10px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(event.name)}</div>
-                  <div style="font-size:9px;color:var(--text3)">${event.nGuests||'?'} pers</div>
-                </div>
-              `:''}
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-  `;
-  
-  el.innerHTML=html;
-  window.prevMonth=prevMonth;
-  window.nextMonth=nextMonth;
-}
-
 function renderSuivi(){
   const el=document.getElementById('suivi-content');if(!el)return;
   
@@ -11448,7 +11412,7 @@ const I18N={
     // Nav
     nav_dashboard:'Tableau de bord',nav_catalogue:'Catalogue',nav_cocktails:'Cocktails',
     nav_events:'Événements',nav_suivi:'Suivi',nav_historique:'Historique',
-    nav_planning:'Planning',nav_staff:'Mon équipe',nav_clients:'Mes clients',nav_profile:'Profil',
+    nav_planning:'Calendrier',nav_staff:'Mon équipe',nav_clients:'Mes clients',nav_profile:'Profil',
     nav_bar:'Bar',nav_prestation:'Prestation',nav_team:'Équipe',
     nav_krafter:'Krafter',nav_suppliers:'Fournisseurs',nav_account:'Compte',nav_collaborators:'Collaborateurs',
     ph_search:'Chercher...',staff_tab_dresscode:'Tenues',staff_btn_add:'+ Ajouter équipe',staff_btn_add_dresscode:'+ Ajouter tenue',
@@ -11524,6 +11488,7 @@ const I18N={
     shop_select:'— Sélectionner un événement —',shop_empty:'Sélectionne un événement.',
     // Planning
     plan_prev:'← Mois préc.',plan_next:'Mois suiv. →',
+    plan_forecast_label:'Prévisionnel du mois',plan_empty_day:'Aucun événement ce jour',plan_add_event_day:'+ Nouvel événement',
     // Dashboard
     dash_upcoming:'Prochains events',dash_next:'Prochain événement',
     dash_days:'dans',dash_day:'jour',dash_days_plural:'jours',
@@ -11895,6 +11860,7 @@ const I18N={
     hist_events:'Events',hist_cocktails:'Cocktails served',hist_empty:'No past events.',
     shop_select:'— Select an event —',shop_empty:'Select an event.',
     plan_prev:'← Prev',plan_next:'Next →',
+    plan_forecast_label:'Monthly forecast',plan_empty_day:'No event this day',plan_add_event_day:'+ New event',
     dash_upcoming:'Upcoming events',dash_next:'Next event',
     dash_days:'in',dash_day:'day',dash_days_plural:'days',
     dash_fiche:'Brief',dash_courses:'Shopping',dash_suivi:'Tracking',
@@ -12231,6 +12197,7 @@ const I18N={
     hist_events:'Eventos',hist_cocktails:'Cócteles servidos',hist_empty:'Sin eventos pasados.',
     shop_select:'— Seleccionar evento —',shop_empty:'Selecciona un evento.',
     plan_prev:'← Anterior',plan_next:'Siguiente →',
+    plan_forecast_label:'Previsión del mes',plan_empty_day:'Sin eventos este día',plan_add_event_day:'+ Nuevo evento',
     dash_upcoming:'Próximos eventos',dash_next:'Próximo evento',
     dash_days:'en',dash_day:'día',dash_days_plural:'días',
     dash_fiche:'Ficha',dash_courses:'Compras',dash_suivi:'Seguimiento',
