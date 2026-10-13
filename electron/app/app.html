@@ -3435,7 +3435,6 @@ function renderCGrid(){
   );
   if(!items.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>${t('c_no_results')}</p></div>`;return;}
   el.innerHTML=items.map(c=>{
-    const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||20)/100)).toFixed(2)+'€ TTC':'—';
     const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'—';
     const fcColor=c.priceHT>0?(c.totalCost/c.priceHT<0.2?'var(--green)':c.totalCost/c.priceHT<0.35?'#ba7517':'var(--red)'):'var(--text3)';
     return`<div class="c-card" style="gap:12px">
@@ -3447,7 +3446,7 @@ function renderCGrid(){
         <h3>${escHtml(c.name)}</h3>
         <div class="c-desc">${escHtml(c.description||'')}</div>
         <div class="stat">${t('c_cost_label')}: <strong>${c.totalCost.toFixed(2)}€</strong> &nbsp;·&nbsp; ${t('c_fc_label')}: <span style="color:${fcColor}">${fc}</span></div>
-        <div class="stat tg">${c.priceHT?'<strong>'+c.priceHT.toFixed(2)+'€ HT</strong>':''} <span class="tm">${ttc}</span></div>
+        <div class="stat tg">${c.priceHT?t('c_form_ht_final')+' : <strong>'+c.priceHT.toFixed(2)+'€</strong>':''}</div>
       </div>
       <div class="c-footer">
         <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${(c.ingredients||[]).length} ${t('c_ingr_abbr')} · ${c.glass||'—'}</div>
@@ -3463,7 +3462,6 @@ function renderCGrid(){
 
 function showCInfo(id){
   const c=state.cocktails.find(x=>x.id===id);if(!c)return;
-  const ttc=c.priceHT>0?(c.priceHT*(1+(c.vat||20)/100)).toFixed(2)+'€':'';
   const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'';
   const ings=(c.ingredients||[]).map(i=>(i.qty?i.qty+(i.unit||'ml')+' ':'')+(i.name||'')).filter(Boolean).join(', ');
   showInfoModal(c.name||'Sans nom', [
@@ -3473,8 +3471,7 @@ function showCInfo(id){
     ['Verre', escHtml(c.glass||'')],
     ['Ingrédients', escHtml(ings)],
     ['Coût', c.totalCost?c.totalCost.toFixed(2)+'€':''],
-    ['Prix HT', c.priceHT?c.priceHT.toFixed(2)+'€':''],
-    ['Prix TTC', escHtml(ttc)],
+    ['Prix de vente HT', c.priceHT?c.priceHT.toFixed(2)+'€':''],
     ['Facteur coût', escHtml(fc)],
   ], ()=>editC(id));
 }
@@ -4871,9 +4868,9 @@ function updCRecap(){
   const loss=(parseFloat(document.getElementById('cf-vat')?.value)||0)/100;
   const ht=prixVente*(1+loss);
   const htFinalEl=document.getElementById('r-ht-final');if(htFinalEl)htFinalEl.textContent=prixVente>0?ht.toFixed(2)+'€':'—';
-  // Marge = prix de vente - coût prod - coût verre (total "out of pocket")
+  // Marge = prix de vente facturé (avec % perte) - coût prod - coût verre (total "out of pocket")
   if(prixVente>0&&total>0){
-    const mg=prixVente-(total+glassCostVal),mgPct=mg/prixVente*100;
+    const mg=ht-(total+glassCostVal),mgPct=mg/ht*100;
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
 
@@ -11462,7 +11459,7 @@ const I18N={
     // Cocktails
     c_name:'Nom du cocktail *',c_glass:'Verre',c_technique:'Technique',
     c_service:'Glace service',c_desc:'Description',c_ingredients:'Ingrédients',
-    c_consumables:'Garnitures & Consommables',c_price:'Prix de vente HT',
+    c_consumables:'Garnitures & Consommables',c_price:'Prix de base HT',
     c_foodcost:'Food cost',c_empty:'Aucun cocktail. Crée ta première recette.',
     // Catalogue
     cat_type:'Type',cat_brand:'Marque *',cat_price:'Prix HT',cat_qty:'Contenance',
@@ -11688,7 +11685,7 @@ const I18N={
     c_form_ice_cost:'Coût glace (HT)',c_form_desc_menu:'Description menu',c_form_photo:'Photo',
     c_form_photo_view_tooltip:'Cliquer pour voir',c_form_photo_change:'Changer',c_form_photo_add:'+ Photo',
     c_form_pricing_title:'Tarification (HT)',c_form_suggested_price:'Prix conseillé',c_form_loss_pct:'% de perte',
-    c_form_cost_production:'Coût production',c_form_ht_final:'HT Final',c_form_margin_eur:'Marge €',c_form_margin_pct:'Marge %',
+    c_form_cost_production:'Coût production',c_form_ht_final:'Prix de vente HT',c_form_margin_eur:'Marge €',c_form_margin_pct:'Marge %',
     c_form_qty:'Quantité',c_form_ing_warn:"Certains produits n'ont pas de prix défini",
     c_form_add_ing:'+ Ajouter ingrédient',c_form_add_conso:'+ Ajouter garniture / consommable',
     // Fournisseur (i18n pass)
@@ -11841,7 +11838,7 @@ const I18N={
     ev_cocktails_qty:'Cocktails & Quantities',ev_staff_assign:'Assigned Staff',
     c_name:'Cocktail name *',c_glass:'Glass',c_technique:'Technique',
     c_service:'Service ice',c_desc:'Description',c_ingredients:'Ingredients',
-    c_consumables:'Garnish & Consumables',c_price:'Sale price HT',
+    c_consumables:'Garnish & Consumables',c_price:'Base price excl. VAT',
     c_foodcost:'Food cost',c_empty:'No cocktails yet. Create your first recipe.',
     cat_type:'Type',cat_brand:'Brand *',cat_price:'Price HT',cat_qty:'Volume',
     cat_unit:'Unit',cat_cpu:'Cost/U',cat_supplier:'Supplier',cat_code:'Product Code',cat_stock:'Stock',cat_alert:'Alert ≤',
@@ -12023,7 +12020,7 @@ const I18N={
     c_form_ice_cost:'Ice cost (excl. VAT)',c_form_desc_menu:'Menu description',c_form_photo:'Photo',
     c_form_photo_view_tooltip:'Click to view',c_form_photo_change:'Change',c_form_photo_add:'+ Photo',
     c_form_pricing_title:'Pricing (excl. VAT)',c_form_suggested_price:'Suggested price',c_form_loss_pct:'Loss %',
-    c_form_cost_production:'Production cost',c_form_ht_final:'Final excl. VAT',c_form_margin_eur:'Margin €',c_form_margin_pct:'Margin %',
+    c_form_cost_production:'Production cost',c_form_ht_final:'Sale price excl. VAT',c_form_margin_eur:'Margin €',c_form_margin_pct:'Margin %',
     c_form_qty:'Quantity',c_form_ing_warn:'Some products have no price set',
     c_form_add_ing:'+ Add ingredient',c_form_add_conso:'+ Add garnish / consumable',
     // Supplier (i18n pass)
@@ -12178,7 +12175,7 @@ const I18N={
     ev_cocktails_qty:'Cócteles & Cantidades',ev_staff_assign:'Personal asignado',
     c_name:'Nombre del cóctel *',c_glass:'Vaso',c_technique:'Técnica',
     c_service:'Hielo servicio',c_desc:'Descripción',c_ingredients:'Ingredientes',
-    c_consumables:'Guarnición & Consumibles',c_price:'Precio venta HT',
+    c_consumables:'Guarnición & Consumibles',c_price:'Precio base sin IVA',
     c_foodcost:'Food cost',c_empty:'Sin cócteles. Crea tu primera receta.',
     cat_type:'Tipo',cat_brand:'Marca *',cat_price:'Precio HT',cat_qty:'Volumen',
     cat_unit:'Unidad',cat_cpu:'Coste/U',cat_supplier:'Proveedor',cat_code:'Código Producto',cat_stock:'Stock',cat_alert:'Alerta ≤',
@@ -12360,7 +12357,7 @@ const I18N={
     c_form_ice_cost:'Coste hielo (sin IVA)',c_form_desc_menu:'Descripción de carta',c_form_photo:'Foto',
     c_form_photo_view_tooltip:'Clic para ver',c_form_photo_change:'Cambiar',c_form_photo_add:'+ Foto',
     c_form_pricing_title:'Tarificación (sin IVA)',c_form_suggested_price:'Precio sugerido',c_form_loss_pct:'% de pérdida',
-    c_form_cost_production:'Coste de producción',c_form_ht_final:'Final sin IVA',c_form_margin_eur:'Margen €',c_form_margin_pct:'Margen %',
+    c_form_cost_production:'Coste de producción',c_form_ht_final:'Precio de venta sin IVA',c_form_margin_eur:'Margen €',c_form_margin_pct:'Margen %',
     c_form_qty:'Cantidad',c_form_ing_warn:'Algunos productos no tienen precio definido',
     c_form_add_ing:'+ Añadir ingrediente',c_form_add_conso:'+ Añadir guarnición / consumible',
     // Proveedor (i18n pass)
