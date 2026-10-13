@@ -3468,7 +3468,7 @@ function showCInfo(id){
   const ings=(c.ingredients||[]).map(i=>(i.qty?i.qty+(i.unit||'ml')+' ':'')+(i.name||'')).filter(Boolean).join(', ');
   showInfoModal(c.name||'Sans nom', [
     ['Catégorie', escHtml(c.category||'')],
-    ['Code', escHtml(c.code||'')],
+    ['Code cocktail', escHtml(c.code||'')],
     ['Description', escHtml(c.description||'')],
     ['Verre', escHtml(c.glass||'')],
     ['Ingrédients', escHtml(ings)],
@@ -11524,7 +11524,7 @@ const I18N={
     ev_summary:'Résumé HT',ev_cost:'Ce que ça coûte',ev_revenue:'Ce qui est facturé',
     ev_margin:'Marge',ev_save:'Enregistrer la prestation',
     // Cocktail form
-    c_category:'Catégorie',c_code:'Code',c_glass_cost:'Coût verre HT',
+    c_category:'Catégorie',c_code:'Code cocktail',c_glass_cost:'Coût verre HT',
     c_mult:'Multiplicateur',c_suggested:'Prix suggéré',c_vat:'TVA',
     c_add_ing:'+ Ingrédient',devis_save_pdf:'Enregistrer PDF',devis_send_contact:'Envoyer au contact',prof_updates_title:'Mises à jour',c_add_conso:'+ Garniture / Conso',
     c_ing_type:'Type de produit *',c_ing_brand:'Marque *',c_ing_qty:'Qté',c_ing_unit:'Unité',c_ing_cost:'Coût HT',
@@ -12058,7 +12058,7 @@ const I18N={
     imp_col_brand:'Brand',imp_more_suffix:'more',
     imp_format_unknown:'Unrecognized format. Import a BAR OPS backup or a JSON products array.',
     // Pre-existing cocktail form keys, missing EN translation
-    c_category:'Category',c_code:'Code',c_ing_brand:'Brand *',c_ing_unit:'Unit',c_ing_cost:'Cost HT',
+    c_category:'Category',c_code:'Cocktail code',c_ing_brand:'Brand *',c_ing_unit:'Unit',c_ing_cost:'Cost HT',
     // New category modal (i18n pass)
     cat_new_title:'New category',cat_new_name_label:'Name',cat_new_name_ph:'E.g: Beers, Iced teas…',
     cat_new_type_label:'Product type:',cat_new_type_liquid:'Liquid (with unit: cl, L, pc…)',cat_new_type_material:'Equipment (no unit)',
@@ -12395,7 +12395,7 @@ const I18N={
     imp_col_brand:'Marca',imp_more_suffix:'más',
     imp_format_unknown:'Formato no reconocido. Importa una copia de seguridad de BAR OPS o un array JSON de productos.',
     // Claves del formulario de cóctel preexistentes, sin traducción ES
-    c_category:'Categoría',c_code:'Código',c_ing_brand:'Marca *',c_ing_unit:'Unidad',c_ing_cost:'Coste HT',
+    c_category:'Categoría',c_code:'Código cóctel',c_ing_brand:'Marca *',c_ing_unit:'Unidad',c_ing_cost:'Coste HT',
     // Modal nueva categoría (i18n pass)
     cat_new_title:'Nueva categoría',cat_new_name_label:'Nombre',cat_new_name_ph:'Ej: Cervezas, Tés helados…',
     cat_new_type_label:'Tipo de productos:',cat_new_type_liquid:'Líquido (con unidad: cl, L, ud…)',cat_new_type_material:'Material (sin unidad)',
