@@ -3435,8 +3435,10 @@ function renderCGrid(){
   );
   if(!items.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>${t('c_no_results')}</p></div>`;return;}
   el.innerHTML=items.map(c=>{
-    const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'—';
-    const fcColor=c.priceHT>0?(c.totalCost/c.priceHT<0.2?'var(--green)':c.totalCost/c.priceHT<0.35?'#ba7517':'var(--red)'):'var(--text3)';
+    // Marge % = (prix de vente facturé - coût prod - verre) / prix de vente — même calcul que le formulaire
+    const mgR=c.priceHT>0?(c.priceHT-(c.totalCost||0)-(c.glassCost||0))/c.priceHT:null;
+    const mgTxt=mgR!==null?(mgR*100).toFixed(0)+'%':'—';
+    const mgColor=mgR!==null?(mgR>=0.8?'var(--green)':mgR>=0.65?'#ba7517':'var(--red)'):'var(--text3)';
     return`<div class="c-card" style="gap:12px">
       <div style="flex-grow:1">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
@@ -3445,7 +3447,7 @@ function renderCGrid(){
         </div>
         <h3>${escHtml(c.name)}</h3>
         <div class="c-desc">${escHtml(c.description||'')}</div>
-        <div class="stat">${t('c_cost_label')}: <strong>${c.totalCost.toFixed(2)}€</strong> &nbsp;·&nbsp; ${t('c_fc_label')}: <span style="color:${fcColor}">${fc}</span></div>
+        <div class="stat">${t('c_cost_label')}: <strong>${c.totalCost.toFixed(2)}€</strong> &nbsp;·&nbsp; ${t('c_margin_label')}: <span style="color:${mgColor}">${mgTxt}</span></div>
         <div class="stat tg">${c.priceHT?t('c_form_ht_final')+' : <strong>'+c.priceHT.toFixed(2)+'€</strong>':''}</div>
       </div>
       <div class="c-footer">
@@ -3462,7 +3464,7 @@ function renderCGrid(){
 
 function showCInfo(id){
   const c=state.cocktails.find(x=>x.id===id);if(!c)return;
-  const fc=c.priceHT>0?(c.totalCost/c.priceHT*100).toFixed(1)+'%':'';
+  const mgPct=c.priceHT>0?((c.priceHT-(c.totalCost||0)-(c.glassCost||0))/c.priceHT*100).toFixed(0)+'%':'';
   const ings=(c.ingredients||[]).map(i=>(i.qty?i.qty+(i.unit||'ml')+' ':'')+(i.name||'')).filter(Boolean).join(', ');
   showInfoModal(c.name||'Sans nom', [
     ['Catégorie', escHtml(c.category||'')],
@@ -3472,7 +3474,7 @@ function showCInfo(id){
     ['Ingrédients', escHtml(ings)],
     ['Coût', c.totalCost?c.totalCost.toFixed(2)+'€':''],
     ['Prix de vente HT', c.priceHT?c.priceHT.toFixed(2)+'€':''],
-    ['Facteur coût', escHtml(fc)],
+    ['Marge', escHtml(mgPct)],
   ], ()=>editC(id));
 }
 
@@ -11567,7 +11569,7 @@ const I18N={
     // Cocktails (i18n pass)
     c_btn_recalc_costs:'↺ Recalculer les coûts',c_search_placeholder:'Rechercher un cocktail...',
     c_filter_all_spirits:'Tous les spiritueux',c_filter_all_cats:'Toutes catégories',c_no_results:'Aucun résultat.',
-    c_cost_label:'Coût',c_fc_label:'FC',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
+    c_cost_label:'Coût',c_margin_label:'Marge',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
     // Clients (i18n pass)
     client_empty_full:"Aucun client. Crée un profil réutilisable pour tes clients récurrents.",client_col_name:'Client',
     client_btn_new_event:'+ Presta',client_address_usual:'Adresse habituelle',client_address_default_placeholder:'Adresse par défaut',
@@ -11901,7 +11903,7 @@ const I18N={
     // Cocktails (i18n pass)
     c_btn_recalc_costs:'↺ Recalculate costs',c_search_placeholder:'Search a cocktail...',
     c_filter_all_spirits:'All spirits',c_filter_all_cats:'All categories',c_no_results:'No results.',
-    c_cost_label:'Cost',c_fc_label:'FC',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
+    c_cost_label:'Cost',c_margin_label:'Margin',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
     // Clients (i18n pass)
     client_empty_full:'No clients yet. Create a reusable profile for your recurring clients.',client_col_name:'Client',
     client_btn_new_event:'+ Event',client_address_usual:'Usual address',client_address_default_placeholder:'Default address',
@@ -12238,7 +12240,7 @@ const I18N={
     // Cócteles (i18n pass)
     c_btn_recalc_costs:'↺ Recalcular costes',c_search_placeholder:'Buscar un cóctel...',
     c_filter_all_spirits:'Todos los espirituosos',c_filter_all_cats:'Todas las categorías',c_no_results:'Sin resultados.',
-    c_cost_label:'Coste',c_fc_label:'FC',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
+    c_cost_label:'Coste',c_margin_label:'Margen',c_ingr_abbr:'ingr.',c_btn_dup:'⧉ Dup',
     // Clientes (i18n pass)
     client_empty_full:'Sin clientes. Crea un perfil reutilizable para tus clientes recurrentes.',client_col_name:'Cliente',
     client_btn_new_event:'+ Evento',client_address_usual:'Dirección habitual',client_address_default_placeholder:'Dirección predeterminada',
