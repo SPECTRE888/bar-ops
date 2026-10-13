@@ -3445,8 +3445,10 @@ function renderCGrid(){
           <div class="cat">${escHtml(c.category)}</div>
           ${c.code?`<span style="font-size:9px;font-family:monospace;padding:1px 6px;border-radius:4px;background:var(--surface3);color:var(--text3);border:1px solid var(--border2)">${escHtml(c.code)}</span>`:''}
         </div>
-        <h3>${escHtml(c.name)}</h3>
-        <div class="c-desc">${escHtml(c.description||'')}</div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="flex:1;min-width:0"><h3>${escHtml(c.name)}</h3><div class="c-desc">${escHtml(c.description||'')}</div></div>
+          ${c.photo?`<img src="${escHtml(c.photo)}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0"/>`:''}
+        </div>
         <div class="stat">${t('c_cost_label')}: <strong>${c.totalCost.toFixed(2)}€</strong> &nbsp;·&nbsp; ${t('c_margin_label')}: <span style="color:${mgColor}">${mgTxt}</span></div>
         <div class="stat tg">${c.priceHT?t('c_form_ht_final')+' : <strong>'+c.priceHT.toFixed(2)+'€</strong>':''}</div>
       </div>
@@ -3467,6 +3469,7 @@ function showCInfo(id){
   const mgPct=c.priceHT>0?((c.priceHT-(c.totalCost||0)-(c.glassCost||0))/c.priceHT*100).toFixed(0)+'%':'';
   const ings=(c.ingredients||[]).map(i=>(i.qty?i.qty+(i.unit||'ml')+' ':'')+(i.name||'')).filter(Boolean).join(', ');
   showInfoModal(c.name||'Sans nom', [
+    ['Photo', c.photo?`<img src="${escHtml(c.photo)}" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:block;margin-left:auto"/>`:''],
     ['Catégorie', escHtml(c.category||'')],
     ['Code cocktail', escHtml(c.code||'')],
     ['Description', escHtml(c.description||'')],
@@ -3506,19 +3509,33 @@ function loadCocktailPhoto(input){
       canvas.width=img.width*ratio;canvas.height=img.height*ratio;
       canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
       window._cfPhotoData=canvas.toDataURL('image/jpeg',0.80);
-      const fnEl=document.getElementById('cf-photo-filename');
-      if(fnEl) fnEl.textContent=file.name;
-      const prev=document.getElementById('cf-photo-new-preview');
-      if(prev) prev.innerHTML=`<img src="${window._cfPhotoData}" style="max-height:80px;border-radius:6px;border:1px solid var(--border)"/>`;
+      const del=document.getElementById('cf-photo-del');if(del)del.value='0';
+      const sec=document.getElementById('cf-photo-section');if(sec)sec.innerHTML=cfPhotoHTML(window._cfPhotoData);
     };
     img.src=e.target.result;
   };
   reader.readAsDataURL(file);
+  input.value=''; // permet de re-choisir le même fichier
+}
+
+// Bloc photo du formulaire cocktail : miniature cliquable + Changer / Supprimer, ou bouton "+ Photo"
+function cfPhotoHTML(src){
+  if(!src) return `<button type="button" class="btn btn-sm btn-ghost" onclick="document.getElementById('cf-photo-input').click()" style="padding:6px 10px">${t('c_form_photo_add')}</button>`;
+  return `<div style="display:flex;align-items:center;gap:10px">
+    <img id="cf-photo-thumb" src="${src}" onclick="showCocktailPhotoPreview()" title="${t('c_form_photo_view_tooltip')}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:zoom-in"/>
+    <button type="button" class="btn btn-sm btn-ghost" onclick="document.getElementById('cf-photo-input').click()" style="padding:4px 8px">${t('c_form_photo_change')}</button>
+    <button type="button" class="btn btn-sm btn-danger" onclick="removeCocktailPhoto()" style="padding:4px 8px">${t('btn_delete')}</button>
+  </div>`;
+}
+function removeCocktailPhoto(){
+  window._cfPhotoData=null;
+  const del=document.getElementById('cf-photo-del');if(del)del.value='1';
+  const sec=document.getElementById('cf-photo-section');if(sec)sec.innerHTML=cfPhotoHTML('');
 }
 
 function showCocktailPhotoPreview(){
   const data=window._cfPhotoData;
-  const src=document.getElementById('cf-photo-preview')?.src;
+  const src=document.getElementById('cf-photo-thumb')?.src;
   const photoSrc=data||src;if(!photoSrc)return;
   const m=document.createElement('div');
   m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s';
@@ -3686,6 +3703,7 @@ function newCocktail(){
 function editC(id){editCId=id;showCForm(state.cocktails.find(x=>x.id===id)||{});}
 
 function showCForm(c){
+  window._cfPhotoData=null;
   // Header h2 removed - no longer display title
   document.getElementById('btn-cback').style.display='flex';
   document.getElementById('btn-cnew').style.display='none';
@@ -3745,19 +3763,9 @@ function showCForm(c){
           <textarea id="cf-desc" rows="2" placeholder="Fruits de la passion, gingembre, citron..." style="font-size:13px;padding:6px">${c.description||''}</textarea>
         </div>
         <div class="field"><label style="font-size:12px">${t('c_form_photo')}</label>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            ${c.photo?`<div style="display:flex;align-items:center;gap:6px;background:var(--bg2);padding:8px 12px;border-radius:4px;flex:1">
-              <span id="cf-photo-filename" style="font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer" onclick="showCocktailPhotoPreview()" title="${t('c_form_photo_view_tooltip')}">image.jpg</span>
-              <button class="btn btn-sm btn-ghost" onclick="document.getElementById('cf-photo-input').click()" style="padding:4px 8px">${t('c_form_photo_change')}</button>
-              <button class="btn btn-sm btn-danger" onclick="window._cfPhotoData=null;document.getElementById('cf-photo-del').value='1';document.getElementById('cf-photo-section').innerHTML='<label class=\\'btn btn-sm btn-ghost\\' style=\\'cursor:pointer;padding:6px 10px\\'>${t('c_form_photo_add')}<input type=\\'file\\' id=\\'cf-photo-input\\' accept=\\'image/*\\' style=\\'display:none\\' onchange=\\'loadCocktailPhoto(this)\\'/></label><input type=\\'hidden\\' id=\\'cf-photo-del\\' value=\\'0\\'/>';" style="padding:4px 8px">✕</button>
-            </div>`
-            :`<div id="cf-photo-section"><label class="btn btn-sm btn-ghost" style="cursor:pointer;padding:6px 10px">
-                ${t('c_form_photo_add')}
-                <input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>
-              </label><input type="hidden" id="cf-photo-del" value="0"/></div>`}
-            ${c.photo?`<input type="hidden" id="cf-photo-del" value="0"/><input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>`:''}
-          </div>
-          <div id="cf-photo-new-preview" style="margin-top:4px"></div>
+          <div id="cf-photo-section">${cfPhotoHTML(c.photo||'')}</div>
+          <input type="hidden" id="cf-photo-del" value="0"/>
+          <input type="file" id="cf-photo-input" accept="image/*" style="display:none" onchange="loadCocktailPhoto(this)"/>
         </div>
       </div>
 
