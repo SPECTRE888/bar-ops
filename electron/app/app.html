@@ -3893,7 +3893,7 @@ function addIngRow(val={}){
       ${['cl','ml','g','pc'].map(u=>`<option${u===(val.unit||'cl')?' selected':''}>${u}</option>`).join('')}
     </select>
     <div class="ing-cost" id="${id}-cost">—</div>
-    <button class="btn btn-sm btn-danger" onclick="document.getElementById('${id}').remove();updCRecap()"></button>`;
+    <button class="btn btn-sm btn-danger" title="${t('btn_delete')}" onclick="document.getElementById('${id}').remove();updCRecap()">×</button>`;
   document.getElementById('ing-list').appendChild(div);
   _setupIngSS(id, val, allTypes);
 }
@@ -3912,7 +3912,7 @@ function addConsoRow(val={}){
       ${['pc','g','cl','ml'].map(u=>`<option${u===(val.unit||'pc')?' selected':''}>${u}</option>`).join('')}
     </select>
     <div class="ing-cost" id="${id}-cost">—</div>
-    <button class="btn btn-sm btn-danger" onclick="document.getElementById('${id}').remove();updCRecap()"></button>`;
+    <button class="btn btn-sm btn-danger" title="${t('btn_delete')}" onclick="document.getElementById('${id}').remove();updCRecap()">×</button>`;
   document.getElementById('conso-list').appendChild(div);
   _setupIngSS(id, val, opts);
 }
@@ -8165,7 +8165,7 @@ function renderContacts(){
           <input value="${escHtml(c.phone||'')}" onchange="updContact(${c.id},'phone',this.value)" placeholder="+33 6 XX XX XX XX"/>
           ${c.phone?`<a href="https://wa.me/${waPhone(c.phone)}" target="_blank" style="color:#25D366;font-size:15px;text-decoration:none;flex-shrink:0" title="WhatsApp"></a>`:''}
         </div>
-        <button class="btn btn-sm btn-danger" onclick="delContact(${c.id})"></button>
+        <button class="btn btn-sm btn-danger" title="${t('btn_delete')}" onclick="delContact(${c.id})">×</button>
       </div>`;
     }).join('');
   }
