@@ -6470,13 +6470,13 @@ async function openMenu(evId){
   cats.forEach(cat=>{
     body+=`<div class="ct">${cat}</div>`;
     items.filter(c=>c.category===cat).forEach(c=>{
-      const pHT=c.priceHT.toFixed(2),pTTC=(c.priceHT*(1+(c.vat||20)/100)).toFixed(2);
+      const pHT=c.priceHT.toFixed(2);
       body+=`<div class="item">
         <div><div class="item-name">${c.name}</div>
           ${c.description?`<div class="item-desc">${c.description}</div>`:''}
           ${c.glass?`<div class="item-glass">${c.glass}</div>`:''}
         </div>
-        <div class="item-pr"><div class="pr-ht">${pHT}€ HT</div><div class="pr-ttc">${pTTC}€ TTC</div></div>
+        <div class="item-pr"><div class="pr-ttc">${pHT}€ HT</div></div>
       </div>`;
     });
   });
