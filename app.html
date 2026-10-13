@@ -6457,10 +6457,12 @@ async function openMenu(evId){
   .divider{border:none;border-top:2px solid #111;margin:14px 0 18px}
   .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#888;margin-bottom:4px}
   .ct{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#aaa;margin:16px 0 7px}
-  .item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0ede8}
+  .item{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px solid #f0ede8;break-inside:avoid}
+  .item-photo{width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0}
+  .item-txt{flex:1;min-width:0}
   .item-name{font-family:'DM Serif Display',serif;font-size:17px;color:#111;margin-bottom:2px}
   .item-desc{font-size:12px;color:#888}.item-glass{font-size:10px;color:#ccc;margin-top:1px}
-  .item-pr{text-align:right;flex-shrink:0;margin-left:14px}
+  .item-pr{text-align:right;flex-shrink:0}
   .pr-ht{font-size:12px;color:#bbb;margin-bottom:2px}
   .pr-ttc{font-family:'DM Serif Display',serif;font-size:19px;color:#111}
   .footer{margin-top:20px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:11px;color:#ccc}
@@ -6482,7 +6484,8 @@ async function openMenu(evId){
     items.filter(c=>c.category===cat).forEach(c=>{
       const pHT=c.priceHT.toFixed(2);
       body+=`<div class="item">
-        <div><div class="item-name">${c.name}</div>
+        ${c.photo?`<img class="item-photo" src="${escHtml(c.photo)}" alt=""/>`:''}
+        <div class="item-txt"><div class="item-name">${c.name}</div>
           ${c.description?`<div class="item-desc">${c.description}</div>`:''}
           ${c.glass?`<div class="item-glass">${c.glass}</div>`:''}
         </div>
@@ -6490,7 +6493,7 @@ async function openMenu(evId){
       </div>`;
     });
   });
-  body+=`<div class="footer"><span>${items.length} cocktail(s) — ${now}</span><span>Prices HT & TTC shown</span></div></div>
+  body+=`<div class="footer"><span>${items.length} cocktail(s) — ${now}</span><span>Prix HT</span></div></div>
   <button class="pbtn" onclick="window.print()"> Print / Save as PDF</button>`;
   const w=window.open('','_blank');
   if(!w){await alertModal('Popup bloqué. Vérifie les paramètres du navigateur.');return;}
