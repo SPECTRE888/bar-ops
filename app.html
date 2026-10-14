@@ -9391,7 +9391,7 @@ function exportEventHTML(evId){
 }
 
 async function exportStockEuro(){
-  // Helper: get display unit (bottle for cl products, actual unit otherwise)
+  // Unité d'affichage du stock (bouteilles pour les liquides, unité réelle sinon)
   const getDisplayUnit=(product)=>{
     if(product.unit==='cl') return 'btl';
     if(product.unit==='L') return 'btl';
@@ -9400,78 +9400,72 @@ async function exportStockEuro(){
     if(product.unit==='pc') return 'pc';
     return product.unit||'';
   };
+  const hasStock=x=>x.stock!=null&&x.stock!=='';
+  // Ordre et libellés = ceux du catalogue, puis catégories personnalisées, Verrerie, Bar & Matériel
+  const CAT_ORDER=['Spirit','Juice','Mixer','Syrup','Garnish','Consumable','Spice','Glassware','Ice','Bar'];
+  const CAT_LBL={Spirit:t('cat_spirits'),Juice:t('cat_juices'),Mixer:t('cat_mixers'),Syrup:t('cat_syrups'),Garnish:t('cat_garnish'),Consumable:t('cat_consumables'),Spice:t('cat_spices'),Glassware:t('cat_glassware'),Ice:t('cat_ice'),Bar:t('cat_bar')};
+  const catKey=c=>{
+    if(!c) return 'Autre';
+    if(String(c).startsWith('Custom_')){const cc=(state.customCategories||[]).find(x=>'Custom_'+x.id===c);return cc?cc.name:'Autre';}
+    return c;
+  };
+  const catLabel=k=>CAT_LBL[k]||k;
+  const catRank=k=>{const i=CAT_ORDER.indexOf(k);return i>=0?i:CAT_ORDER.length+(k==='Autre'?1:0);};
+  const mkItem=(x,o)=>{
+    const stock=parseFloat(x.stock)||0,priceHT=parseFloat(x.priceHT)||0,alert=parseFloat(x.stockAlert)||0;
+    return Object.assign({stock,priceHT,valueTotalHT:stock*priceHT,supplier:x.supplier||'',
+      low:alert>0&&stock<=alert,out:stock<=0,noPrice:!priceHT,alert},o);
+  };
 
-  // Filter products that have stock defined (exclude consumables - they'll be in separate category)
-  const products=state.products.filter(p=>p.category!=='Consumable'&&p.stock!=null&&p.stock!=='').map(p=>{
-    const valueTotalHT=(p.stock||0)*(p.priceHT||0);
-    return {
-      category:p.category||'',
-      type:p.productType||'',
-      brand:p.brand||'',
-      priceHT:p.priceHT||0,
-      stock:p.stock||0,
-      valueTotalHT:valueTotalHT.toFixed(2),
-      supplier:p.supplier||'',
-      unit:getDisplayUnit(p)
-    };
-  });
+  const products=state.products.filter(hasStock).map(p=>mkItem(p,{
+    category:catKey(p.category),type:p.productType||p.name||'',brand:p.brand||'',
+    format:p.qty?`${p.qty}${p.unit||''}`:'',unit:getDisplayUnit(p)
+  }));
+  const glasses=(state.glasses||[]).filter(hasStock).map(g=>mkItem(g,{
+    category:'Glassware',type:g.name||'',brand:g.appellation||'',format:'',unit:'pc'
+  }));
+  const barItems=(state.barItems||[]).filter(hasStock).map(b=>mkItem(b,{
+    category:'Bar',type:b.name||'',brand:b.brand||'',format:'',unit:b.unit||'pc'
+  }));
+  const skipped=state.products.filter(p=>!hasStock(p)).length;
 
-  const glasses=state.glasses.filter(g=>g.stock!=null&&g.stock!=='').map(g=>{
-    const valueTotalHT=(g.stock||0)*(g.priceHT||0);
-    return {
-      category:'Verrerie',
-      type:g.name||'',
-      brand:g.appellation||'',
-      priceHT:g.priceHT||0,
-      stock:g.stock||0,
-      valueTotalHT:valueTotalHT.toFixed(2),
-      supplier:g.supplier||'',
-      unit:'pc'
-    };
-  });
+  const cmp=(a,b)=>(a||'').localeCompare(b||'','fr',{sensitivity:'base'});
+  const allItems=[...products,...glasses,...barItems].sort((a,b)=>
+    catRank(a.category)-catRank(b.category)||cmp(catLabel(a.category),catLabel(b.category))||cmp(a.type,b.type)||cmp(a.brand,b.brand));
+  const totalValueHT=allItems.reduce((s,i)=>s+i.valueTotalHT,0);
+  const nLow=allItems.filter(i=>i.low&&!i.out).length,nOut=allItems.filter(i=>i.out).length,nNoPrice=allItems.filter(i=>i.noPrice).length;
 
-  const consommables=state.products.filter(p=>p.category==='Consumable'&&p.stock!=null&&p.stock!=='').map(p=>{
-    const valueTotalHT=(p.stock||0)*(p.priceHT||0);
-    return {
-      category:'Consommables',
-      type:p.productType||'',
-      brand:p.brand||'',
-      priceHT:p.priceHT||0,
-      stock:p.stock||0,
-      valueTotalHT:valueTotalHT.toFixed(2),
-      supplier:p.supplier||'',
-      unit:getDisplayUnit(p)
-    };
-  });
+  // Regroupement par catégorie (ordre déjà trié)
+  const groups=[];
+  allItems.forEach(i=>{let g=groups[groups.length-1];if(!g||g.key!==i.category){g={key:i.category,label:catLabel(i.category),items:[],value:0};groups.push(g);}g.items.push(i);g.value+=i.valueTotalHT;});
+  const pct=v=>totalValueHT>0?Math.round(v/totalValueHT*100):0;
+  const eur=v=>v.toFixed(2)+' €';
 
-  const barItems=(state.barItems||[]).filter(b=>b.stock!=null&&b.stock!=='').map(b=>{
-    const valueTotalHT=(b.stock||0)*(b.priceHT||0);
-    return {
-      category:'Bar & Matériel',
-      type:b.name||'',
-      brand:'',
-      priceHT:b.priceHT||0,
-      stock:b.stock||0,
-      valueTotalHT:valueTotalHT.toFixed(2),
-      supplier:b.supplier||'',
-      unit:b.unit||'pc'
-    };
-  });
+  if(!allItems.length){await alertModal('Aucun article avec un stock renseigné. Renseigne les stocks dans le catalogue pour exporter un inventaire.');return;}
 
-  const allItems=[...products,...glasses,...consommables,...barItems].filter(Boolean).sort((a,b)=>(a.category||'').localeCompare(b.category||'')||(a.type||'').localeCompare(b.type||''));
-  const totalValueHT=allItems.reduce((s,item)=>s+parseFloat(item.valueTotalHT),0);
-
-  // Show modal with total value before download
+  // Modal récap avant téléchargement
   const confirmed=await new Promise((resolve)=>{
     const modal=document.createElement('div');
     modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)';
-    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)">
-      <div style="font-size:15px;color:var(--text);margin-bottom:24px;line-height:1.5;font-weight:400">Télécharger l'inventaire valorisé ?</div>
-      <div style="background:var(--surface2);border:1px solid var(--gold-border);border-radius:5px;padding:16px;margin-bottom:24px;text-align:center">
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Valeur totale du stock</div>
-        <div style="font-size:32px;font-family:'DM Serif Display',serif;color:var(--gold);font-weight:600">${totalValueHT.toFixed(2)}€</div>
+    const stat=(v,l,c)=>`<div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:600;color:${c||'var(--text)'}">${v}</div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">${l}</div></div>`;
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+      <div style="font-size:15px;color:var(--text);margin-bottom:18px;line-height:1.5;font-weight:400">Télécharger l'inventaire valorisé ?</div>
+      <div style="background:var(--surface2);border:1px solid var(--gold-border);border-radius:5px;padding:16px;margin-bottom:12px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Valeur totale du stock HT</div>
+        <div style="font-size:32px;font-family:'DM Serif Display',serif;color:var(--gold);font-weight:600">${eur(totalValueHT)}</div>
       </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        ${stat(allItems.length,'Références')}
+        ${stat(nLow,'Stock faible',nLow?'#ff9800':'')}
+        ${stat(nOut,'Rupture',nOut?'var(--red)':'')}
+        ${stat(nNoPrice,'Sans prix',nNoPrice?'var(--red)':'')}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px">
+        <thead><tr style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.06em"><th style="text-align:left;padding:4px 0;font-weight:500">Catégorie</th><th style="text-align:right;padding:4px 0;font-weight:500">Réf.</th><th style="text-align:right;padding:4px 0;font-weight:500">Valeur HT</th><th style="text-align:right;padding:4px 0;font-weight:500">%</th></tr></thead>
+        <tbody>${groups.map(g=>`<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;color:var(--text)">${escHtml(g.label)}</td><td style="text-align:right;color:var(--text2)">${g.items.length}</td><td style="text-align:right;color:var(--text)">${eur(g.value)}</td><td style="text-align:right;color:var(--text3)">${pct(g.value)}%</td></tr>`).join('')}</tbody>
+      </table>
+      ${skipped?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">${skipped} produit${skipped>1?'s':''} sans stock renseigné non inclus.</div>`:''}
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
         <button style="padding:10px 20px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)'">Annuler</button>
         <button style="padding:10px 20px;background:var(--gold);color:#000;border:1px solid var(--gold);border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:.2s;font-family:var(--font-body)" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">Télécharger</button>
       </div>
@@ -9485,47 +9479,54 @@ async function exportStockEuro(){
 
   if(!confirmed) return;
 
-  // Générer le PDF localement
+  // Générer le PDF
   const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-  const bycat={};
-  allItems.forEach(i=>{if(!bycat[i.category])bycat[i.category]=[];bycat[i.category].push(i);});
+  const td='padding:6px 8px;font-size:11px';
   let tableRows='';
-  Object.entries(bycat).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cat,items])=>{
-    tableRows+=`<tr style="background:#f0f0f0"><td colspan="6" style="padding:8px 10px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#555">${cat}</td></tr>`;
-    items.forEach(i=>{
+  groups.forEach(g=>{
+    tableRows+=`<tr style="background:#f0f0f0"><td colspan="5" style="padding:8px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#555">${escHtml(g.label)} <span style="font-weight:400;color:#999;text-transform:none;letter-spacing:0">· ${g.items.length} réf.</span></td><td style="padding:8px;text-align:right;font-weight:600;font-size:11px;color:#555">${eur(g.value)}</td><td style="padding:8px;font-size:10px;color:#999;text-align:right">${pct(g.value)}%</td></tr>`;
+    g.items.forEach(i=>{
+      const flag=i.out?'<span style="color:#c62828;font-weight:600">Rupture</span>':i.low?`<span style="color:#e67e00;font-weight:600">⚠ Faible</span>`:'';
       tableRows+=`<tr style="border-bottom:1px solid #eee">
-        <td style="padding:7px 10px;font-size:12px">${i.type||'—'}</td>
-        <td style="padding:7px 10px;font-size:12px;color:#666">${i.brand||'—'}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:center">${i.stock} ${i.unit}</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right">${parseFloat(i.priceHT).toFixed(2)} €</td>
-        <td style="padding:7px 10px;font-size:12px;text-align:right;font-weight:500">${parseFloat(i.valueTotalHT).toFixed(2)} €</td>
-        <td style="padding:7px 10px;font-size:11px;color:#999">${i.supplier||'—'}</td>
+        <td style="${td}">${escHtml(i.type)||'—'}</td>
+        <td style="${td};color:#666">${escHtml(i.brand)||'—'}</td>
+        <td style="${td};color:#666;text-align:center">${escHtml(i.format)||'—'}</td>
+        <td style="${td};text-align:center;${i.out?'color:#c62828;font-weight:600':i.low?'color:#e67e00;font-weight:600':''}">${i.stock} ${escHtml(i.unit)}${flag?'<br>'+flag:''}</td>
+        <td style="${td};text-align:right;${i.noPrice?'color:#c62828':''}">${i.noPrice?'—':eur(i.priceHT)}</td>
+        <td style="${td};text-align:right;font-weight:500">${eur(i.valueTotalHT)}</td>
+        <td style="${td};font-size:10px;color:#999">${escHtml(i.supplier)||'—'}</td>
       </tr>`;
     });
   });
-  const barName=state.profile?.barName||'Bar Ops';
+  const barName=escHtml(state.profile?.barName||'Bar Ops');
+  const box=(v,l,c)=>`<div style="flex:1;border:1px solid #e0e0e0;border-radius:4px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:${c||'#111'}">${v}</div><div style="font-size:9px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-top:2px">${l}</div></div>`;
   const reportHTML=`<div style="font-family:sans-serif;color:#111;padding:0;max-width:100%">
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #111">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #111">
       <div><div style="font-size:20px;font-weight:700;letter-spacing:.04em">${barName}</div><div style="font-size:12px;color:#666;margin-top:4px">Inventaire valorisé — ${today}</div></div>
-      <div style="text-align:right"><div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.08em">Valeur totale HT</div><div style="font-size:26px;font-weight:700;color:#b8922b">${totalValueHT.toFixed(2)} €</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.08em">Valeur totale HT</div><div style="font-size:26px;font-weight:700;color:#b8922b">${eur(totalValueHT)}</div></div>
     </div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr style="background:#111;color:#fff"><th style="padding:8px 10px;text-align:left;font-weight:500">Produit</th><th style="padding:8px 10px;text-align:left;font-weight:500">Marque</th><th style="padding:8px 10px;text-align:center;font-weight:500">Stock</th><th style="padding:8px 10px;text-align:right;font-weight:500">Prix u. HT</th><th style="padding:8px 10px;text-align:right;font-weight:500">Valeur HT</th><th style="padding:8px 10px;text-align:left;font-weight:500">Fournisseur</th></tr></thead>
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      ${box(allItems.length,'Références')}${box(groups.length,'Catégories')}${box(nLow,'Stock faible',nLow?'#e67e00':'')}${box(nOut,'Rupture',nOut?'#c62828':'')}${box(nNoPrice,'Sans prix',nNoPrice?'#c62828':'')}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:#111;color:#fff"><th style="padding:7px 8px;text-align:left;font-weight:500">Produit</th><th style="padding:7px 8px;text-align:left;font-weight:500">Marque</th><th style="padding:7px 8px;text-align:center;font-weight:500">Format</th><th style="padding:7px 8px;text-align:center;font-weight:500">Stock</th><th style="padding:7px 8px;text-align:right;font-weight:500">Prix u. HT</th><th style="padding:7px 8px;text-align:right;font-weight:500">Valeur HT</th><th style="padding:7px 8px;text-align:left;font-weight:500">Fournisseur</th></tr></thead>
       <tbody>${tableRows}</tbody>
+      <tfoot><tr style="border-top:2px solid #111"><td colspan="5" style="padding:8px;font-weight:700;font-size:12px">TOTAL HT</td><td style="padding:8px;text-align:right;font-weight:700;font-size:12px;color:#b8922b">${eur(totalValueHT)}</td><td></td></tr></tfoot>
     </table>
+    ${skipped?`<div style="margin-top:12px;font-size:10px;color:#999">${skipped} produit${skipped>1?'s':''} du catalogue sans stock renseigné ${skipped>1?'ne sont pas inclus':'n’est pas inclus'}.</div>`:''}
   </div>`;
+  // Élément détaché (PAS positionné hors écran : html2canvas produirait un canvas de hauteur 0 → PDF vide)
   const el=document.createElement('div');
-  el.style.cssText='position:absolute;left:-9999px;top:0;width:750px;background:#fff';
+  el.style.cssText='width:700px;background:#fff';
   el.innerHTML=reportHTML;
-  document.body.appendChild(el);
   const filename=`Inventaire-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.pdf`;
   if(typeof html2pdf!=='undefined'){
-    html2pdf().set({margin:[12,12,12,12],filename,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}})
-      .from(el).save().then(()=>el.remove());
+    html2pdf().set({margin:[12,12,12,12],filename,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:'tr'}})
+      .from(el).save();
   }else{
     const blob=new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Inventaire</title></head><body style="margin:24px">${reportHTML}</body></html>`],{type:'text/html'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.pdf','.html');
-    document.body.appendChild(a);a.click();document.body.removeChild(a);el.remove();
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
   }
 }
 
