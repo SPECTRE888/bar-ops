@@ -3185,6 +3185,10 @@ function filterStaff(){
     const hay=(card.dataset.search||card.textContent).toLowerCase();
     card.style.display=hay.includes(q)?'':'none';
   });
+  // Masquer les titres de rôle dont aucune fiche ne correspond
+  document.querySelectorAll('#staff-content .staff-group').forEach(g=>{
+    g.style.display=[...g.querySelectorAll('.staff-card')].some(c=>c.style.display!=='none')?'':'none';
+  });
 }
 
 function toggleStaff(id){
@@ -3222,10 +3226,8 @@ function renderStaff(){
   if(!state.staffItems.length){el.innerHTML='';em.style.display='block';return;}
   em.style.display='none';
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
-  const ROLE_COLOR={'Bartender':'var(--gold)','Serveur':'var(--blue,#7eaadc)','Bar Manager':'var(--green)','Manutentionnaire':'var(--text3)'};
-  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.staffItems.map(s=>{
+  const cardHTML=s=>{
     const isOpen=s._open===true;
-    const roleColor=ROLE_COLOR[s.type]||'var(--text3)';
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     // Ligne contact
@@ -3244,13 +3246,10 @@ function renderStaff(){
     if(s.couleurCheveux) phys.push(chip(t('staff_hair'),s.couleurCheveux));
     // data-search
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.zone,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
-    return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);border-left:3px solid ${roleColor};background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
+    return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
       <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;min-height:56px;box-sizing:border-box">
         <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;overflow:hidden">
-          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:nowrap;min-width:0">
-            <span style="font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name||t('staff_no_name'))}</span>
-            ${s.type?`<span style="font-size:9.5px;font-weight:600;color:${roleColor};letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0">${escHtml(s.type)}</span>`:''}
-          </div>
+          <span style="font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name||t('staff_no_name'))}</span>
           ${phys.length?`<div style="display:flex;align-items:center;flex-wrap:wrap;line-height:1.4">${phys.join(sep)}</div>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -3322,7 +3321,23 @@ function renderStaff(){
         </div>
       </div>`:''}
     </div>`;
-  }).join('')+`</div>`;
+  };
+  // Regroupement par rôle (ordre : rôles de base, rôles perso, autres, sans rôle) — tri par nom dans chaque groupe
+  const ROLE_ORDER=['Bar Manager','Bartender','Serveur','Manutentionnaire',...(state.staffCustomRoles||[])];
+  const groups=new Map();
+  ROLE_ORDER.forEach(r=>groups.set(r,[]));
+  state.staffItems.forEach(s=>{const k=s.type||'';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(s);});
+  if(groups.has('')){const none=groups.get('');groups.delete('');groups.set('',none);}
+  el.innerHTML=[...groups.entries()].filter(([,items])=>items.length).map(([role,items])=>{
+    items.sort((a,b)=>(a.name||'').localeCompare(b.name||'','fr',{sensitivity:'base'}));
+    return`<div class="staff-group" style="margin-bottom:18px">
+      <div style="display:flex;align-items:baseline;gap:8px;margin:0 2px 8px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2)">${escHtml(role||t('staff_no_role'))}</span>
+        <span style="font-size:10px;color:var(--text3)">${items.length}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">${items.map(cardHTML).join('')}</div>
+    </div>`;
+  }).join('');
   filterStaff();
 }
 
@@ -11584,7 +11599,7 @@ const I18N={
     staff_top:'Haut',staff_pants:'Pantalon',staff_shoe_size:'Pointure',staff_physique:'Physique',
     staff_lang_short:'Langues',staff_hair:'Cheveux',staff_years:'ans',staff_no_name:'Sans nom',btn_info:'Info',
     staff_new_role_opt:'+ Nouveau rôle...',staff_new_role_placeholder:'Nom du rôle → Entrée',staff_del_role_title:'Supprimer ce rôle',
-    staff_address_placeholder:'Adresse complète',staff_zone:'Zone géographique',staff_zone_short:'Zone',select_placeholder:'— Sélectionner —',
+    staff_address_placeholder:'Adresse complète',staff_zone:'Zone géographique',staff_zone_short:'Zone',staff_no_role:'Sans rôle',select_placeholder:'— Sélectionner —',
     staff_measurements:'Mensurations & Physique',staff_height_cm:'Taille (cm)',staff_hair_placeholder:'Brun, blond...',
     staff_lang_full:'Langues parlées',staff_tariffs:'Tarifs',staff_cost_hr:'Coût HT (€/h)',staff_billed_hr:'Facturé HT (€/h)',
     staff_infos_supp:'Infos supplémentaires',staff_docs_title:'Documents & attestations',staff_docs_empty:'Aucun document',staff_doc_view:'Voir',
@@ -11918,7 +11933,7 @@ const I18N={
     staff_top:'Top',staff_pants:'Pants',staff_shoe_size:'Shoe size',staff_physique:'Build',
     staff_lang_short:'Languages',staff_hair:'Hair',staff_years:'yrs',staff_no_name:'No name',btn_info:'Info',
     staff_new_role_opt:'+ New role...',staff_new_role_placeholder:'Role name → Enter',staff_del_role_title:'Delete this role',
-    staff_address_placeholder:'Full address',staff_zone:'Geographic area',staff_zone_short:'Area',select_placeholder:'— Select —',
+    staff_address_placeholder:'Full address',staff_zone:'Geographic area',staff_zone_short:'Area',staff_no_role:'No role',select_placeholder:'— Select —',
     staff_measurements:'Measurements & Build',staff_height_cm:'Height (cm)',staff_hair_placeholder:'Brown, blonde...',
     staff_lang_full:'Languages spoken',staff_tariffs:'Rates',staff_cost_hr:'Cost excl. VAT (€/h)',staff_billed_hr:'Billed excl. VAT (€/h)',
     staff_infos_supp:'Additional info',staff_docs_title:'Documents & certificates',staff_docs_empty:'No documents',staff_doc_view:'View',
@@ -12255,7 +12270,7 @@ const I18N={
     staff_top:'Parte superior',staff_pants:'Pantalón',staff_shoe_size:'Talla de zapato',staff_physique:'Físico',
     staff_lang_short:'Idiomas',staff_hair:'Cabello',staff_years:'años',staff_no_name:'Sin nombre',btn_info:'Info',
     staff_new_role_opt:'+ Nuevo rol...',staff_new_role_placeholder:'Nombre del rol → Intro',staff_del_role_title:'Eliminar este rol',
-    staff_address_placeholder:'Dirección completa',staff_zone:'Zona geográfica',staff_zone_short:'Zona',select_placeholder:'— Seleccionar —',
+    staff_address_placeholder:'Dirección completa',staff_zone:'Zona geográfica',staff_zone_short:'Zona',staff_no_role:'Sin rol',select_placeholder:'— Seleccionar —',
     staff_measurements:'Medidas y Físico',staff_height_cm:'Altura (cm)',staff_hair_placeholder:'Moreno, rubio...',
     staff_lang_full:'Idiomas hablados',staff_tariffs:'Tarifas',staff_cost_hr:'Coste sin IVA (€/h)',staff_billed_hr:'Facturado sin IVA (€/h)',
     staff_infos_supp:'Información adicional',staff_docs_title:'Documentos y certificados',staff_docs_empty:'Sin documentos',staff_doc_view:'Ver',
