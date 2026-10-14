@@ -3223,20 +3223,17 @@ function renderStaff(){
   em.style.display='none';
   const canCost=typeof BarOpsAuth==='undefined'||BarOpsAuth.can('canViewCosts');
   const ROLE_COLOR={'Bartender':'var(--gold)','Serveur':'var(--blue,#7eaadc)','Bar Manager':'var(--green)','Manutentionnaire':'var(--text3)'};
-  const ROLE_BG={'Bartender':'var(--gold-bg)','Serveur':'var(--blue-bg,rgba(126,170,220,.14))','Bar Manager':'var(--green-bg)','Manutentionnaire':'var(--surface3)'};
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">`+state.staffItems.map(s=>{
     const isOpen=s._open===true;
     const roleColor=ROLE_COLOR[s.type]||'var(--text3)';
-    const roleBg=ROLE_BG[s.type]||'var(--surface3)';
     const margin=(s.billHT||0)-(s.rateHT||0);
     const sep=`<span style="color:var(--border2);margin:0 6px">·</span>`;
     // Ligne contact
-    const infos=[];
-    if(s.phone)  infos.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="${t('staff_wa_title')}" style="font-size:11px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">${t('staff_tel_prefix')} ${escHtml(s.phone)}</a>`);
-    if(s.zone)   infos.push(`<span style="font-size:11px;color:var(--text3)">${escHtml(s.zone)}</span>`);
-    // Ligne physique (ligne visible sans ouvrir) — texte fluide, pas de pastilles
+    // Ligne d'infos unique (contact + physique) — texte fluide, même format partout, pas de pastilles
     const chip=(label,val)=>`<span style="font-size:11px;white-space:nowrap"><span style="color:var(--text3)">${label}</span> <span style="color:var(--text2);font-weight:600">${escHtml(val)}</span></span>`;
     const phys=[];
+    if(s.phone)  phys.push(`<a href="https://wa.me/${waPhone(s.phone)}" target="_blank" onclick="event.stopPropagation()" title="${t('staff_wa_title')}" style="font-size:11px;white-space:nowrap;text-decoration:none"><span style="color:var(--text3)">${t('staff_tel_prefix')}</span> <span style="color:var(--text2);font-weight:600" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='var(--text2)'">${escHtml(s.phone)}</span></a>`);
+    if(s.zone)   phys.push(chip(t('staff_zone_short'),s.zone));
     if(s.age)             phys.push(chip(t('staff_age'),s.age+' '+t('staff_years')));
     if(s.tailleCm)       phys.push(chip(t('staff_height_short'),s.tailleCm+' cm'));
     if(s.tailleHaut)     phys.push(chip(t('staff_top'),s.tailleHaut));
@@ -3247,13 +3244,12 @@ function renderStaff(){
     if(s.couleurCheveux) phys.push(chip(t('staff_hair'),s.couleurCheveux));
     // data-search
     const searchData=[s.name,s.type,s.phone,s.email,s.address,s.zone,s.age,s.tailleCm,s.tailleHaut,s.taillePantalon,s.pointure,s.couleurCheveux,s.langues,s.physique,s.notes].filter(Boolean).join(' ').toLowerCase();
-    return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px">
-        <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;overflow:hidden">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
-            <span style="font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;flex-shrink:0">${escHtml(s.name||t('staff_no_name'))}</span>
-            <span style="font-size:10px;font-weight:700;color:${roleColor};letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;background:${roleBg};border:1px solid ${roleColor};border-radius:20px;flex-shrink:0">${escHtml(s.type||'')}</span>
-            ${infos.length?`${sep}${infos.join(sep)}`:''}
+    return`<div class="card staff-card" id="staff-row-${s.id}" style="padding:0;overflow:hidden;border-radius:6px;border:1px solid var(--border2);border-left:3px solid ${roleColor};background:var(--surface2);margin-bottom:0" data-search="${escHtml(searchData)}">
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;min-height:56px;box-sizing:border-box">
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;overflow:hidden">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:nowrap;min-width:0">
+            <span style="font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.name||t('staff_no_name'))}</span>
+            ${s.type?`<span style="font-size:9.5px;font-weight:600;color:${roleColor};letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;flex-shrink:0">${escHtml(s.type)}</span>`:''}
           </div>
           ${phys.length?`<div style="display:flex;align-items:center;flex-wrap:wrap;line-height:1.4">${phys.join(sep)}</div>`:''}
         </div>
@@ -11588,7 +11584,7 @@ const I18N={
     staff_top:'Haut',staff_pants:'Pantalon',staff_shoe_size:'Pointure',staff_physique:'Physique',
     staff_lang_short:'Langues',staff_hair:'Cheveux',staff_years:'ans',staff_no_name:'Sans nom',btn_info:'Info',
     staff_new_role_opt:'+ Nouveau rôle...',staff_new_role_placeholder:'Nom du rôle → Entrée',staff_del_role_title:'Supprimer ce rôle',
-    staff_address_placeholder:'Adresse complète',staff_zone:'Zone géographique',select_placeholder:'— Sélectionner —',
+    staff_address_placeholder:'Adresse complète',staff_zone:'Zone géographique',staff_zone_short:'Zone',select_placeholder:'— Sélectionner —',
     staff_measurements:'Mensurations & Physique',staff_height_cm:'Taille (cm)',staff_hair_placeholder:'Brun, blond...',
     staff_lang_full:'Langues parlées',staff_tariffs:'Tarifs',staff_cost_hr:'Coût HT (€/h)',staff_billed_hr:'Facturé HT (€/h)',
     staff_infos_supp:'Infos supplémentaires',staff_docs_title:'Documents & attestations',staff_docs_empty:'Aucun document',staff_doc_view:'Voir',
@@ -11922,7 +11918,7 @@ const I18N={
     staff_top:'Top',staff_pants:'Pants',staff_shoe_size:'Shoe size',staff_physique:'Build',
     staff_lang_short:'Languages',staff_hair:'Hair',staff_years:'yrs',staff_no_name:'No name',btn_info:'Info',
     staff_new_role_opt:'+ New role...',staff_new_role_placeholder:'Role name → Enter',staff_del_role_title:'Delete this role',
-    staff_address_placeholder:'Full address',staff_zone:'Geographic area',select_placeholder:'— Select —',
+    staff_address_placeholder:'Full address',staff_zone:'Geographic area',staff_zone_short:'Area',select_placeholder:'— Select —',
     staff_measurements:'Measurements & Build',staff_height_cm:'Height (cm)',staff_hair_placeholder:'Brown, blonde...',
     staff_lang_full:'Languages spoken',staff_tariffs:'Rates',staff_cost_hr:'Cost excl. VAT (€/h)',staff_billed_hr:'Billed excl. VAT (€/h)',
     staff_infos_supp:'Additional info',staff_docs_title:'Documents & certificates',staff_docs_empty:'No documents',staff_doc_view:'View',
@@ -12259,7 +12255,7 @@ const I18N={
     staff_top:'Parte superior',staff_pants:'Pantalón',staff_shoe_size:'Talla de zapato',staff_physique:'Físico',
     staff_lang_short:'Idiomas',staff_hair:'Cabello',staff_years:'años',staff_no_name:'Sin nombre',btn_info:'Info',
     staff_new_role_opt:'+ Nuevo rol...',staff_new_role_placeholder:'Nombre del rol → Intro',staff_del_role_title:'Eliminar este rol',
-    staff_address_placeholder:'Dirección completa',staff_zone:'Zona geográfica',select_placeholder:'— Seleccionar —',
+    staff_address_placeholder:'Dirección completa',staff_zone:'Zona geográfica',staff_zone_short:'Zona',select_placeholder:'— Seleccionar —',
     staff_measurements:'Medidas y Físico',staff_height_cm:'Altura (cm)',staff_hair_placeholder:'Moreno, rubio...',
     staff_lang_full:'Idiomas hablados',staff_tariffs:'Tarifas',staff_cost_hr:'Coste sin IVA (€/h)',staff_billed_hr:'Facturado sin IVA (€/h)',
     staff_infos_supp:'Información adicional',staff_docs_title:'Documentos y certificados',staff_docs_empty:'Sin documentos',staff_doc_view:'Ver',
