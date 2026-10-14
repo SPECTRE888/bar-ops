@@ -4888,7 +4888,7 @@ function updCRecap(){
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
 
     // Barre = Marge % : 0% à gauche → 100% à droite, couleur selon le niveau de marge
-    const mgColor=mgPct>=75?'var(--green)':mgPct>=65?'var(--gold)':mgPct>=50?'#ff9800':'var(--red)';
+    const mgColor=mgPct>85?'var(--blue)':mgPct>=75?'var(--green)':mgPct>=65?'var(--gold)':mgPct>=50?'#ff9800':'var(--red)';
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=Math.max(0,Math.min(100,mgPct))+'%';
