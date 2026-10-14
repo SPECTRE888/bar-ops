@@ -3805,10 +3805,9 @@ function showCForm(c){
             <div style="font-weight:bold;font-size:15px" id="r-mgp">—</div>
           </div>
         </div>
-        <div style="height:12px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:4px;position:relative">
+        <div style="height:12px;background:var(--surface3);border-radius:4px;overflow:hidden;margin-bottom:4px;position:relative">
           <div class="bar-fill" id="bar-fill" style="height:100%;width:0%;border-radius:4px;transition:width .4s,background .4s"></div>
-          <div style="position:absolute;left:50%;top:0;height:100%;width:1px;background:var(--text3);opacity:0.3"></div>
-          <div style="position:absolute;left:75%;top:0;height:100%;width:1px;background:var(--text3);opacity:0.3"></div>
+          <div id="bar-target" title="${t('c_mg_target')}" style="display:none;position:absolute;top:0;height:100%;width:2px;margin-left:-1px;background:var(--text);opacity:0.55;transition:left .4s"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text3)">
           <span>0%</span><span style="font-weight:600" id="bar-lbl"></span><span>100%</span>
@@ -4890,8 +4889,15 @@ function updCRecap(){
     const mgEl=document.getElementById('r-mg');if(mgEl)mgEl.textContent=mg.toFixed(2)+'€';
     const mgpEl=document.getElementById('r-mgp');if(mgpEl)mgpEl.textContent=mgPct.toFixed(0)+'%';
 
-    // Barre = Marge % : 0% à gauche → 100% à droite, couleur selon le niveau de marge
-    const mgColor=mgPct>85?'var(--blue)':mgPct>=75?'var(--green)':mgPct>=65?'var(--gold)':mgPct>=50?'#ff9800':'var(--red)';
+    // Barre = Marge % : 0% à gauche → 100% à droite.
+    // Couleur = écart (en points) avec la marge obtenue au prix conseillé (même calcul, avec % perte et verre)
+    const htSug=suggested*(1+loss);
+    const mgTarget=htSug>0?(htSug-(total+glassCostVal))/htSug*100:0;
+    const d=mgPct-mgTarget;
+    const mgLvl=d>=10?'c_mg_too_high':d>=-0.5?'c_mg_excellent':d>=-5?'c_mg_good':d>=-15?'c_mg_low':'c_mg_too_low';
+    const mgColor={c_mg_too_high:'var(--blue)',c_mg_excellent:'var(--green)',c_mg_good:'var(--gold)',c_mg_low:'#ff9800',c_mg_too_low:'var(--red)'}[mgLvl];
+    const tgt=document.getElementById('bar-target');
+    if(tgt){tgt.style.display=mgTarget>0?'block':'none';tgt.style.left=Math.min(100,mgTarget)+'%';}
     const fill=document.getElementById('bar-fill');
     if(fill){
       fill.style.width=Math.max(0,Math.min(100,mgPct))+'%';
@@ -4901,11 +4907,12 @@ function updCRecap(){
     if(mgpEl)mgpEl.style.color=mgColor;
 
     const lbl=document.getElementById('bar-lbl');
-    if(lbl){lbl.textContent=t(mgPct>85?'c_mg_too_high':mgPct>=75?'c_mg_excellent':mgPct>=65?'c_mg_good':mgPct>=50?'c_mg_low':'c_mg_too_low');lbl.style.color=mgColor;}
+    if(lbl){lbl.textContent=t(mgLvl);lbl.style.color=mgColor;}
   } else {
     ['r-mg','r-mgp'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='—';el.style.color='';}});
     const f=document.getElementById('bar-fill');if(f){f.style.width='0%';f.style.background='var(--bg3)';}
     const l=document.getElementById('bar-lbl');if(l){l.textContent='';l.style.color='';}
+    const tg=document.getElementById('bar-target');if(tg)tg.style.display='none';
   }
   const iceDisp=document.getElementById('cf-ice-display');
   const iceVal=parseFloat(document.getElementById('cf-ice')?.value)||0;
@@ -11705,7 +11712,7 @@ const I18N={
     c_form_ice_cost:'Coût glace (HT)',c_form_desc_menu:'Description menu',c_form_photo:'Photo',
     c_form_photo_view_tooltip:'Cliquer pour voir',c_form_photo_change:'Changer',c_form_photo_add:'+ Photo',
     c_form_pricing_title:'Tarification (HT)',c_form_suggested_price:'Prix conseillé',c_form_loss_pct:'% de perte',
-    c_form_cost_production:'Coût production',c_form_ht_final:'Prix de vente HT',c_form_margin_eur:'Marge €',c_form_margin_pct:'Marge %',c_mg_too_high:'★ Marge très haute',c_mg_excellent:'✓ Excellente marge',c_mg_good:'✓ Bonne marge',c_mg_low:'⚠ Marge faible',c_mg_too_low:'✗ Marge trop basse',
+    c_form_cost_production:'Coût production',c_form_ht_final:'Prix de vente HT',c_form_margin_eur:'Marge €',c_form_margin_pct:'Marge %',c_mg_too_high:'★ Marge très haute',c_mg_target:'Marge au prix conseillé',c_mg_excellent:'✓ Excellente marge',c_mg_good:'✓ Bonne marge',c_mg_low:'⚠ Marge faible',c_mg_too_low:'✗ Marge trop basse',
     c_form_qty:'Quantité',c_form_ing_warn:"Certains produits n'ont pas de prix défini",
     c_form_add_ing:'+ Ajouter ingrédient',c_form_add_conso:'+ Ajouter garniture / consommable',
     // Fournisseur (i18n pass)
@@ -12040,7 +12047,7 @@ const I18N={
     c_form_ice_cost:'Ice cost (excl. VAT)',c_form_desc_menu:'Menu description',c_form_photo:'Photo',
     c_form_photo_view_tooltip:'Click to view',c_form_photo_change:'Change',c_form_photo_add:'+ Photo',
     c_form_pricing_title:'Pricing (excl. VAT)',c_form_suggested_price:'Suggested price',c_form_loss_pct:'Loss %',
-    c_form_cost_production:'Production cost',c_form_ht_final:'Sale price excl. VAT',c_form_margin_eur:'Margin €',c_form_margin_pct:'Margin %',c_mg_too_high:'★ Very high margin',c_mg_excellent:'✓ Excellent margin',c_mg_good:'✓ Good margin',c_mg_low:'⚠ Low margin',c_mg_too_low:'✗ Margin too low',
+    c_form_cost_production:'Production cost',c_form_ht_final:'Sale price excl. VAT',c_form_margin_eur:'Margin €',c_form_margin_pct:'Margin %',c_mg_too_high:'★ Very high margin',c_mg_target:'Margin at suggested price',c_mg_excellent:'✓ Excellent margin',c_mg_good:'✓ Good margin',c_mg_low:'⚠ Low margin',c_mg_too_low:'✗ Margin too low',
     c_form_qty:'Quantity',c_form_ing_warn:'Some products have no price set',
     c_form_add_ing:'+ Add ingredient',c_form_add_conso:'+ Add garnish / consumable',
     // Supplier (i18n pass)
@@ -12377,7 +12384,7 @@ const I18N={
     c_form_ice_cost:'Coste hielo (sin IVA)',c_form_desc_menu:'Descripción de carta',c_form_photo:'Foto',
     c_form_photo_view_tooltip:'Clic para ver',c_form_photo_change:'Cambiar',c_form_photo_add:'+ Foto',
     c_form_pricing_title:'Tarificación (sin IVA)',c_form_suggested_price:'Precio sugerido',c_form_loss_pct:'% de pérdida',
-    c_form_cost_production:'Coste de producción',c_form_ht_final:'Precio de venta sin IVA',c_form_margin_eur:'Margen €',c_form_margin_pct:'Margen %',c_mg_too_high:'★ Margen muy alto',c_mg_excellent:'✓ Margen excelente',c_mg_good:'✓ Buen margen',c_mg_low:'⚠ Margen bajo',c_mg_too_low:'✗ Margen demasiado bajo',
+    c_form_cost_production:'Coste de producción',c_form_ht_final:'Precio de venta sin IVA',c_form_margin_eur:'Margen €',c_form_margin_pct:'Margen %',c_mg_too_high:'★ Margen muy alto',c_mg_target:'Margen al precio sugerido',c_mg_excellent:'✓ Margen excelente',c_mg_good:'✓ Buen margen',c_mg_low:'⚠ Margen bajo',c_mg_too_low:'✗ Margen demasiado bajo',
     c_form_qty:'Cantidad',c_form_ing_warn:'Algunos productos no tienen precio definido',
     c_form_add_ing:'+ Añadir ingrediente',c_form_add_conso:'+ Añadir guarnición / consumible',
     // Proveedor (i18n pass)
